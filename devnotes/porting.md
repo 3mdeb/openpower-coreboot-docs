@@ -113,11 +113,11 @@ struct BootloaderConfigData_t
 ```
 
 The layout of the HBBL can be found in `src/bootloader.ld`. The assembly that
-starts the HBBL is located in `src/bootloader/bl_start.S`. IT sets up some
-reigsters, exception vectors and jumps to bootloader main in
+starts the HBBL is located in `src/bootloader/bl_start.S`. It sets up some
+registers, exception vectors and jumps to bootloader main in
 `src/bootloader/bootloader.C`.
 
-### HBBL reponsibility
+### HBBL responsibility
 
 HBBL sets up the exception vectors and parses the information passed from SBE.
 It additionally loads the Hostboot Base (HBB) into cache. Initially the HBB
@@ -136,11 +136,11 @@ HBB working address and launched.
                                  + MAX_HBBL_SIZE)
 ```
 
-The working addressess are ORed with HRMOR ingore bit (bit 0 in BE, or bit 63
+The working addresses are ORed with HRMOR ignore bit (bit 0 in BE, or bit 63
 in LE).
 
 For initial bootblock launching the HBB may contain the entire coreboot.rom,
-since HBBL does everythig what we need for now.
+since HBBL does everything what we need for now.
 
 ## Enabling console
 
@@ -162,13 +162,13 @@ Relevant hostboot source files:
 - `src/include/usr/lpc/lpc_const.H`
 - `src/usr/lpc/lpcdd.H`
 
-SBE (Self Boot Engine) seem to be passing some data structure to hostboot
+SBE (Self Boot Engine) seems to be passing some data structure to hostboot
 during handoff of the control. It is parsed by hostboot to retrieve data such
 as LPC base address. This base address is needed to implement in\* and out\*
 functions to generate IO cycles.
 
 TODO: calculate the LPC base address instead of hardcoding it, since the
-defautl values may be overriden (see `BLTOHB_SECURE_OVERRIDES`).
+default values may be overriden (see `BLTOHB_SECURE_OVERRIDES`).
 
 hostboot repo: https://github.com/open-power/hostboot
 sbe repo: https://github.com/open-power/sbe
@@ -186,7 +186,7 @@ various utilities:
 - `fpart` - create, modify, erase PNOR partition table
 - `fcp` - erase, modify, write, read contents of the PNOR image partitions
 
-Exampel usage of `fcp` how to read out a partition or replace contents in a partition:
+Example usage of `fcp` how to read out a partition or replace contents in a partition:
 
 1. Write HBB partition with coreboot.rom.signed.ecc file:
 
@@ -202,7 +202,7 @@ https://github.com/open-power/sb-signing-utils
 
 Utilities to sign the images for Secure and Trusted Boot. The utilities create
 a container with key hashes and wraps the payload (image) with it. The
-cotnainer must be created before ECC is applied. HBB must contains such
+container must be created before ECC is applied. HBB must contains such
 container for example.
 
 ## Flashing the firmware via BMC
@@ -225,7 +225,7 @@ Sample commands:
 
 4. Erase and program single partition with file:
 
-  `poflash -e -P <partition> -p <partition>.bin`
+  `pflash -e -P <partition> -p <partition>.bin`
 
 > The file size must be exact the same as partition size on PNOR.
 
@@ -277,7 +277,7 @@ ID=32     BACKUP_PART 0x03ff7000..0x03fff000 (actual=0x00000000) [----RB----]
 
 ## Building OpenPOWER firmware
 
-Sometimes it may be necessary to modify the core OpenPOWER firmware. The easies
+Sometimes it may be necessary to modify the core OpenPOWER firmware. The easiest
 way to do this is to use op-build. To build the image get familiar with the
 [README.md](https://git.raptorcs.com/git/talos-op-build/tree/README.md).
 
@@ -318,7 +318,7 @@ Sniffing these ports can be done with following commands:
 `cat /dev/aspeed-lpc-snoop0 | hexdump -e '/1 "%02x\n"' -v` for port 0x81 and
 `cat /dev/aspeed-lpc-snoop1 | hexdump -e '/1 "%02x\n"' -v` for port 0x82.
 
-One may chaneg the printf formating to decimal for example with `%02d` in the
+One may change the printf formating to decimal for example with `%02d` in the
 hexdump expression.
 
 ## QEMU
@@ -626,7 +626,7 @@ The plan assumed following implementation:
 3. In the newly create partition called COREBOOT we put the coreboot CBFS
    without bootblock.
 
-> In the future mayeb we could leave the defaut layout and simply replace HBB
+> In the future maybe we could leave the defaut layout and simply replace HBB
 > with bootblock and HBI with coreboot without layout change.
 
 Let's see how openpower packages look like:
