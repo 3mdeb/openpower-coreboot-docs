@@ -1,0 +1,41 @@
+Flash info:
+-----------
+Name          = /dev/mtd6
+Total size    = 64MB	 Flags E:ECC, P:PRESERVED, R:READONLY, B:BACKUP
+Erase granule = 64KB           F:REPROVISION, V:VOLATILE, C:CLEARECC
+
+TOC@0x00000000 Partitions:
+-----------
+ID=00            part 0x00000000..0x00002000 (actual=0x00002000) [----R-----]
+ID=01            HBEL 0x00008000..0x0002c000 (actual=0x00024000) [E-----F-C-]
+ID=02           GUARD 0x0002c000..0x00031000 (actual=0x00005000) [E--P--F-C-]
+ID=03           NVRAM 0x00031000..0x000c1000 (actual=0x00090000) [---P--F---]
+ID=04         SECBOOT 0x000c1000..0x000e5000 (actual=0x00024000) [E--P------]
+ID=05           DJVPD 0x000e5000..0x0012d000 (actual=0x00048000) [E--P--F-C-]
+ID=06            MVPD 0x0012d000..0x001bd000 (actual=0x00090000) [E--P--F-C-]
+ID=07            CVPD 0x001bd000..0x00205000 (actual=0x00048000) [E--P--F-C-]
+ID=08             HBB 0x00205000..0x00305000 (actual=0x00100000) [EL--R-----]
+ID=09             HBD 0x00305000..0x00425000 (actual=0x00120000) [EL--------]
+ID=10             HBI 0x00425000..0x019c5000 (actual=0x015a0000) [EL--R-----]
+ID=11             SBE 0x019c5000..0x01a81000 (actual=0x000bc000) [ELI-R-----]
+ID=12           HCODE 0x01a81000..0x01ba1000 (actual=0x00120000) [EL--R-----]
+ID=13            HBRT 0x01ba1000..0x021a1000 (actual=0x00600000) [EL--R-----]
+ID=14         PAYLOAD 0x021a1000..0x022a1000 (actual=0x00100000) [-L--R-----]
+ID=15      BOOTKERNEL 0x022a1000..0x03821000 (actual=0x01580000) [-L--R-----]
+ID=16             OCC 0x03821000..0x03941000 (actual=0x00120000) [EL--R-----]
+ID=17         FIRDATA 0x03941000..0x03944000 (actual=0x00003000) [E-----F-C-]
+ID=18         VERSION 0x03944000..0x03946000 (actual=0x00002000) [-L--R-----]
+ID=19         BMC_INV 0x03968000..0x03971000 (actual=0x00009000) [------F---]
+ID=20            HBBL 0x03971000..0x03978000 (actual=0x00007000) [EL--R-----]
+ID=21        ATTR_TMP 0x03978000..0x03980000 (actual=0x00008000) [------F---]
+ID=22       ATTR_PERM 0x03980000..0x03988000 (actual=0x00008000) [E-----F-C-]
+ID=23     IMA_CATALOG 0x03989000..0x039c9000 (actual=0x00040000) [EL--R-----]
+ID=24         RINGOVD 0x039c9000..0x039e9000 (actual=0x00020000) [----------]
+ID=25         WOFDATA 0x039e9000..0x03ce9000 (actual=0x00300000) [EL--R-----]
+ID=26     HB_VOLATILE 0x03ce9000..0x03cee000 (actual=0x00005000) [E-----F-CV]
+ID=27            MEMD 0x03cee000..0x03cfc000 (actual=0x0000e000) [EL--R-----]
+ID=28            SBKT 0x03d02000..0x03d06000 (actual=0x00004000) [EL--R-----]
+ID=29            HDAT 0x03d06000..0x03d0e000 (actual=0x00008000) [EL--R-----]
+ID=30          UVISOR 0x03d10000..0x03e10000 (actual=0x00100000) [-L--R-----]
+ID=31      BOOTKERNFW 0x03e10000..0x03ff0000 (actual=0x001e0000) [---P------]
+ID=32     BACKUP_PART 0x03ff7000..0x03fff000 (actual=0x00000000) [----RB----]

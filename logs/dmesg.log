@@ -1,0 +1,719 @@
+[    0.000000] dt-cpu-ftrs: setup for ISA 3000
+[    0.000000] dt-cpu-ftrs: not enabling: system-call-vectored (disabled or unsupported by kernel)
+[    0.000000] dt-cpu-ftrs: final cpu/mmu features = 0x0001f86f8f5fb1a7 0x3c006041
+[    0.000000] radix-mmu: Page sizes from device-tree:
+[    0.000000] radix-mmu: Page size shift = 12 AP=0x0
+[    0.000000] radix-mmu: Page size shift = 16 AP=0x5
+[    0.000000] radix-mmu: Page size shift = 21 AP=0x1
+[    0.000000] radix-mmu: Page size shift = 30 AP=0x2
+[    0.000000] radix-mmu: Initializing Radix MMU
+[    0.000000] radix-mmu: Partition table (____ptrval____)
+[    0.000000] radix-mmu: Mapped 0x0000000000000000-0x0000000200000000 with 1.00 GiB pages
+[    0.000000] radix-mmu: Mapped 0x0000200000000000-0x0000200200000000 with 1.00 GiB pages
+[    0.000000] radix-mmu: Process table (____ptrval____) and radix root for kernel: (____ptrval____)
+[    0.000000] Linux version 4.19.0-9-powerpc64le (debian-kernel@lists.debian.org) (gcc version 8.3.0 (Debian 8.3.0-6)) #1 SMP Debian 4.19.118-2 (2020-04-29)
+[    0.000000] Found initrd at 0xc0000000037b0000:0xc0000000050aec36
+[    0.000000] OPAL: Found memory mapped LPC bus on chip 0
+[    0.000000] ISA: Non-PCI bridge is /lpcm-opb@6030000000000/lpc@0
+[    0.000000] Using PowerNV machine description
+[    0.000000] bootconsole [udbg0] enabled
+[    0.000000] CPU maps initialized for 4 threads per core
+[    0.000000]  (thread shift is 2)
+[    0.000000] Allocated 4992 bytes for 64 pacas
+[    0.000000] -----------------------------------------------------
+[    0.000000] ppc64_pft_size    = 0x0
+[    0.000000] phys_mem_size     = 0x400000000
+[    0.000000] dcache_bsize      = 0x80
+[    0.000000] icache_bsize      = 0x80
+[    0.000000] cpu_features      = 0x0001f86f8f5fb1a7
+[    0.000000]   possible        = 0x0001fbefcf5fb1a7
+[    0.000000]   always          = 0x00000003800081a1
+[    0.000000] cpu_user_features = 0xdc0065c2 0xaee00000
+[    0.000000] mmu_features      = 0x3c006041
+[    0.000000] firmware_features = 0x0000000110000000
+[    0.000000] -----------------------------------------------------
+[    0.000000] cma: Reserved 832 MiB at 0x00002001c8000000
+[    0.000000] numa:   NODE_DATA [mem 0x1ffd52300-0x1ffd5bfff]
+[    0.000000] numa:   NODE_DATA [mem 0x2001ff44a300-0x2001ff453fff]
+[    0.000000] rfi-flush: mttrig type flush available
+[    0.000000] rfi-flush: patched 9 locations (mttrig type flush)
+[    0.000000] link-stack-flush: software flush enabled.
+[    0.000000] count-cache-flush: software flush disabled.
+[    0.000000] stf-barrier: eieio barrier available
+[    0.000000] stf-barrier: patched 61 entry locations (eieio barrier)
+[    0.000000] stf-barrier: patched 9 exit locations (eieio barrier)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0000000)
+[    0.000000] PCI host bridge /pciex@600c3c0000000 (primary) ranges:
+[    0.000000]  MEM 0x000600c000000000..0x000600c07ffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006000000000000..0x0006003fffffffff -> 0x0006000000000000 (M64 #1..31)
+[    0.000000]  Using M64 #31 as default window
+[    0.000000]   512 (511) PE's M32: 0x80000000 [segment=0x400000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x20000000]
+[    0.000000]   Allocated bitmap for 4088 MSIs (base IRQ 0xfe000)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0100000)
+[    0.000000] PCI host bridge /pciex@600c3c0100000  ranges:
+[    0.000000]  MEM 0x000600c080000000..0x000600c0fffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006004000000000..0x0006007fffffffff -> 0x0006004000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0xfd800)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0200000)
+[    0.000000] PCI host bridge /pciex@600c3c0200000  ranges:
+[    0.000000]  MEM 0x000600c100000000..0x000600c17ffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006008000000000..0x000600bfffffffff -> 0x0006008000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0xfd000)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0300000)
+[    0.000000] PCI host bridge /pciex@600c3c0300000  ranges:
+[    0.000000]  MEM 0x000600c180000000..0x000600c1fffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006020000000000..0x0006023fffffffff -> 0x0006020000000000 (M64 #1..31)
+[    0.000000]  Using M64 #31 as default window
+[    0.000000]   512 (511) PE's M32: 0x80000000 [segment=0x400000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x20000000]
+[    0.000000]   Allocated bitmap for 4088 MSIs (base IRQ 0xfc000)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0400000)
+[    0.000000] PCI host bridge /pciex@600c3c0400000  ranges:
+[    0.000000]  MEM 0x000600c200000000..0x000600c27ffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006024000000000..0x0006027fffffffff -> 0x0006024000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0xfb800)
+[    0.000000] Initializing IODA2 PHB (/pciex@600c3c0500000)
+[    0.000000] PCI host bridge /pciex@600c3c0500000  ranges:
+[    0.000000]  MEM 0x000600c280000000..0x000600c2fffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006028000000000..0x000602bfffffffff -> 0x0006028000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0xfb000)
+[    0.000000] Initializing IODA2 PHB (/pciex@620c3c0000000)
+[    0.000000] PCI host bridge /pciex@620c3c0000000  ranges:
+[    0.000000]  MEM 0x000620c000000000..0x000620c07ffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006200000000000..0x0006203fffffffff -> 0x0006200000000000 (M64 #1..31)
+[    0.000000]  Using M64 #31 as default window
+[    0.000000]   512 (511) PE's M32: 0x80000000 [segment=0x400000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x20000000]
+[    0.000000]   Allocated bitmap for 4088 MSIs (base IRQ 0x1fe000)
+[    0.000000] Initializing IODA2 PHB (/pciex@620c3c0100000)
+[    0.000000] PCI host bridge /pciex@620c3c0100000  ranges:
+[    0.000000]  MEM 0x000620c080000000..0x000620c0fffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006204000000000..0x0006207fffffffff -> 0x0006204000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0x1fd800)
+[    0.000000] Initializing IODA2 PHB (/pciex@620c3c0200000)
+[    0.000000] PCI host bridge /pciex@620c3c0200000  ranges:
+[    0.000000]  MEM 0x000620c100000000..0x000620c17ffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006208000000000..0x000620bfffffffff -> 0x0006208000000000 (M64 #1..15)
+[    0.000000]  Using M64 #15 as default window
+[    0.000000]   256 (255) PE's M32: 0x80000000 [segment=0x800000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x40000000]
+[    0.000000]   Allocated bitmap for 2040 MSIs (base IRQ 0x1fd000)
+[    0.000000] Initializing IODA2 PHB (/pciex@620c3c0300000)
+[    0.000000] PCI host bridge /pciex@620c3c0300000  ranges:
+[    0.000000]  MEM 0x000620c180000000..0x000620c1fffeffff -> 0x0000000080000000 
+[    0.000000]  MEM 0x0006220000000000..0x0006223fffffffff -> 0x0006220000000000 (M64 #1..31)
+[    0.000000]  Using M64 #31 as default window
+[    0.000000]   512 (511) PE's M32: 0x80000000 [segment=0x400000]
+[    0.000000]                  M64: 0x4000000000 [segment=0x20000000]
+[    0.000000]   Allocated bitmap for 4088 MSIs (base IRQ 0x1fc000)
+[    0.000000] OPAL nvram setup, 589824 bytes
+[    0.000000] barrier-nospec: using ORI speculation barrier
+[    0.000000] barrier-nospec: patched 460 locations
+[    0.000000] Top of RAM: 0x200200000000, Total RAM: 0x400000000
+[    0.000000] Memory hole size: 33546240MB
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000000000000-0x00002001ffffffff]
+[    0.000000]   DMA32    empty
+[    0.000000]   Normal   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x00000001ffffffff]
+[    0.000000]   node   8: [mem 0x0000200000000000-0x00002001ffffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x00000001ffffffff]
+[    0.000000] On node 0 totalpages: 131072
+[    0.000000]   DMA zone: 128 pages used for memmap
+[    0.000000]   DMA zone: 0 pages reserved
+[    0.000000]   DMA zone: 131072 pages, LIFO batch:3
+[    0.000000] Initmem setup node 8 [mem 0x0000200000000000-0x00002001ffffffff]
+[    0.000000] On node 8 totalpages: 131072
+[    0.000000]   DMA zone: 128 pages used for memmap
+[    0.000000]   DMA zone: 0 pages reserved
+[    0.000000]   DMA zone: 131072 pages, LIFO batch:3
+[    0.000000] percpu: Embedded 4 pages/cpu s170648 r0 d91496 u262144
+[    0.000000] pcpu-alloc: s170648 r0 d91496 u262144 alloc=4*65536
+[    0.000000] pcpu-alloc: [0] 00 [0] 01 [0] 02 [0] 03 [0] 04 [0] 05 [0] 06 [0] 07 
+[    0.000000] pcpu-alloc: [0] 08 [0] 09 [0] 10 [0] 11 [0] 12 [0] 13 [0] 14 [0] 15 
+[    0.000000] pcpu-alloc: [0] 16 [0] 17 [0] 18 [0] 19 [0] 20 [0] 21 [0] 22 [0] 23 
+[    0.000000] pcpu-alloc: [0] 24 [0] 25 [0] 26 [0] 27 [0] 28 [0] 29 [0] 30 [0] 31 
+[    0.000000] pcpu-alloc: [1] 32 [1] 33 [1] 34 [1] 35 [1] 36 [1] 37 [1] 38 [1] 39 
+[    0.000000] pcpu-alloc: [1] 40 [1] 41 [1] 42 [1] 43 [1] 44 [1] 45 [1] 46 [1] 47 
+[    0.000000] pcpu-alloc: [1] 48 [1] 49 [1] 50 [1] 51 [1] 52 [1] 53 [1] 54 [1] 55 
+[    0.000000] pcpu-alloc: [1] 56 [1] 57 [1] 58 [1] 59 [1] 60 [1] 61 [1] 62 [1] 63 
+[    0.000000] Built 2 zonelists, mobility grouping on.  Total pages: 261888
+[    0.000000] Policy zone: DMA
+[    0.000000] Kernel command line: root=UUID=d63739c4-c7ec-4bde-bc0d-afa680abd21c ro quiet
+[    0.000000] log_buf_len individual max cpu contribution: 4096 bytes
+[    0.000000] log_buf_len total cpu_extra contributions: 258048 bytes
+[    0.000000] log_buf_len min size: 131072 bytes
+[    0.000000] log_buf_len: 524288 bytes
+[    0.000000] early log buf free: 120180(91%)
+[    0.000000] Memory: 15349568K/16777216K available (9984K kernel code, 1664K rwdata, 2240K rodata, 3904K init, 2281K bss, 575680K reserved, 851968K cma-reserved)
+[    0.000000] random: get_random_u64 called from __kmem_cache_create+0x5c/0x810 with crng_init=0
+[    0.000000] SLUB: HWalign=128, Order=0-3, MinObjects=0, CPUs=64, Nodes=9
+[    0.000000] ftrace: allocating 26567 entries in 10 pages
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=2048 to nr_cpu_ids=64.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=64
+[    0.000000] NR_IRQS: 512, nr_irqs: 512, preallocated irqs: 16
+[    0.000000] xive: Interrupt handling initialized with native backend
+[    0.000000] xive: Using priority 7 for all interrupts
+[    0.000000] xive: Using 64kB queues
+[    0.000000] time_init: decrementer frequency = 512.000000 MHz
+[    0.000000] time_init: processor frequency   = 3000.000000 MHz
+[    0.000002] time_init: 56 bit decrementer (max: 7fffffffffffff)
+[    0.000005] clocksource: timebase: mask: 0xffffffffffffffff max_cycles: 0x761537d007, max_idle_ns: 440795202126 ns
+[    0.000007] clocksource: timebase mult[1f40000] shift[24] registered
+[    0.000012] clockevent: decrementer mult[83126f] shift[24] cpu[0]
+[    0.000106] Console: colour dummy device 80x25
+[    0.000109] console [hvc0] enabled
+[    0.000111] bootconsole [udbg0] disabled
+[    0.000289] mempolicy: Enabling automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl
+[    0.000293] pid_max: default: 65536 minimum: 512
+[    0.001981] Security Framework initialized
+[    0.001983] Yama: disabled by default; enable with sysctl kernel.yama.*
+[    0.002024] AppArmor: AppArmor initialized
+[    0.003608] Dentry cache hash table entries: 2097152 (order: 8, 16777216 bytes)
+[    0.004335] Inode-cache hash table entries: 1048576 (order: 7, 8388608 bytes)
+[    0.004479] Mount-cache hash table entries: 32768 (order: 2, 262144 bytes)
+[    0.004500] Mountpoint-cache hash table entries: 32768 (order: 2, 262144 bytes)
+[    0.006018] EEH: PowerNV platform initialized
+[    0.006021] POWER9 performance monitor hardware support registered
+[    0.006060] rcu: Hierarchical SRCU implementation.
+[    0.007032] smp: Bringing up secondary CPUs ...
+[    0.057750] smp: Brought up 2 nodes, 64 CPUs
+[    0.057752] numa: Node 0 CPUs: 0-31
+[    0.057756] numa: Node 8 CPUs: 32-63
+[    0.057758] Using standard scheduler topology
+[    0.065210] devtmpfs: initialized
+[    0.090995] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.091014] futex hash table entries: 16384 (order: 5, 2097152 bytes)
+[    0.092747] NET: Registered protocol family 16
+[    0.092987] audit: initializing netlink subsys (disabled)
+[    0.093087] audit: type=2000 audit(1596464961.092:1): state=initialized audit_enabled=0 res=1
+[    0.093345] cpuidle: using governor ladder
+[    0.093418] cpuidle: using governor menu
+[    0.119238] PCI: Probing PCI hardware
+[    0.119286] PCI host bridge to bus 0000:00
+[    0.119292] pci_bus 0000:00: root bus resource [mem 0x600c000000000-0x600c07ffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.119295] pci_bus 0000:00: root bus resource [mem 0x6000000000000-0x6003fbfffffff 64bit pref]
+[    0.119299] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    0.119302] pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.119336] pci 0000:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.119492] pci 0000:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.126591] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+[    0.126624] pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.126671] PCI host bridge to bus 0001:00
+[    0.126675] pci_bus 0001:00: root bus resource [mem 0x600c080000000-0x600c0fffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.126678] pci_bus 0001:00: root bus resource [mem 0x6004000000000-0x6007f7fffffff 64bit pref]
+[    0.126680] pci_bus 0001:00: root bus resource [bus 00-ff]
+[    0.126683] pci_bus 0001:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.126707] pci 0001:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.126855] pci 0001:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.133891] pci 0001:00:00.0: PCI bridge to [bus 01-ff]
+[    0.133924] pci_bus 0001:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.133980] PCI host bridge to bus 0002:00
+[    0.133984] pci_bus 0002:00: root bus resource [mem 0x600c100000000-0x600c17ffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.133987] pci_bus 0002:00: root bus resource [mem 0x6008000000000-0x600bf7fffffff 64bit pref]
+[    0.133989] pci_bus 0002:00: root bus resource [bus 00-ff]
+[    0.133992] pci_bus 0002:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.134016] pci 0002:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.134163] pci 0002:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.141197] pci 0002:00:00.0: PCI bridge to [bus 01-ff]
+[    0.141229] pci_bus 0002:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.141273] PCI host bridge to bus 0003:00
+[    0.141277] pci_bus 0003:00: root bus resource [mem 0x600c180000000-0x600c1fffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.141280] pci_bus 0003:00: root bus resource [mem 0x6020000000000-0x6023fbfffffff 64bit pref]
+[    0.141283] pci_bus 0003:00: root bus resource [bus 00-ff]
+[    0.141285] pci_bus 0003:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.141309] pci 0003:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.141466] pci 0003:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.145120] pci 0003:01:00.0: [104c:8241] type 00 class 0x0c0330
+[    0.145173] pci 0003:01:00.0: reg 0x10: [mem 0x600c180000000-0x600c18000ffff 64bit]
+[    0.145199] pci 0003:01:00.0: reg 0x18: [mem 0x600c180010000-0x600c180011fff 64bit]
+[    0.145270] pci 0003:01:00.0: BAR2 [mem size 0x00002000 64bit]: requesting alignment to 0x10000
+[    0.145372] pci 0003:01:00.0: supports D1 D2
+[    0.145374] pci 0003:01:00.0: PME# supported from D0 D1 D2 D3hot
+[    0.148969] pci 0003:00:00.0: PCI bridge to [bus 01]
+[    0.149026] pci_bus 0003:00: busn_res: [bus 00-ff] end is updated to 01
+[    0.149071] PCI host bridge to bus 0004:00
+[    0.149075] pci_bus 0004:00: root bus resource [mem 0x600c200000000-0x600c27ffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.149077] pci_bus 0004:00: root bus resource [mem 0x6024000000000-0x6027f7fffffff 64bit pref]
+[    0.149080] pci_bus 0004:00: root bus resource [bus 00-ff]
+[    0.149083] pci_bus 0004:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.149106] pci 0004:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.149263] pci 0004:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.152917] pci 0004:01:00.0: [14e4:1657] type 00 class 0x020000
+[    0.152976] pci 0004:01:00.0: reg 0x10: [mem 0x6024000000000-0x602400000ffff 64bit pref]
+[    0.153002] pci 0004:01:00.0: reg 0x18: [mem 0x6024000010000-0x602400001ffff 64bit pref]
+[    0.153028] pci 0004:01:00.0: reg 0x20: [mem 0x6024000020000-0x602400002ffff 64bit pref]
+[    0.153213] pci 0004:01:00.0: PME# supported from D0 D3hot D3cold
+[    0.153301] pci 0004:01:00.0: 8.000 Gb/s available PCIe bandwidth, limited by 5 GT/s x2 link at 0004:00:00.0 (capable of 16.000 Gb/s with 5 GT/s x4 link)
+[    0.153393] pci 0004:01:00.1: [14e4:1657] type 00 class 0x020000
+[    0.153452] pci 0004:01:00.1: reg 0x10: [mem 0x6024000030000-0x602400003ffff 64bit pref]
+[    0.153478] pci 0004:01:00.1: reg 0x18: [mem 0x6024000040000-0x602400004ffff 64bit pref]
+[    0.153505] pci 0004:01:00.1: reg 0x20: [mem 0x6024000050000-0x602400005ffff 64bit pref]
+[    0.153691] pci 0004:01:00.1: PME# supported from D0 D3hot D3cold
+[    0.157265] pci 0004:00:00.0: PCI bridge to [bus 01]
+[    0.157353] pci_bus 0004:00: busn_res: [bus 00-ff] end is updated to 01
+[    0.157398] PCI host bridge to bus 0005:00
+[    0.157402] pci_bus 0005:00: root bus resource [mem 0x600c280000000-0x600c2fffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.157404] pci_bus 0005:00: root bus resource [mem 0x6028000000000-0x602bf7fffffff 64bit pref]
+[    0.157407] pci_bus 0005:00: root bus resource [bus 00-ff]
+[    0.157410] pci_bus 0005:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.157433] pci 0005:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.157590] pci 0005:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.161235] pci 0005:01:00.0: [1a03:1150] type 01 class 0x060400
+[    0.161453] pci 0005:01:00.0: supports D1 D2
+[    0.161455] pci 0005:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+[    0.165029] pci 0005:00:00.0: PCI bridge to [bus 01-02]
+[    0.165144] pci_bus 0005:02: extended config space not accessible
+[    0.165196] pci 0005:02:00.0: [1a03:2000] type 00 class 0x030000
+[    0.165230] pci 0005:02:00.0: reg 0x10: [mem 0x600c280000000-0x600c280ffffff]
+[    0.165249] pci 0005:02:00.0: reg 0x14: [mem 0x600c281000000-0x600c28101ffff]
+[    0.165267] pci 0005:02:00.0: reg 0x18: [io  0x0000-0x007f]
+[    0.165412] pci 0005:02:00.0: supports D1 D2
+[    0.165414] pci 0005:02:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+[    0.168918] pci 0005:01:00.0: PCI bridge to [bus 02]
+[    0.168975] pci_bus 0005:00: busn_res: [bus 00-ff] end is updated to 02
+[    0.169021] PCI host bridge to bus 0030:00
+[    0.169025] pci_bus 0030:00: root bus resource [mem 0x620c000000000-0x620c07ffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.169033] pci_bus 0030:00: root bus resource [mem 0x6200000000000-0x6203fbfffffff 64bit pref]
+[    0.169036] pci_bus 0030:00: root bus resource [bus 00-ff]
+[    0.169039] pci_bus 0030:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.169066] pci 0030:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.169248] pci 0030:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.176301] pci 0030:00:00.0: PCI bridge to [bus 01-ff]
+[    0.176339] pci_bus 0030:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.176384] PCI host bridge to bus 0031:00
+[    0.176388] pci_bus 0031:00: root bus resource [mem 0x620c080000000-0x620c0fffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.176391] pci_bus 0031:00: root bus resource [mem 0x6204000000000-0x6207f7fffffff 64bit pref]
+[    0.176393] pci_bus 0031:00: root bus resource [bus 00-ff]
+[    0.176396] pci_bus 0031:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.176424] pci 0031:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.176618] pci 0031:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.180303] pci 0031:01:00.0: [144d:a808] type 00 class 0x010802
+[    0.180375] pci 0031:01:00.0: reg 0x10: [mem 0x620c080000000-0x620c080003fff 64bit]
+[    0.180494] pci 0031:01:00.0: BAR0 [mem size 0x00004000 64bit]: requesting alignment to 0x10000
+[    0.184274] pci 0031:00:00.0: PCI bridge to [bus 01]
+[    0.184336] pci_bus 0031:00: busn_res: [bus 00-ff] end is updated to 01
+[    0.184381] PCI host bridge to bus 0032:00
+[    0.184385] pci_bus 0032:00: root bus resource [mem 0x620c100000000-0x620c17ffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.184388] pci_bus 0032:00: root bus resource [mem 0x6208000000000-0x620bf7fffffff 64bit pref]
+[    0.184390] pci_bus 0032:00: root bus resource [bus 00-ff]
+[    0.184393] pci_bus 0032:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.184421] pci 0032:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.184603] pci 0032:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.191658] pci 0032:00:00.0: PCI bridge to [bus 01]
+[    0.191697] pci_bus 0032:00: busn_res: [bus 00-ff] end is updated to 01
+[    0.191745] PCI host bridge to bus 0033:00
+[    0.191749] pci_bus 0033:00: root bus resource [mem 0x620c180000000-0x620c1fffeffff] (bus address [0x80000000-0xfffeffff])
+[    0.191752] pci_bus 0033:00: root bus resource [mem 0x6220000000000-0x6223fbfffffff 64bit pref]
+[    0.191754] pci_bus 0033:00: root bus resource [bus 00-ff]
+[    0.191757] pci_bus 0033:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.191785] pci 0033:00:00.0: [1014:04c1] type 01 class 0x060400
+[    0.191968] pci 0033:00:00.0: PME# supported from D0 D3hot D3cold
+[    0.199024] pci 0033:00:00.0: PCI bridge to [bus 01-ff]
+[    0.199063] pci_bus 0033:00: busn_res: [bus 00-ff] end is updated to ff
+[    0.199089] pci 0000:00     : [PE# 1fe] Secondary bus 0 associated with PE#1fe
+[    0.199303] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+[    0.199321] pci_bus 0000:00: resource 4 [mem 0x600c000000000-0x600c07ffeffff]
+[    0.199324] pci_bus 0000:00: resource 5 [mem 0x6000000000000-0x6003fbfffffff 64bit pref]
+[    0.199338] pci 0001:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.199547] pci 0001:00:00.0: PCI bridge to [bus 01-ff]
+[    0.199565] pci_bus 0001:00: resource 4 [mem 0x600c080000000-0x600c0fffeffff]
+[    0.199567] pci_bus 0001:00: resource 5 [mem 0x6004000000000-0x6007f7fffffff 64bit pref]
+[    0.199581] pci 0002:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.199805] pci 0002:00:00.0: PCI bridge to [bus 01-ff]
+[    0.199822] pci_bus 0002:00: resource 4 [mem 0x600c100000000-0x600c17ffeffff]
+[    0.199825] pci_bus 0002:00: resource 5 [mem 0x6008000000000-0x600bf7fffffff 64bit pref]
+[    0.199841] pci 0003:00:00.0: BAR 14: assigned [mem 0x600c180000000-0x600c1803fffff]
+[    0.199846] pci 0003:01:00.0: BAR 0: assigned [mem 0x600c180000000-0x600c18000ffff 64bit]
+[    0.199865] pci 0003:01:00.0: BAR 2: assigned [mem 0x600c180010000-0x600c180011fff 64bit]
+[    0.199883] pci 0003:00     : [PE# 1fe] Secondary bus 0 associated with PE#1fe
+[    0.200097] pci 0003:01     : [PE# 1fd] Secondary bus 1 associated with PE#1fd
+[    0.200318] pci 0003:01     : [PE# 1fd] Setting up 32-bit TCE table at 0..80000000
+[    0.200353] IOMMU table initialized, virtual merging enabled
+[    0.200356] pci 0003:01     : [PE# 1fd] Setting up window#0 0..7fffffff pg=1000
+[    0.200364] pci 0003:01     : [PE# 1fd] Enabling 64-bit DMA bypass
+[    0.200371] iommu: Adding device 0003:01:00.0 to group 0
+[    0.200373] pci 0003:00:00.0: PCI bridge to [bus 01]
+[    0.200381] pci 0003:00:00.0:   bridge window [mem 0x600c180000000-0x600c1ffefffff]
+[    0.200394] pci_bus 0003:00: resource 4 [mem 0x600c180000000-0x600c1fffeffff]
+[    0.200397] pci_bus 0003:00: resource 5 [mem 0x6020000000000-0x6023fbfffffff 64bit pref]
+[    0.200399] pci_bus 0003:01: resource 1 [mem 0x600c180000000-0x600c1ffefffff]
+[    0.200415] pci 0004:00:00.0: BAR 15: assigned [mem 0x6024000000000-0x602403fffffff 64bit pref]
+[    0.200420] pci 0004:01:00.0: BAR 0: assigned [mem 0x6024000000000-0x602400000ffff 64bit pref]
+[    0.200438] pci 0004:01:00.0: BAR 2: assigned [mem 0x6024000010000-0x602400001ffff 64bit pref]
+[    0.200456] pci 0004:01:00.0: BAR 4: assigned [mem 0x6024000020000-0x602400002ffff 64bit pref]
+[    0.200474] pci 0004:01:00.1: BAR 0: assigned [mem 0x6024000030000-0x602400003ffff 64bit pref]
+[    0.200492] pci 0004:01:00.1: BAR 2: assigned [mem 0x6024000040000-0x602400004ffff 64bit pref]
+[    0.200510] pci 0004:01:00.1: BAR 4: assigned [mem 0x6024000050000-0x602400005ffff 64bit pref]
+[    0.200529] pci 0004:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.200750] pci 0004:01     : [PE# 00] Secondary bus 1 associated with PE#0
+[    0.200966] pci 0004:01     : [PE# 00] Setting up 32-bit TCE table at 0..80000000
+[    0.200995] pci 0004:01     : [PE# 00] Setting up window#0 0..7fffffff pg=1000
+[    0.201000] pci 0004:01     : [PE# 00] Enabling 64-bit DMA bypass
+[    0.201005] iommu: Adding device 0004:01:00.0 to group 1
+[    0.201009] iommu: Adding device 0004:01:00.1 to group 1
+[    0.201011] pci 0004:00:00.0: PCI bridge to [bus 01]
+[    0.201022] pci 0004:00:00.0:   bridge window [mem 0x6024000000000-0x6027f7fffffff 64bit pref]
+[    0.201031] pci_bus 0004:00: resource 4 [mem 0x600c200000000-0x600c27ffeffff]
+[    0.201034] pci_bus 0004:00: resource 5 [mem 0x6024000000000-0x6027f7fffffff 64bit pref]
+[    0.201037] pci_bus 0004:01: resource 2 [mem 0x6024000000000-0x6027f7fffffff 64bit pref]
+[    0.201066] pci 0005:00:00.0: BAR 14: assigned [mem 0x600c280000000-0x600c2817fffff]
+[    0.201069] pci 0005:00:00.0: BAR 13: no space for [io  size 0x1000]
+[    0.201072] pci 0005:00:00.0: BAR 13: failed to assign [io  size 0x1000]
+[    0.201075] pci 0005:01:00.0: BAR 14: assigned [mem 0x600c280000000-0x600c2817fffff]
+[    0.201078] pci 0005:01:00.0: BAR 13: no space for [io  size 0x1000]
+[    0.201080] pci 0005:01:00.0: BAR 13: failed to assign [io  size 0x1000]
+[    0.201084] pci 0005:02:00.0: BAR 0: assigned [mem 0x600c280000000-0x600c280ffffff]
+[    0.201092] pci 0005:02:00.0: BAR 1: assigned [mem 0x600c281000000-0x600c28101ffff]
+[    0.201099] pci 0005:02:00.0: BAR 2: no space for [io  size 0x0080]
+[    0.201102] pci 0005:02:00.0: BAR 2: failed to assign [io  size 0x0080]
+[    0.201105] pci 0005:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.201317] pci 0005:02     : [PE# fd] Secondary bus 2..2 associated with PE#fd
+[    0.201541] pci 0005:02     : [PE# fd] Setting up 32-bit TCE table at 0..80000000
+[    0.201571] pci 0005:02     : [PE# fd] Setting up window#0 0..7fffffff pg=1000
+[    0.201575] pci 0005:02     : [PE# fd] Enabling 64-bit DMA bypass
+[    0.201580] iommu: Adding device 0005:02:00.0 to group 2
+[    0.201583] pci 0005:01:00.0: PCI bridge to [bus 02]
+[    0.201591] pci 0005:01:00.0:   bridge window [mem 0x600c280000000-0x600c2ffefffff]
+[    0.201607] pci 0005:01     : [PE# fc] Secondary bus 1 associated with PE#fc
+[    0.201816] pci 0005:00:00.0: PCI bridge to [bus 01-02]
+[    0.201824] pci 0005:00:00.0:   bridge window [mem 0x600c280000000-0x600c2ffefffff]
+[    0.201836] pci_bus 0005:00: Some PCI device resources are unassigned, try booting with pci=realloc
+[    0.201839] pci_bus 0005:00: resource 4 [mem 0x600c280000000-0x600c2fffeffff]
+[    0.201842] pci_bus 0005:00: resource 5 [mem 0x6028000000000-0x602bf7fffffff 64bit pref]
+[    0.201844] pci_bus 0005:01: resource 1 [mem 0x600c280000000-0x600c2ffefffff]
+[    0.201847] pci_bus 0005:02: resource 1 [mem 0x600c280000000-0x600c2ffefffff]
+[    0.201863] pci 0030:00     : [PE# 1fe] Secondary bus 0 associated with PE#1fe
+[    0.202074] pci 0030:00:00.0: PCI bridge to [bus 01-ff]
+[    0.202095] pci_bus 0030:00: resource 4 [mem 0x620c000000000-0x620c07ffeffff]
+[    0.202097] pci_bus 0030:00: resource 5 [mem 0x6200000000000-0x6203fbfffffff 64bit pref]
+[    0.202114] pci 0031:00:00.0: BAR 14: assigned [mem 0x620c080000000-0x620c0807fffff]
+[    0.202118] pci 0031:01:00.0: BAR 0: assigned [mem 0x620c080000000-0x620c080003fff 64bit]
+[    0.202139] pci 0031:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.202354] pci 0031:01     : [PE# fd] Secondary bus 1 associated with PE#fd
+[    0.202572] pci 0031:01     : [PE# fd] Setting up 32-bit TCE table at 0..80000000
+[    0.202607] pci 0031:01     : [PE# fd] Setting up window#0 0..7fffffff pg=1000
+[    0.202652] pci 0031:01     : [PE# fd] Enabling 64-bit DMA bypass
+[    0.202657] iommu: Adding device 0031:01:00.0 to group 3
+[    0.202660] pci 0031:00:00.0: PCI bridge to [bus 01]
+[    0.202668] pci 0031:00:00.0:   bridge window [mem 0x620c080000000-0x620c0ffefffff]
+[    0.202683] pci_bus 0031:00: resource 4 [mem 0x620c080000000-0x620c0fffeffff]
+[    0.202686] pci_bus 0031:00: resource 5 [mem 0x6204000000000-0x6207f7fffffff 64bit pref]
+[    0.202688] pci_bus 0031:01: resource 1 [mem 0x620c080000000-0x620c0ffefffff]
+[    0.202704] pci 0032:00     : [PE# fe] Secondary bus 0 associated with PE#fe
+[    0.202914] pci 0032:00:00.0: PCI bridge to [bus 01]
+[    0.202935] pci_bus 0032:00: resource 4 [mem 0x620c100000000-0x620c17ffeffff]
+[    0.202937] pci_bus 0032:00: resource 5 [mem 0x6208000000000-0x620bf7fffffff 64bit pref]
+[    0.202953] pci 0033:00     : [PE# 1fe] Secondary bus 0 associated with PE#1fe
+[    0.203166] pci 0033:00:00.0: PCI bridge to [bus 01-ff]
+[    0.203186] pci_bus 0033:00: resource 4 [mem 0x620c180000000-0x620c1fffeffff]
+[    0.203189] pci_bus 0033:00: resource 5 [mem 0x6220000000000-0x6223fbfffffff 64bit pref]
+[    0.203241] pci 0003:00:00.0: enabling device (0101 -> 0103)
+[    0.203256] pci 0004:00:00.0: enabling device (0101 -> 0103)
+[    0.203269] pci 0005:00:00.0: enabling device (0101 -> 0103)
+[    0.203284] pci 0005:01:00.0: enabling device (0141 -> 0143)
+[    0.203302] pci 0031:00:00.0: enabling device (0101 -> 0103)
+[    0.204066] EEH: PCI Enhanced I/O Error Handling Enabled
+[    0.204169] PCI: Probing PCI hardware done
+[    0.205717] cpuidle-powernv: Default stop: psscr = 0x0000000000000330,mask=0x00000000003003ff
+[    0.205718] cpuidle-powernv: Deepest stop: psscr = 0x0000000000300375,mask=0x00000000003003ff
+[    0.205719] cpuidle-powernv: Requested Level (RL) value of first deep stop = 0x4
+[    0.209452] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.209453] HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.211375] pci 0005:02:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
+[    0.211379] pci 0005:02:00.0: vgaarb: bridge control possible
+[    0.211383] pci 0005:02:00.0: vgaarb: setting as boot device (VGA legacy resources not available)
+[    0.211384] vgaarb: loaded
+[    0.211591] SCSI subsystem initialized
+[    0.211729] libata version 3.00 loaded.
+[    0.211743] pps_core: LinuxPPS API ver. 1 registered
+[    0.211744] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.211747] PTP clock support registered
+[    0.212213] clocksource: Switched to clocksource timebase
+[    0.229241] VFS: Disk quotas dquot_6.6.0
+[    0.229404] VFS: Dquot-cache hash table entries: 8192 (order 0, 65536 bytes)
+[    0.229727] AppArmor: AppArmor Filesystem Enabled
+[    0.232670] NET: Registered protocol family 2
+[    0.233018] tcp_listen_portaddr_hash hash table entries: 8192 (order: 1, 131072 bytes)
+[    0.233058] TCP established hash table entries: 131072 (order: 4, 1048576 bytes)
+[    0.233359] TCP bind hash table entries: 65536 (order: 4, 1048576 bytes)
+[    0.233557] TCP: Hash tables configured (established 131072 bind 65536)
+[    0.233678] UDP hash table entries: 8192 (order: 2, 262144 bytes)
+[    0.233738] UDP-Lite hash table entries: 8192 (order: 2, 262144 bytes)
+[    0.234049] NET: Registered protocol family 1
+[    0.234055] NET: Registered protocol family 44
+[    0.234077] pci 0003:01:00.0: enabling device (0140 -> 0142)
+[    0.234142] PCI: CLS 0 bytes, default 128
+[    0.234199] Unpacking initramfs...
+[    0.776866] Freeing initrd memory: 25536K
+[    0.778281] nest_alink0_imc performance monitor hardware support registered
+[    0.778324] nest_alink1_imc performance monitor hardware support registered
+[    0.778359] nest_alink2_imc performance monitor hardware support registered
+[    0.778395] nest_alink3_imc performance monitor hardware support registered
+[    0.778431] nest_capp0_imc performance monitor hardware support registered
+[    0.778465] nest_capp1_imc performance monitor hardware support registered
+[    0.778496] nest_centaur0_imc performance monitor hardware support registered
+[    0.778527] nest_centaur1_imc performance monitor hardware support registered
+[    0.778558] nest_centaur2_imc performance monitor hardware support registered
+[    0.778588] nest_centaur3_imc performance monitor hardware support registered
+[    0.778620] nest_centaur4_imc performance monitor hardware support registered
+[    0.778651] nest_centaur5_imc performance monitor hardware support registered
+[    0.778683] nest_centaur6_imc performance monitor hardware support registered
+[    0.778714] nest_centaur7_imc performance monitor hardware support registered
+[    0.780321] core_imc performance monitor hardware support registered
+[    0.780346] nest_mba0_imc performance monitor hardware support registered
+[    0.780370] nest_mba1_imc performance monitor hardware support registered
+[    0.780394] nest_mba2_imc performance monitor hardware support registered
+[    0.780418] nest_mba3_imc performance monitor hardware support registered
+[    0.780441] nest_mba4_imc performance monitor hardware support registered
+[    0.780465] nest_mba5_imc performance monitor hardware support registered
+[    0.780489] nest_mba6_imc performance monitor hardware support registered
+[    0.780512] nest_mba7_imc performance monitor hardware support registered
+[    0.780547] nest_mcs01_imc performance monitor hardware support registered
+[    0.780582] nest_mcs23_imc performance monitor hardware support registered
+[    0.780646] nest_nvlink0_imc performance monitor hardware support registered
+[    0.780701] nest_nvlink1_imc performance monitor hardware support registered
+[    0.780754] nest_nvlink2_imc performance monitor hardware support registered
+[    0.780807] nest_nvlink3_imc performance monitor hardware support registered
+[    0.780860] nest_nvlink4_imc performance monitor hardware support registered
+[    0.780913] nest_nvlink5_imc performance monitor hardware support registered
+[    0.780948] nest_nx_imc performance monitor hardware support registered
+[    0.780975] nest_phb0_imc performance monitor hardware support registered
+[    0.781001] nest_phb1_imc performance monitor hardware support registered
+[    0.781027] nest_phb2_imc performance monitor hardware support registered
+[    0.781053] nest_phb3_imc performance monitor hardware support registered
+[    0.781079] nest_phb4_imc performance monitor hardware support registered
+[    0.781103] nest_phb5_imc performance monitor hardware support registered
+[    0.781162] nest_powerbus0_imc performance monitor hardware support registered
+[    0.782844] thread_imc performance monitor hardware support registered
+[    0.782845] IMC Unknown Device type 
+[    0.782887] nest_xlink0_imc performance monitor hardware support registered
+[    0.782927] nest_xlink1_imc performance monitor hardware support registered
+[    0.782967] nest_xlink2_imc performance monitor hardware support registered
+[    0.789129] Initialise system trusted keyrings
+[    0.789143] Key type blacklist registered
+[    0.789260] workingset: timestamp_bits=38 max_order=18 bucket_order=0
+[    0.791587] zbud: loaded
+[    1.401326] Key type asymmetric registered
+[    1.401327] Asymmetric key parser 'x509' registered
+[    1.401339] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 249)
+[    1.401464] io scheduler noop registered
+[    1.401465] io scheduler deadline registered
+[    1.401613] io scheduler cfq registered (default)
+[    1.401614] io scheduler mq-deadline registered
+[    1.402544] hvc0: raw protocol on /ibm,opal/consoles/serial@0 (boot console)
+[    1.402548] hvc0: No interrupts property, using OPAL event
+[    1.402876] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+[    1.403261] Linux agpgart interface v0.103
+[    1.403702] mousedev: PS/2 mouse device common for all mice
+[    1.420239] rtc-opal opal-rtc: rtc core: registered rtc-opal as rtc0
+[    1.425049] powernv-cpufreq: cpufreq pstate min 0x62 nominal 0x30 max 0x0
+[    1.425050] powernv-cpufreq: Workload Optimized Frequency is enabled in the platform
+[    1.429223] powernv_idle_driver registered
+[    1.430026] ledtrig-cpu: registered to indicate activity on CPUs
+[    1.430724] NET: Registered protocol family 10
+[    1.439346] Segment Routing with IPv6
+[    1.439364] mip6: Mobile IPv6
+[    1.439366] NET: Registered protocol family 17
+[    1.439435] mpls_gso: MPLS GSO support
+[    1.439459] drmem: No dynamic reconfiguration memory found
+[    1.439737] registered taskstats version 1
+[    1.439737] Loading compiled-in X.509 certificates
+[    1.472950] Loaded X.509 cert 'Debian Secure Boot CA: 6ccece7e4c6c0d1f6149f3dd27dfcc5cbb419ea1'
+[    1.472962] Loaded X.509 cert 'Debian Secure Boot Signer: 00a7468def'
+[    1.473004] zswap: loaded using pool lzo/zbud
+[    1.473024] AppArmor: AppArmor sha1 policy hashing enabled
+[    1.492897] rtc-opal opal-rtc: setting system clock to 2020-08-03 14:29:23 UTC (1596464963)
+[    1.494901] Freeing unused kernel memory: 3904K
+[    1.494902] This architecture does not have kernel memory protection.
+[    1.494904] Run /init as init process
+[    1.572207] synth uevent: /devices/vio: failed to send uevent
+[    1.572210] vio vio: uevent: failed to send synthetic uevent
+[    1.575839] tg3.c:v3.137 (May 11, 2014)
+[    1.575873] tg3 0004:01:00.0: enabling device (0140 -> 0142)
+[    1.579393] nvme nvme0: pci function 0031:01:00.0
+[    1.579829] nvme 0031:01:00.0: enabling device (0140 -> 0142)
+[    1.579843] nvme 0031:01:00.0: Using 64-bit DMA iommu bypass
+[    1.580982] usbcore: registered new interface driver usbfs
+[    1.580991] usbcore: registered new interface driver hub
+[    1.581131] usbcore: registered new device driver usb
+[    1.585545] xhci_hcd 0003:01:00.0: xHCI Host Controller
+[    1.585626] xhci_hcd 0003:01:00.0: new USB bus registered, assigned bus number 1
+[    1.585699] xhci_hcd 0003:01:00.0: Using 64-bit DMA iommu bypass
+[    1.586296] xhci_hcd 0003:01:00.0: hcc params 0x0270f06d hci version 0x96 quirks 0x0000000004000000
+[    1.586697] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 4.19
+[    1.586700] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    1.586704] usb usb1: Product: xHCI Host Controller
+[    1.586705] usb usb1: Manufacturer: Linux 4.19.0-9-powerpc64le xhci-hcd
+[    1.586706] usb usb1: SerialNumber: 0003:01:00.0
+[    1.586847] hub 1-0:1.0: USB hub found
+[    1.586877] hub 1-0:1.0: 4 ports detected
+[    1.587089] xhci_hcd 0003:01:00.0: xHCI Host Controller
+[    1.587092] xhci_hcd 0003:01:00.0: new USB bus registered, assigned bus number 2
+[    1.587095] xhci_hcd 0003:01:00.0: Host supports USB 3.0 SuperSpeed
+[    1.587138] usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
+[    1.587208] usb usb2: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 4.19
+[    1.587210] usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    1.587212] usb usb2: Product: xHCI Host Controller
+[    1.587214] usb usb2: Manufacturer: Linux 4.19.0-9-powerpc64le xhci-hcd
+[    1.587215] usb usb2: SerialNumber: 0003:01:00.0
+[    1.587386] hub 2-0:1.0: USB hub found
+[    1.587397] hub 2-0:1.0: 4 ports detected
+[    1.590910] tg3 0004:01:00.0: Using 64-bit DMA iommu bypass
+[    1.591224] tg3 0004:01:00.0 eth0: Tigon3 [partno(BCM95719) rev 5719001] (PCI Express) MAC address 2c:09:4d:00:02:b9
+[    1.591226] tg3 0004:01:00.0 eth0: attached PHY is 5719C (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[1])
+[    1.591228] tg3 0004:01:00.0 eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[1] TSOcap[1]
+[    1.591230] tg3 0004:01:00.0 eth0: dma_rwctrl[00000000] dma_mask[64-bit]
+[    1.591340] tg3 0004:01:00.1: enabling device (0140 -> 0142)
+[    1.610876] tg3 0004:01:00.1: Using 64-bit DMA iommu bypass
+[    1.611191] tg3 0004:01:00.1 eth1: Tigon3 [partno(BCM95719) rev 5719001] (PCI Express) MAC address 2c:09:4d:00:02:ba
+[    1.611194] tg3 0004:01:00.1 eth1: attached PHY is 5719C (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[1])
+[    1.611196] tg3 0004:01:00.1 eth1: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[1] TSOcap[1]
+[    1.611199] tg3 0004:01:00.1 eth1: dma_rwctrl[00000000] dma_mask[64-bit]
+[    1.613119] tg3 0004:01:00.1 enP4p1s0f1: renamed from eth1
+[    1.656458] tg3 0004:01:00.0 enP4p1s0f0: renamed from eth0
+[    1.795275] nvme nvme0: Shutdown timeout set to 8 seconds
+[    1.856630]  nvme0n1: p1 p2 p3
+[    1.920684] usb 1-3: new high-speed USB device number 2 using xhci_hcd
+[    2.076592] usb 1-3: New USB device found, idVendor=1d6b, idProduct=0107, bcdDevice= 1.00
+[    2.076594] usb 1-3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    2.076596] usb 1-3: Product: USB Virtual Hub
+[    2.076598] usb 1-3: Manufacturer: Aspeed
+[    2.076599] usb 1-3: SerialNumber: 00000000
+[    2.093391] hub 1-3:1.0: USB hub found
+[    2.094479] hub 1-3:1.0: 5 ports detected
+[    2.228201] usb 1-4: new high-speed USB device number 3 using xhci_hcd
+[    2.381226] usb 1-4: New USB device found, idVendor=05e3, idProduct=0610, bcdDevice=32.98
+[    2.381229] usb 1-4: New USB device strings: Mfr=0, Product=1, SerialNumber=0
+[    2.381231] usb 1-4: Product: USB2.0 Hub
+[    2.396786] hub 1-4:1.0: USB hub found
+[    2.397749] hub 1-4:1.0: 4 ports detected
+[    2.460680] usb 1-3.1: new high-speed USB device number 4 using xhci_hcd
+[    2.570744] usb 1-3.1: New USB device found, idVendor=1d6b, idProduct=0104, bcdDevice= 1.00
+[    2.570747] usb 1-3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    2.570748] usb 1-3.1: Product: virtual_input
+[    2.570750] usb 1-3.1: Manufacturer: OpenBMC
+[    2.570752] usb 1-3.1: SerialNumber: OBMC0001
+[    2.627593] hidraw: raw HID events driver (C) Jiri Kosina
+[    2.635499] usbcore: registered new interface driver usbhid
+[    2.635500] usbhid: USB HID core driver
+[    2.636636] input: OpenBMC virtual_input as /devices/pci0003:00/0003:00:00.0/0003:01:00.0/usb1/1-3/1-3.1/1-3.1:1.0/0003:1D6B:0104.0001/input/input0
+[    2.697982] hid-generic 0003:1D6B:0104.0001: input,hidraw0: USB HID v1.01 Keyboard [OpenBMC virtual_input] on usb-0003:01:00.0-3.1/input0
+[    2.698108] input: OpenBMC virtual_input as /devices/pci0003:00/0003:00:00.0/0003:01:00.0/usb1/1-3/1-3.1/1-3.1:1.1/0003:1D6B:0104.0002/input/input1
+[    2.700522] hid-generic 0003:1D6B:0104.0002: input,hidraw1: USB HID v1.01 Mouse [OpenBMC virtual_input] on usb-0003:01:00.0-3.1/input1
+[    2.871884] random: fast init done
+[    2.922516] EXT4-fs (nvme0n1p2): mounted filesystem with ordered data mode. Opts: (null)
+[    3.081732] systemd[1]: Inserted module 'autofs4'
+[    3.102689] systemd[1]: systemd 241 running in system mode. (+PAM +AUDIT +SELINUX +IMA +APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD -IDN2 +IDN -PCRE2 default-hierarchy=hybrid)
+[    3.121265] systemd[1]: Detected architecture ppc64-le.
+[    3.130057] systemd[1]: Set hostname to <debian>.
+[    3.306179] random: systemd: uninitialized urandom read (16 bytes read)
+[    3.307351] random: systemd: uninitialized urandom read (16 bytes read)
+[    3.308249] systemd[1]: Created slice system-getty.slice.
+[    3.308379] random: systemd: uninitialized urandom read (16 bytes read)
+[    3.308462] systemd[1]: Listening on Journal Audit Socket.
+[    3.308552] systemd[1]: Listening on udev Kernel Socket.
+[    3.308630] systemd[1]: Started Dispatch Password Requests to Console Directory Watch.
+[    3.308732] systemd[1]: Listening on udev Control Socket.
+[    3.309611] systemd[1]: Set up automount Arbitrary Executable File Formats File System Automount Point.
+[    3.309720] systemd[1]: Listening on Syslog Socket.
+[    3.347015] EXT4-fs (nvme0n1p2): re-mounted. Opts: errors=remount-ro
+[    3.394265] synth uevent: /devices/vio: failed to send uevent
+[    3.394269] vio vio: uevent: failed to send synthetic uevent
+[    3.441545] systemd-journald[546]: Received request to flush runtime journal from PID 1
+[    3.450875] at24 0-0050: 65536 byte 24c512 EEPROM, writable, 1 bytes/write
+[    3.455766] version 39.2
+[    3.456744] ipmi device interface
+[    3.460612] 5 fixed-partitions partitions found on MTD device flash
+[    3.460620] Creating 5 MTD partitions on "flash":
+[    3.460628] 0x000000000000-0x000004000000 : "PNOR"
+[    3.460879] 0x0000022a1000-0x000003821000 : "BOOTKERNEL"
+[    3.461122] 0x000003944000-0x000003946000 : "VERSION"
+[    3.461318] 0x000003989000-0x0000039c9000 : "IMA_CATALOG"
+[    3.461476] 0x000003e10000-0x000003ff0000 : "BOOTKERNFW"
+[    3.472669] ipmi-powernv ibm,opal:ipmi: IPMI message handler: The GUID response from the BMC was too short, it was 1 but should have been 17.  Assuming GUID is not available.
+[    3.473390] crypto_register_alg 'aes' = 0
+[    3.476295] audit: type=1400 audit(1596464965.480:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe" pid=623 comm="apparmor_parser"
+[    3.476302] audit: type=1400 audit(1596464965.480:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe//kmod" pid=623 comm="apparmor_parser"
+[    3.476819] audit: type=1400 audit(1596464965.480:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/bin/man" pid=624 comm="apparmor_parser"
+[    3.476823] audit: type=1400 audit(1596464965.480:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_filter" pid=624 comm="apparmor_parser"
+[    3.476828] audit: type=1400 audit(1596464965.480:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_groff" pid=624 comm="apparmor_parser"
+[    3.480794] crypto_register_alg 'cbc(aes)' = 0
+[    3.485461] crypto_register_alg 'ctr(aes)' = 0
+[    3.492830] crypto_register_alg 'xts(aes)' = 0
+[    3.494262] ast 0005:02:00.0: enabling device (0141 -> 0143)
+[    3.494391] [drm] platform has no IO space, trying MMIO
+[    3.494396] [drm] Using device-tree for configuration
+[    3.494397] [drm] AST 2500 detected
+[    3.494400] [drm] Analog VGA only
+[    3.494406] [drm] dram MCLK=800 Mhz type=7 bus_width=16 size=01000000
+[    3.494472] [TTM] Zone  kernel: Available graphics memory: 8115968 kiB
+[    3.494473] [TTM] Zone   dma32: Available graphics memory: 2097152 kiB
+[    3.494473] [TTM] Initializing pool allocator
+[    3.496417] ipmi-powernv ibm,opal:ipmi: Found new BMC (man_id: 0x00cb06, prod_id: 0x0001, dev_id: 0x00)
+[    3.498453] at24 2-0050: 16384 byte 24c128 EEPROM, writable, 1 bytes/write
+[    3.516110] Console: switching to colour frame buffer device 128x48
+[    3.531272] ast 0005:02:00.0: fb0: astdrmfb frame buffer device
+[    3.593094] Adding 15850432k swap on /dev/nvme0n1p3.  Priority:-2 extents:1 across:15850432k SSFS
+[    3.608209] [drm] Initialized ast 0.1.0 20120228 for 0005:02:00.0 on minor 0
+[    3.684342] tg3 0004:01:00.0 enP4p1s0f0: Link is up at 1000 Mbps, full duplex
+[    3.684346] tg3 0004:01:00.0 enP4p1s0f0: Flow control is off for TX and off for RX
+[    3.684348] tg3 0004:01:00.0 enP4p1s0f0: EEE is disabled
+[    3.692226] IPv6: ADDRCONF(NETDEV_UP): enP4p1s0f0: link is not ready
+[    3.692237] IPv6: ADDRCONF(NETDEV_CHANGE): enP4p1s0f0: link becomes ready
+[    4.011995] at24 4-0056: 256 byte spd EEPROM, read-only, 0 bytes/write
+[    4.060329] at24 5-0050: 65536 byte 24c512 EEPROM, writable, 1 bytes/write
+[    5.200651] at24 8-0056: 256 byte spd EEPROM, read-only, 0 bytes/write
+[   18.567577] random: crng init done
+[   18.567579] random: 7 urandom warning(s) missed due to ratelimiting
+[  431.302650] device-mapper: uevent: version 1.0.3
+[  431.302832] device-mapper: ioctl: 4.39.0-ioctl (2018-04-03) initialised: dm-devel@redhat.com
+[  432.448687] SGI XFS with ACLs, security attributes, realtime, no debug enabled
+[  432.456900] JFS: nTxBlock = 7925, nTxLock = 63406
+[  432.478919] QNX4 filesystem 0.2.3 registered.
+[  432.486320] xor: measuring software checksum speed
+[  432.526058]    8regs     : 11664.000 MB/sec
+[  432.566075]    8regs_prefetch:  9664.000 MB/sec
+[  432.606088]    32regs    : 11808.000 MB/sec
+[  432.646105]    32regs_prefetch: 10416.000 MB/sec
+[  432.686119]    altivec   : 13536.000 MB/sec
+[  432.686121] xor: using function: altivec (13536.000 MB/sec)
+[  432.754148] raid6: altivecx1 gen()  8836 MB/s
+[  432.822166] raid6: altivecx2 gen() 13089 MB/s
+[  432.890192] raid6: altivecx4 gen() 17799 MB/s
+[  432.958222] raid6: altivecx8 gen() 15193 MB/s
+[  433.026247] raid6: vpermxor1 gen()  8918 MB/s
+[  433.094273] raid6: vpermxor2 gen() 12622 MB/s
+[  433.162296] raid6: vpermxor4 gen() 17803 MB/s
+[  433.230323] raid6: vpermxor8 gen() 19616 MB/s
+[  433.298359] raid6: int64x1  gen()  4772 MB/s
+[  433.366381] raid6: int64x1  xor()  1441 MB/s
+[  433.434399] raid6: int64x2  gen()  7323 MB/s
+[  433.502433] raid6: int64x2  xor()  2616 MB/s
+[  433.570455] raid6: int64x4  gen() 10373 MB/s
+[  433.638478] raid6: int64x4  xor()  3411 MB/s
+[  433.706500] raid6: int64x8  gen()  5391 MB/s
+[  433.774515] raid6: int64x8  xor()  2433 MB/s
+[  433.774517] raid6: using algorithm vpermxor8 gen() 19616 MB/s
+[  433.774518] raid6: using intx1 recovery algorithm
+[  433.812276] Btrfs loaded, crc32c=crc32c-generic
+[  433.817596] fuse init (API version 7.27)

@@ -1,0 +1,221 @@
+
+
+--== Welcome to Hostboot hostboot-a2ddbf3/hbicore.bin ==--
+
+  3.07333|secure|SecureROM valid - enabling functionality
+  5.47338|Booting from SBE side 0 on master proc=00050000
+  5.51410|ISTEP  6. 5 - host_init_fsi
+  5.70058|ISTEP  6. 6 - host_set_ipl_parms
+  6.00262|ISTEP  6. 7 - host_discover_targets
+  8.33290|HWAS|PRESENT> DIMM[03]=0020002000000000
+  8.33291|HWAS|PRESENT> Proc[05]=8800000000000000
+  8.33292|HWAS|PRESENT> Core[07]=2556405151500000
+  8.42128|ISTEP  6. 8 - host_update_master_tpm
+  8.91359|SECURE|Security Access Bit> 0x0000000000000000
+  8.91361|SECURE|Secure Mode Disable (via Jumper)> 0xC000000000000000
+  8.91378|ISTEP  6. 9 - host_gard
+  9.27034|HWAS|Deconfig HUID 0x00030012, Physical:/Sys0/Node0/DIMM10
+  9.27061|HWAS|FUNCTIONAL> DIMM[03]=0020002000000000
+  9.27063|HWAS|FUNCTIONAL> Proc[05]=8800000000000000
+  9.27064|HWAS|FUNCTIONAL> Core[07]=2556405151500000
+  9.27522|ISTEP  6.11 - host_start_occ_xstop_handler
+ 10.39993|ISTEP  6.12 - host_voltage_config
+ 10.53081|ISTEP  7. 1 - mss_attr_cleanup
+ 11.20423|ISTEP  7. 2 - mss_volt
+ 11.42147|ISTEP  7. 3 - mss_freq
+ 11.78582|ISTEP  7. 4 - mss_eff_config
+ 12.46029|ISTEP  7. 5 - mss_attr_update
+ 12.48575|ISTEP  8. 1 - host_slave_sbe_config
+ 12.71957|ISTEP  8. 2 - host_setup_sbe
+ 12.72140|ISTEP  8. 3 - host_cbs_start
+ 12.76769|ISTEP  8. 4 - proc_check_slave_sbe_seeprom_complete
+ 17.83462|ISTEP  8. 5 - host_attnlisten_proc
+ 17.85223|ISTEP  8. 6 - host_p9_fbc_eff_config
+ 17.85763|ISTEP  8. 7 - host_p9_eff_config_links
+ 17.91211|ISTEP  8. 8 - proc_attr_update
+ 17.91369|ISTEP  8. 9 - proc_chiplet_fabric_scominit
+ 17.96029|ISTEP  8.10 - proc_xbus_scominit
+ 19.24395|ISTEP  8.11 - proc_xbus_enable_ridi
+ 19.27443|ISTEP  8.12 - host_set_voltages
+ 19.37141|ISTEP  9. 1 - fabric_erepair
+ 19.51739|ISTEP  9. 2 - fabric_io_dccal
+ 20.28541|ISTEP  9. 3 - fabric_pre_trainadv
+ 20.29176|ISTEP  9. 4 - fabric_io_run_training
+ 20.44431|ISTEP  9. 5 - fabric_post_trainadv
+ 20.45499|ISTEP  9. 6 - proc_smp_link_layer
+ 20.46016|ISTEP  9. 7 - proc_fab_iovalid
+ 20.76919|ISTEP  9. 8 - host_fbc_eff_config_aggregate
+ 20.80225|ISTEP 10. 1 - proc_build_smp
+ 21.80958|ISTEP 10. 2 - host_slave_sbe_update
+ 22.83760|ISTEP 10. 4 - proc_cen_ref_clk_enable
+ 22.92760|ISTEP 10. 5 - proc_enable_osclite
+ 22.92860|ISTEP 10. 6 - proc_chiplet_scominit
+ 23.01042|ISTEP 10. 7 - proc_abus_scominit
+ 23.07374|ISTEP 10. 8 - proc_obus_scominit
+ 23.07558|ISTEP 10. 9 - proc_npu_scominit
+ 23.09549|ISTEP 10.10 - proc_pcie_scominit
+ 23.18650|ISTEP 10.11 - proc_scomoverride_chiplets
+ 23.20043|ISTEP 10.12 - proc_chiplet_enable_ridi
+ 23.23112|ISTEP 10.13 - host_rng_bist
+ 23.24752|ISTEP 10.14 - host_update_redundant_tpm
+ 23.25177|ISTEP 11. 1 - host_prd_hwreconfig
+ 23.50942|ISTEP 11. 2 - cen_tp_chiplet_init1
+ 23.51432|ISTEP 11. 3 - cen_pll_initf
+ 23.51900|ISTEP 11. 4 - cen_pll_setup
+ 23.52358|ISTEP 11. 5 - cen_tp_chiplet_init2
+ 23.54938|ISTEP 11. 6 - cen_tp_arrayinit
+ 23.55409|ISTEP 11. 7 - cen_tp_chiplet_init3
+ 23.55887|ISTEP 11. 8 - cen_chiplet_init
+ 23.56353|ISTEP 11. 9 - cen_arrayinit
+ 23.56813|ISTEP 11.10 - cen_initf
+ 23.57467|ISTEP 11.11 - cen_do_manual_inits
+ 23.57942|ISTEP 11.12 - cen_startclocks
+ 23.58464|ISTEP 11.13 - cen_scominits
+ 23.58973|ISTEP 12. 1 - mss_getecid
+ 24.48139|ISTEP 12. 2 - dmi_attr_update
+ 24.48608|ISTEP 12. 3 - proc_dmi_scominit
+ 24.59742|ISTEP 12. 4 - cen_dmi_scominit
+ 24.60663|ISTEP 12. 5 - dmi_erepair
+ 24.68398|ISTEP 12. 6 - dmi_io_dccal
+ 24.68796|ISTEP 12. 7 - dmi_pre_trainadv
+ 24.69490|ISTEP 12. 8 - dmi_io_run_training
+ 24.71414|ISTEP 12. 9 - dmi_post_trainadv
+ 24.71891|ISTEP 12.10 - proc_cen_framelock
+ 24.72387|ISTEP 12.11 - host_startprd_dmi
+ 24.72791|ISTEP 12.12 - host_attnlisten_memb
+ 24.73207|ISTEP 12.13 - cen_set_inband_addr
+ 24.73687|ISTEP 13. 1 - host_disable_memvolt
+ 24.90507|ISTEP 13. 2 - mem_pll_reset
+ 24.94380|ISTEP 13. 3 - mem_pll_initf
+ 24.97852|ISTEP 13. 4 - mem_pll_setup
+ 25.02075|ISTEP 13. 6 - mem_startclocks
+ 25.05463|ISTEP 13. 7 - host_enable_memvolt
+ 25.07569|ISTEP 13. 8 - mss_scominit
+ 25.58879|ISTEP 13. 9 - mss_ddr_phy_reset
+ 25.99988|ISTEP 13.10 - mss_draminit
+ 26.11199|ISTEP 13.11 - mss_draminit_training
+ 26.72876|ISTEP 13.12 - mss_draminit_trainadv
+ 26.78192|ISTEP 13.13 - mss_draminit_mc
+ 26.82579|ISTEP 14. 1 - mss_memdiag
+ 28.98122|ISTEP 14. 2 - mss_thermal_init
+ 29.03570|ISTEP 14. 3 - proc_pcie_config
+ 29.09463|ISTEP 14. 4 - mss_power_cleanup
+ 29.10073|ISTEP 14. 5 - proc_setup_bars
+ 29.13842|ISTEP 14. 6 - proc_htm_setup
+ 29.15218|ISTEP 14. 7 - proc_exit_cache_contained
+ 29.19598|ISTEP 15. 1 - host_build_stop_image
+ 32.78664|ISTEP 15. 2 - proc_set_pba_homer_bar
+ 32.90092|ISTEP 15. 3 - host_establish_ex_chiplet
+ 32.93627|ISTEP 15. 4 - host_start_stop_engine
+ 32.97866|ISTEP 16. 1 - host_activate_master
+ 34.14703|ISTEP 16. 2 - host_activate_slave_cores
+ 34.34439|ISTEP 16. 3 - host_secure_rng
+ 34.35983|ISTEP 16. 4 - mss_scrub
+ 34.38128|ISTEP 16. 5 - host_load_io_ppe
+ 34.41084|ISTEP 16. 6 - host_ipl_complete
+ 34.78903|ISTEP 18.11 - proc_tod_setup
+ 34.90611|ISTEP 18.12 - proc_tod_init
+ 34.91598|ISTEP 20. 1 - host_load_payload
+ 35.48722|ISTEP 20. 2 - host_load_hdat
+ 37.18882|ISTEP 21. 1 - host_runtime_setup
+ 48.08790|htmgt|OCCs are now running in ACTIVE state
+ 53.30261|ISTEP 21. 2 - host_verify_hdat
+ 53.37376|ISTEP 21. 3 - host_start_payload
+[   54.169996435,5] OPAL skiboot-9858186 starting...
+[   54.169999442,7] initial console log level: memory 7, driver 5
+[   54.170001462,6] CPU: P9 generation processor (max 4 threads/core)
+[   54.170003237,7] CPU: Boot CPU PIR is 0x001c PVR is 0x004e1202
+[   54.170005876,7] OPAL table: 0x30103830 .. 0x30103e10, branch table: 0x30002000
+[   54.170008921,7] Assigning physical memory map table for nimbus
+[   54.170011595,7] Parsing HDAT...
+[   54.170012950,7] SPIRA-S found.
+[   54.170015291,6] BMC #0: HW version 3, SW version 2, chip DD1.0
+[   54.170110618,6] SP Family is ibm,ast2500,openbmc
+[   54.170116876,7] LPC: IOPATH chip id = 0
+[   54.170118218,7] LPC: FW BAR       = f0000000
+[   54.170119721,7] LPC: MEM BAR      = e0000000
+[   54.170121183,7] LPC: IO BAR       = d0010000
+[   54.170122630,7] LPC: Internal BAR = c0012000
+[   54.170135260,7] LPC UART: base addr = 3f8 (3f8) size = 1 clk = 1843200, baud = 115200
+[   54.170137908,7] LPC: BT [0, 0] sms_int: 0, bmc_int: 0
+[   54.172032826,5] HDAT I2C: found e3p1 - unknown@1c dp:ff (ff:)
+[   54.172149376,5] HDAT I2C: found e3p1 - unknown@1d dp:ff (ff:)
+[   54.172205116,5] HDAT I2C: found e3p0 - unknown@19 dp:ff (ff:)
+[   54.172284906,5] HDAT I2C: found e3p1 - unknown@1e dp:ff (ff:)
+[   54.172329369,5] HDAT I2C: found e3p0 - unknown@1b dp:ff (ff:)
+[   54.172374040,5] HDAT I2C: found e3p1 - unknown@1f dp:ff (ff:)
+[   54.172441726,5] HDAT I2C: found e3p0 - unknown@1a dp:ff (ff:)
+[   54.172498749,5] HDAT I2C: found e3p0 - unknown@18 dp:ff (ff:)
+[   54.172864356,5] HDAT I2C: found e3p1 - unknown@1c dp:ff (ff:)
+[   54.172943337,5] HDAT I2C: found e3p1 - unknown@1d dp:ff (ff:)
+[   54.172994391,5] HDAT I2C: found e3p0 - unknown@19 dp:ff (ff:)
+[   54.173046453,5] HDAT I2C: found e3p1 - unknown@1e dp:ff (ff:)
+[   54.173091954,5] HDAT I2C: found e3p0 - unknown@1b dp:ff (ff:)
+[   54.173140169,5] HDAT I2C: found e3p1 - unknown@1f dp:ff (ff:)
+[   54.173218223,5] HDAT I2C: found e3p0 - unknown@1a dp:ff (ff:)
+[   54.173287303,5] HDAT I2C: found e3p0 - unknown@18 dp:ff (ff:)
+[   54.174469182,5] CHIP: Chip ID 0000 type: P9N DD2.21
+[   54.174559592,5] CHIP: Chip ID 0008 type: P9N DD2.21
+[   54.175143894,5] PLAT: Detected Talos platform
+[   54.175215951,5] PLAT: Detected BMC platform ast2500:openbmc
+[   54.198757574,5] CPU: All 64 processors called in...
+[   55.069790665,7] LPC: Routing irq 10, policy: 0 (r=1)
+[   55.069791594,7] LPC: SerIRQ 10 using route 0 targetted at OPAL
+[   56.177504849,5] HIOMAP: Negotiated hiomap protocol v2
+[   56.177586357,5] HIOMAP: Block size is 64KiB
+[   56.177620633,5] HIOMAP: BMC suggested flash timeout of 8s
+[   56.177665595,5] HIOMAP: Flash size is 64MiB
+[   56.177693913,5] HIOMAP: Erase granule size is 64KiB
+[   58.289606868,5] FLASH: Found system flash: (unnamed) id:0
+[   59.078043549,7] LPC: Routing irq 4, policy: 0 (r=1)
+[   59.078044348,7] LPC: SerIRQ 4 using route 1 targetted at OPAL
+[   59.078218906,5] OCC: All Chip Rdy after 0 ms
+[   59.392466920,3] STB: VERSION verification FAILED. log=0xffffffffffff8160
+[   60.504670690,3] STB: IMA_CATALOG verification FAILED. log=0xffffffffffff8160
+[   61.190328746,3] CAPP: Error loading ucode lid. index=202d1
+[   61.207896423,5] PCI: Resetting PHBs and training links...
+[   62.233601442,5] PCI: Probing slots...
+[   62.290024931,5] PCI Summary:
+[   62.290092086,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU1 Slot2 (16x) 
+[   62.290211566,5] PHB#0001:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU1 Slot1 (8x) 
+[   62.290335386,5] PHB#0002:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=Builtin SAS 
+[   62.290474109,5] PHB#0003:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=Builtin USB 
+[   62.290585463,5] PHB#0003:01:00.0 [EP  ] 104c 8241 R:02 C:0c0330 (      usb-xhci) LOC_CODE=Builtin USB
+[   62.290698892,5] PHB#0004:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=Builtin Ethernet 
+[   62.290811714,5] PHB#0004:01:00.0 [EP  ] 14e4 1657 R:01 C:020000 (      ethernet) LOC_CODE=Builtin Ethernet
+[   62.290942122,5] PHB#0004:01:00.1 [EP  ] 14e4 1657 R:01 C:020000 (      ethernet) LOC_CODE=Builtin Ethernet
+[   62.291060162,5] PHB#0005:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..02 SLOT=BMC 
+[   62.291168465,5] PHB#0005:01:00.0 [ETOX] 1a03 1150 R:04 C:060400 B:02..02 LOC_CODE=BMC
+[   62.291270367,5] PHB#0005:02:00.0 [PCID] 1a03 2000 R:41 C:030000 (           vga) LOC_CODE=BMC
+[   62.291460906,5] PHB#0030:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU2 Slot2 (16x) 
+[   62.291576562,5] PHB#0031:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=CPU2 Slot3 (8x) 
+[   62.291691879,5] PHB#0031:01:00.0 [EP  ] 144d a808 R:00 C:010802 (  mass-storage) LOC_CODE=CPU2 Slot3 (8x)
+[   62.291845469,5] PHB#0032:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:00..00 
+[   62.291966066,5] PHB#0033:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU2 Slot1 (16x) 
+[   62.308573258,5] IPMI: Resetting boot count on successful boot
+[   62.308665629,5] INIT: Waiting for kernel...
+[   74.080405443,3] STB: BOOTKERNEL verification FAILED. log=0xffffffffffff8160
+[   74.081837101,5] INIT: 64-bit LE kernel discovered
+[   74.240183131,5] INIT: Starting kernel at 0x20011000, fdt at 0x3075b320 318108 bytes
+
+zImage starting: loaded at 0x0000000020011000 (sp: 0x000000002145bed8)
+Allocating 0x23f4098 bytes for kernel...
+Decompressing (0x0000000000000000 <- 0x0000000020020000:0x0000000021459984)...
+Done! Decompressed 0x220c5d8 bytes
+
+Linux/PowerPC load: 
+Finalizing device tree... flat tree at 0x2145d0c0
+[   75.323720711,3] LPC[000]: Got SYNC no-response error. Error address reg: 0xd0010080
+[   75.323733058,6] IPMI: dropping non severe PEL event
+[   75.323804359,7] UART: IRQ functional !
+[    4.074167] kAFS: failed to register: -97
+
+
+nvram process returned non-zero exit status
+dmesg: klogctl: Operation not permitted
+)0[1;24r[m[4l[?7h[?25l[?1c[H[J[H[J Petitboot (0ed84c0-p94177c1)[2d ──────────────────────────────────────────────────────────────────────────────[4;3HSystem information[5;3HSystem configuration[6;3HSystem status log[7;3HLanguage[8;3HRescan devices[9;3HRetrieve config from URL[10;3HPlugins (0)[11d *[0;10;7mExit to shell           [22;2H[m──────────────────────────────────────────────────────────────────────────────[23d Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help[24d Welcome to Petitboot Info: Waiting for device discovery[J[1;55HT2P9D01 REV 1.01 A1000148[24d [3;21r[3;1H[2L[1;24r[3;3H[Disk: nvme0n1p2 / d63739c4-c7ec-4bde-bc0d-afa680abd21c][4;5H(*) Debian GNU/Linux[13;27H[0;10;7m                                [24;2H[m[4;21r[4;1HM[1;24r[4;5HDebian GNU/Linux, with Linux 4.19.0-9-powerpc64le[24d [4;21r[4;1HM[1;24r[4;5HDebian GNU/Linux, with Linux 4.19.0-9-powerpc64le (recovery mode)[15;59H[0;10;7m           [24;2H[mBooting in 9 sec: [nvme0n1p2] Debian GNU/Linux[24;13H8[24;48H[24;13H7[24;48H[24;13H6[24;48H[24;13H5[24;48H[24;13H4[24;48H[24;13H3[24;48H[24;13H2[24;48H [sda] Processing new USB device[K[24;9Harsed GRUB configuration from /boot/grub/grub.cfg[7;21r[7;1H[2L[1;24r[7;3H[USB: sda / 2020-05-09-18-18-12-00][8;5HDefault install[24;58H[8;21r[8;1HM[1;24r[8;5HAutomated install[24;58H[8;21r[8;1HM[1;24r[8;5HExpert install[24;58H[8;21r[8;1HM[1;24r[8;5HRescue mode[24;58H Booting in 1 sec: [nvme0n1p2] Debian GNU/Linux[K[?25h[?0c[H[J[24;1H[1;24r[?25h[?0c[m[4l[?7h[H[J[24;1Hc(B[m[J[?25hnvram process returned non-zero exit status
+dmesg: klogctl: Operation not permitted
+)0[1;24r[m[4l[?7h[?25l[?1c[H[J[H[J Petitboot (0ed84c0-p94177c1)[2d ──────────────────────────────────────────────────────────────────────────────[4;3HSystem information[5;3HSystem configuration[6;3HSystem status log[7;3HLanguage[8;3HRescan devices[9;3HRetrieve config from URL[10;3HPlugins (0)[11d *[0;10;7mExit to shell           [22;2H[m──────────────────────────────────────────────────────────────────────────────[23d Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help[24d Welcome to Petitboot[J[1;55HT2P9D01 REV 1.01 A1000148[24d [3;21r[3;1H[2L[1;24r[3;3H[Disk: nvme0n1p2 / d63739c4-c7ec-4bde-bc0d-afa680abd21c][4;5H(*) Debian GNU/Linux[13;27H[0;10;7m                                [24;2H[m[4;21r[4;1HM[1;24r[4;5HDebian GNU/Linux, with Linux 4.19.0-9-powerpc64le[24d [4;21r[4;1HM[1;24r[4;5HDebian GNU/Linux, with Linux 4.19.0-9-powerpc64le (recovery mode)[15;59H[0;10;7m           [24;2H[m[7;21r[7;1H[2L[1;24r[7;3H[USB: sda / 2020-05-09-18-18-12-00][8;5HDefault install[24d [8;21r[8;1HM[1;24r[8;5HAutomated install[24d [8;21r[8;1HM[1;24r[8;5HExpert install[24d [8;21r[8;1HM[1;24r[8;5HRescue mode[24d Running /bin/sh...[H[J[24;1H[?25h[?0cc(B[m[J[?25hExiting petitboot. Type 'exit' to return.
+You may run 'pb-sos' to gather diagnostic data
+No password set, running as root. You may set a password in the System Configuration screen.
+# 
