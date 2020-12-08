@@ -17,11 +17,11 @@
 * [# 9.1 fabric_erepair: Restore Fabric Bus eRepair data](isteps/9_EDI_and_obus_init/1_fabric_erepair.md)
 * [# 9.2 fabric_io_dccal: Calibrate Fabric interfaces](isteps/9_EDI_and_obus_init/2_fabric_io_dccal.md)
 * [# 9.3 fabric_pre_trainadv: Advanced pre training](isteps/9_EDI_and_obus_init/3_fabric_pre_trainadv.md)
-* [# 9.4 fabric_io_run_training: Run training on internal buses](isteps/9_EDI_and_obus_init/fabric_io_run_training.md)
-* [# 9.5 fabric_post_trainadv: Advanced post EI/EDI training](isteps/9_EDI_and_obus_init/fabric_post_trainadv.md)
-* [# 9.6 proc_smp_link_layer: Start SMP link layer](isteps/9_EDI_and_obus_init/proc_smp_link_layer.md)
-* [# 9.7 proc_fab_iovalid: Lower functional fences on local SMP](isteps/9_EDI_and_obus_init/proc_fab_iovalid.md)
-* [# 9.8 host_fbc_eff_config_aggregate: Pick link(s) for coherency](isteps/9_EDI_and_obus_init/host_fbc_eff_config_aggregate.md)
+* [# 9.4 fabric_io_run_training: Run training on internal buses](isteps/9_EDI_and_obus_init/4_fabric_io_run_training.md)
+* [# 9.5 fabric_post_trainadv: Advanced post EI/EDI training](isteps/9_EDI_and_obus_init/5_fabric_post_trainadv.md)
+* [# 9.6 proc_smp_link_layer: Start SMP link layer](isteps/9_EDI_and_obus_init/6_proc_smp_link_layer.md)
+* [# 9.7 proc_fab_iovalid: Lower functional fences on local SMP](isteps/9_EDI_and_obus_init/7_proc_fab_iovalid.md)
+* [# 9.8 host_fbc_eff_config_aggregate: Pick link(s) for coherency](isteps/9_EDI_and_obus_init/8_host_fbc_eff_config_aggregate.md)
 
 # Step 11 Hostboot - Centaur Init
 * [11.1 host_prd_hwreconfig](isteps/11_centaur_init/1_host_prd_hwreconfig.md)
