@@ -1,4 +1,6 @@
-```
+# 8.10 proc_xbus_scominit: Apply scom inits to Xbus
+
+```cpp
 void *call_proc_xbus_scominit(void *io_pArgs)
 {
     EDI_EI_INITIALIZATION::TargetPairs_t l_XbusConnections;
