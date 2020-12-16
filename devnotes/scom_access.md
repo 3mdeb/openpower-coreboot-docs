@@ -23,6 +23,16 @@ behaved as expected, writing it and continuing the execution.
 
 Setting bit 0 in address makes it baypass HRMOR translation, but the result is the same as without it set.
 
+Adding `volatile` keyword, trying ot do the same from `bootblock`,
+adding `ull` to the register address, trying `0x000003FC00000000`
+as XCOM base wich is correct according to the documentation
+or using following assembly didn't allow us to access the register.
+```
+uint64_t buffer;
+asm volatile("ldcix %0, %1, %2" : "=r"(buffer) : "b"(0x800603FC00000000ull), "r"(0xF000F));
+eieio();
+```
+
 Access to this address causes an exception.
 
 # Analysis of SCOM in hostboot code
