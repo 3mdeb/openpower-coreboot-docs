@@ -13,6 +13,8 @@ Technologies. The development process is open and anyoen can join. See
 ## Repository overview
 
 * [devnotes](devnotes/) - various developer notes created during the porting
+  * [isteps_analysis.md](devnotes/isteps_analysis.md) - file containing
+  a table of content for analysis of isteps/IPL flow
 * [logs](logs/) - a place to put important dumps and logs, which can be linked
   in the documents
 * [images](images/) - directory containins images linked in the documents

@@ -2,11 +2,11 @@
 ## 11.1 host_prd_hwreconfig: Hook to handle HW reconfig
 
 * This step is always called
-* Move all Centaurs inband scom back to FSI scom
+* Move all Centaur's inband scom back to FSI scom
 * Call PRD to allow them to rebuild model to remove non-functional Centaurs
 * Protect Centaur from SP operations during initialization
   ** Set the CFP Security bit. This will prevent the SP from performing FSI operations to the Centaur while it is being initialized
-* Used for HW reconfig path. FWs strategy is to perform the reconfig on ALL functional Centaurs/MCSs in the system.
+* Used for HW reconfig path. FW's strategy is to perform the reconfig on ALL functional Centaurs/MCS's in the system.
 * The following procedures must be called:
 
 ### bp9_switch_cfsim.C(proc target)
@@ -21,18 +21,18 @@
   ** Attribute (ATTR_CEN_MSS_INIT_STATE) to each Centaur to track where the Reconfig loop got to
   ** Clocks on (can do fir masking) –set after step 11
   ** DMI bus up (inject special bit) –set after
-    *** Turns on special bit that allows the MCS DMI to get errors and not get into a hang condition
+    *** Turn's on special bit that allows the MCS DMI to get errors and not get into a hang condition
     *** Mask a bunch of FIRson processor
     *** Mask a bunch FIRs on centaur (HWP will check clock state)
     *** Injects a fail on the DMI bus (only if DMI bus is alive)
-    *** Clears IO/MCS FIRs Turns off special bit
+    *** Clears IO/MCS FIRs•Turns off special bit
 * Nimbus
   ** Raise the MCU chiplet fences
   ** Stop clocks
   ** Scan 0 flush the MCU chiplet each and everytime through this loop
   ** How do we cleanup the nest portion of the MCS?
 
-```cpp
+```
 if defined(CONFIG_SECUREBOOT) and not defined(CONFIG_AXONE):
     // Send message to secure provider to load the section
     msg_q_t spnorQ = msg_q_resolve(SPNORRP_MSG_Q);
