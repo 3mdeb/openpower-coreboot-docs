@@ -7,7 +7,7 @@ Documentation related to POWER9 coreboot porting effort.
 3mdeb Embedded Systems Consulting is porting POWER9 architecture with Raptor
 Comupting Systems' Talos II and Talos II lite as reference platforms. The
 project has been initiated and is sponsored by Insurgo Technologies Libres/Open
-Technologies. The development process is open and anyoen can join. See
+Technologies. The development process is open and anyone can join. See
 [How to help and contribute](#how-to-help-and-contribute) section.
 
 ## Repository overview
