@@ -30,8 +30,7 @@ Invalid access at addr 0xF0010, size 8, region '(null)', reason: rejected
 XSCOM read failed at @0xf0010 pcba=0x0001e002
 ```
 
-### XSCOM base: **0x800003FC00000000**, **0x800023FC00000000**
-### or **0x800623FC00000000** register: **0xF000F**
+### XSCOM base: **0x800003FC00000000**, **0x800023FC00000000** or **0x800623FC00000000** register: **0xF000F**
 **Talos II**:\
 `resets`\
 **qemu**:
@@ -41,8 +40,7 @@ Invalid access at addr 0x3FC000F0010, size 8, region '(null)', reason: rejected
 ```
 
 
-### XSCOM base: **0x800603FC000000000** register: **0xF0010**, **0xF001F**
-### or **0xF0020**
+### XSCOM base: **0x800603FC000000000** register: **0xF0010**, **0xF001F** or **0xF0020**
 **Talos II**:\
 `Not tested`\
 **qemu**:
@@ -71,8 +69,7 @@ Invalid access at addr 0x623FC000F0008, size 8, region '(null)', reason: rejecte
 Invalid access at addr 0x623FC000F0010, size 8, region '(null)', reason: rejected
 ```
 
-### Adding **`volatile`** keyword to variable type and **`ull`** suffix
-### to register address
+### Adding **`volatile`** keyword to variable type and **`ull`** suffix to register address
 Code behavior was unchanged\
 **Talos II**: `resets`\
 **qemu**: Outputs information about invalid access to stdout
