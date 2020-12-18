@@ -4,6 +4,29 @@ writing and reading.
 
 # Proposed registers
 
+## TP.TPCHIP.PIB.PCBMS.DEVICE_ID_REG
+* SCOM address: 00000000000F000F
+* ID readout.
+**0:19 RO**: CFAM_CHIPID: This field is also known as cfam_chipid.
+**0 RO**: constant = 0b0
+**21:31 RO**: VENDOR_ID: The IBM ID is 0x49
+**32:35 RO**: constant = 0b0000
+**36:38 RW**: SOCKET_ID: Socket position \
+Socket 0x0 is connected to the primary service element. \
+Socket 0x1 is connected to the secondary service element (high end only).
+**39 RW**: CHIPPOS_ID: DCM position \
+0 = SCMs or the first chip on the DCM \
+1 = The second chip on the DCM (always a slave)
+**40 RO**: IO_TP_VSB_CHIP_POS
+**41:47 RO**: constant = 0b0000000
+**48 ROX**: FUSE_NX_ALLOW_CRYPTO: 1 = NX crypto-functionality is enabled (export regulation).
+**49 ROX**: FUSE_VMX_CRYPTO_DIS: 1 = VMX crypto-functionality is disabled (export regulation).
+**50 ROX**: FUSE_FP_THROTTLE_EN: 1 = Floating point is throttled (export regulation).
+**51 RO**: TP_NP_NVLINK_DISABLE: Indicates that NVLink is disabled.
+**52 RO**: FUSE_TOPOLOGY_2CHIP
+**53:54 RO**: FUSE_TOPOLOGY_GROUP
+**55:63 RO**: constant = 0b000000000
+
 ## NPU.STCK0.CS.CTL.MISC.CONFIG1
 * SCOM address: 0000000005011081
 * Future Configuration 1 Register. \
@@ -45,8 +68,8 @@ if OCC_HEARTBEAT_EN = 1. Reads return the current value of the counter value.\
 * used in `src/import/chips/p9/procedures/hwp/pm/p9_pm_ocb_init.C:691`
 
 # Summary
-`NPU.STCK0.CS.CTL.MISC.CONFIG1` seems to be the best choice.
-According to the documentation it is currently unused,
+`TP.TPCHIP.PIB.PCBMS.DEVICE_ID_REG` Has non 0, partially known value after boot, so it is great for testing SCOM reads. \
+`NPU.STCK0.CS.CTL.MISC.CONFIG1` According to the documentation it is currently unused,
 and can be written to and read from freely. \
 `VA.VA_NORTH.VA_RG.SCF.VAS_PMCNTL` can be used for testing too.
 Part of the register can be read and written to freely.
