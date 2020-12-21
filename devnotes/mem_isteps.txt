@@ -1886,8 +1886,8 @@ for each functional MCBIST
       // timeouts. Perhaps only the registers that actually change the clock settings require time to stabilize.
       // On the other hand, I2C is relatively slow, so it is possible that the write itself is long enough.
       // RCD I2C address is 0xBx, it should be located on the same bus as SPD (number 3 in Petitboot). It uses a bit
-      // unusual bus command encoding, see section 3.3 in JESD82-31 and/or `rcd_i2c_dump.sh` in this repository for
-      // an example of reading and writing register values.
+      // unusual bus command encoding, see section 3.3 in JESD82-31 and/or `scripts/rcd_i2c_dump.sh` in this repository
+      // for an example of reading and writing register values.
       // TODO: calculate whether we need additional timeouts.
       // TODO2: do we need draminit_cke_helper() when using I2C access, too? Maybe it should be done after RCD is set?
       //
