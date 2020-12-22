@@ -51,7 +51,8 @@ repository, except the first byte of the file (always 0x84) is skipped. This
 makes the rounding algorithm used in the header even less accurate. The actual
 size of data is always smaller than the one written in the header so if code
 allocates buffer based on the size reported there it should never overflow, but
-it may unnecessarily waste some memory.
+it may unnecessarily waste some memory. During build, `talos-xml` is downloaded
+to `talos-op-build/output/build/machine-xml-<hash>`.
 
 Binary VPD file is created along with [blackbird-MEMD.tvpd](https://git.raptorcs.com/git/blackbird-vpd/tree/mainboard/blackbird-MEMD.tvpd)
 (yes, Talos uses VPD from Blackbird, see README in `talos-xml/memd_binaries`).
@@ -91,7 +92,9 @@ There are also 2 distinctive DQ configurations mapped by 8 entries in Q0, based
 on the MCS position. Nevertheless, both configurations are identical.
 
 No separate configurations exist for nonfunctional (unpopulated) MCAs/MCSs,
-those are simply not configured at all.
+those are simply not configured at all. All J#, X# and Q# slots are saved in
+VPD, even when they are not used. Because of that the size of the binary VPD is
+constant (20 764 bytes).
 
 #### VPD decoding
 
