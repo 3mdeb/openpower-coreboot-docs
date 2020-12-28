@@ -870,7 +870,7 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                 [49-55] BIT0_VREF_DAC = vref_bf
                 [57-63] BIT1_VREF_DAC = vref_bf
           IOM0.DDRPHY_DP16_RD_VREF_CAL_EN_P0_{0-4}                // 0x800000760701103F, +0x0400_0000_0000
-                [48-63] VREF_CAL_EN = ATTR_MSS_RDVREF_CAL_ENABLE    // enable = 0xffff, disable = 0x0000
+                [48-63] VREF_CAL_EN = 0xffff          // enable = 0xffff, disable = 0x0000
 
         pc::reset
           // IOM0.DDRPHY_PC_CONFIG0_P0 (0x8000c00c0701103f) has been reset in p9n_ddrphy_scom()
@@ -954,7 +954,7 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
           IOM0.DDRPHY_RC_RDVREF_CONFIG1_P0 =      // 0x8000C80A0701103F
                 [all]   0
                 [48-55] CMD_PRECEDE_TIME =  (AL + CL + 15)
-                [56-59] MPR_LOCATION =      4     // From R. King. The only other possible value is 8
+                [56-59] MPR_LOCATION =      4     // "From R. King."
 
         seq::reset
           IOM0.DDRPHY_SEQ_CONFIG0_P0 =            // 0x8000C4020701103F
@@ -1841,6 +1841,7 @@ for each functional MCBIST
     MC01.MCBIST.MBA_SCOMFIR.CCS_CNTLQ          // 0x070123A5
           [all] 0
           [0]   CCS_CNTLQ_CCS_START = 1
+    // Note that these timeouts may be different for different CCS invocations
     delay(400 memclocks)  // initial delay of poll method, maybe it should be slightly lower? Code execution takes time
     timeout(50*10ns):
       if MC01.MCBIST.MBA_SCOMFIR.CCS_STATQ[0] (CCS_STATQ_CCS_IP) != 1: break          // 0x070123A6
@@ -2064,8 +2065,8 @@ for each functional MCBIST
       [A5]      0                 // Temp readout. It is 0, won't it impact `sensors`?
     MR6 =
       [all] 0
-      [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f
-      [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+      [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f       // This is "don't care" when A7 is not set
+      [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40       // This is "don't care" when A7 is not set
       // BUG? Hostboot doesn't take into account minimal values per freq from JESD79-4C
       // Keep in mind that SPD[40] is unsigned MTB and SPD[117] is signed FTB
       [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
@@ -2430,24 +2431,34 @@ for each functional MCBIST
       IOM0.DDRPHY_SEQ_MEM_TIMING_PARAM0_P0          // 0x8000C4120701103F
         // > May need to add freq/tRFI attr dependency later but for now use this value
         // > Provided by Ryan King
-        [60-63] TRFC_CYCLES = 9
+        [60-63] TRFC_CYCLES = 9             // tRFC = 2^9 = 512 memcycles = 384-640 ns (2666-1866MT/s, respectively)
 
       IOM0.DDRPHY_PC_INIT_CAL_CONFIG1_P0                  // 0x8000C0170701103F
         // > Hard coded settings provided by Ryan King for this workaround
         [48-51] REFRESH_COUNT =     0xf
+        // TODO: see "Read clock align - pre-workaround" below. Why not 1 until calibration finishes? Does it pull in
+        // refresh commands?
         [52-53] REFRESH_CONTROL =   3       // refresh commands may interrupt calibration routines
         [54]    REFRESH_ALL_RANKS = 1
         [55]    CMD_SNOOP_DIS =     0
-        [57-63] REFRESH_INTERVAL =  0x13
+        [57-63] REFRESH_INTERVAL =  0x13    // Worst case: 6.08us for 1866 (max tCK). Must be not more than 7.8us
+        // When we want to preserve data in RAM the controller must send a refresh command every tREFI (7.8us) on average.
+        // Up to 8 such commands may be postponed/pulled in in advance, which gives max of 9*tREFI between commands where
+        // calibration may happen (minus the time required for refresh command to do its job - tRFC, depends on memory
+        // density). With these in mind, max time for any calibration step should be no longer than 70us if we want to
+        // preserve the contents of memory. However, due to conservative settings of TRFC_CYCLES and REFRESH_INTERVAL,
+        // and the fact that an error is reported by the controller when internal counter overflows after 15 postponed
+        // commands (see description of REFRESH_INTERVAL in the documentation) for 2666MT/s DIMMs this time falls down
+        // below 50us. Max value for REFRESH_INTERVAL for 1866MT/s DIMMs that meets the 7.8us requirement is 24 (0x18).
 
     // List of calibration steps for RDIMM, in execution order:
     // - ZQ calibration - calibrates DRAM output driver and on-die termination values (already done)
     // - Write leveling - compensates for skew caused by a fly-by topology
-    // - Initial pattern write
+    // - Initial pattern write - not exactly a calibration, but prepares patterns for next steps
     // - DQS align
     // - RDCLK align
     // - Read centering
-    // - Write Vref latching
+    // - Write Vref latching - not exactly a calibration, but required for next steps
     // - Write centering
     // - Coarse write/read
     // - Custom read and/or write centering
@@ -2457,6 +2468,7 @@ for each functional MCBIST
     // them require that there is no other activity on the controller so parallelization may not be possible.
 
     for each rp in l_pairs
+      ===============================================================
       // Write leveling - pre-workaround
       // JEDEC spec requires disabling RTT_WR during WR_LEVEL, and enabling equivalent terminations
       //
@@ -2496,9 +2508,11 @@ for each functional MCBIST
               [A7]  = 1       // Write Leveling Enable
               [A12] = 1       // Outputs disabled (DQ, DQS)
 
+      ---------------------------------------------------------------
       // Write leveling - main
       // This is a PHY hardware accelerated calibration step
-      //
+
+      ################ PHY steps common part - begin ##########################
       // Common part of all PHY steps (w/o debug and error checking for clarity):
       //
       // >  const auto& l_mcbist = mss::find_target<TARGET_TYPE_MCBIST>(i_target);
@@ -2527,21 +2541,239 @@ for each functional MCBIST
       // >  // should be polled to determine which calibration step failed.
       // >  mss::ccs::execute(l_mcbist, l_program, i_target);
       //
-      // i_cal_config is one of IOM0.DDRPHY_PC_INIT_CAL_CONFIG0_P0[48-56] bits set, i_total_cycles is a result of
-      // calculate_cycles() for given calibration step.
+      // i_cal_config is one of IOM0.DDRPHY_PC_INIT_CAL_CONFIG0_P0[48-56] bits set.
+      // i_total_cycles is a result of calculate_cycles() for given calibration step. cal_timer_setup() then sets
+      // polling parameters: initial delay is i_total_cycles/8, delay between polls is 10us, poll count is whatever
+      // it takes to get to i_total_cycles (rounded up), multiplied by 4 (although this may be required just for
+      // simulation, but wouldn't hurt unless calibration fails anyway).
+      // l_cal_inst is almost the same as DES instruction except for ACTN, DDR_CAL_TYPE and DDR_CALIBRATION_ENABLE:
+      MC01.MCBIST.CCS.CCS_INST_ARR0_xx              // 0x07012316
+            [all]   0
+            // "CKE is high Note: P8 set all 4 of these high - not sure if that's correct. BRS"
+            [24-27] CCS_INST_ARR0_00_CCS_DDR_CKE =      0xf
+            [32-33] CCS_INST_ARR0_00_CCS_DDR_CSN_0_1 =  3     // Not used by the engine for calibration?
+            [36-37] CCS_INST_ARR0_00_CCS_DDR_CSN_2_3 =  3     // Not used by the engine for calibration?
+            [56-59] CCS_INST_ARR0_00_CCS_DDR_CAL_TYPE = 0xc
+      MC01.MCBIST.CCS.CCS_INST_ARR1_xx              // 0x07012336
+            [all]   0
+            [53-56] CCS_INST_ARR1_00_DDR_CAL_RANK = rp
+            [57]    CCS_INST_ARR1_00_DDR_CALIBRATION_ENABLE = 1
+
+      // setup_cal_config()
+      IOM0.DDRPHY_PC_INIT_CAL_CONFIG0_P0            // 0x8000C0160701103F
+            [48-57] i_cal_config            // ### depends on step, bit 48 set for WR leveling ###
+            [58]    ABORT_ON_CAL_ERROR =  0   // Maybe setting to 1 will help in debugging? ATTR_MSS_CAL_ABORT_ON_ERROR
+            [60+rp] ENA_RANK_PAIR =       1   // So, rp must be [0-3]
+
+      ### For WR leveling:
+      ### > // Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to
+      ### > // the workbook
+      ### > // This step runs for approximately (80 + TWLO_TWLOE) x NUM_VALID_SAMPLES x (384/(BIG_STEP + 1) +
+      ### > // (2 x (BIG_STEP + 1))/(SMALL_STEP + 1)) + 20 memory clock cycles per rank.
+      ### TWLO_TWLOE for every defined speed bin is 9.5 + 2 = 11.5 ns, this needs to be converted to clock cycles, it is
+      ### the only non-constant component of the equation.
+      ### WR_LVL_BIG_STEP = 7
+      ### WR_LVL_SMALL_STEP = 0
+      ### WR_LVL_NUM_VALID_SAMPLES = 5
+      ### We should leave full equation in the code and leave it for the compiler to simplify, but for rough estimations:
+      ### i_total_cycles = (80 + to_cycles(11.5ns)) * 320 + 20
+      ### i_total_cycles = (80 + 11.5/0.75) * 320 + 20 = 30740    // Min tCK for 2666, ~23us
+      ### i_total_cycles = (80 + 11.5/1.25) * 320 + 20 = 28820    // Max tCK for 1866, ~36us
+
+      // Important: delays and timeouts are different than defaults! Depends on i_total_cycles
+      // TODO: are there any drawbacks for polling more often than every 10us?
+      --------------- do CCS finalization and execution, see draminit_cke_helper ----------------------
+
+      ################ PHY steps common part - end ############################
+
+      ---------------------------------------------------------------
+      // Write leveling - post-workaround
+      //
+      // Basically reverting the pre-workaround here
+      if (ATTR_MSS_VPD_MT_DRAM_RTT_WR == 0): skip this workaround       // goto skip_here
+      MR2 =               // redo the rest of the bits
+          [A11-A9]  f(ATTR_MSS_VPD_MT_DRAM_RTT_WR)      // see mrs_load() above
+      MR1 =               // redo the rest of the bits
+          [A8-A10]  240/ATTR_MSS_VPD_MT_DRAM_RTT_NOM      // integer division rounds properly for 7/34 (watch out for 0)
+      // Originally set in 13.8
+      IOM0.DDRPHY_SEQ_ODT_WR_CONFIG0_P0 =     // 0x8000C40A0701103F
+            F(X) = (((X >> 4) & 0xc) | ((X >> 2) & 0x3))    // Bits 0,1,4,5 of X, see also MC01.PORT0.SRQ.MBA_FARB2Q
+            [all]   0
+            [48-51] ODT_WR_VALUES0 = F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][0][0])
+            [56-59] ODT_WR_VALUES1 = F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][0][1])
+
+      IOM0.DDRPHY_SEQ_ODT_WR_CONFIG1_P0 =     // 0x8000C40B0701103F
+            F(X) = (((X >> 4) & 0xc) | ((X >> 2) & 0x3))    // Bits 0,1,4,5 of X, see also MC01.PORT0.SRQ.MBA_FARB2Q
+            [all]   0
+            [48-51] ODT_WR_VALUES2 =
+                      // RDIMM can't have more than 2 master ranks, maybe don't use ranks 2/3? On the other hand,
+                      // maybe ranks 2/3 are used as "DIMM1 not present". TODO: check VPD for clues
+                      count_dimm(MCA) == 2: F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][1][0])
+                      count_dimm(MCA) != 2: F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][0][2])
+            [56-59] ODT_WR_VALUES3 =
+                      count_dimm(MCA) == 2: F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][1][1])
+                      count_dimm(MCA) != 2: F(ATTR_MSS_VPD_MT_ODT_WR[index(MCA)][0][3])
+              [59] = 1
+
+      mss::workarounds::seq::odt_config - not needed on DD2
+
+      skip_here:
+
+      // Different workaround, executed even if RTT_WR == 0
+      workarounds::wr_lvl::configure_non_calibrating_ranks()
+        for each rank on MCA except current primary rank:
+          MR1 =               // redo the rest of the bits
+              [A7]  = 0       // Write Leveling Enable: 0 = disabled
+              [A12] = 0       // Outputs disabled (DQ, DQS): 0 = not disabled
+
+      ===============================================================
+      // Initial Pattern Write
+      // No pre-/post-workaround required. This is PHY hardware accelerated step.
+      //
+      // This isn't exactly a calibration algorithm, but it prepares data for further steps. It writes to MPRs (Multi
+      // Purpose Registers), using values specified in IOM0.DDRPHY_SEQ_RD_WR_DATA{0,1}_P0 in 13.8.
+      PHY steps common part:
+        i_cal_config[49] ENA_INITIAL_PAT_WR = 1
+        // > Not sure how long this should take, so we're gonna use 1 to make sure we get at least one polling loop
+        i_total_cycles = 1    // Note that delay between polls is 10us, so it basically becomes our timeout
+
+      ===============================================================
+      // DQS (read) alignment
+      // No pre-workaround required, post-workaround does not apply to DD2.*. This is PHY hardware accelerated step.
+      PHY steps common part:
+        i_cal_config[50] ENA_DQS_ALIGN = 1
+        // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
+        // > workbook. This step runs for approximately 6 x 600 x 4 DRAM clocks per rank pair.
+        i_total_cycles = 6 * 600 * 4 (= 14400)
+
+      ===============================================================
+      // Alignment of the internal SysClk to the Read clock
+      // This is PHY hardware accelerated step.
+      //
+      // Read clock align - pre-workaround
+      // Turn off refresh, we don't want it to interfere here
+      IOM0.DDRPHY_PC_INIT_CAL_CONFIG1_P0                  // 0x8000C0170701103F
+        // TODO: we just set it before starting calibration steps. As we don't have any precious data in RAM yet (no S3?),
+        // maybe we can use 0 there and just change it to 3 in the post-workaround?
+        [52-53] REFRESH_CONTROL =   0       // refresh commands are only sent at start of initial calibration
+
+      ---------------------------------------------------------------
+      // Read clock align - main
+      PHY steps common part:
+        i_cal_config[51] ENA_RDCLK_ALIGN = 1
+        // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
+        // > workbook. This step runs for approximately 24 x ((1024/COARSE_CAL_STEP_SIZE + 4 x COARSE_CAL_STEP_SIZE) x 4 + 32)
+        // > DRAM clocks per rank pair
+        // COARSE_CAL_STEP_SIZE = 4
+        i_total_cycles = 24 * ((256 + 16) * 4 + 32) = 26880
+
+      ---------------------------------------------------------------
+      // Read clock align - post-workaround
+      // > In DD2.*, We adjust the red waterfall to account for low VDN settings. We move the waterfall forward by one
+      IOM0.DDRPHY_DP16_DQS_RD_PHASE_SELECT_RANK_PAIR{0-3}_P0_{0-3}      // 0x80000{0-3}090701103F, +0x0400_0000_0000
+        [48-49] DQSCLK_SELECT0 = (++DQSCLK_SELECT0 % 4)
+        [52-53] DQSCLK_SELECT1 = (++DQSCLK_SELECT1 % 4)
+        [56-57] DQSCLK_SELECT2 = (++DQSCLK_SELECT2 % 4)
+        [60-61] DQSCLK_SELECT3 = (++DQSCLK_SELECT3 % 4)
+      IOM0.DDRPHY_DP16_DQS_RD_PHASE_SELECT_RANK_PAIR{0-3}_P0_4          // 0x80001{0-3}090701103F
+        [48-49] DQSCLK_SELECT0 = (++DQSCLK_SELECT0 % 4)
+        [52-53] DQSCLK_SELECT1 = (++DQSCLK_SELECT1 % 4)
+        // Can't change non-existing quads
+
+      // Turn on refresh
+      // This is exactly the same as was called just before iterating over rank pairs...
+      IOM0.DDRPHY_SEQ_MEM_TIMING_PARAM0_P0                              // 0x8000C4120701103F
+        [60-63] TRFC_CYCLES = 9
+      IOM0.DDRPHY_PC_INIT_CAL_CONFIG1_P0                                // 0x8000C0170701103F
+        [48-51] REFRESH_COUNT =     0xf
+        [52-53] REFRESH_CONTROL =   3       // refresh commands may interrupt calibration routines
+        [54]    REFRESH_ALL_RANKS = 1
+        [55]    CMD_SNOOP_DIS =     0
+        [57-63] REFRESH_INTERVAL =  0x13
+
+      ===============================================================
+      // Read centering
+      // This is PHY hardware accelerated step. Assuming both Vref and centering is enabled.
+      //
+      // Read centering - pre-workaround
+      turn off refreshing - see "Read clock align - pre-workaround"
+
+      IOM0.DDRPHY_DP16_CONFIG0_P0_{0-4}                                 // 0x800000030701103F, +0x0400_0000_0000
+        [62]  1         // part of ATESTSEL_0_4 field
+
+      ---------------------------------------------------------------
+      // Read centering - main
+      IOM0.DDRPHY_DP16_RD_VREF_CAL_EN_P0_{0-4}                          // 0x800000760701103F, +0x0400_0000_0000
+        [all] 0
+        [48-63] VREF_CAL_EN = 0xffff    // But we already did this in reset_rd_vref() in 13.8...
+
+      IOM0.DDRPHY_RC_RDVREF_CONFIG1_P0                                  // 0x8000C80A0701103F
+        [60]  CALIBRATION_ENABLE =  1
+        [61]  SKIP_RDCENTERING =    0
+
+      PHY steps common part:
+        i_cal_config[51] ENA_READ_CTR = 1
+        // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
+        // > workbook
+        // > This step runs for approximately 6 x (512/COARSE_CAL_STEP_SIZE + 4 x (COARSE_CAL_STEP_SIZE +
+        // > 4 x CONSEQ_PASS)) x 24 DRAM clocks per rank pair.
+        // COARSE_CAL_STEP_SIZE = 4
+        // CONSEQ_PASS = 8
+        i_total_cycles = 6 * (128 + 4 * (4 + 32)) * 24 = 39168
+
+      ---------------------------------------------------------------
+      // Read centering - post-workaround
+      workarounds::dp16::rd_dq::fix_delay_values() - does not apply to DD2.*
+
+      turn on refreshing - see "Read clock align - post-workaround"
+
+      IOM0.DDRPHY_DP16_CONFIG0_P0_{0-4}                                 // 0x800000030701103F, +0x0400_0000_0000
+        [62]  0         // part of ATESTSEL_0_4 field
+
+      ===============================================================
+      // Write VREF Latching
+      // Pre-workaround does not apply to DD2.*, there is no post-workaround.
+      //
+      // > JEDEC has a 3 step latching process for WR VREF
+      // > 1) enter into VREFDQ training mode, with the desired range value is XXXXXX
+      // > 2) set the VREFDQ value while in training mode - this actually latches the value
+      // > 3) exit VREFDQ training mode and go into normal operation mode
+      // Each step is followed by a 150ns (tVREFDQE or tVREFDQX) stream of DES commands before next one.
+      for each present rank in rp:
+        // Step 1
+        MR6 =
+          [all] 0
+          [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f       // This is "don't care" in step 1
+          [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+          [A7]      1
+          [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+        // Step 2 - exactly the same as step 1
+        MR6 =
+          [all] 0
+          [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f
+          [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+          [A7]      1
+          [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+        // Step 3
+        MR6 =
+          [all] 0
+          [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f       // This is "don't care" when A7 is not set
+          [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40       // This is "don't care" when A7 is not set
+          [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+      ===============================================================
+      // Write centering
+
+      ---------------------------------------------------------------
+      ===============================================================
 
 
 !!!!!!!!!!!!!
-    WR_LEVEL          = 5,  ///< Write Leveling
-    INITIAL_PAT_WR    = 6,  ///< Initial Pattern Write
-    WR_VREF_LATCH     = 7,  ///< Write VREF Latching
-    DQS_ALIGN         = 12, ///< DQS (read) alignment
-    RDCLK_ALIGN       = 13, ///< Alignment of the internal SysClk to the Read clock
-    READ_CTR_2D_VREF  = 14, ///< Read Vref
-    READ_CTR          = 15, ///< Read Centering
-    WRITE_CTR_2D_VREF = 16, ///< Write Vref
+    WRITE_CTR_2D_VREF = 16, ///< Write Vref                   // ORed with next one, one function for both
     WRITE_CTR         = 17, ///< Write Centering
-    COARSE_WR         = 18, ///< Initial Coarse Pattern Write
+    COARSE_WR         = 18, ///< Initial Coarse Pattern Write // ORed with next one, one function for both
     COARSE_RD         = 19, ///< Coarse Read Centering
-    TRAINING_ADV_RD   = 20, ///< Flag for draminit training advance in the attribute/ CUSTOM_READ_CTR in code
-    TRAINING_ADV_WR   = 21, ///< Flag for draminit training advance in the attribute/ CUSTOM_WRITE_CTR in code
+    TRAINING_ADV_RD   = 20, ///< CUSTOM_READ_CTR in code    // ANDed with next one, if both set - one function for both,
+    TRAINING_ADV_WR   = 21, ///< CUSTOM_WRITE_CTR in code   // otherwise just one (or zero) steps performed
