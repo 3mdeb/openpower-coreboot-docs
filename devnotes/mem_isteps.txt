@@ -741,7 +741,8 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
       for each functional MCA:
         if (count_dimm(MCA) == 0) continue
         set_rank_pairs
-          // TODO: assumes non-LR DIMMs (platform wiki) and no ATTR_EFF_RANK_GROUP_OVERRIDE (default in hb_temp_defaults.xml), add if needed (get_rank_pair_assignments)
+          // TODO: assumes non-LR DIMMs (platform wiki) and no ATTR_EFF_RANK_GROUP_OVERRIDE (default in
+          // hb_temp_defaults.xml), add if needed (get_rank_pair_assignments)
           IOM0.DDRPHY_PC_RANK_PAIR0_P0 =      // 0x8000C0020701103F
               // TODO: re-check whether these numbers are correct. Some assumptions and simplifications were made here
               [48-63] = 0x1537 & F[rank_count]:     // F = {0, 0xf000, 0xf0f0, 0xfff0, 0xffff}
@@ -764,25 +765,9 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                   [60-62] RANK_PAIR3_SEC = 3
                   [63]    RANK_PAIR3_SEC_V = 1: if (rank_count == 4)
           IOM0.DDRPHY_PC_RANK_PAIR2_P0 =      // 0x8000C0300701103F
-              [48-63] = 0x1537 & F[rank_count]:     // F = {0, 0xf000, 0xf0f0, 0xfff0, 0xffff}
-                  [48-50] RANK_PAIR0_TER = 0
-                  [51]    RANK_PAIR0_TER_V = 1: if (rank_count >= 1)
-                  [52-54] RANK_PAIR0_QUA = 2
-                  [55]    RANK_PAIR0_QUA_V = 1: if (rank_count >= 3)
-                  [56-58] RANK_PAIR1_TER = 1
-                  [59]    RANK_PAIR1_TER_V = 1: if (rank_count >= 2)
-                  [60-62] RANK_PAIR1_QUA = 3
-                  [63]    RANK_PAIR1_QUA_V = 1: if (rank_count == 4)
+              [48-63] = 0
           IOM0.DDRPHY_PC_RANK_PAIR3_P0 =      // 0x8000C0310701103F
-              [48-63] = 0x1537 & F[rank_count]:     // F = {0, 0xf000, 0xf0f0, 0xfff0, 0xffff}
-                  [48-50] RANK_PAIR2_TER = 0
-                  [51]    RANK_PAIR2_TER_V = 1: if (rank_count >= 1)
-                  [52-54] RANK_PAIR2_QUA = 2
-                  [55]    RANK_PAIR2_QUA_V = 1: if (rank_count >= 3)
-                  [56-58] RANK_PAIR3_TER = 1
-                  [59]    RANK_PAIR3_TER_V = 1: if (rank_count >= 2)
-                  [60-62] RANK_PAIR3_QUA = 3
-                  [63]    RANK_PAIR3_QUA_V = 1: if (rank_count == 4)
+              [48-63] = 0
           IOM0.DDRPHY_PC_CSID_CFG_P0 =        // 0x8000C0330701103F
                   [0-63]  0xf000:
                       [48]  CS0_INIT_CAL_VALUE = 1
@@ -794,7 +779,8 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                   // A rank is mirrored if all are true:
                   //  - the rank is valid (RANK_PAIRn_XXX_V ==    1)
                   //  - the rank is odd   (RANK_PAIRn_XXX[LSB] == 1)
-                  //  - the mirror mode attribute is set for the rank's DIMM (set in src/import/chips/p9/procedures/hwp/memory/lib/dimm/eff_dimm.C from SPD[136])
+                  //  - the mirror mode attribute is set for the rank's DIMM (set in
+                  //    src/import/chips/p9/procedures/hwp/memory/lib/dimm/eff_dimm.C from SPD[136])
                   //  - We are not in quad encoded mode (so master ranks <= 2)
                   [48]    ADDR_MIRROR_RP0_PRI
                           ...
@@ -825,8 +811,8 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                   [all] = 0
 
         reset_bad_bits
-          // TODO: this disables bad DQ (and DQS if all DQs are dead) bits, based on data saved in NVRAM during earlier trainings.
-          // For now assume there are no bad DQ bits. We do not yet have PNOR NVRAM driver in coreboot anyway.
+          // TODO: this disables bad DQ (and DQS if all DQs are dead) bits, based on data saved in NVRAM during earlier
+          // trainings. For now assume there are no bad DQ bits.
           // Regs touched: IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP{0-3}_P0_{0-4}, IOM0.DDRPHY_DP16_DQS_BIT_DISABLE_RP{0-3}_P0_{0-4}
           // - Is it enough to leave reset values or do we have to set them to 0 explicitly?
           //   - Those bits are set to 1 during training for failed pins in calibration steps
@@ -2046,8 +2032,11 @@ for each functional MCBIST
     // - DLL Enable, DLL Reset (only tMOD doesn't apply)
     // - maximum power saving mode (only tMOD doesn't apply)
     //
-    // I have not seen any explicit information as to what is the scope of MR#, but according to the Hostboot's source
-    // code there is one set of Mode Registers per rank. Nevertheless, each rank on a DIMM gets the same data usually.
+    // MRS are written per rank usually, although most of them must have the same values across the DIMM or even port.
+    // There are some settings that apply to individual DRAMs instead of whole rank (e.g. Vref in MR6). Normally settings
+    // written to MR# are passed to each DRAM, if individual DRAM has to have its settings changed independently of others
+    // we must use Per DRAM Addressability (PDA) mode. PDA is possible only if write leveling was performed.
+    //
     // CCS is per MCBIST, so we need at most 4 (ports) * 2 (DIMMs per port) * 2 (master ranks per DIMM, is 4 ranks on
     // RDIMM possible/used? PHY supports two ranks per DIMM) * 2 (A- and B-side) * (7 (# of MRS) + 1 (final DES)) = 256
     // instructions. CCS holds space for 32 instructions, so we have to divide it and send a set of instructions per
@@ -2712,7 +2701,7 @@ for each functional MCBIST
         [61]  SKIP_RDCENTERING =    0
 
       PHY steps common part:
-        i_cal_config[51] ENA_READ_CTR = 1
+        i_cal_config[52] ENA_READ_CTR = 1
         // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
         // > workbook
         // > This step runs for approximately 6 x (512/COARSE_CAL_STEP_SIZE + 4 x (COARSE_CAL_STEP_SIZE +
@@ -2765,8 +2754,65 @@ for each functional MCBIST
 
       ===============================================================
       // Write centering
+      // This is PHY hardware accelerated step. Assuming both Vref and centering is enabled.
+      //
+      // Write centering - pre-workaround
+      // Following the assumption from reset_bad_bits() - assume there are no bad DQ bits
+      // DRAM is one IC on the DIMM module, there are 9 DRAMs for x8 and 18 for x4 devices (DQ bits/width) per master rank
+      l_dram_delays[number of DRAMs]        // will be used in post-workaround
+      for each DRAM:
+        // This assumes that the delays are the same across the rank pair. Does it mean that grouping is useful only for
+        // slave ranks and one master rank always is exactly one rank pair? This would explain a lot...
+        // Before centering the delays should be the same for each DQ of a given DRAM
+        // Hostboot extracted just the delay from that SCOM, but the rest is 0s so why bother
+        l_dram_delays[DRAM] = IOM0.DDRPHY_DP16_WR_DELAY_VALUE_<(DRAM*width)%16>_RP<rp>_REG_P0_<(DRAM*width)/16>
+                    // 0x800000380701103F and others
 
       ---------------------------------------------------------------
+      // Write centering - main
+      // Hostboot sets bit 48 of IOM0.DDRPHY_DP16_WR_VREF_CONFIG0_P0_{0-4} to 0, but it was already set that way
+      // in reset_wr_vref_registers() in 13.8
+      PHY steps common part:
+        i_cal_config[53] ENA_WRITE_CTR = 1
+        // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
+        // > workbook
+        // > 1000 + (NUM_VALID_SAMPLES * (FW_WR_RD + FW_RD_WR + 16) *
+        // > (1024/(SMALL_STEP +1) + 128/(BIG_STEP +1)) + 2 * (BIG_STEP+1)/(SMALL_STEP+1)) x 24 DRAM
+        // > clocks per rank pair.
+        //
+        // Yes, write leveling values are used for write centering, this is not an error
+        // WR_LVL_BIG_STEP = 7
+        // WR_LVL_SMALL_STEP = 0
+        // WR_LVL_NUM_VALID_SAMPLES = 5
+        //
+        // > Per PHY spec, defaults to 0. Would need an attribute to drive differently
+        // FW_WR_RD = 0
+        //
+        // > From the PHY spec. Also confirmed with S. Wyatt as this is different than the calculation used in Centaur.
+        // > This field must be set to the larger of the two values in number of memory clock cycles.
+        // > FW_RD_WR = max(tWTR + 11, AL + tRTP + 3)
+        // > Note from J. Bialas: The difference between tWTR_S and tWTR_L is that _S is write to read
+        // > time to different bank groups, while _L is to the same. The algorithm should be switching
+        // > bank groups so tWTR_S can be used
+        // tWTR_S is shorter than tWTR_L
+        // tWTR_S can be read from SPD[0x29] and SPD[0x2c], there are also minimal values in DDR4 spec, max of those should
+        // be used (tWTR_L is in SPD[0x29] and SPD[0x2d], if it were to be used)
+        // tRTP = 7.5ns, but it has to be converted to nCK (this comes from DDR4 spec)
+        // AL = 0
+        i_total_cycles = 1000 + (5 * (0 + max(tWTR_S + 11, 0 + to_clocks(7.5ns) + 3) + 16) *
+                          (1024/(0 + 1) + 128/(7 + 1)) + 2 * (7+1)/(0+1)) * 24
+        // to_clocks(7.5ns) is between 6 and 10 clocks for all supported frequencies (1866-2666MT/s). Minimal tWTR_S per JEDEC
+        // is max(2nCK, 2.5ns), which means that even for minimal possible tWTR_S it is at least as big as the second part, so
+        // max(tWTR_S + 11, to_clocks(7.5ns) + 3) = tWTR_S + 11
+        // Reducing as much as possible:
+        // i_total_cycles = 1000 + ((tWTR_S + 27) * 5200 + 16) * 24 = 1000 + (5200*tWTR_S + 140400 + 16) * 24 =
+        //                  1000 + 124800*tWTR_S + 3369984 = 124800*tWTR_S + 3370984
+        // Taking tWTR_S = 2.5ns (as seen in some SPDs) this gives 3620584 - 3870184 cycles = ~2.9 - 4.5ms (rough estimations).
+
+      ---------------------------------------------------------------
+      // Write centering - post-workaround
+      // Assume no NVDIMMs. After write centering some bad DQ bits may have appeared.
+
       ===============================================================
 
 
