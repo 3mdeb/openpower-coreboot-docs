@@ -2300,6 +2300,11 @@ for each functional MCBIST
       for each DIMM, for each rank
         // Max instructions: 4 (ports per MCBIST) * 2 (DIMMs per port) * 2 (master ranks per DIMM) * 1 (ZQCL) + 1 (final
         // DES) = 17 instructions
+        // TODO: do we have to do this for side A and side B?
+        // TODO: maybe "double buffering" CCS instruction array is an option? We can fill one half of the array, let it run,
+        // fill the second half and only then poll for completion. When first half completes, we start the other half and
+        // can begin filling next instructions in the half that is not used at the moment.
+        //
         // JEDEC: "All banks must be precharged and tRP met before ZQCL or ZQCS commands are issued by the controller" -
         // not sure if this is met. A refresh during the calibration probably would impact the results. Also, "No other
         // activities should be performed on the DRAM channel by the controller for the duration of tZQinit, tZQoper,
@@ -2571,6 +2576,7 @@ for each functional MCBIST
 
       // Important: delays and timeouts are different than defaults! Depends on i_total_cycles
       // TODO: are there any drawbacks for polling more often than every 10us?
+      // TODO: do we have to do this for side A and side B?
       --------------- do CCS finalization and execution, see draminit_cke_helper ----------------------
 
       ################ PHY steps common part - end ############################
@@ -2812,6 +2818,40 @@ for each functional MCBIST
       ---------------------------------------------------------------
       // Write centering - post-workaround
       // Assume no NVDIMMs. After write centering some bad DQ bits may have appeared.
+      //
+      // This workaround uses per DRAM addressing (PDA) mode a lot. In general, PDA is used to set values that may not be the
+      // same for all DRAMs on a given rank, such as ODT or Vref. Only MRS commands are available in PDA mode. How to use it:
+      // 0. Write leveling must be performed before entering PDA mode.
+      // 1. Enable PDA by writing MR3 with A4 = 1 (this MRS is sent to ALL DRAMs).
+      // 2. In PDA mode DQ0 of each DRAM serves as a "chip select" - when DQ0 is 1, that DRAM ignores the command. Note that
+      //    DQ bits on the edge connector do not have to be mapped 1:1 into consecutive DRAM DQ pins (see SPD[60-77]). For
+      //    this reason the controller may choose to drive all the DQ bits of a nibble (or byte for x8 devices).
+      // 3. After appropriate DQ bits are set, MRS command may be sent as usual. Because only MRS commands are allowed, there
+      //    is no separate tMOD, but tMRD_PDA = max(16nCK, 10ns) is used instead of tMRD = 8nCK. In addition to tMRD_PDA more
+      //    delay is needed because the DQ bits must propagate to DRAM (AL + CWL + PL + BL/2), we can subtract half clock
+      //    cycle because tMRD_PDA is counted since the arrival of the last DQ bit, not including the hold time. The total
+      //    minimum time between MRS commands in PDA mode is thus (AL + (PL) + CWL + BL/2 - 0.5tCK + tMRD_PDA), where:
+      //    - AL - Additive Latency, set in MR1
+      //    - CWL - CAS Write Latency, set in MR2
+      //    - BL - Burst Length, set in MR0, divided by 2 because DDR
+      //    - PL - C/A Parity Latency, set in MR5, optional
+      // 4. To exit PDA mode write MR3 with A4 = 0. As this command is sent while still in PDA mode, it is send ONLY to the
+      //    selected DRAMs. DQ0 bits for all DRAMs should be driven to 0 so the command is sent to all DRAM devices at once.
+      //    Bits in mode registers are assigned in such a way that no per-DRAM values are configured by MR3. Next command
+      //    (other than MRS and DES) may be send after (AL + (PL) + CWL + BL/2 - 0.5tCK + tMOD).
+      //
+      // That was the theory. On POWER9 we have some help from the hardware. We still have the CCS to send MRS commands. DP16s
+      // have registers that can set appropriate DQ bits for a whole nibble, we just have to specify which one. Delay and hold
+      // time of DQ bits is configurable, although Hostboot uses 0 for delay and max possible value for hold (0xff memory
+      // clock cycles) because it is "safer and easier than figuring out how long to hold the values".
+      //
+      // Unfortunately, those DQ bits cannot be changed by CCS_INSTR_ARR0/1 registers, which means that switching the targets
+      // must be performed outside of CCS, manually. We still can and should, if possible, select multiple DRAMs at once.
+      // Configuring CCS for each command takes time, we also have to poll the status to know when it is safe to modify
+      // registers specifying DQs. We cannot change them in the middle of an instruction, but it should be safe to do so
+      // during the last tMRD_PDA, however the time saved this way would be negligible.
+      //
+      // TODO: what about sides A/B? We still have to send MRS commands to both, right?
 
       ===============================================================
 
