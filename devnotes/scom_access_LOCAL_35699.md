@@ -1,11 +1,6 @@
 # Access to SCOM registers
 
-SCOM registers are responsible for configuration of many platform settings.
-To port hostboot into coreboot it is necessery to be able to access these registers.
-
-* [Registers that could be used for tests](https://github.com/3mdeb/openpower-coreboot-docs/blob/main/devnotes/register_for_SCOM_tests.md)
-
-According to information given on the [OpenPower-firmware mailing list](https://lists.ozlabs.org/pipermail/openpower-firmware/2020-December/000602.html),
+According to information given on the OpenPower-firmware mailing list,
 `SCOM` can be accessed through `XSCOM` with base address `0x000603FC00000000`.
 
 ```
@@ -60,12 +55,13 @@ Invalid access at addr 0x3FC000F0010, size 8, region '(null)', reason: rejected
 ```
 
 
-### XSCOM base: **0x800603FC00000000** register: **0xF0010**, **0xF001F** or **0xF0020**
+### XSCOM base: **0x800603FC00000000** register: **0xF0010**, **0xF001F**
 Tested code:
 ```
 long long unsigned int *reg = (void *)(0x800603FC00000000 | 0xF0010 << 3);
 printk(BIOS_EMERG, "SCOM:? %llX\n", *reg);
 ```
+### or **0xF0020**
 **Talos II**:\
 `resets`\
 **qemu**:
@@ -111,7 +107,8 @@ printk(BIOS_EMERG, "SCOM:? %llX\n", buffer);
 Invalid access at addr 0x623FC00780078, size 8, region '(null)', reason: rejected
 ```
 
-### Adding **`volatile`** keyword to variable type and **`ull`** suffix to register address
+### Adding **`volatile`** keyword to variable type and **`ull`** suffix
+### to register address
 Code behavior was unchanged\
 **Talos II**: `resets`\
 **qemu**: Outputs information about invalid access to stdout
@@ -121,12 +118,14 @@ Code behavior was unchanged\
 To access `SCOM` `putScom()` or `getScom()` is used.
 Early analysis of call chain resulted with following:
 
-   [putScom(target, address, data)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/include/usr/fapi2/hw_access.H#L119)
--> [platPutScom(target, address, data)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/fapi2/plat_hw_access.C#L148)
--> [deviceWrite(target, data, size, DEVICE_SCOM_ADDRESS(address, opMode))](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/userif.C#L62)
--> [Singleton<Associator>::instance().performOp(WRITE, target, buffer, buflen, accessType, args)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L161)
--> [findDeviceRoute(opType = WRITE, devType, accessType)(opType = WRITE, target, buffer, buflen, accessType, addr)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243)
+```
+   putScom(target, address, data)
+-> platPutScom(target, address, data)
+-> deviceWrite(target, data, size, DEVICE_SCOM_ADDRESS(address, opMode))
+-> Singleton<Associator>::instance().performOp(WRITE, target, buffer, buflen, accessType, args)
+-> findDeviceRoute(opType = WRITE, devType, accessType)(opType = WRITE, target, buffer, buflen, accessType, addr)
+```
 
 before findDeviceRoute(), procedure has to be registerd using Associator.registerRoute()
 
-[/src/usr/fsiscom/fsiscom.C:178](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/fsiscom/fsiscom.C#L178) fsiScomPerformOp() is probably a function responsible for reading/writing
+/src/usr/fsiscom/fsiscom.C:178 fsiScomPerformOp() is probably a function responsible for reading/writing
