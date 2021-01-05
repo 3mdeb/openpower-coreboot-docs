@@ -15,23 +15,37 @@ structure. Now this base address can change if the SBE sets it to something
 else, or we end up in some memory swapping scenario, and its going to be
 different when talking to secondary processors.
 ```
+[Source](https://lists.ozlabs.org/pipermail/openpower-firmware/2020-December/000602.html)
 
 ## Failed SCOM read attempts
 
-### XSCOM base: **0x800603FC000000000** register: **0xF000F**
+All attempts were made in the `coreboot` bootblock code.\
+It was tested on QEMU version `QEMU emulator version 5.2.50 (v5.2.0-463-g657ee88ef3ec)` using following command line
+```
+./qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'open-power/coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio
+```
+HW tests were made on `Talos II` machine using BMC.
 
+### XSCOM base: **0x800603FC00000000** register: **0xF000F**
+Tested code:
+```
+long long unsigned int *reg = (void *)(0x800603FC00000000 | (0xF000F << 3));
+printk(BIOS_EMERG, "SCOM:? %llX\n", *reg);
+```
 **Talos II**:\
 `resets`\
 **qemu**:
 ```
-Invalid access at addr 0xF0008, size 8, region '(null)', reason: rejected
-XSCOM read failed at @0xf0008 pcba=0x0001e001
-Invalid access at addr 0xF0010, size 8, region '(null)', reason: rejected
-XSCOM read failed at @0xf0010 pcba=0x0001e002
+SCOM:? 220D104900008000
 ```
 
 ### XSCOM base: **0x800003FC00000000**, **0x800023FC00000000**
 ### or **0x800623FC00000000** register: **0xF000F**
+Tested code:
+```
+long long unsigned int *reg = (void *)(0x800603FC00000000 | (0xF000F << 3));
+printk(BIOS_EMERG, "SCOM:? %llX\n", *reg);
+```
 **Talos II**:\
 `resets`\
 **qemu**:
@@ -41,10 +55,15 @@ Invalid access at addr 0x3FC000F0010, size 8, region '(null)', reason: rejected
 ```
 
 
-### XSCOM base: **0x800603FC000000000** register: **0xF0010**, **0xF001F**
+### XSCOM base: **0x800603FC00000000** register: **0xF0010**, **0xF001F**
+Tested code:
+```
+long long unsigned int *reg = (void *)(0x800603FC00000000 | 0xF0010 << 3);
+printk(BIOS_EMERG, "SCOM:? %llX\n", *reg);
+```
 ### or **0xF0020**
 **Talos II**:\
-`Not tested`\
+`resets`\
 **qemu**:
 ```
 Invalid access at addr <address>, size 8, region '(null)', reason: rejected
@@ -54,7 +73,7 @@ XSCOM read failed at @<address> pcba=0x0001e002
 ```
 
 ### Assembly instruction **`ldcix`**
-Following code was tested:
+Tested code:
 ```
 #include <arch/io.h>
 
@@ -69,6 +88,23 @@ printk(BIOS_EMERG, "SCOM:? %llX\n", buffer);
 ```
 Invalid access at addr 0x623FC000F0008, size 8, region '(null)', reason: rejected
 Invalid access at addr 0x623FC000F0010, size 8, region '(null)', reason: rejected
+```
+
+### Assembly instruction **`ldcix`** with bit shift
+Tested code:
+```
+#include <arch/io.h>
+
+uint64_t buffer;
+asm volatile("ldcix %0, %1, %2" : "=r"(buffer) : "b"(0x800623FC00000000ull), "r"(0xF000F << 3));
+eieio();
+printk(BIOS_EMERG, "SCOM:? %llX\n", buffer);
+```
+**Talos II**:\
+`resets`\
+**qemu**:
+```
+Invalid access at addr 0x623FC00780078, size 8, region '(null)', reason: rejected
 ```
 
 ### Adding **`volatile`** keyword to variable type and **`ull`** suffix
