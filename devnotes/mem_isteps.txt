@@ -1243,7 +1243,7 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                 [49]    WR_CTR_RUN_FULL_1D =          1
                 [50-52] WR_CTR_2D_SMALL_STEP_VAL =    0     // implicit +1
                 [53-56] WR_CTR_2D_BIG_STEP_VAL =      1     // implicit +1
-                [57-59] WR_CTR_NUM_BITS_TO_SKIP =     0     // skip all 7 (3 for x4) intermediary bits
+                [57-59] WR_CTR_NUM_BITS_TO_SKIP =     0     // skip nothing
                 [60-62] WR_CTR_NUM_NO_INC_VREF_COMP = 7
 
           IOM0.DDRPHY_DP16_WR_VREF_CONFIG1_P0_{0,1,2,3,4} =       // 0x800000EC0701103F, +0x0400_0000_0000
@@ -2021,13 +2021,19 @@ for each functional MCBIST
     // Programming the Mode Registers consists of entering special mode using MRS (Mode Register Set) command and sending
     // MR# values, one at a time, in a specific order (3,6,5,4,2,1,0). Those values are sent using address lines,
     // including bank and bank group lines, which select which MR to write to. One of the implications is that these
-    // values cannot be read back. We have to write a whole register even when changing just one bit, this means that we
-    // have to remember what was written, or be able to (re)generate valid data. For this platform we have CCS which can
-    // be programmed to push all MRs in one sequence of instructions, including all required timeouts. There are two main
-    // timeout parameters: tMRD (minimal amount of time between two MRS commands) and tMOD (time between MRS and non-MRS
-    // and non-DES command). For all Speed Bins tMRD = 8nCK, tMOD = max(24nCK, 15ns) = 24nCK. Exceptions to those are:
+    // values cannot be read back. PHY controller holds the mirrors of last written values in its registers, but the
+    // mapping of bits is not clear. This mirror is RW, so there is a possibility that the values are not the same as the
+    // real ones (but this would be a bad idea as these bits are used by a controller). It gets further complicated when
+    // PDA mode was used at any point, as there is just one mirror register per rank pair.
+    //
+    // We have to write a whole register even when changing just one bit, this means that we have to remember what was
+    // written, or be able to (re)generate valid data. For this platform we have CCS which can be programmed to push all
+    // MRs in one sequence of instructions, including all required timeouts. There are two main timeout parameters: tMRD
+    // (minimal amount of time between two MRS commands) and tMOD (time between MRS and non-MRS and non-DES command). For
+    // all Speed Bins tMRD = 8nCK, tMOD = max(24nCK, 15ns) = 24nCK. Exceptions to those are:
     // - gear down mode
-    // - settings to command & address lines: C/A parity latency, CS to C/A latency (only tMRC doesn't apply), PDA mode
+    // - PDA mode
+    // - settings to command & address lines: C/A parity latency, CS to C/A latency (only tMRC doesn't apply)
     // - VrefDQ training
     // - DLL Enable, DLL Reset (only tMOD doesn't apply)
     // - maximum power saving mode (only tMOD doesn't apply)
@@ -2298,9 +2304,9 @@ for each functional MCBIST
   for each functional MCA
     setup_and_execute_zqcal()
       for each DIMM, for each rank
-        // Max instructions: 4 (ports per MCBIST) * 2 (DIMMs per port) * 2 (master ranks per DIMM) * 1 (ZQCL) + 1 (final
-        // DES) = 17 instructions
-        // TODO: do we have to do this for side A and side B?
+        // Max instructions: 4 (ports per MCBIST) * 2 (DIMMs per port) * 2 (master ranks per DIMM) * 2 (sides) * 1 (ZQCL)
+        // + 1 (final DES) = 33 instructions
+        // TODO: do we have to do this for side A and side B? Probably yes, ZQ is for DRAM, not for RCD.
         // TODO: maybe "double buffering" CCS instruction array is an option? We can fill one half of the array, let it run,
         // fill the second half and only then poll for completion. When first half completes, we start the other half and
         // can begin filling next instructions in the half that is not used at the moment.
@@ -2455,7 +2461,7 @@ for each functional MCBIST
     // - Write Vref latching - not exactly a calibration, but required for next steps
     // - Write centering
     // - Coarse write/read
-    // - Custom read and/or write centering
+    // - Custom read and/or write centering - performed in istep 13.12
     // Some of these steps have pre- or post-workarounds, or both.
     //
     // All of those steps (except ZQ calibration) are executed for each rank pair before going to the next pair. Some of
@@ -2771,13 +2777,15 @@ for each functional MCBIST
         // slave ranks and one master rank always is exactly one rank pair? This would explain a lot...
         // Before centering the delays should be the same for each DQ of a given DRAM
         // Hostboot extracted just the delay from that SCOM, but the rest is 0s so why bother
-        l_dram_delays[DRAM] = IOM0.DDRPHY_DP16_WR_DELAY_VALUE_<(DRAM*width)%16>_RP<rp>_REG_P0_<(DRAM*width)/16>
+        // DP = (DRAM*width) / 16
+        // val = (DRAM*width) % 16
+        l_dram_delays[DRAM] = IOM0.DDRPHY_DP16_WR_DELAY_VALUE_<val>_RP<rp>_REG_P0_<DP>
                     // 0x800000380701103F and others
 
       ---------------------------------------------------------------
       // Write centering - main
       // Hostboot sets bit 48 of IOM0.DDRPHY_DP16_WR_VREF_CONFIG0_P0_{0-4} to 0, but it was already set that way
-      // in reset_wr_vref_registers() in 13.8
+      // in reset_wr_vref_registers() in 13.8. It is also used by a workaround, where it may be set as 1.
       PHY steps common part:
         i_cal_config[53] ENA_WRITE_CTR = 1
         // > Note: the following equation is taken from the PHY workbook - leaving the naked numbers in for parity to the
@@ -2786,7 +2794,7 @@ for each functional MCBIST
         // > (1024/(SMALL_STEP +1) + 128/(BIG_STEP +1)) + 2 * (BIG_STEP+1)/(SMALL_STEP+1)) x 24 DRAM
         // > clocks per rank pair.
         //
-        // Yes, write leveling values are used for write centering, this is not an error
+        // Yes, write leveling values are used for write centering, this is not an error (or is it? CONFIG0 says BIG_STEP = 1)
         // WR_LVL_BIG_STEP = 7
         // WR_LVL_SMALL_STEP = 0
         // WR_LVL_NUM_VALID_SAMPLES = 5
@@ -2817,10 +2825,12 @@ for each functional MCBIST
 
       ---------------------------------------------------------------
       // Write centering - post-workaround
-      // Assume no NVDIMMs. After write centering some bad DQ bits may have appeared.
+      // Assume no NVDIMMs.
+      // Write centering may fail for DQ bits that have significantly different RD VREF values than the rest of DQ bits under
+      // the same DRAM. In that case disable all but one, known to be good, DQ bits and rerun WR centering.
       //
-      // This workaround uses per DRAM addressing (PDA) mode a lot. In general, PDA is used to set values that may not be the
-      // same for all DRAMs on a given rank, such as ODT or Vref. Only MRS commands are available in PDA mode. How to use it:
+      // This workaround uses per DRAM addressing (PDA) mode. In general, PDA is used to set values that may not be the same
+      // for all DRAMs on a given rank, such as ODT or Vref. Only MRS commands are available in PDA mode. How to use it:
       // 0. Write leveling must be performed before entering PDA mode.
       // 1. Enable PDA by writing MR3 with A4 = 1 (this MRS is sent to ALL DRAMs).
       // 2. In PDA mode DQ0 of each DRAM serves as a "chip select" - when DQ0 is 1, that DRAM ignores the command. Note that
@@ -2842,8 +2852,10 @@ for each functional MCBIST
       //
       // That was the theory. On POWER9 we have some help from the hardware. We still have the CCS to send MRS commands. DP16s
       // have registers that can set appropriate DQ bits for a whole nibble, we just have to specify which one. Delay and hold
-      // time of DQ bits is configurable, although Hostboot uses 0 for delay and max possible value for hold (0xff memory
-      // clock cycles) because it is "safer and easier than figuring out how long to hold the values".
+      // time of DQ bits is configurable, although Hostboot uses 0 for delay and max possible value for hold (0x3f memory
+      // clock cycles) because it is "safer and easier than figuring out how long to hold the values". PHY logic can only
+      // track one MRS PDA command at a time. This introduces another timing constraint: spacing between MRS commands in PDA
+      // mode must be at least (delay + hold + 8) memory clock cycles.
       //
       // Unfortunately, those DQ bits cannot be changed by CCS_INSTR_ARR0/1 registers, which means that switching the targets
       // must be performed outside of CCS, manually. We still can and should, if possible, select multiple DRAMs at once.
@@ -2851,15 +2863,245 @@ for each functional MCBIST
       // registers specifying DQs. We cannot change them in the middle of an instruction, but it should be safe to do so
       // during the last tMRD_PDA, however the time saved this way would be negligible.
       //
-      // TODO: what about sides A/B? We still have to send MRS commands to both, right?
+      // On the controller, PDA mode is enabled by multiple bits. There is one global (per MCA) bit to set up the driving of
+      // DQ/DQS bits in write control block, and MR3 mirrors (per rank pair) in PHY control block. The latter are changed
+      // automatically, but unfortunately they do not account for RDIMMs A- and B-sides. This is not an issue for entering
+      // PDA mode (side B is written with all DQs driven to 0, except for possibly longer timeout they are ignored by DRAMs
+      // that are not in PDA mode yet), but for exiting we need another workaround to tell the controller that it is still
+      // using PDA and should drive DQ bits as ordered. This is done by manually setting MR3[A4] mirror between issuing
+      // commands to A- and B-side. Note that the workaround is needed just for the command that clears MR3[A4], and not all
+      // of the MRS commands.
+
+      // Check if there are any (new) bad DQ bits, there is no reason to run this workaround if calibration passed.
+      for each DRAM:
+        // DP = (DRAM*width) / 16
+        IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_<DP>:       // 0x8000007C0701103F and others
+            if ALL 'width' bits for this DRAM == 1: add DRAM to l_bad_drams
+
+      if l_bad_drams is empty: skip workaround        // go to next calibration step
+
+      // We are about to disable DQ bits. One of those bits may be DQ0, which is used to select DRAM in PDA mode, which
+      // means we have to do PDA first to redo WR VREF latch.
+      //
+      // Attribute ATTR_MSS_VPD_MT_VREF_DRAM_WR that is written to most of the registers below is defined for MCS, so it
+      // will be the same for all ranks.
+      //
+      // Deselect all DRAMs by setting appropriate DQ bits. Hostboot does it later (PDA enter) but doing it now will
+      // simplify the rest of the code. In the code these registers were named MCA_DDRPHY_DP16_DATA_BIT_ENABLE1_P0_*.
+      IOM0.DDRPHY_DP16_DFT_PDA_CONTROL_P0_{0-3}                     // 800000010701103F, +0x0400_0000_0000
+          [60-63] MRS_CMD_DATA_Nx = 1
+      IOM0.DDRPHY_DP16_DFT_PDA_CONTROL_P0_4
+          [60-61] MRS_CMD_DATA_Nx = 1             // only two bits for last DP
+
+      for each DRAM in l_bad_drams:
+        mss::ddr4::pda::commands::add_command():
+          // In Hostboot this function is generalised and uses C++ containers magic to minimise the number of rank switching.
+          // For this particular case (one command to a group of ranks, no switching required other than exit from PDA) it
+          // is enough to just add bad DRAM to the current set, provided that this set was cleared before the loop. PDA mode
+          // will be enabled regardless of DQ bits, even though the controller will set those just for bad DRAMs on the PDA
+          // entry for side B. In non-PDA mode those bits are ignored by DRAMs.
+          // reg = (DRAM*width) / 16
+          // bit = (DRAM*width/4) % 4             // so 1 bit per DRAM for x4, 2 bits for x8
+          IOM0.DDRPHY_DP16_DFT_PDA_CONTROL_P0_<reg>
+              [60+bit] MRS_CMD_DATA_Nx = 0
+              if x8:                  // for x8 set second nibble too, DQ0 may be in any of them
+                [60+bit+1] = 0
+
+        configure_wr_vref_to_nominal():
+          // DP = (DRAM*width) / 16
+          // reg = ((DRAM*width) % 16) / 2
+          IOM0.DDRPHY_DP16_WR_VREF_VALUE<reg>_RANK_PAIR<rp>_P0_<DP> =   // 0x8000005E0701103F and others
+              // Modify just the bits for this DRAM, leave the rest as it was set by the calibration
+              if DRAM % 2 == 0:
+                [49]    WR_VREF_RANGE_DRAM{0,2} = ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+                [50-55] WR_VREF_VALUE_DRAM{0,2} = ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f
+              if DRAM % 2 == 1:
+                [57]    WR_VREF_RANGE_DRAM{1,3} = ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+                [58-63] WR_VREF_VALUE_DRAM{1,3} = ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f
+
+        reset_wr_dq_delay():
+          // Saved in pre-workaround
+          // DP = (DRAM*width) / 16
+          // val = (DRAM*width) % 16
+          IOM0.DDRPHY_DP16_WR_DELAY_VALUE_<val>_RP<rp>_REG_P0_<DP> = l_dram_delays[DRAM]
+                      // 0x800000380701103F and others
+
+        // Must temporally re-enable DQ bits for PDA
+        clear_dram_disable_bits():
+          // DP = (DRAM*width) / 16
+          // pos = 48 + (DRAM*width) % 16
+          IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_<DP>:       // 0x8000007C0701103F and others
+              [pos - pos+width-1]   0     // might as well do this in the first loop of this workaround
+
+      // MR6 is sent to bad DRAMs only through PDA, but we are sending one command to multiple DRAMs, so this is outside
+      // "for each DRAM" loop. But first we have to set up and enter PDA mode. For MRS use CCS as before, remember to
+      // send the commands to side A and side B. No workaround needed for entry.
+      //
+      // JEDEC says to wait for tMOD = max(24nCK, 15ns) even if the next command is another MRS, but we may have different
+      // constraints:
+      // > Note: the delay is taken from the PDA timing register's maximum value 2^6
+      // > 10 cycles for safety
+      // Hostboot waits for 64 + 10 = 74 cycles.
+      MR3:
+        [A4]      1
+
+      // PDA mode is enabled for DRAMs, but the controller isn't set to drive DQ bits yet, do it now.
+      IOM0.DDRPHY_WC_CONFIG3_P0                                 // 0x8000CC050701103F
+        [all] 0       // all non-0 bits are changed, no need to read the register
+        [48]    PDA_RANKDELAY_ENABLE =  1
+        [49-54] MRS_CMD_DQ_ON =         0
+        [55-60] MRS_CMD_DQ_OFF =        0x3f
+
+      // Only now Hostboot configures DQ bits in DDRPHY_DP16_DFT_PDA_CONTROL registers, until now all that data was hold
+      // in the PDA command structures. It also disables DRAMs (one by one) after the command stream is sent, preparing for
+      // the next set of commands, even though there are none.
+      //
+      // By JEDEC, we should wait for (AL + (PL) + CWL + BL/2 - 0.5tCK + tMRD_PDA) = ~30-40 clocks, depending on settings,
+      // but because of delay in DDRPHY_WC_CONFIG3_P0 we have to wait at least (MRS_CMD_DQ_ON + MRS_CMD_DQ_OFF + 8) = 71
+      // clock cycles. On top of that, because we are changing VrefDQ, tVREFDQ{E,X} = 150ns is used instead of tMRD_PDA.
+      // However, Hostboot uses just tVREFDQE which probably is OK, as it is longer than other constraints and DRAM still
+      // receives it in the same intervals.
+      //
+      // This is exactly the same as in Write VREF latching, except we do not do this for all ranks.
+      // Step 1
+      MR6 =
+        [all] 0
+        [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f       // This is "don't care" in step 1
+        [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+        [A7]      1
+        [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+      // Step 2 - exactly the same as step 1
+      MR6 =
+        [all] 0
+        [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f
+        [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40
+        [A7]      1
+        [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+      // Step 3
+      MR6 =
+        [all] 0
+        [A5-A0]   ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x3f       // This is "don't care" when A7 is not set
+        [A6]      ATTR_MSS_VPD_MT_VREF_DRAM_WR & 0x40       // This is "don't care" when A7 is not set
+        [A12-A10] (conv_to_nCK(SPD[40] + SPD[117])) - 4
+
+      // Vref on DRAMs has been restored, prepare to exit PDA.
+      // Select all DRAMs, not just the disabled ones. Hostboot does it too, overwriting what it just wrote during PDA
+      // command set finalisation where it deselected bad DRAMs.
+      IOM0.DDRPHY_DP16_DFT_PDA_CONTROL_P0_{0-3}                     // 800000010701103F, +0x0400_0000_0000
+          [60-63] MRS_CMD_DATA_Nx = 0
+      IOM0.DDRPHY_DP16_DFT_PDA_CONTROL_P0_4
+          [60-61] MRS_CMD_DATA_Nx = 0             // only two bits for last DP
+
+      // Disable PDA on DRAMs. This needs a workaround, so the command is send to side A only (for now).
+      MR3:
+        [A4] 0
+
+      // Right now the controller sees that PDA is being disabled, so it traps this information in MR3 mirror register.
+      // It does it before sending the command to side B, so side B would receive this command as if it were in non-PDA
+      // mode. We must manually set A4 mirror bit to tell the controller that it should still work in PDA mode.
+      IOM0.DDRPHY_PC_MR3_RP<rp>_P0                                  // 0x8000C<rp>1F0701103F
+        // This bit corresponds to A4. Perhaps bit numbering is reversed (A0->63, A1->62...), or bits may be swizzled,
+        // there is no explicit information about the order of bits, but 59 comes from the Hostboot code.
+        [59]  1
+
+      // Now send the same command to side B (with inverting and mirroring as usual).
+      MR3:
+        [A4] 0
+
+      // Disable PDA mode in WC register
+      IOM0.DDRPHY_WC_CONFIG3_P0                                 // 0x8000CC050701103F
+        // Any reason for RMW and not zeroing the whole register?
+        [48]    PDA_RANKDELAY_ENABLE =  0
+
+      // Everything up to this point was done just to revert the state to that from before first try of write centering,
+      // for bad DRAMs only. Now we have to disable all but one DQ bits for bad DRAMs. We must select a bit that is good,
+      // that means its RD Vref is close to the median value of DRAM's Vrefs (not true median actually, for even number
+      // of elements, as is always the case for DQ bits, we choose element n/2 instead of average of this and the next
+      // element - integer math and such value always exists).
+      for each DRAM in l_bad_drams:
+        disable_bits():
+          // > There are two RD VREF values stored per register, one RD VREF value corresponds to one bit
+          // > For a x4 DRAM, there are 4 bits per DRAM, meaning two registers need to be read
+          // > For a x8 DRAM, there are 8 bits per DRAM, meaning four registers need to be read
+          // DP = (DRAM*width) / 16
+          // DAC_l = (DRAM * width/2) % 8
+          // DAC_h = ((DRAM+1) * width/2) % 8 - 1
+          // DRAMs do not cross DPs and both values in a register describe exactly one DRAM. We need the median of
+          // values from registers in range DAC_l-DAC_h from:
+          IOM0.DDRPHY_DP16_RD_VREF_DAC_<DAC>_P0_<DP>
+            [49-55] BIT(2*DAC)_VREF_DAC
+            [57-63] BIT(2*DAC+1)_VREF_DAC
+
+          // Hostboot searches for the first good bit but any one would do probably. It uses a threshold of 3 units to
+          // minimise lookup time. Take care to not overflow.
+          // TODO: can we find median without sorting, so we can keep the index of element? If yes, is this faster?
+          // good_bit = first bit for which RD VREF value is median +/- 3
+          // pos = 48 + (DRAM*width) % 16
+          IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_<DP>:       // 0x8000007C0701103F and others
+              [pos - pos+width-1]   1         // disable all...
+              [pos+good_bit]        0         // ...but one, known to be good
+
+      configure_skip_bits():
+        IOM0.DDRPHY_DP16_WR_VREF_CONFIG0_P0_{0,1,2,3,4} =       // 0x8000006C0701103F, +0x0400_0000_0000
+            [57-59] WR_CTR_NUM_BITS_TO_SKIP = 7     // skip all but one
+
+      // Rerun main calibration
+      // TODO: what about i_total_cycles? Hostboot uses one value, regardless of number of skip bits and whether 2D or 1D
+      // calibration is performed.
+      run()
+
+      // Clear training FIRs
+      IOM0.IOM_PHY0_DDRPHY_FIR_REG SCOM1 (AND) =    // 0x0000000007011001
+          [all] 1
+          [56]  IOM_PHY0_DDRPHY_FIR_REG_DDR_FIR_ERROR_2 = 0
+
+      // Hostboot here reads IOM0.IOM_PHY0_DDRPHY_FIR_REG (0x07011001) and discards the value. This was not done in
+      // clear_initial_cal_errors().
+
+      // Check if DRAMs are still bad.
+      for each DRAM in l_bad_drams:
+        // DP = (DRAM*width) / 16
+        IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_<DP>:       // 0x8000007C0701103F and others
+            if ALL 'width' bits for this DRAM == 1: l_is_bad = true
+
+        if l_is_bad == false:     // if DRAM was recovered
+          clear_dram_disable_bits():
+            // DP = (DRAM*width) / 16
+            // pos = 48 + (DRAM*width) % 16
+            IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_<DP>:       // 0x8000007C0701103F and others
+                [pos - pos+width-1]   0
+
+      // Now that the disable bits for recovered DRAMs were cleared, we can rerun 1D WR centering calibration.
+      IOM0.DDRPHY_DP16_WR_VREF_CONFIG0_P0_{0,1,2,3,4} =       // 0x8000006C0701103F, +0x0400_0000_0000
+          [48]  WR_CTR_1D_MODE_SWITCH = 1
+
+      // Rerun main calibration, again
+      run()
+
+      ===============================================================
+      // Coarse WR/RD calibration
+      // No pre-/post-workaround required. This is PHY hardware accelerated step.
+      PHY steps common part:
+        i_cal_config
+            [54] ENA_INITIAL_COARSE_WR =  1
+            [55] ENA_COARSE_RD =          1
+        // 40 cycles for WR, 32 for RD
+        i_total_cycles = 72
 
       ===============================================================
 
+      // That was the last calibration step performed in draminit_training, there are two more in draminit_trainadv.
+
+// This is next istep!
+      ===============================================================
+      // Custom read/write centering
+      // Those are two separate PHY hardware accelerated steps, but WR centering may fail because of bad RD centering,
+      // in which case both RD and WR must be repeated with a different pattern.
+
+      ===============================================================
 
 !!!!!!!!!!!!!
-    WRITE_CTR_2D_VREF = 16, ///< Write Vref                   // ORed with next one, one function for both
-    WRITE_CTR         = 17, ///< Write Centering
-    COARSE_WR         = 18, ///< Initial Coarse Pattern Write // ORed with next one, one function for both
-    COARSE_RD         = 19, ///< Coarse Read Centering
     TRAINING_ADV_RD   = 20, ///< CUSTOM_READ_CTR in code    // ANDed with next one, if both set - one function for both,
     TRAINING_ADV_WR   = 21, ///< CUSTOM_WRITE_CTR in code   // otherwise just one (or zero) steps performed
