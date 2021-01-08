@@ -22,7 +22,35 @@ different when talking to secondary processors.
 ```
 [Source](https://lists.ozlabs.org/pipermail/openpower-firmware/2020-December/000602.html)
 
-## Failed SCOM read attempts
+## How to access SCOM
+
+To read register at offset 0xF000F:
+```
+uint64_t buffer;
+asm volatile("ldcix %0, %1, %2" : "=r"(buffer) : "b"(0x800603FC00000000), "r"(0xF000F << 3));
+eieio();
+printk(BIOS_EMERG, "SCOM:? %llX\n", buffer);
+```
+* 0x800603FC00000000 is the `XSCOM` base address.
+* 0xF000F is the register address. Refer to POWER9_Registers_vol1\2\3 for more information
+* `ldcix` performs cache inhibited read
+
+To write SCOM register at offset 0xF0008:
+```
+printk(BIOS_EMERG, "hw trying to write 0xF0008\n");
+uint64_t buffer;
+asm volatile("ldcix %0, %1, %2" : "=r"(buffer) : "b"(0x800603FC00000000), "r"(0xF0008 << 3));
+eieio();
+printk(BIOS_EMERG, "SCOM before: %llX\n", buffer);
+asm volatile("stdcix %0, %1, %2" :: "b"(0xAAAAAAAAAAAAAAAA), "b"(0x800603FC00000000), "r"(0xF0008 << 3));
+eieio();
+printk(BIOS_EMERG, "just wrote new value\n");
+asm volatile("ldcix %0, %1, %2" : "=r"(buffer) : "b"(0x800603FC00000000), "r"(0xF0008 << 3));
+eieio();
+printk(BIOS_EMERG, "SCOM after: %llX\n", buffer);
+```
+
+## Failed SCOM read attempts during research
 
 All attempts were made in the `coreboot` bootblock code.\
 It was tested on QEMU version `QEMU emulator version 5.2.50 (v5.2.0-463-g657ee88ef3ec)` using following command line
