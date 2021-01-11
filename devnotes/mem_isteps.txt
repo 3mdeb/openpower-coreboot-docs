@@ -830,6 +830,12 @@ a)      IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
                   {0,2,3} - 1 ranks DIMM0, 2(3,4) ranks DIMM1
                   {0,1}   - 2(3,4) ranks DIMM0, 0 ranks DIMM1 etc.
 
+        // The following two functions specify which clock/strobes pins (16-23) of DP16 are used to capture outgoing/incoming
+        // data on which data pins (0-16). Those will eventually arrive to DIMM as DQS and DQ, respectively. The mapping must
+        // be the same for write and read. It will be used after DRAM training to discover which nibbles failed.
+        // TODO: are those mappings determined by hardware or can we change them to uniform mapping for all DIMMs/ranks?
+        // Schematics don't show what happens inside CPU, i.e. whether these DP16 pins are multiplexed (and configurable by
+        // these registers) or hardwired between DP16 and external CPU pins.
         reset_write_clock_enable(MCA, l_pairs)    // Merge with next function
           for each rp in l_pairs:
             wrckl_enable =        // src/import/chips/p9/procedures/hwp/memory/lib/phy/dp16.C
@@ -3093,15 +3099,155 @@ for each functional MCBIST
       ===============================================================
 
       // That was the last calibration step performed in draminit_training, there are two more in draminit_trainadv.
+      // We are still in "for each rp" loop.
+      //
+      // Assuming ABORT_ON_CAL_ERROR==0 in DDRPHY_PC_INIT_CAL_CONFIG0_Px, we want to continue training other DIMMs/ranks
+      // regardless of whether calibration passed or failed. We may or may not have bad DQ bits now. A number of bad bits
+      // can be handled.
+      //
+      // Check if initial calibration failed.
+      l_rc = process_initial_cal_errors(DIMM):
+        IOM0.DDRPHY_DP16_RD_VREF_CAL_ERROR_P0_{0-4}               // 0x8000007A0701103F, +0x0400_0000_0000
+          // We can test all bits of the last DP16 - unused bits are always 0 because they were not trained.
+          if any register != 0: return error
 
-// This is next istep!
+        // Note ERROR_MASK1 is before ERROR_MASK0 in SCOM space
+        IOM0.DDRPHY_DP16_WR_VREF_ERROR0_P0_{0-4}                  // 0x800000AE0701103F, +0x0400_0000_0000
+        IOM0.DDRPHY_DP16_WR_VREF_ERROR1_P0_{0-4}                  // 0x800000AF0701103F, +0x0400_0000_0000
+        IOM0.DDRPHY_DP16_WR_VREF_ERROR_MASK0_P0_{0-4}             // 0x800000FB0701103F, +0x0400_0000_0000
+        IOM0.DDRPHY_DP16_WR_VREF_ERROR_MASK1_P0_{0-4}             // 0x800000FA0701103F, +0x0400_0000_0000
+          if any (ERRORn & ~ERROR_MASKn) != 0: return error
+
+        IOM0.DDRPHY_PC_INIT_CAL_ERROR_P0                          // 0x8000C0180701103F
+          if [60-63] == 0 or      // no rank pairs reported
+           [48-59] == 0:          // no errors reported
+            // This is either true success or an error in the calibration engine itself. Check for latter.
+            IOM0.IOM_PHY0_DDRPHY_FIR_REG        // 0x07011000
+              if IOM_PHY0_DDRPHY_FIR_REG_DDR_FIR_ERROR_2 (52) == 1:
+                // > Clear the PHY FIR ERROR 2 bit so we don't keep failing training and training advance on this port
+                [52] IOM_PHY0_DDRPHY_FIR_REG_DDR_FIR_ERROR_2 = 0
+                // FIXME: comments say that we return success if there are FIR errors, even when bit 52 was 1. Code
+                // seems to negate that and return error caused by PLL or error caused by FIR, which is treated the same
+                // by functions higher in the call stack (different debug output maybe?). It is possible that I totally
+                // misunderstood the code, double check later with fresh mind.
+                // Or, maybe it should return "success" as an indication of failure that isn't related to bad DQ bits,
+                // so there is no reason to even try fixing it?
+                return error
+
+            return success        // still in the "if no rp or no errors reported" branch
+
+        // At this point we have no RD/WR VREF errors, but at least one bit in PC_INIT_CAL_ERROR is set. Print it and:
+        return error        // This also checks PLL vs FIR errors in Hostboot
+
+      if l_rc != success:
+        // Hostboot assumes that when we got here, we have some bad DQ bits. It doesn't seem to differentiate between
+        // bad bits and other errors, like calibration engine failure (unless FFDC does something about that).
+        //
+        // We can recover from 1 nibble + 1 bit (or less) bad lines. Anything more and DIMM is beyond repair. A bad
+        // nibble is a nibble with any number of bad bits. If a DQS is bad (either true or complementary signal, or
+        // both), a whole nibble (for x4 DRAMs) or byte (x8) is considered bad.
+        //
+        // Function used in Hostboot checks again if there are any bad bits. It also has support for checking more than
+        // one rank pair (maybe it is called from other places, too). These check are omitted here.
+        //
+        // Check both DQS and DQ registers in one loop, iterating over DP16s - easier to sum bad bits/nibbles.
+        //
+        // See reset_write_clock_enable() and reset_write_clock_enable() in 13.8 or an array in process_bad_bits() in
+        // phy/dp16.C for mapping of DQS bits in x8 and mask bits from this register accordingly.
+        // TODO: maybe unused bits are not trained and cannot fail? This would simplify things, we could use the same
+        // logic for x8 as for x4.
+        total_bad_nibbles = 0
+        total_bad_bits = 0
+        IOM0.DDRPHY_DP16_DQS_BIT_DISABLE_RP<rp>_P0_{0-4}:         // 0x80000<rp>7D0701103F, +0x0400_0000_0000
+          // This calculates how many (DQS_t | DQS_c) failed - if _t and _c failed for the same DQS, we count it as one.
+          bad_dqs = bit_count((reg & 0x5500) | ((reg & 0xaa00) >> 1))
+          if x8 && bad_dqs > 0: DIMM is FUBAR, return error?
+          total_bad_nibbles += bad_dqs
+          // If we are already past max possible number, we might as well return now
+          if total_bad_nibbles > 1: DIMM is FUBAR, return error?
+
+        IOM0.DDRPHY_DP16_DQ_BIT_DISABLE_RP<rp>_P0_{0-4}:          // 0x80000<rp>7C0701103F, +0x0400_0000_0000
+          nibble = {[48-51], [52-55], [56-59], [60-63]}   // exclude nibble corresponding to a bad DQS, it won't get worse
+          for each nibble:
+            if bit_count(nibble) >  1: total_bad_nibbles += 1
+            if bit_count(nibble) == 1: total_bad_bits += 1
+            // We can't have two bad bits, one of them must be treated as bad nibble
+            if total_bad_bits    >  1: total_bad_nibbles += 1, total_bad_bits -= 1
+            if total_bad_nibbles >  1: DIMM is FUBAR, return error?
+
+        // Now, if total_bad_nibbles is less than 2 we know that total_bad_bits is also less than 2, and DIMM is good
+        // enough for recovery.
+
+    // End of "for each rp" loop
+
+    // Hostboot writes bad DQ maps into an attribute. Attribute name suggests this is saved in VPD, but comments mention
+    // SPD. Long time ago we assumed no bad DQ bits from VPD, all of them were to be trained on each boot, so no reason
+    // to write it back (at least for now).
+
+    workarounds::dp16::modify_calibration_results() - does not apply to DD2.*
+
+  // End of "for each functional MCA" loop
+
+  // Hostboot just logs the errors reported earlier (i.e. more than 1 nibble + 1 bit of bad DQ lines) "and lets PRD
+  // deconfigure based off of ATTR_BAD_DQ_BITMAP".
+  // TODO: what is PRD? How does it "deconfigure" and what? Quick glance at the code: it may have something to do with
+  // undocumented 0x501082X SCOM registers, there are usr/diag/prdf/*/*.rule files with yacc/flex files to compile them.
+  // It also may be using `attn` instruction.
+
+  mss::unmask::after_dram_training():
+    // > All mcbist attentions are already special attentions
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT0             // 0x07012306
+          [1] MCBISTFIRQ_COMMAND_ADDRESS_TIMEOUT =  0
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT1             // 0x07012307
+          [1] MCBISTFIRQ_COMMAND_ADDRESS_TIMEOUT =  1
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRMASK             // 0x07012303
+          [1] MCBISTFIRQ_COMMAND_ADDRESS_TIMEOUT =  0     //recoverable_error (0,1,0)
+
+    for each functional MCA
+      MC01.PORT0.SRQ.MBACALFIR_ACTION0              // 0x07010906
+            [2]   MBACALFIR_MASK_REFRESH_OVERRUN =        0
+            [5]   MBACALFIR_MASK_DDR_CAL_TIMEOUT_ERR =    0
+            [7]   MBACALFIR_MASK_DDR_CAL_RESET_TIMEOUT =  0
+            [9]   MBACALFIR_MASK_WRQ_RRQ_HANG_ERR =       0
+            [11]  MBACALFIR_MASK_ASYNC_IF_ERROR =         0
+            [12]  MBACALFIR_MASK_CMD_PARITY_ERROR =       0
+            [14]  MBACALFIR_MASK_RCD_CAL_PARITY_ERROR =   0
+      MC01.PORT0.SRQ.MBACALFIR_ACTION1              // 0x07010907
+            [2]   MBACALFIR_MASK_REFRESH_OVERRUN =        1
+            [5]   MBACALFIR_MASK_DDR_CAL_TIMEOUT_ERR =    1
+            [7]   MBACALFIR_MASK_DDR_CAL_RESET_TIMEOUT =  1
+            [9]   MBACALFIR_MASK_WRQ_RRQ_HANG_ERR =       1
+            [11]  MBACALFIR_MASK_ASYNC_IF_ERROR =         0
+            [12]  MBACALFIR_MASK_CMD_PARITY_ERROR =       0
+            [14]  MBACALFIR_MASK_RCD_CAL_PARITY_ERROR =   1
+      MC01.PORT0.SRQ.MBACALFIR_MASK                 // 0x07010903
+            [2]   MBACALFIR_MASK_REFRESH_OVERRUN =        0   // recoverable_error (0,1,0)
+            [5]   MBACALFIR_MASK_DDR_CAL_TIMEOUT_ERR =    0   // recoverable_error (0,1,0)
+            [7]   MBACALFIR_MASK_DDR_CAL_RESET_TIMEOUT =  0   // recoverable_error (0,1,0)
+            [9]   MBACALFIR_MASK_WRQ_RRQ_HANG_ERR =       0   // recoverable_error (0,1,0)
+            [11]  MBACALFIR_MASK_ASYNC_IF_ERROR =         0   // checkstop (0,0,0)
+            [12]  MBACALFIR_MASK_CMD_PARITY_ERROR =       0   // checkstop (0,0,0)
+            [14]  MBACALFIR_MASK_RCD_CAL_PARITY_ERROR =   0   // recoverable_error (0,1,0)
+
+## mss_draminit_trainadv: Advanced dram training (13.12)
+
+> a) p9_mss_draminit_training_advanced.C  (mcbist target) - Nimbus
+> b) p9c_mss_draminit_training_advanced.C  (mba target)   - Cumulus
+>    - Prior to running this procedure will apply known DQ bad bits to prevent them from participating in training.
+>      This information is extracted from the bad DQ attribute and applied to Hardware
+>      - Marks the MCBist mask
+>    - This step will contain any algorithms to improve data eye post training
+>      - At the moment this is a no-op for P9 Nimbus
+>      - For P9 Cumulus the VREF calibration will be done here
+>    - Also will contain some characterization (mfg only) tests
+>      - There will be a FAPI interface for dumping characterization data, platform implementation is TBD (dump to console,
+>        memory, PNOR)
+>    - This procedure will update the bad DQ attribute for each dimm based on its finding
+
+!!!!
       ===============================================================
       // Custom read/write centering
       // Those are two separate PHY hardware accelerated steps, but WR centering may fail because of bad RD centering,
       // in which case both RD and WR must be repeated with a different pattern.
 
       ===============================================================
-
-!!!!!!!!!!!!!
-    TRAINING_ADV_RD   = 20, ///< CUSTOM_READ_CTR in code    // ANDed with next one, if both set - one function for both,
-    TRAINING_ADV_WR   = 21, ///< CUSTOM_WRITE_CTR in code   // otherwise just one (or zero) steps performed
