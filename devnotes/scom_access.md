@@ -155,6 +155,13 @@ Early analysis of call chain resulted with following:
 -> [Singleton<Associator>::instance().performOp(WRITE, target, buffer, buflen, accessType, args)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L161)
 -> [findDeviceRoute(opType = WRITE, devType, accessType)(opType = WRITE, target, buffer, buflen, accessType, addr)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243)
 
-before findDeviceRoute(), procedure has to be registerd using Associator.registerRoute()
+before [findDeviceRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243), procedure has to be registerd using [Associator.registerRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L55)
 
-[/src/usr/fsiscom/fsiscom.C:178](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/fsiscom/fsiscom.C#L178) fsiScomPerformOp() is probably a function responsible for reading/writing
+Call chain to register XSCOM procedure:
+
+[Associator.registerRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L55)
+<- [DeviceFW_deviceRegisterRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L53)
+<- [alias deviceRegisterRoute](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L75)
+<- [macro DEVICE_REGISTER_ROUTE](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.H#L432)
+<- [DEVICE_REGISTER_ROUTE()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L69)
+<- [called on xscomPerformOp()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L665)
