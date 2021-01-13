@@ -149,19 +149,19 @@ Code behavior was unchanged\
 To access `SCOM` `putScom()` or `getScom()` is used.
 Early analysis of call chain resulted with following:
 
-   [putScom(target, address, data)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/include/usr/fapi2/hw_access.H#L119)
--> [platPutScom(target, address, data)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/fapi2/plat_hw_access.C#L148)
--> [deviceWrite(target, data, size, DEVICE_SCOM_ADDRESS(address, opMode))](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/userif.C#L62)
--> [Singleton<Associator>::instance().performOp(WRITE, target, buffer, buflen, accessType, args)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L161)
--> [findDeviceRoute(opType = WRITE, devType, accessType)(opType = WRITE, target, buffer, buflen, accessType, addr)](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243)
+[putScom()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/include/usr/fapi2/hw_access.H#L119)<br/>
+-> [platPutScom()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/fapi2/plat_hw_access.C#L148)<br/>
+-> [deviceWrite()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/userif.C#L62)<br/>
+-> [Singleton<Associator>::instance().performOp()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L161)<br/>
+-> [call procedure returned by findDeviceRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243)
 
 before [findDeviceRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L243), procedure has to be registerd using [Associator.registerRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L55)
 
 Call chain to register XSCOM procedure:
 
-[Associator.registerRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L55)
-<- [DeviceFW_deviceRegisterRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L53)
-<- [alias deviceRegisterRoute](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L75)
-<- [macro DEVICE_REGISTER_ROUTE](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.H#L432)
-<- [DEVICE_REGISTER_ROUTE()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L69)
+[Associator.registerRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/associator.C#L55)<br/>
+<- [DeviceFW_deviceRegisterRoute()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L53)<br/>
+<- [alias deviceRegisterRoute](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.C#L75)<br/>
+<- [macro DEVICE_REGISTER_ROUTE](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.H#L432)<br/>
+<- [DEVICE_REGISTER_ROUTE()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L69)<br/>
 <- [called on xscomPerformOp()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L665)
