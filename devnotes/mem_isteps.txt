@@ -289,10 +289,10 @@ for each functional MCBIST:
           l_TGT4_ATTR_CHIP_EC_FEATURE_HW401780 = !!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!
           // Regs for ID=5 below are not documented
-          *0x5010823 =        // P9N2_MCS_PORT02_MCPERF0
+          *0x05010823 =       // P9N2_MCS_PORT02_MCPERF0
               [22-27] = 0x20
 
-          *0x5010824 =
+          *0x05010824 =       // P9N2_MCS_PORT02_MCPERF2
               [0-2]   = 1
               [3-5]   = 3
               [6-8]   = 5
@@ -308,12 +308,12 @@ for each functional MCBIST:
               [50-54] = 0b11100
               [61] = 1 : if (l_TGT3_ATTR_ENABLE_MEM_EARLY_DATA_SCOM == fapi2::ENUM_..._ON) else 0 // MC01_PORT0_ATCL_CL_CLSCOM_MCPERF2_EN_ALT_ECR_ERR
 
-          *0x5010825 =
+          *0x05010825 =       // P9N2_MCS_PORT02_MCAMOC
               [1]     = 0     // MC01_PORT0_ATCL_CL_CLSCOM_MCAMOC_FORCE_PF_DROP0_OFF
               [4-28]  = 0x19fffff : if (l_TGT4_ATTR_CHIP_EC_FEATURE_HW401780 != 1) else 0
               [29-31] = 1     // MC01_PORT0_ATCL_CL_CLSCOM_MCAMOC_AMO_SIZE_SELECT_128B_RW_64B_DATA
 
-          *0x5010826 =
+          *0x05010826 =       // P9N2_MCS_PORT02_MCEPSQ
               [0-7]   = 1
               [8-15]  = l_def_MC_EPSILON_CFG_T0
               [16-23] = l_def_MC_EPSILON_CFG_T1
@@ -321,14 +321,14 @@ for each functional MCBIST:
               [32-39] = l_def_MC_EPSILON_CFG_T2
               [40-47] = l_def_MC_EPSILON_CFG_T2
 
-          *0x5010827 =
+          *0x05010827 =       // P9N2_MCS_PORT02_MCBUSYQ
               [0]     = 1   // MC01_PORT0_ATCL_CL_CLSCOM_MCBUSYQ_ENABLE_BUSY_COUNTERS_ON
               [1-3]   = 1   // MC01_PORT0_ATCL_CL_CLSCOM_MCBUSYQ_BUSY_COUNTER_WINDOW_SELECT_1024_CYCLES
               [4-13]  = 38
               [14-23] = 51
               [24-33] = 64
 
-          *0x501082b =
+          *0x0501082b =       // P9N2_MCS_PORT02_MCPERF3
               [31] = 1      // MC01_PORT0_ATCL_CL_CLSCOM_MCPERF3_ENABLE_CL0
               [41] = 1      // MC01_PORT0_ATCL_CL_CLSCOM_MCPERF3_ENABLE_AMO_MSI_RMW_ONLY
               [43] = 1 : if (l_TGT3_ATTR_ENABLE_MEM_EARLY_DATA_SCOM == fapi2::ENUM_..._OFF) else 0 // MC01_PORT0_ATCL_CL_CLSCOM_MCPERF3_ENABLE_CP_M_MDI0_LOCAL_ONLY
@@ -2049,10 +2049,14 @@ for each functional MCBIST
     // written to MR# are passed to each DRAM, if individual DRAM has to have its settings changed independently of others
     // we must use Per DRAM Addressability (PDA) mode. PDA is possible only if write leveling was performed.
     //
-    // CCS is per MCBIST, so we need at most 4 (ports) * 2 (DIMMs per port) * 2 (master ranks per DIMM, is 4 ranks on
-    // RDIMM possible/used? PHY supports two ranks per DIMM) * 2 (A- and B-side) * (7 (# of MRS) + 1 (final DES)) = 256
-    // instructions. CCS holds space for 32 instructions, so we have to divide it and send a set of instructions per
-    // DIMM or even smaller chunks.
+    // CCS is per MCBIST, so we need at most 4 (ports) * 2 (DIMMs per port) * 2 (master ranks per DIMM)
+    // * 2 (A- and B-side) * (7 (# of MRS) + 1 (final DES)) = 256 instructions. CCS holds space for 32 instructions, so we
+    // have to divide it and send a set of instructions per DIMM or even smaller chunks.
+    //
+    // TODO: is 4 ranks on RDIMM possible/used? PHY supports two ranks per DIMM (see 2.1 in any of the volumes of the
+    // registers specification), but Hostboot has configurations even for RDIMMs with 4 master ranks (see xlate_map vector
+    // in src/import/chips/p9/procedures/hwp/memory/lib/mc/xlate.C). Maybe those are counted in different places, i.e.
+    // before and after RCD, and thanks to Encoded QuadCS 4R DIMMs are visible to the PHY as 2R devices?
     //
     // Just the MR# values, send each one in this order using procedure described below. Remember about address mirroring!
     // These bits are also in little endian order. All multi-bit fields must be swizzled.
@@ -3191,7 +3195,7 @@ for each functional MCBIST
   // Hostboot just logs the errors reported earlier (i.e. more than 1 nibble + 1 bit of bad DQ lines) "and lets PRD
   // deconfigure based off of ATTR_BAD_DQ_BITMAP".
   // TODO: what is PRD? How does it "deconfigure" and what? Quick glance at the code: it may have something to do with
-  // undocumented 0x501082X SCOM registers, there are usr/diag/prdf/*/*.rule files with yacc/flex files to compile them.
+  // undocumented 0x0501082X SCOM registers, there are usr/diag/prdf/*/*.rule files with yacc/flex files to compile them.
   // It also may be using `attn` instruction.
 
   mss::unmask::after_dram_training():
@@ -3429,3 +3433,109 @@ for each functional MCBIST
 >    - Turn on ECC checking on memory accesses
 >    - Note at this point memory FIRs can be monitored by PRD
 
+for each functional MCBIST
+  if (count_dimms(MCBIST) == 0) go to next MCBIST
+
+  for each functional MCA
+    if (count_dimms(MCA) == 0) go to next MCA
+
+    // Set up the MC port <-> DIMM address translation registers.
+    //
+    // These are not documented in specs, everything described here comes from the code (and comments). Depending on how
+    // you count them, there are 2 or 3 base configurations, and the rest is a modification of one of the bases or its
+    // derived forms. Each level usually adds one row bit, but sometimes it removes it or modifies rank bits. In most cases
+    // when it happens, the rest of bits must be shifted.
+    //
+    // There are two pairs of identical settings for each master/slave rank configurations: 4Gb x4 is always the same as
+    // 8Gb x8, and 8Gb x4 is the same as 16Gb x8.
+    //
+    // Base configurations are:
+    // - 1 rank, non-3DS 4Gb x4 and second DIMM is also 1R (not necessarily 4Gb x4)
+    //   - special case when the other DIMM is not an 1R device (or not present)
+    // - 2 rank, non-3DS 4Gb x4
+    // The special case uses different column, bank and bank group addressing, the other two cases use identical mapping.
+    // Hostboot divides those cases as listed above, but it might make more sense to separate special case and use uniform
+    // logic for the rest.
+    //
+    // According to code, port addresses 0-7 and 22-32 can be configured in the register - 19 possibilities total, encoded,
+    // so bit field in register is 5 bits long, except for row bitmaps, which are only 3 bits long (addresses 0-7 only).
+    // Column, bank and bank group addressing is always the same (DDR4 always has 10 column, 2 bank, 2 bank group bits),
+    // difference is in row bit mapping (we may or may not have bits 15, 16 and 17, those are indexed from 0 so we can have
+    // 15-18 row bits in total) and ranks mapping (up to 2 bits for master ranks, up to 3 bits for slave ranks in 3DS
+    // devices).
+    // TODO: what about 16Gb bank groups? Those should use just 1 bit, but the code doesn't change it.
+    //
+    // Apart from already mentioned bits there is also D-bit (D is short for DIMM). It is used to tell the controller which
+    // DIMM has to be accessed. To avoid holes in the memory map, larger DIMM must be mapped to lower addresses. For example,
+    // when we have 4GB and 8GB DIMMs:
+    //
+    // 0       4       8      12      16 ...      memory space, in GB
+    // |   DIMM A      |DIMM B | hole  | ...             <- this is good
+    // |DIMM B | hole  |   DIMM A      | ...             <- this is bad
+    //
+    // Whether DIMM A is in DIMM0 or DIMM1 slot doesn't matter. The example is simplified - the addresses do not translate
+    // directly to CPU address space. It also assumes that only one MCA is populated.
+    //
+    // There are two pieces to configure for D-bit:
+    // - D_BIT_MAP - which address bit is used to decide which DIMM is used (this would correspond to 8GB in the example
+    //   above), this is common to both DIMMs,
+    // - SLOTn_D_VALUE - what value should the D-bit have to access DIMMn, each DIMM has its own SLOTn_D_VALUE, when one
+    //   DIMM has this bit set, the other one should have it cleared; in the (good) example above DIMM B should have this
+    //   bit set.
+    //
+    // If bits are assigned in a proper order, we can use a constant table with mappings and assign values from that table
+    // to registers describing address bits in a sparse manner, depending on a number of rank and row bits used by a given
+    // DIMM. Both cases of 1R DIMMs are exceptions, most likely because for the smallest possible single DIMM there is not
+    // enough address bits to interleave them in the same way as for larger (single or paired) DIMMs. Discarding support
+    // for 4GB sticks would simplify this to just one case for all possible rank configurations.
+    // TODO: clean and append a spreadsheet with mappings.
+    //
+    // Below are registers layouts reconstructed from import/chips/p9/common/include/p9n2_mc_scom_addresses_fld.H:
+    0x05010820                      // P9N2_MCS_PORT02_MCP0XLT0, also PORT13 on +0x10 SCOM addresses
+        [0]     SLOT0_VALID             // set if DIMM present
+        [1]     SLOT0_D_VALUE
+        [2]     12GB_ENABLE
+        [5]     SLOT0_M0_VALID
+        [6]     SLOT0_M1_VALID
+        [9]     SLOT0_S0_VALID
+        [10]    SLOT0_S1_VALID
+        [11]    SLOT0_S2_VALID
+        [12]    SLOT0_B2_VALID          // Hmmm...
+        [13]    SLOT0_ROW15_VALID
+        [14]    SLOT0_ROW16_VALID
+        [15]    SLOT0_ROW17_VALID
+        [16]    SLOT1_VALID             // set if DIMM present
+        [17]    SLOT1_D_VALUE
+        [21]    SLOT1_M0_VALID
+        [22]    SLOT1_M1_VALID
+        [25]    SLOT1_S0_VALID
+        [26]    SLOT1_S1_VALID
+        [27]    SLOT1_S2_VALID
+        [28]    SLOT1_B2_VALID          // Hmmm...
+        [29]    SLOT1_ROW15_VALID
+        [30]    SLOT1_ROW16_VALID
+        [31]    SLOT1_ROW17_VALID
+        [35-39] D_BIT_MAP
+        [41-43] M0_BIT_MAP              // 3b for M0 but 5b for M1? Seems strange, but that's what the code says...
+        [47-51] M1_BIT_MAP
+        [53-55] R17_BIT_MAP
+        [57-59] R16_BIT_MAP
+        [61-63] R15_BIT_MAP
+
+    0x05010821                      // P9N2_MCS_PORT02_MCP0XLT1
+        [3-7]   S0_BIT_MAP
+        [11-15] S1_BIT_MAP
+        [19-23] S2_BIT_MAP
+        [35-39] COL4_BIT_MAP
+        [43-47] COL5_BIT_MAP
+        [51-55] COL6_BIT_MAP
+        [59-63] COL7_BIT_MAP
+
+    0x05010822                      // P9N2_MCS_PORT02_MCP0XLT2
+        [3-7]   COL8_BIT_MAP
+        [11-15] COL9_BIT_MAP
+        [19-23] BANK0_BIT_MAP
+        [27-31] BANK1_BIT_MAP
+        [35-39] BANK2_BIT_MAP           // Hmmm...
+        [43-47] BANK_GROUP0_BIT_MAP
+        [51-55] BANK_GROUP1_BIT_MAP
