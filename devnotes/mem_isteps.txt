@@ -3427,7 +3427,7 @@ for each functional MCBIST
 
 > a) p9_mss_draminit_mc.C  (mcbist) - Nimbus
 > b) p9c_mss_draminit_mc.C  (membuf) -Cumulus
->    - P9 Cumulus --Set IML complete bit in centaur
+>    - P9 Cumulus -- Set IML complete bit in centaur
 >    - Start main refresh engine
 >    - Refresh, periodic calibration, power controls
 >    - Turn on ECC checking on memory accesses
@@ -3454,8 +3454,13 @@ for each functional MCBIST
     //   - special case when the other DIMM is not an 1R device (or not present)
     // - 2 rank, non-3DS 4Gb x4
     // The special case uses different column, bank and bank group addressing, the other two cases use identical mapping.
-    // Hostboot divides those cases as listed above, but it might make more sense to separate special case and use uniform
-    // logic for the rest.
+    // This is due to the fact that for one 1R DIMM there is no port address bit with index 7, which is used as C9 in other
+    // cases. Hostboot divides those cases as listed above, but it might make more sense to separate special case and use
+    // uniform logic for the rest. However, for two 1R DIMMs port address 29 is always assigned to D-bit (more about it
+    // later), because bit map fields for rows use only 3 bit for encoding, meaning that only port bits 0-7 can be mapped
+    // to row bits 15-17.
+    // TODO: does this imply that 2 1R DIMMs have to have the same size when installed on the same port? Otherwise we may
+    // have stripes of holes for smaller DIMM.
     //
     // According to code, port addresses 0-7 and 22-32 can be configured in the register - 19 possibilities total, encoded,
     // so bit field in register is 5 bits long, except for row bitmaps, which are only 3 bits long (addresses 0-7 only).
@@ -3470,31 +3475,56 @@ for each functional MCBIST
     // when we have 4GB and 8GB DIMMs:
     //
     // 0       4       8      12      16 ...      memory space, in GB
-    // |   DIMM A      |DIMM B | hole  | ...             <- this is good
-    // |DIMM B | hole  |   DIMM A      | ...             <- this is bad
+    // |   DIMM X      |DIMM Y | hole  | ...             <- this is good
+    // |DIMM Y | hole  |   DIMM X      | ...             <- this is bad
     //
-    // Whether DIMM A is in DIMM0 or DIMM1 slot doesn't matter. The example is simplified - the addresses do not translate
-    // directly to CPU address space. It also assumes that only one MCA is populated.
+    // Whether DIMM X is in DIMM0 or DIMM1 slot doesn't matter. The example is simplified - the addresses do not translate
+    // directly to CPU address space. There are multiple MCAs in the system, they are grouped together later in 14.5, based
+    // on the mappings calculated in 7.4.
     //
     // There are two pieces to configure for D-bit:
     // - D_BIT_MAP - which address bit is used to decide which DIMM is used (this would correspond to 8GB in the example
     //   above), this is common to both DIMMs,
     // - SLOTn_D_VALUE - what value should the D-bit have to access DIMMn, each DIMM has its own SLOTn_D_VALUE, when one
-    //   DIMM has this bit set, the other one should have it cleared; in the (good) example above DIMM B should have this
-    //   bit set.
+    //   DIMM has this bit set, the other one should have it cleared; in the (good) example above DIMM Y should have this
+    //   bit set. When both DIMMs have the same size then only one D_VALUE must be set, but it doesn't matter which one.
+    // TODO: what if only one DIMM is present? Do we have to set these to something sane (0 and 0 should work) or is it
+    // enough that VALID bit is clear for the other DIMM?
     //
     // If bits are assigned in a proper order, we can use a constant table with mappings and assign values from that table
     // to registers describing address bits in a sparse manner, depending on a number of rank and row bits used by a given
-    // DIMM. Both cases of 1R DIMMs are exceptions, most likely because for the smallest possible single DIMM there is not
-    // enough address bits to interleave them in the same way as for larger (single or paired) DIMMs. Discarding support
-    // for 4GB sticks would simplify this to just one case for all possible rank configurations.
-    // TODO: clean and append a spreadsheet with mappings.
+    // DIMM. The order is based on the cost of changing individual bits on the DIMM side (considering data locality):
+    // 1. Bank group, bank and column bits are sent with every read/write command. It takes RL = AL + CL + PL after the read
+    //    command until first DQ bits appear on the bus. In practice we usually don't care about write delays, when data is
+    //    sent to the controller the CPU can already execute further code, it doesn't have to wait until it is actually
+    //    written to DRAM. This is a cheap change.
+    //    TODO: this is for DRAM, any additional delay caused by RCD, PHY or MC?
+    // 2. Ranks (both master and slave) are selected by CS (and Chip ID for slave ranks) bits, they are also sent with each
+    //    command. Depending on MR4 settings, we may need to wait for additional tCAL (CS to Command Address Latency), DRAM
+    //    needs some time to "wake up" before it can parse commands. If tCAL is not used (default in Hostboot), the cost is
+    //    the same as for BG, BA, column bits. It doesn't matter whether master or slave ranks are assigned first, but
+    //    Hostboot starts with slave ranks - it has 5 bits per bit map, so it can encode higher numbers.
+    // 3. Row bits - these are expensive. Row must be activated before its column are accessed. Each bank can have one
+    //    activated row at a time. If there was an open row (different than the one we want to access), it must be precharged
+    //    (it takes tRP before next activation command can be issued), and then the new row can be activated (after which we
+    //    have to wait for tRCD before sending the read/write command). A row cannot be opened indefinitely, there is both a
+    //    minimal and maximal period between ACT and PRE commands (tRAS), and minimums for read to precharge (tRTP), ACT to
+    //    ACT for different banks (tRRD, with differentiation between the same and different bank groups) and Four Activate
+    //    Window (tFAW). When row changes don't happen too often, we usually have to wait for tRCD and sometimes also tRP,
+    //    on top of the previous delays.
+    // 4. D bit. Two DIMMs on a channel share all of its lines except CLK, CS, ODT and CKE bits. Because we don't have to
+    //    change CS for a given DIMM, the cost is the same as 1 (assuming hardware holds CS between commands). However, this
+    //    bit has to be assigned lastly (i.e. it has to be the most significant port address bit) to not introduce holes in
+    //    the memory space for two differently sized DIMMs.
+    //    // TODO: can we safely map it closer to LSB (at least before row bits) when we have two DIMMs with the same size?
+    //
+    // TODO: what about bad DQ bits? Do they impact this in any way? Probably not, until DIMM isn't disabled.
     //
     // Below are registers layouts reconstructed from import/chips/p9/common/include/p9n2_mc_scom_addresses_fld.H:
     0x05010820                      // P9N2_MCS_PORT02_MCP0XLT0, also PORT13 on +0x10 SCOM addresses
         [0]     SLOT0_VALID             // set if DIMM present
-        [1]     SLOT0_D_VALUE
-        [2]     12GB_ENABLE
+        [1]     SLOT0_D_VALUE           // set if both DIMMs present and size of DIMM1 > DIMM0
+        [2]     12GB_ENABLE     // unused (maybe for 12Gb/24Gb DRAM?)
         [5]     SLOT0_M0_VALID
         [6]     SLOT0_M1_VALID
         [9]     SLOT0_S0_VALID
@@ -3505,7 +3535,7 @@ for each functional MCBIST
         [14]    SLOT0_ROW16_VALID
         [15]    SLOT0_ROW17_VALID
         [16]    SLOT1_VALID             // set if DIMM present
-        [17]    SLOT1_D_VALUE
+        [17]    SLOT1_D_VALUE           // set if both DIMMs present and size of DIMM1 <= DIMM0
         [21]    SLOT1_M0_VALID
         [22]    SLOT1_M1_VALID
         [25]    SLOT1_S0_VALID
@@ -3516,7 +3546,7 @@ for each functional MCBIST
         [30]    SLOT1_ROW16_VALID
         [31]    SLOT1_ROW17_VALID
         [35-39] D_BIT_MAP
-        [41-43] M0_BIT_MAP              // 3b for M0 but 5b for M1? Seems strange, but that's what the code says...
+        [41-43] M0_BIT_MAP              // 3b for M0 but 5b for M1
         [47-51] M1_BIT_MAP
         [53-55] R17_BIT_MAP
         [57-59] R16_BIT_MAP
@@ -3539,3 +3569,21 @@ for each functional MCBIST
         [35-39] BANK2_BIT_MAP           // Hmmm...
         [43-47] BANK_GROUP0_BIT_MAP
         [51-55] BANK_GROUP1_BIT_MAP
+
+    // All *_BIT_MAP fields above are encoded. Note that some of them are 3b long, those can map only PA 0 through 7.
+    // When code unmaps any bit, the bit map field is also cleared to 0, in addition to SLOTn_*_VALID bit. This probably
+    // isn't necessary, but without documentation it is hard to tell.
+    //
+    // PA   | field
+    // 0    | 0b00000   0x00
+    // 1    | 0b00001   0x01
+    // 2    | 0b00010   0x02
+    // ...
+    // 7    | 0b00111   0x07
+    // 22   | 0b01000   0x08      // defined but not actually used by Hostboot
+    // 23   | 0b01001   0x09
+    // ...
+    // 32   | 0b10010   0x12
+    //
+    // Mappings used by Hostboot can be found in `RAM_addressing.ods` in this repo. I have made some comments about settings
+    // that look suspicious to me, but I'm not an expert.
