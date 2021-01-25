@@ -25,3 +25,13 @@
 
 # Step 11 Hostboot - Centaur Init
 * [11.1 host_prd_hwreconfig](isteps/11_centaur_init/1_host_prd_hwreconfig.md)
+
+# Step 14 Hostboot - DRAM Init
+* [14.1 mss_memdiag: Mainstore Pattern Testing](isteps/14_DRAM_init/1_mss_memdiag.md)
+* [14.2 mss_thermal_init: Initialize the thermal sensor](isteps/14_DRAM_init/2_mss_thermal_init.md)
+* [14.3 proc_pcie_config: Configure the PHBs](isteps/14_DRAM_init/3_proc_pcie_config.md)
+* [14.4 mss_power_cleanup: Clean up any MCS/Centaurs](isteps/14_DRAM_init/4_mss_power_cleanup.md)
+* [14.5 proc_setup_bars: Setup Memory BARs](isteps/14_DRAM_init/5_proc_setups_bars.md)
+* [14.6 proc_htm_setup: Setup HTM allocations](isteps/14_DRAM_init/6_proc_htm_setup.md)
+* [14.7 proc_exit_cache_contained: Execution from memory](isteps/14_DRAM_init/7_proc_exit_cache_contained.md)
+* [14.8 host_mpipl_service: Perform MPIPL tasks](isteps/14_DRAM_init/8_host_mpipl_service.md)
