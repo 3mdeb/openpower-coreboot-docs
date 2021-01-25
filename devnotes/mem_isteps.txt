@@ -2354,7 +2354,7 @@ for each functional MCBIST
 
     // > Disable port fails as it doesn't appear the MC handles initial cal timeouts
     // > correctly (cal_length.) BRS, see conversation with Brad Michael
-    MC01.PORT0.SRQ.MBA_FARB0Q =                 // 0x0000000007010913
+    MC01.PORT0.SRQ.MBA_FARB0Q =                 // 0x07010913
           [57]  MBA_FARB0Q_CFG_PORT_FAIL_DISABLE = 1
 
     // > The following registers must be configured to the correct operating environment:
@@ -2422,7 +2422,7 @@ for each functional MCBIST
       IOM0.DDRPHY_PC_INIT_CAL_ERROR_P0 =            // 0x8000C0180701103F
             [all] 0
 
-      IOM0.IOM_PHY0_DDRPHY_FIR_REG SCOM1 (AND) =    // 0x0000000007011001
+      IOM0.IOM_PHY0_DDRPHY_FIR_REG SCOM1 (AND) =    // 0x07011001
             [all] 1
             [56]  IOM_PHY0_DDRPHY_FIR_REG_DDR_FIR_ERROR_2 = 0
 
@@ -3063,7 +3063,7 @@ for each functional MCBIST
       run()
 
       // Clear training FIRs
-      IOM0.IOM_PHY0_DDRPHY_FIR_REG SCOM1 (AND) =    // 0x0000000007011001
+      IOM0.IOM_PHY0_DDRPHY_FIR_REG SCOM1 (AND) =    // 0x07011001
           [all] 1
           [56]  IOM_PHY0_DDRPHY_FIR_REG_DDR_FIR_ERROR_2 = 0
 
@@ -3587,3 +3587,172 @@ for each functional MCBIST
     //
     // Mappings used by Hostboot can be found in `RAM_addressing.ods` in this repo. I have made some comments about settings
     // that look suspicious to me, but I'm not an expert.
+    //
+    // Registers listed above should be set according to the spreadsheet, I will not repeat these settings here.
+
+    setup_read_pointer_delay():
+      MC01.PORT0.ECC64.SCOM.RECR                    // 0x07010A0A
+          [6-8] MBSECCQ_READ_POINTER_DELAY = 1    // code sets this to "ON", but this field is numerical value
+          // Not sure where this attr comes from or what is its default value. Assume !0 = 1 -> TCE correction enabled
+          [27]  MBSECCQ_ENABLE_TCE_CORRECTION = !ATTR_MNFG_FLAGS.MNFG_REPAIRS_DISABLED_ATTR
+
+    // Enable Power management based off of mrw_power_control_requested
+    // > Before enabling power controls, run the parity disable workaround
+    // TODO: this is a loop over MCAs inside a loop over MCAs. Is this really necessary?
+    for each functional MCA
+      // > The workaround is needed iff
+      // > 1) greater than or equal to DD2
+      // > 2) self time refresh is enabled
+      // > 3) the DIMM's are not TSV                // TSV == 3DS?
+      // > 4) a 4R DIMM is present
+      // FIXME: skip for now, we do not have any 4R, non-3DS sticks to test it anyway
+      str_non_tsv_parity()
+
+    MC01.PORT0.SRQ.PC.MBARPC0Q                      // 0x07010934
+      if ATTR_MSS_MRW_POWER_CONTROL_REQUESTED ==            // default 0 == off
+          ENUM_ATTR_MSS_MRW_IDLE_POWER_CONTROL_REQUESTED_POWER_DOWN         ||        // 1
+          ENUM_ATTR_MSS_MRW_IDLE_POWER_CONTROL_REQUESTED_PD_AND_STR_CLK     ||        // 2
+          ENUM_ATTR_MSS_MRW_IDLE_POWER_CONTROL_REQUESTED_PD_AND_STR_CLK_STOP:         // 3
+        [2] MBARPC0Q_CFG_MIN_MAX_DOMAINS_ENABLE = ATTR_MSS_MRW_POWER_CONTROL_REQUESTED
+
+    // This was already done after draminit_cke_helper, search for "Per conversation with Shelton and Steve..." in 13.10,
+    // > however that might be a work-around so we set it low here kind of like belt-and-suspenders. BRS
+    change_addr_mux_sel()
+      MC01.PORT0.SRQ.MBA_FARB5Q                     // 0x07010918
+          [5]   MBA_FARB5Q_CFG_CCS_ADDR_MUX_SEL = 0
+
+    change_port_fail_disable()
+      MC01.PORT0.SRQ.MBA_FARB0Q                     // 0x07010913
+          [57]  MBA_FARB0Q_CFG_PORT_FAIL_DISABLE = 0
+
+    // > MC work around for OE bug (seen in periodics + PHY)
+    // > Turn on output-enable always on. Shelton tells me they'll fix for DD2
+    // This is also surrounded by #ifndef REMOVE_FOR_DD2, but this name is nowhere else to be found. If this still have to
+    // be used, we may as well merge it with the previous write.
+    change_oe_always_on()
+      MC01.PORT0.SRQ.MBA_FARB0Q                     // 0x07010913
+          [55]  MBA_FARB0Q_CFG_OE_ALWAYS_ON = 1
+
+    change_refresh_enable()
+      MC01.PORT0.SRQ.PC.MBAREF0Q                    // 0x07010932
+          [0] MBAREF0Q_CFG_REFRESH_ENABLE = 1
+
+    enable_periodic_cal()
+      // A large chunk of this function is disabled, protected by #ifdef TODO_166433_PERIODICS, which also isn't mentioned
+      // anywhere else. This is what is left:
+      MC01.PORT0.SRQ.MBA_CAL3Q                      // 0x07010912
+          [all]   0
+          [0-1]   MBA_CAL3Q_CFG_INTERNAL_ZQ_TB =        0x3
+          [2-9]   MBA_CAL3Q_CFG_INTERNAL_ZQ_LENGTH =    0xff
+          [10-11] MBA_CAL3Q_CFG_EXTERNAL_ZQ_TB =        0x3
+          [12-19] MBA_CAL3Q_CFG_EXTERNAL_ZQ_LENGTH =    0xff
+          [20-21] MBA_CAL3Q_CFG_RDCLK_SYSCLK_TB =       0x3
+          [22-29] MBA_CAL3Q_CFG_RDCLK_SYSCLK_LENGTH =   0xff
+          [30-31] MBA_CAL3Q_CFG_DQS_ALIGNMENT_TB =      0x3
+          [32-39] MBA_CAL3Q_CFG_DQS_ALIGNMENT_LENGTH =  0xff
+          [40-41] MBA_CAL3Q_CFG_MPR_READEYE_TB =        0x3
+          [42-49] MBA_CAL3Q_CFG_MPR_READEYE_LENGTH =    0xff
+          [50-51] MBA_CAL3Q_CFG_ALL_PERIODIC_TB =       0x3
+          [52-59] MBA_CAL3Q_CFG_ALL_PERIODIC_LENGTH =   0xff
+          // Or simpler: 0xfffffffffffffff0
+
+    enable_read_ecc()
+      MC01.PORT0.ECC64.SCOM.RECR                    // 0x07010A0A
+          [0]     MBSECCQ_DISABLE_MEMORY_ECC_CHECK_CORRECT =  0
+          [1]     MBSECCQ_DISABLE_MEMORY_ECC_CORRECT =        0
+          [29]    MBSECCQ_USE_ADDRESS_HASH =                  1
+          // Docs don't describe the encoding, code suggests this inverts data, toggles checks
+          [30-31] MBSECCQ_DATA_INVERSION =                    3
+
+    apply_mark_store()
+      MC01.PORT0.ECC64.SCOM.FWMS{0-7}               // 0x07010A18 - 0x07010A1F
+          [all]   0
+          [0-22]  from ATTR_MSS_MVPD_FWMS         // FIXME: where do the values written to MVPD come from?
+
+  unmask::after_draminit_mc()
+    // > All mcbist attentions are already special attentions
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT0             // 0x07012306
+          [10]  MCBISTFIRQ_MCBIST_PROGRAM_COMPLETE =  1
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT1             // 0x07012307
+          [10]  MCBISTFIRQ_COMMAND_ADDRESS_TIMEOUT =  0
+    MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRMASK             // 0x07012303
+          [10]  MCBISTFIRQ_COMMAND_ADDRESS_TIMEOUT =  0     // attention (1,0,0)
+
+    workaround::mcbist::broadcast_out_of_sync()
+      // Maybe merge with previous RMWs?
+      MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT0             // 0x07012306
+          [3]   MCBISTFIRQ_MCBIST_BRODCAST_OUT_OF_SYNC =  0
+      MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRACT1             // 0x07012307
+          [3]   MCBISTFIRQ_MCBIST_BRODCAST_OUT_OF_SYNC =  1
+      MC01.MCBIST.MBA_SCOMFIR.MCBISTFIRMASK             // 0x07012303
+          [3]   MCBISTFIRQ_MCBIST_BRODCAST_OUT_OF_SYNC =  0   // recoverable_error (0,1,0)
+
+      // This loop may as well be merged with the next one, and possibly even with previous writes to this register.
+      for each functional MCA
+        MC01.PORT0.ECC64.SCOM.RECR                    // 0x07010A0A
+            [26]  MBSECCQ_ENABLE_UE_NOISE_WINDOW =  0
+
+    for each functional MCA
+      MC01.PORT1.ECC64.SCOM.ACTION0              // 0x07010A46
+          [33]  FIR_MAINTENANCE_AUE =                     0
+          [36]  FIR_MAINTENANCE_IAUE =                    0
+          [41]  FIR_SCOM_PARITY_CLASS_STATUS =            0
+          [42]  FIR_SCOM_PARITY_CLASS_RECOVERABLE =       0
+          [43]  FIR_SCOM_PARITY_CLASS_UNRECOVERABLE =     0
+          [44]  FIR_ECC_CORRECTOR_INTERNAL_PARITY_ERROR = 0
+          [45]  FIR_WRITE_RMW_CE =                        0
+          [46]  FIR_WRITE_RMW_UE =                        0
+          [48]  FIR_WDF_OVERRUN_ERROR_0 =                 0
+          [49]  FIR_WDF_OVERRUN_ERROR_1 =                 0
+          [50]  FIR_WDF_SCOM_SEQUENCE_ERROR =             0
+          [51]  FIR_WDF_STATE_MACHINE_ERROR =             0
+          [52]  FIR_WDF_MISC_REGISTER_PARITY_ERROR =      0
+          [53]  FIR_WRT_SCOM_SEQUENCE_ERROR =             0
+          [54]  FIR_WRT_MISC_REGISTER_PARITY_ERROR =      0
+          [55]  FIR_ECC_GENERATOR_INTERNAL_PARITY_ERROR = 0
+          [56]  FIR_READ_BUFFER_OVERFLOW_ERROR =          0
+          [57]  FIR_WDF_ASYNC_INTERFACE_ERROR =           0
+          [58]  FIR_READ_ASYNC_INTERFACE_PARITY_ERROR =   0
+          [59]  FIR_READ_ASYNC_INTERFACE_SEQUENCE_ERROR = 0
+      MC01.PORT1.ECC64.SCOM.ACTION1              // 0x07010A47
+          [33]  FIR_MAINTENANCE_AUE =                     1
+          [36]  FIR_MAINTENANCE_IAUE =                    1
+          [41]  FIR_SCOM_PARITY_CLASS_STATUS =            1
+          [42]  FIR_SCOM_PARITY_CLASS_RECOVERABLE =       1
+          [43]  FIR_SCOM_PARITY_CLASS_UNRECOVERABLE =     0
+          [44]  FIR_ECC_CORRECTOR_INTERNAL_PARITY_ERROR = 0
+          [45]  FIR_WRITE_RMW_CE =                        1
+          [46]  FIR_WRITE_RMW_UE =                        0
+          [48]  FIR_WDF_OVERRUN_ERROR_0 =                 0
+          [49]  FIR_WDF_OVERRUN_ERROR_1 =                 0
+          [50]  FIR_WDF_SCOM_SEQUENCE_ERROR =             0
+          [51]  FIR_WDF_STATE_MACHINE_ERROR =             0
+          [52]  FIR_WDF_MISC_REGISTER_PARITY_ERROR =      0
+          [53]  FIR_WRT_SCOM_SEQUENCE_ERROR =             0
+          [54]  FIR_WRT_MISC_REGISTER_PARITY_ERROR =      0
+          [55]  FIR_ECC_GENERATOR_INTERNAL_PARITY_ERROR = 0
+          [56]  FIR_READ_BUFFER_OVERFLOW_ERROR =          0
+          [57]  FIR_WDF_ASYNC_INTERFACE_ERROR =           0
+          [58]  FIR_READ_ASYNC_INTERFACE_PARITY_ERROR =   0
+          [59]  FIR_READ_ASYNC_INTERFACE_SEQUENCE_ERROR = 0
+      MC01.PORT1.ECC64.SCOM.MASK                 // 0x07010A43
+          [33]  FIR_MAINTENANCE_AUE =                     0   // recoverable_error (0,1,0)
+          [36]  FIR_MAINTENANCE_IAUE =                    0   // recoverable_error (0,1,0)
+          [41]  FIR_SCOM_PARITY_CLASS_STATUS =            0   // recoverable_error (0,1,0)
+          [42]  FIR_SCOM_PARITY_CLASS_RECOVERABLE =       0   // recoverable_error (0,1,0)
+          [43]  FIR_SCOM_PARITY_CLASS_UNRECOVERABLE =     0   // checkstop (0,0,0)
+          [44]  FIR_ECC_CORRECTOR_INTERNAL_PARITY_ERROR = 0   // checkstop (0,0,0)
+          [45]  FIR_WRITE_RMW_CE =                        0   // recoverable_error (0,1,0)
+          [46]  FIR_WRITE_RMW_UE =                        0   // checkstop (0,0,0)
+          [48]  FIR_WDF_OVERRUN_ERROR_0 =                 0   // checkstop (0,0,0)
+          [49]  FIR_WDF_OVERRUN_ERROR_1 =                 0   // checkstop (0,0,0)
+          [50]  FIR_WDF_SCOM_SEQUENCE_ERROR =             0   // checkstop (0,0,0)
+          [51]  FIR_WDF_STATE_MACHINE_ERROR =             0   // checkstop (0,0,0)
+          [52]  FIR_WDF_MISC_REGISTER_PARITY_ERROR =      0   // checkstop (0,0,0)
+          [53]  FIR_WRT_SCOM_SEQUENCE_ERROR =             0   // checkstop (0,0,0)
+          [54]  FIR_WRT_MISC_REGISTER_PARITY_ERROR =      0   // checkstop (0,0,0)
+          [55]  FIR_ECC_GENERATOR_INTERNAL_PARITY_ERROR = 0   // checkstop (0,0,0)
+          [56]  FIR_READ_BUFFER_OVERFLOW_ERROR =          0   // checkstop (0,0,0)
+          [57]  FIR_WDF_ASYNC_INTERFACE_ERROR =           0   // checkstop (0,0,0)
+          [58]  FIR_READ_ASYNC_INTERFACE_PARITY_ERROR =   0   // checkstop (0,0,0)
+          [59]  FIR_READ_ASYNC_INTERFACE_SEQUENCE_ERROR = 0   // checkstop (0,0,0)
