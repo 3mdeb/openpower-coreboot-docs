@@ -1,5 +1,3 @@
-class: center, middle, intro
-
 ## OpenPOWER coreboot
 
 ## Documentation
@@ -27,7 +25,7 @@ for Talos II.
 1. Log into the BMC via SSH:
 
    ```
-   ssh root@23.155.224.90
+   ssh root@<IP>
    ```
 
    > The password is `wfv978h4JSG`
@@ -58,10 +56,11 @@ for Talos II.
    [==================================================] 100% ETA:0s 
    ```
 
-4. Log into the BMC GUI at https://23.155.224.90/. Enter the
-   [Server power operations](https://23.155.224.90/#/server-control/power-operations)
-   and invoke warm reboot. Then move to [Serial over LAN remote console](https://23.155.224.90/#/server-control/remote-console)
-   to observe whether the platform is booting. It should boot up to Debian.
+4. Log into the BMC GUI at https://<IP>/. Enter the Server power operations
+   (https://<IP>/#/server-control/power-operations) and invoke warm reboot.
+   Then move to Serial over LAN remote console
+   (https://<IP>/#/server-control/remote-console) to observe whether the
+   platform is booting. It should boot up to Debian.
 
 ---
 
@@ -119,7 +118,7 @@ In order to build coreboot image, follow the steps below:
    (assuming in the coreboot root directory):
 
    ```
-   scp build/coreboot.rom root@23.155.224.90:/tmp
+   scp build/coreboot.rom root@<IP>:/tmp
    ```
 
 2. Backup the HBB partition (for faster later recovery) by invoking this
@@ -137,9 +136,10 @@ In order to build coreboot image, follow the steps below:
 
    Answer yes to the prompt and wait for the process to finish.
 
-4. Log into the BMC GUI again at https://23.155.224.90/. Enter the
-   [Server power operations](https://23.155.224.90/#/server-control/power-operations)
-   and invoke warm reboot. Then move to [Serial over LAN remote console](https://23.155.224.90/#/server-control/remote-console)
+4. Log into the BMC GUI again at https://<IP>/. Enter the Server power
+   operations (https://<IP>/#/server-control/power-operations) and invoke warm
+   reboot. Then move to Serial over LAN remote console
+   (https://<IP>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
 
@@ -150,6 +150,3 @@ In order to build coreboot image, follow the steps below:
 > OPTIONAL: in order to recovery the platform quickly to healthy state, flash
 > the HBB partition back with:
 > `pflash -e -P HBB -p /tmp/hbb.bin`
-
----
-class: center, middle, outro
