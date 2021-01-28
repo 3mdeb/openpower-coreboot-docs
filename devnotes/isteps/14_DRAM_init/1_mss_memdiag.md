@@ -12,6 +12,33 @@ void get_rdtag_delay( const fapi2::buffer<uint64_t>& i_data, uint64_t& o_delay )
     i_data.template extractToRight<36, 6>(o_delay);
 }
 
+template< fapi2::TargetType T, typename TT = portTraits<mss::mc_type::NIMBUS> >
+fapi2::ReturnCode read_farb0q_register( const fapi2::Target<T>& i_target, fapi2::buffer<uint64_t>& o_time )
+{
+    mss::getScom(i_target, 0x7010913, o_time);
+}
+
+template< fapi2::TargetType T, typename TT = portTraits<mss::mc_type::NIMBUS> >
+fapi2::ReturnCode write_farb0q_register( const fapi2::Target<T>& i_target, const fapi2::buffer<uint64_t> i_time )
+{
+    mss::putScom(i_target, 0x7010913, i_time);
+}
+
+template< fapi2::TargetType T = fapi2::TARGET_TYPE_MCA, typename TT = portTraits<mss::mc_type::NIMBUS> >
+void set_rcd_protect_time( const uint64_t i_time, fapi2::buffer<uint64_t>& io_data )
+{
+     io_data.template insertFromRight<48, 6>(i_time);
+}
+
+template< fapi2::TargetType T, typename TT = portTraits<mss::mc_type::NIMBUS> >
+fapi2::ReturnCode change_rcd_protect_time( const fapi2::Target<T>& i_target, const uint64_t i_time )
+{
+    fapi2::buffer<uint64_t> l_data;
+    read_farb0q_register(i_target, l_data);
+    set_rcd_protect_time(i_time, l_data);
+    write_farb0q_register(i_target, l_data);
+}
+
 ///
 /// @brief Unmask and setup actions for memdiags related FIR
 /// @param[in] i_target the fapi2::Target MCBIST
@@ -61,7 +88,8 @@ fapi2::ReturnCode after_memdiags<mss::mc_type::NIMBUS>( const fapi2::Target<fapi
         // As a result, these firs are marked as checkstop for DD2 to avoid any mishandling
         if (l_checkstop_flag)
         {
-            l_ecc64_fir_reg.checkstop<MCA_FIR_MAINLINE_UE>()
+            l_ecc64_fir_reg
+              .checkstop<MCA_FIR_MAINLINE_UE>()
               .checkstop<MCA_FIR_MAINLINE_RCD>();
             l_cal_fir_reg.checkstop<MCA_MBACALFIRQ_PORT_FAIL>();
         }
@@ -90,6 +118,80 @@ fapi2::ReturnCode after_memdiags<mss::mc_type::NIMBUS>( const fapi2::Target<fapi
         mss::change_rcd_recovery_disable(p, mss::LOW);
     }
 }
+
+
+errlHndl_t runStep(const TargetHandleList & i_targetList)
+{
+    // memory diagnostics ipl step entry point
+    errlHndl_t err = nullptr;
+    Globals globals;
+    TargetHandle_t top = nullptr;
+    targetService().getTopLevelTarget(top);
+
+    if(top)
+    {
+        globals.mfgPolicy = top->getAttr<ATTR_MNFG_FLAGS>();
+
+        // by default 0
+        // see hostboot/src/usr/targeting/common/xmltohb/attribute_types.xml:7292
+        uint8_t maxMemPatterns =
+            top->getAttr<ATTR_RUN_MAX_MEM_PATTERNS>();
+
+
+        // This registry / attr is the same as the
+        // exhaustive mnfg one
+        if(maxMemPatterns)
+        {
+            globals.mfgPolicy |=
+              MNFG_FLAG_ENABLE_EXHAUSTIVE_PATTERN_TEST;
+        }
+        globals.simicsRunning = Util::isSimicsRunning();
+    }
+
+    // get the workflow for each target mba passed in.
+    // associate each workflow with the target handle.
+    WorkFlowAssocMap list;
+    TargetHandleList::const_iterator tit;
+    DiagMode mode;
+    for(tit = i_targetList.begin(); tit != i_targetList.end(); ++tit)
+    {
+        // mode = 0 (ONE_PATTERN) is the default output
+        err = getDiagnosticMode(globals, *tit, mode);
+        // create a list with patterns
+        // for ONE_PATTERN the list is as follows
+        // [0] = 12 (START_SCRUB)
+        // [1] = 0 (START_PATTERN_0)
+        err = getWorkFlow(mode, list[*tit], globals);
+    }
+
+    if(nullptr == err)
+    {
+        // set global data
+        Singleton<StateMachine>::instance().setGlobals(globals);
+        err = Singleton<StateMachine>::instance().run(list);
+    }
+
+    // ensure threads and pools are shutdown when finished
+    if(nullptr == err)
+    {
+        err = doStepCleanup(globals);
+    }
+
+    // If this step completes without the need for a reconfig due to an RCD
+    // parity error, clear all RCD parity error counters.
+    ATTR_RECONFIGURE_LOOP_type attr = top->getAttr<ATTR_RECONFIGURE_LOOP>();
+    if (0 == (attr & RECONFIGURE_LOOP_RCD_PARITY_ERROR))
+    {
+        TargetHandleList trgtList; getAllChiplets( trgtList, TYPE_MCA );
+        for (auto & trgt : trgtList)
+        {
+            if (0 != trgt->getAttr<ATTR_RCD_PARITY_RECONFIG_LOOP_COUNT>())
+                trgt->setAttr<ATTR_RCD_PARITY_RECONFIG_LOOP_COUNT>(0);
+        }
+    }
+    return err;
+}
+
 errlHndl_t __runMemDiags(TargetHandleList i_trgtList)
 {
     ATTN::startService();
