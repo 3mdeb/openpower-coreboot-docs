@@ -1,7 +1,15 @@
+```cpp
+const fapi2::Target<fapi2::TARGET_TYPE_MBA> iv_target;          // MBA
+fapi2::Target<fapi2::TARGET_TYPE_MEMBUF_CHIP> iv_targetCentaur; // Centaur associated with this MBA
+fapi2::buffer<uint64_t> iv_start_addr;                          // Start address
+fapi2::buffer<uint64_t> iv_end_addr;                            // End address
+uint32_t iv_stop_condition;                                     // Mask of stop contitions
+bool iv_poll;                                                   // Set true to wait for cmd complete
+const CmdType iv_cmd_type;                                      // Command type
+uint8_t iv_mbaPosition;                                         // 0 = mba01, 1 = mba23
 
 fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
 {
-    FAPI_INF("ENTER mss_MaintCmd::loadPattern()");
     static constexpr uint32_t maintBufferDataRegs[MAX_MBA_PER_CEN][NUM_BEATS][NUM_WORDS] =
     {
         // port0
@@ -66,14 +74,10 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
     uint8_t l_dramWidth = 0;
     uint8_t l_attr_centaur_ec_enable_rce_with_other_errors_hw246685 = 0;
 
-    FAPI_INF("pattern = 0x%.8X 0x%.8X",
-             mss_maintBufferData[l_dramWidth][i_initPattern][0][0],
-             mss_maintBufferData[l_dramWidth][i_initPattern][0][1]);
-
     //----------------------------------------------------
     // Get l_dramWidth
     //----------------------------------------------------
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_WIDTH, iv_target,  l_dramWidth));
+    FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_WIDTH, iv_target,  l_dramWidth);
 
     // Convert from attribute enum values: 8,4 to index values: 0,1
     if(l_dramWidth == mss_memconfig::X8)
@@ -103,117 +107,100 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
         // MAINT_BUFFx_DATA_ECCy is written to.
         l_data.insert<0, 32, 0>(mss_maintBufferData[l_dramWidth][i_initPattern][loop][0]);
         l_data.insert<32, 32, 0>(mss_maintBufferData[l_dramWidth][i_initPattern][loop][1]);
-        FAPI_TRY(fapi2::putScom(iv_targetCentaur, maintBufferDataRegs[iv_mbaPosition][loop][0], l_data));
-        FAPI_TRY(fapi2::putScom(iv_targetCentaur, maintBufferDataRegs[iv_mbaPosition][loop][1], l_ecc));
+        fapi2::putScom(iv_targetCentaur, maintBufferDataRegs[iv_mbaPosition][loop][0], l_data);
+        fapi2::putScom(iv_targetCentaur, maintBufferDataRegs[iv_mbaPosition][loop][1], l_ecc);
     }
-
     //----------------------------------------------------
     // Load the 65th byte: 4 loops to fill in the two 65th bytes in cacheline
     //----------------------------------------------------
-
     l_65th.flush<0>();
-
     // Set bit 56 so that hw will generate the fabric ECC.
     // This is an 8B ECC protecting the data moving on internal buses in Centaur.
     l_65th.setBit<56>();
-
     for(loop = 0; loop < NUM_LOOPS_FOR_65TH_BYTE; ++loop )
     {
         l_65th.insert<1, 3, 1>(mss_65thByte[l_dramWidth][i_initPattern][loop]);
-        FAPI_TRY(fapi2::putScom(iv_targetCentaur, maintBuffer65thRegs[loop][iv_mbaPosition], l_65th));
+        fapi2::putScom(iv_targetCentaur, maintBuffer65thRegs[loop][iv_mbaPosition], l_65th);
     }
-
     //----------------------------------------------------
     // Save i_initPattern in unused maint mark reg
     // so we know what pattern was used when we do
     // UE isolation
     //----------------------------------------------------
-
     // No plans to use maint mark, but make sure it's disabled to be safe
-    FAPI_TRY(fapi2::getScom(iv_targetCentaur, mss_mbsecc[iv_mbaPosition], l_mbsecc));
-
+    fapi2::getScom(iv_targetCentaur, mss_mbsecc[iv_mbaPosition], l_mbsecc);
     l_mbsecc.clearBit<4>();
-
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CEN_CENTAUR_EC_FEATURE_ENABLE_RCE_WITH_OTHER_ERRORS_HW246685, iv_targetCentaur,
-                           l_attr_centaur_ec_enable_rce_with_other_errors_hw246685));
-
-
+    FAPI_ATTR_GET(fapi2::ATTR_CEN_CENTAUR_EC_FEATURE_ENABLE_RCE_WITH_OTHER_ERRORS_HW246685, iv_targetCentaur,
+                           l_attr_centaur_ec_enable_rce_with_other_errors_hw246685);
     if(l_attr_centaur_ec_enable_rce_with_other_errors_hw246685)
     {
         l_mbsecc.setBit<16>();
     }
-
-    FAPI_TRY(fapi2::putScom(iv_targetCentaur, mss_mbsecc[iv_mbaPosition], l_mbsecc));
-
+    fapi2::putScom(iv_targetCentaur, mss_mbsecc[iv_mbaPosition], l_mbsecc);
     l_mbmmr.flush<0>();
     // Store i_initPattern, with range 0-8, in MBMMR bits 4-7
-    l_mbmmr.insert < 4, 4, 8 - 4 > (static_cast<uint8_t>(i_initPattern));
-    FAPI_TRY(fapi2::putScom(iv_targetCentaur, mss_mbmmr[iv_mbaPosition] , l_mbmmr));
+    l_mbmmr.insert <4, 4, 8-4> (static_cast<uint8_t>(i_initPattern));
+    fapi2::putScom(iv_targetCentaur, mss_mbmmr[iv_mbaPosition] , l_mbmmr);
 }
 
 fapi2::ReturnCode mss_MaintCmd::loadCmdType()
 {
     fapi2::buffer<uint64_t> l_data;
     uint8_t l_dram_gen = 0;
-
     // Get DDR3/DDR4: ATTR_EFF_DRAM_GEN
     // 0x01 = fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR3
     // 0x02 = fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR4
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_GEN, iv_target,  l_dram_gen));
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data));
-    l_data.insert < 0, 5, 32 - 5 > ( static_cast<uint32_t>(iv_cmd_type));
-
+    FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_GEN, iv_target,  l_dram_gen);
+    fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data);
+    l_data.insert <0, 5, 32-5>(static_cast<uint32_t>(iv_cmd_type));
     // Setting super fast address increment mode for DDR3, where COL bits are LSB. Valid for all cmds.
     // NOTE: Super fast address increment mode is broken for DDR4 due to DD1 bug
     if (l_dram_gen == fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR3)
     {
         l_data.setBit<5>();
     }
-
-    FAPI_TRY(fapi2::putScom(iv_target, CEN_MBA_MBMCTQ, l_data));
+    fapi2::putScom(iv_target, CEN_MBA_MBMCTQ, l_data);
 }
 
 fapi2::ReturnCode mss_MaintCmd::loadCmdType()
 {
     fapi2::buffer<uint64_t> l_data;
     uint8_t l_dram_gen = 0;
-
     // Get DDR3/DDR4: ATTR_EFF_DRAM_GEN
     // 0x01 = fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR3
     // 0x02 = fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR4
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_GEN, iv_target,  l_dram_gen));
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data));
-    l_data.insert < 0, 5, 32 - 5 > ( static_cast<uint32_t>(iv_cmd_type));
+    FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_GEN, iv_target,  l_dram_gen);
+    fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data);
+    l_data.insert<0, 5, 32-5>(static_cast<uint32_t>(iv_cmd_type));
 
     // Setting super fast address increment mode for DDR3, where COL bits are LSB. Valid for all cmds.
     // NOTE: Super fast address increment mode is broken for DDR4 due to DD1 bug
-    if (l_dram_gen == fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR3)
+    if(l_dram_gen == fapi2::ENUM_ATTR_CEN_EFF_DRAM_GEN_DDR3)
     {
         l_data.setBit<5>();
     }
 
-    FAPI_TRY(fapi2::putScom(iv_target, CEN_MBA_MBMCTQ, l_data));
+    fapi2::putScom(iv_target, CEN_MBA_MBMCTQ, l_data);
 }
 
 fapi2::ReturnCode mss_MaintCmd::loadStartAddress()
 {
     fapi2::buffer<uint64_t> l_data;
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMACAQ, l_data));
-
+    fapi2::getScom(iv_target, CEN_MBA_MBMACAQ, l_data);
     // Load address bits 0:39
     l_data.insert<0, 40, 0>(iv_start_addr);
     l_data.writeBit<CEN_MBA_MBMACAQ_CMD_ROW17>(iv_start_addr.getBit<CEN_MBA_MBMACAQ_CMD_ROW17>());
     // Clear error status bits 40:46
     l_data.clearBit<40, 7>();
-    FAPI_TRY(fapi2::putScom(iv_target, CEN_MBA_MBMACAQ, l_data));
+    fapi2::putScom(iv_target, CEN_MBA_MBMACAQ, l_data);
 }
 
 fapi2::ReturnCode mss_MaintCmd::loadEndAddress()
 {
     fapi2::buffer<uint64_t> l_data;
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMEAQ, l_data));
+    fapi2::getScom(iv_target, CEN_MBA_MBMEAQ, l_data);
     l_data.insert<0, 41, 0>(iv_end_addr);
-    FAPI_TRY(fapi2::putScom(iv_target, CEN_MBA_MBMEAQ, l_data));
+    fapi2::putScom(iv_target, CEN_MBA_MBMEAQ, l_data);
 }
 
 fapi2::ReturnCode mss_get_address_range( const fapi2::Target<fapi2::TARGET_TYPE_MBA>& i_target,
@@ -416,10 +403,8 @@ fapi2::ReturnCode mss_get_address_range( const fapi2::Target<fapi2::TARGET_TYPE_
 
     // (0:3) Configuration type (1-8)
     l_data.extract<0, 4, 8-4>(l_configType);
-
     // (4:5) Configuration subtype (A, B, C, D)
     l_data.extract<4, 2, 8-2>(l_configSubType);
-
     // (8)   Slot Configuration
     // 0 = Centaur DIMM or IS DIMM, slot0 only, 1 = IS DIMM slots 0 and 1
     l_data.extract<8, 1, 8-1>(l_slotConfig);
@@ -477,8 +462,7 @@ fapi2::ReturnCode mss_MaintCmd::loadSpeed(const TimeBaseSpeed i_speed)
     constexpr uint64_t TIMEBASE_SEL01 = 8192;
     constexpr uint64_t PICO_TO_NANOS = 1000;
 
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data));
-
+    fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data);
     if (FAST_MAX_BW_IMPACT == i_speed)
     {
         l_timebase_sel = 0;
@@ -500,7 +484,6 @@ fapi2::ReturnCode mss_MaintCmd::loadSpeed(const TimeBaseSpeed i_speed)
         // taking longer than 12h, but these is no plan to actually use
         // those frequencies.
         FAPI_ATTR_GET(fapi2::ATTR_CEN_MSS_FREQ, iv_targetCentaur,  l_ddr_freq);
-
         // l_timebase_sel
         // MBMCTQ[9:10]: 00 = 1 * Maint Clk
         //               01 = 8192 * Maint Clk
@@ -508,14 +491,12 @@ fapi2::ReturnCode mss_MaintCmd::loadSpeed(const TimeBaseSpeed i_speed)
         l_timebase_sel = 1;
         // Get l_step_size in nSec
         l_step_size = TIMEBASE_SEL01 * 2 * PICO_TO_NANOS / l_ddr_freq;
-
         // Get l_end_address
         mss_get_address_range(
           iv_target,
           MSS_ALL_RANKS,
           l_start_address,
           l_end_address );
-
 
         // Get l_num_address_bits by counting bits set to 1 in l_end_address.
         for(l_address_bit = 0; l_address_bit < VALID_BITS_IN_ADDR_STRING; l_address_bit++ )
@@ -525,29 +506,23 @@ fapi2::ReturnCode mss_MaintCmd::loadSpeed(const TimeBaseSpeed i_speed)
                 l_num_address_bits++;
             }
         }
-
         // Adds in the row for 16Gb. Yes, it's located in a different location
         if(l_end_address.getBit<CEN_MBA_MBMEAQ_CMD_ROW17>())
         {
             l_num_address_bits++;
         }
-
         // NOTE: Smallest number of address bits is supposed to be 25.
         // So if for some reason it's less (like in VBU),
         // use 25 anyway so the scrub rate calculation still works.
         l_num_address_bits = min(25, l_num_address_bits);
-
         // Get l_num_addresses
         l_num_addresses = 1;
-
         for(uint32_t i = 0; i < l_num_address_bits; i++ )
         {
             l_num_addresses *= 2;
         }
-
         // Convert to M addresses
         l_num_addresses /= 1000000;
-
         // Get interval between cmds in order to through l_num_addresses in 12h
         l_cmd_interval = (12 * 60 * 60 * 1000) / l_num_addresses;
         // How many times to multiply l_step_size to get l_cmd_interval?
@@ -557,7 +532,6 @@ fapi2::ReturnCode mss_MaintCmd::loadSpeed(const TimeBaseSpeed i_speed)
         // Make sure smallest is 1
         l_timebase_interval = min(1, l_timebase_interval);
     }
-
     // burst_window_sel
     // MBMCTQ[6]
     l_data.insert<6, 1, 8-1>(l_burst_window_sel);
@@ -583,18 +557,14 @@ fapi2::ReturnCode mss_MaintCmd::loadStopCondMask()
 {
     fapi2::buffer<uint64_t> l_mbasctlq;
     uint8_t l_mbspa_0_fixed_for_dd2 = 0;
-
     // Get attribute that tells us if mbspa 0 cmd complete attention is fixed for dd2
     FAPI_ATTR_GET(fapi2::ATTR_CEN_CENTAUR_EC_FEATURE_HW217608_MBSPA_0_CMD_COMPLETE_ATTN_FIXED, iv_targetCentaur,
                            l_mbspa_0_fixed_for_dd2);
-
     // Get stop conditions from MBASCTLQ
     fapi2::getScom(iv_target, CEN_MBA_MBASCTLQ, l_mbasctlq);
-
     // Start by clearing all bits 0:12 and bit 16
     l_mbasctlq.clearBit<0, 13>();
     l_mbasctlq.clearBit<16>();
-
     if(0 != (iv_stop_condition & STOP_IMMEDIATE))
     {
         l_mbasctlq.setBit<0>();
@@ -647,7 +617,6 @@ fapi2::ReturnCode mss_MaintCmd::loadStopCondMask()
     {
         l_mbasctlq.setBit<12>();
     }
-
     // Command complete attention on clean and error
     // DD2: enable (fixed)
     // DD1: disable (broken)
@@ -690,9 +659,8 @@ fapi2::ReturnCode mss_MaintCmd::collectFFDC()
     uint8_t l_symbol_mark = MSS_INVALID_SYMBOL;
     uint8_t l_chip_mark = MSS_INVALID_SYMBOL;
 
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data));
-    FAPI_TRY(fapi2::getScom(iv_target, CEN_MBA_MBMACAQ, l_data));
-
+    fapi2::getScom(iv_target, CEN_MBA_MBMCTQ, l_data);
+    fapi2::getScom(iv_target, CEN_MBA_MBMACAQ, l_data);
     fapi2::getScom(iv_target, CEN_MBA_MBMEAQ, l_data);
     fapi2::getScom(iv_target, CEN_MBA_MBASCTLQ, l_data);
     fapi2::getScom(iv_target, CEN_MBA_MBMCCQ, l_data);
@@ -705,22 +673,60 @@ fapi2::ReturnCode mss_MaintCmd::collectFFDC()
     for ( uint8_t l_rank = 0; l_rank < MAX_RANKS_PER_PORT; ++l_rank )
     {
         fapi2::getScom(iv_targetCentaur, mss_markstore_regs[l_rank][iv_mbaPosition], l_data);
-    }
-
-    for(uint8_t l_rank = 0; l_rank < MAX_RANKS_PER_PORT; ++l_rank)
-    {
-        mss_get_mark_store(iv_target, l_rank, l_symbol_mark, l_chip_mark );
-    }
-
-    for(uint8_t l_rank = 0; l_rank < MAX_RANKS_PER_PORT; ++l_rank)
-    {
+        mss_get_mark_store(iv_target, l_rank, l_symbol_mark, l_chip_mark);
         mss_check_steering(
-          iv_target,
-          l_rank,
-          l_dramSparePort0Symbol,
-          l_dramSparePort1Symbol,
-          l_eccSpareSymbol);
+          iv_target, l_rank, l_dramSparePort0Symbol,
+          l_dramSparePort1Symbol, l_eccSpareSymbol);
     }
+}
+
+fapi2::ReturnCode mss_SuperFastRandomInit::setupAndExecuteCmd()
+{
+    fapi2::buffer<uint64_t> l_data;
+    // preConditionCheck(); error checking here
+    loadPattern(iv_initPattern);
+    loadCmdType();
+    loadStartAddress();
+    loadEndAddress();
+    loadStopCondMask();
+    // Disable 8B ECC check/correct on WRD data bus: MBA_WRD_MODE(0:1) = 11
+    // before a SuperFastRandomInit command is issued
+    fapi2::getScom(iv_target, CEN_MBA_MBA_WRD_MODE, iv_saved_MBA_WRD_MODE);
+    l_data.insert<0, 64, 0>(iv_saved_MBA_WRD_MODE);
+    l_data.setBit<0>();
+    l_data.setBit<1>();
+    fapi2::putScom(iv_target, CEN_MBA_MBA_WRD_MODE, l_data);
+    startMaintCmd();
+    // postConditionCheck(); error checking here
+    pollForMaintCmdComplete();
+    collectFFDC();
+}
+
+fapi2::ReturnCode mss_SuperFastRead::setupAndExecuteCmd()
+{
+    fapi2::buffer<uint64_t> l_data;
+
+    // preConditionCheck(); error checking here
+    ueTrappingSetup();
+    loadCmdType();
+    loadStartAddress();
+    loadEndAddress();
+    loadStopCondMask();
+    // Need to set RRQ to fifo mode to ensure super fast read commands
+    // are done on order. Otherwise, if cmds get out of order we can't be sure
+    // the trapped address in MBMACA will be correct when we stop
+    // on error. That means we could unintentionally skip addresses if we just
+    // try to increment MBMACA and continue.
+    // NOTE: Cleanup needs to be done to restore settings done.
+    fapi2::getScom(iv_target, CEN_MBA_MBA_RRQ0Q, iv_saved_MBA_RRQ0);
+    l_data.insert<0, 64, 0>(iv_saved_MBA_RRQ0);
+    l_data.clearBit<6, 5>(); // Set 6:10 = 00000 (fifo mode)
+    l_data.setBit<12>();    // Disable MBA RRQ fastpath
+    fapi2::putScom(iv_target, CEN_MBA_MBA_RRQ0Q, l_data);
+    startMaintCmd();
+    // postConditionCheck();  error checking here
+    pollForMaintCmdComplete();
+    collectFFDC();
 }
 
 ///
@@ -741,11 +747,6 @@ fapi2::ReturnCode mss_SuperFastInit::setupAndExecuteCmd()
     loadStopCondMask();
     startMaintCmd();
     // postConditionCheck(); error checking here
-
-    if(iv_poll == false)
-    {
-        return fapi2::FAPI2_RC_SUCCESS;
-    }
     pollForMaintCmdComplete();
     collectFFDC();
 }
@@ -783,56 +784,46 @@ mss_TimeBaseScrub::mss_TimeBaseScrub( const fapi2::Target<fapi2::TARGET_TYPE_MBA
 class mss_TimeBaseScrub : public mss_MaintCmd
 {
     public:
-
         mss_TimeBaseScrub(const fapi2::Target<fapi2::TARGET_TYPE_MBA>& i_target,
                           const fapi2::buffer<uint64_t>& i_start_addr,
                           const fapi2::buffer<uint64_t>& i_end_addr,
                           TimeBaseSpeed i_speed,
                           uint32_t i_stop_condition,
                           bool i_poll );
-
-
         fapi2::ReturnCode setupAndExecuteCmd();
         CmdType getCmdType() const
         {
             return cv_cmd_type;
         }
-
         void setStartAddr(fapi2::buffer<uint64_t> i_start_addr)
         {
             iv_start_addr = i_start_addr;
         }
-
         void setEndAddr(  fapi2::buffer<uint64_t> i_end_addr  )
         {
             iv_end_addr   = i_end_addr;
         }
-
         fapi2::buffer<uint64_t> getStartAddr() const
         {
             return iv_start_addr;
         }
-
         fapi2::buffer<uint64_t> getEndAddr()   const
         {
             return iv_end_addr;
         }
-
     private:
-
         fapi2::ReturnCode setSavedData( uint32_t i_savedData )
         {
             fapi2::ReturnCode l_rc;
             iv_savedData = i_savedData;
             return l_rc;
         }
-
         uint32_t getSavedData()
         {
             return iv_savedData;
         }
-
         static const CmdType cv_cmd_type;
         uint32_t iv_savedData;
         TimeBaseSpeed iv_speed;
 };
+```

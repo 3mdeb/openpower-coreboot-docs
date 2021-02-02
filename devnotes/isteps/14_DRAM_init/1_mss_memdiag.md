@@ -1,15 +1,33 @@
+NOTE: `mss_SuperFastRandomInit`, `mss_SuperFastRead` and `mss_SuperFastInit`
+related analysis is located in [mss_SuperFast.md](mss_SuperFast.md)
 ```cpp
-
-template< fapi2::TargetType T, typename TT = portTraits<mss::mc_type::NIMBUS> >
-fapi2::ReturnCode change_rcd_protect_time( const fapi2::Target<T>& i_target, const uint64_t i_time )
+fapi2::ReturnCode broadcast_out_of_sync(const fapi2::Target<fapi2::TARGET_TYPE_MCBIST>& i_target,
+        const mss::states i_value)
 {
-    fapi2::buffer<uint64_t> l_data;
-    // get farb0q register
-    mss::getScom(i_target, 0x7010913, l_data);
-    // set rcd protect time
-    l_data.template insertFromRight<48, 6>(i_time);
-    // set farb0q register
-    mss::putScom(i_target, 0x7010913, l_data);
+    fapi2::buffer<uint64_t> l_mcbist_action_buffer;
+    // Change Broadcast of out sync to checkstop post workaround
+    // Current FIR register API resets FIR mask registers when setting up FIR
+    // This can result in FIRs being incorrectly unmasked after being handled in memdiags
+    // The scoms below set the mask to checkstop while preserving the current mask state
+    mss::getScom(i_target, MCBIST_MCBISTFIRACT1, l_mcbist_action_buffer);
+    l_mcbist_action_buffer.clearBit<MCBIST_MCBISTFIRQ_MCBIST_BRODCAST_OUT_OF_SYNC>();
+    mss::putScom(i_target, MCBIST_MCBISTFIRACT1, l_mcbist_action_buffer);
+
+    for (const auto& p : mss::find_targets<fapi2::TARGET_TYPE_MCA>(i_target))
+    {
+        fapi2::buffer<uint64_t> l_recr_buffer;
+        // Set UE noise window for workaround
+        // ----
+        // mss::read_recr_register(p, l_recr_buffer);
+        mss::getScom(p, TT::ECC_REG, l_recr_buffer);
+        // ----
+        // mss::set_enable_ue_noise_window(l_recr_buffer, i_value);
+        l_recr_buffer.template writeBit<portTraits<mss::mc_type::NIMBUS>::RECR_ENABLE_UE_NOISE_WINDOW>(i_value);
+        // ----
+        // mss::write_recr_register(p, l_recr_buffer);
+        mss::putScom(p, TT::ECC_REG, l_recr_buffer);
+        // -----
+    }
 }
 
 ///
@@ -37,25 +55,28 @@ fapi2::ReturnCode after_memdiags<mss::mc_type::NIMBUS>( const fapi2::Target<fapi
         fir::reg<MCA_MBACALFIRQ> l_cal_fir_reg(p, l_rc2);
         uint64_t rcd_protect_time = 0;
         const auto l_chip_target = mss::find_target<fapi2::TARGET_TYPE_PROC_CHIP>(i_target);
+        fapi2::buffer<uint64_t> l_data;
 
         // Read out the wr_done and rd_tag delays and find min
         // and set the RCD Protect Time to this value
-        mss::read_dsm0q_register(p, dsm0_buffer);
+        // ----
+        // mss::read_dsm0q_register(p, dsm0_buffer);
+        mss::getScom(p, TT::DSM0Q_REG, dsm0_buffer);
+        // ----
         // mss::get_wrdone_delay(dsm0_buffer, wr_done_delay);
         dsm0_buffer.template extractToRight<24, 6>(wr_done_delay);
         // mss::get_rdtag_delay(dsm0_buffer, rd_tag_delay);
         rcd_protect_time = min(wr_done_delay, rd_tag_delay);
 
-        ////
+        // ----
         // mss::change_rcd_protect_time(p, rcd_protect_time);
-        fapi2::buffer<uint64_t> l_data;
         // get farb0q register
         mss::getScom(p, 0x7010913, l_data);
         // set rcd protect time
         l_data.template insertFromRight<48, 6>(rcd_protect_time);
         // set farb0q register
         mss::putScom(p, 0x7010913, l_data);
-        ////
+        // ----
 
         l_ecc64_fir_reg.checkstop<MCA_FIR_MAINLINE_AUE>()
           .recoverable_error<MCA_FIR_MAINLINE_UE>()
@@ -98,8 +119,17 @@ fapi2::ReturnCode after_memdiags<mss::mc_type::NIMBUS>( const fapi2::Target<fapi
         mss::putScom(p, MCA_ACTION1, l_aue_buffer);
 
         // Note: We also want to include the following setup RCD recovery and port fail
-        mss::change_port_fail_disable(p, mss::LOW);
-        mss::change_rcd_recovery_disable(p, mss::LOW);
+        // ----
+        // mss::change_port_fail_disable(p, mss::LOW);
+        mss::getScom(p, TT::FARB0Q_REG, l_data);
+        l_data.writeBit<TT::PORT_FAIL_DISABLE>(mss::LOW);
+        mss::putScom(p, TT::FARB0Q_REG, l_data);
+        // ----
+        // mss::change_rcd_recovery_disable(p, mss::LOW);
+        mss::getScom(p, TT::FARB0Q_REG, l_data);
+        l_data.writeBit<TT::RCD_RECOVERY_DISABLE>(mss::LOW);
+        mss::putScom(p, TT::FARB0Q_REG, l_data);
+        // ----
     }
 }
 
@@ -125,20 +155,17 @@ bool StateMachine::scheduleWorkItem(WorkFlowProperties & i_wfp)
         // Clear BAD_DQ_BIT_SET bit
         TargetHandle_t top = NULL;
         targetService().getTopLevelTarget(top);
-        ATTR_RECONFIGURE_LOOP_type reconfigAttr =
-            top->getAttr<TARGETING::ATTR_RECONFIGURE_LOOP>();
+        ATTR_RECONFIGURE_LOOP_type reconfigAttr = top->getAttr<TARGETING::ATTR_RECONFIGURE_LOOP>();
         reconfigAttr &= ~RECONFIGURE_LOOP_BAD_DQ_BIT_SET;
         top->setAttr<TARGETING::ATTR_RECONFIGURE_LOOP>(reconfigAttr);
 
         // all workFlows are finished
         // release the init service dispatcher
         // thread waiting for completion
-
         iv_done = true;
-        sync_cond_broadcast(&iv_cond);
-    }
-
-    else if(i_wfp.status == IN_PROGRESS)
+        // synconizes threads
+        // void sync_cond_broadcast(sync_cond_t * i_cond)
+    } else if(i_wfp.status == IN_PROGRESS)
     {
         // still work left for this target
 
@@ -163,143 +190,33 @@ bool StateMachine::scheduleWorkItem(WorkFlowProperties & i_wfp)
 
         return true;
     }
-
     return false;
 }
 
-template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T >
-fapi2::ReturnCode sf_init( const fapi2::Target<T>& i_target,
-                           const uint64_t i_pattern = PATTERN_0 )
-{
-    using ET = mss::mcbistMCTraits<MC>;
-    fapi2::ReturnCode l_rc;
-    constraints<MC> l_const(i_pattern);
-    sf_init_operation<MC> l_init_op(i_target, l_const, l_rc);
-    return l_init_op.execute();
-}
-
-fapi2::ReturnCode nim_sf_init( const fapi2::Target<fapi2::TARGET_TYPE_MCBIST>& i_target,
-                               const uint64_t i_pattern )
-{
-    return mss::memdiags::sf_init<mss::mc_type::NIMBUS>(i_target, i_pattern);
-}
-
-fapi2::ReturnCode nim_sf_read( const fapi2::Target<fapi2::TARGET_TYPE_MCBIST>& i_target,
-                               const mss::mcbist::stop_conditions<mss::mc_type::NIMBUS>& i_stop,
-                               const mss::mcbist::address& i_address,
-                               const mss::mcbist::end_boundary i_end,
-                               const mss::mcbist::address& i_end_address )
-{
-    return mss::memdiags::sf_read<mss::mc_type::NIMBUS>(i_target, i_stop, i_address, i_end, i_end_address);
-}
-
-template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
-inline fapi2::ReturnCode clear_errors( const fapi2::Target<T> i_target )
-{
-    // TK: Clear the more detailed errors checked above
-    fapi2::putScom(i_target, TT::MCBSTATQ_REG, 0);
-    fapi2::putScom(i_target, TT::SRERR0_REG, 0);
-    fapi2::putScom(i_target, TT::SRERR1_REG, 0);
-    fapi2::putScom(i_target, TT::FIRQ_REG, 0);
-}
-
-template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
-inline fapi2::ReturnCode load_fifo_mode( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
-{
-    // Checks if FIFO mode is required by checking all subtests
-    const auto l_subtest_it = std::find_if(i_program.iv_subtests.begin(),
-                                           i_program.iv_subtests.end(), []( const mss::mcbist::subtest_t<MC, T, TT>& i_rhs) -> bool
-    {
-        return i_rhs.fifo_mode_required();
-    });
-
-    // if the FIFO load is not needed (no subtest requiring it was found), just exit out
-    if(l_subtest_it == i_program.iv_subtests.end())
-    {
-        return fapi2::FAPI2_RC_SUCCESS;
-    }
-
-    // Turns on FIFO mode
-    constexpr mss::states FIFO_ON = mss::states::ON;
-
-    // ----
-    // configure_wrq(i_target, FIFO_ON);
-    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target) )
-    {
-        fapi2::buffer<uint64_t> l_data;
-        mss::getScom(l_port, TT::WRQ_REG, l_data);
-        l_data.writeBit<TT::WRQ_FIFO_MODE>(FIFO_ON == mss::states::ON);
-        mss::putScom(l_port, TT::WRQ_REG, l_data);
-    }
-    // ----
-    // configure_rrq(i_target, FIFO_ON);
-    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
-    {
-        fapi2::buffer<uint64_t> l_data;
-        mss::getScom(l_port, TT::RRQ_REG, l_data);
-        l_data.writeBit<TT::RRQ_FIFO_MODE>(FIFO_ON == mss::states::ON);
-        mss::putScom(l_port, TT::RRQ_REG, l_data);
-    }
-}
-
-template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
-inline fapi2::ReturnCode load_config( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
-{
-    // Copy the program's config settings - we want to modify them if we're in sim.
-    fapi2::buffer<uint64_t> l_config = i_program.iv_config;
-
-    // If we're running in Cronus, there is no interrupt so any attention bits will
-    // hang something somewhere. Make sure there's nothing in this config which can
-    // turn on attention bits unless we're running in hostboot
-#ifndef __HOSTBOOT_MODULE
-    if(TT::CFG_ENABLE_ATTN_SUPPORT == mss::states::YES)
-    {
-        l_config.template clearBit<TT::CFG_ENABLE_HOST_ATTN>();
-        l_config.template clearBit<TT::CFG_ENABLE_SPEC_ATTN>();
-    }
-#endif
-    fapi2::putScom(i_target, TT::CFGQ_REG, l_config);
-}
-
-template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
+template<mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
 fapi2::ReturnCode load_mcbmr( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
 {
-    fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
-
-    // Leave if there are no subtests.
-    if (0 == i_program.iv_subtests.size())
-    {
-        return fapi2::current_err;
-    }
-
     // List of the 8 MCBIST registers - each holds 4 subtests.
-    const std::vector< uint64_t > l_memory_registers =
+    const std::vector<uint64_t> l_memory_registers =
     {
         TT::MCBMR0_REG, TT::MCBMR1_REG, TT::MCBMR2_REG, TT::MCBMR3_REG,
         TT::MCBMR4_REG, TT::MCBMR5_REG, TT::MCBMR6_REG, TT::MCBMR7_REG,
     };
-
-    std::vector< uint64_t > l_memory_register_buffers =
-    {
-        0, 0, 0, 0, 0, 0, 0, 0,
-    };
-
+    std::vector<uint64_t> l_memory_register_buffers = {0, 0, 0, 0, 0, 0, 0, 0};
     ssize_t l_bin = -1;
     size_t l_register_shift = 0;
 
     // We'll shift this in to position to indicate which subtest is the last
-    const uint64_t l_done_bit( 0x8000000000000000 >> TT::DONE );
-
+    // TT::DONE = MCBIST_MCBMR0Q_MCBIST_CFG_TEST00_DONE
+    const uint64_t l_done_bit(0x8000000000000000 >> TT::DONE);
     // For now limit MCBIST programs to 32 subtests.
     const auto l_program_size = i_program.iv_subtests.size();
-
     // Distribute the program over the 8 MCBIST subtest registers
     // We need the index, so increment thru i_program.iv_subtests.size()
     for (size_t l_index = 0; l_index < l_program_size; ++l_index)
     {
         l_bin = (l_index % TT::SUBTEST_PER_REG) == 0 ? l_bin + 1 : l_bin;
         l_register_shift = (l_index % TT::SUBTEST_PER_REG) * TT::BITS_IN_SUBTEST;
-
         l_memory_register_buffers[l_bin] |=
             (uint64_t(i_program.iv_subtests[l_index].iv_mcbmr) << TT::LEFT_SHIFT) >> l_register_shift;
     }
@@ -314,16 +231,6 @@ fapi2::ReturnCode load_mcbmr( const fapi2::Target<T>& i_target, const mcbist::pr
     {
         fapi2::putScom(i_target, l_memory_registers[l_index], l_memory_register_buffers[l_index]);
     }
-}
-
-template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
-inline fapi2::ReturnCode start_stop( const fapi2::Target<T>& i_target, const bool i_start_stop )
-{
-    // This is the same as the CCS start_stop ... perhaps we need one template for all
-    // 'engine' control functions? BRS
-    fapi2::buffer<uint64_t> l_buf;
-    fapi2::getScom(i_target, TT::CNTLQ_REG, l_buf);
-    fapi2::putScom(i_target, TT::CNTLQ_REG, i_start_stop ? l_buf.setBit<TT::MCBIST_START>() : l_buf.setBit<TT::MCBIST_STOP>());
 }
 
 template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
@@ -346,10 +253,116 @@ inline fapi2::ReturnCode load_data_config( const fapi2::Target<T>& i_target, con
     fapi2::putScom(i_target, TT::DATA_ROTATE_SEED_REG, i_program.iv_data_rotate_seed);
 }
 
-template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
-inline fapi2::ReturnCode load_control( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
+// using cache_line = std::pair<uint64_t, uint64_t>;
+// using pattern = std::vector<cache_line>;
+template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
+fapi2::ReturnCode load_maint_pattern( const fapi2::Target<T>& i_target, const pattern& i_pattern, const bool i_invert )
 {
-    return fapi2::putScom(i_target, TT::CNTLQ_REG, i_program.iv_control);
+    // The scom registers are in the port target. PT: port traits
+    using PT = mcbistTraits<MC, TT::PORT_TYPE>;
+    // Init the fapi2 return code
+    fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
+    // Array access control
+    fapi2::buffer<uint64_t> l_aacr;
+    // Array access data
+    fapi2::buffer<uint64_t> l_aadr;
+
+    // first we must setup the access control register
+    // Setup the array address
+    // enable the auto increment bit
+    // set ecc mode bit on
+    l_aacr
+    .template writeBit<PT::RMW_WRT_BUFFER_SEL>(mss::states::OFF)
+    .template insertFromRight<PT::RMW_WRT_ADDRESS, PT::RMW_WRT_ADDRESS_LEN>(PT::MAINT_DATA_INDEX_START)
+    .template writeBit<PT::RMW_WRT_AUTOINC>(mss::states::ON)
+    .template writeBit<PT::RMW_WRT_ECCGEN>(mss::states::ON);
+
+    // This loop will be run twice to write the pattern twice.  Once per 64B write.
+    // When MCBIST maint mode is in 64B mode it will only use the first 64B when in 128B mode
+    // MCBIST maint will use all 128B (it will perform two consecutive writes)
+    const auto l_ports =  mss::find_targets<TT::PORT_TYPE>(i_target);
+    // Init the port map
+    for (const auto& p : l_ports)
+    {
+        l_aacr.template insertFromRight<PT::RMW_WRT_ADDRESS, PT::RMW_WRT_ADDRESS_LEN>(PT::MAINT_DATA_INDEX_START);
+        for (auto l_num_writes = 0; l_num_writes < 2; ++l_num_writes)
+        {
+            fapi2::putScom(p, PT::RMW_WRT_BUF_CTL_REG, l_aacr);
+            for (const auto& l_cache_line : i_pattern)
+            {
+                fapi2::buffer<uint64_t> l_value_first  = i_invert ? ~l_cache_line.first : l_cache_line.first;
+                fapi2::buffer<uint64_t> l_value_second = i_invert ? ~l_cache_line.second : l_cache_line.second;
+                fapi2::putScom(p, PT::RMW_WRT_BUF_DATA_REG, l_value_first);
+                // In order for the data to actually be written into the RMW buffer, we must issue a putscom to the MCA_AAER register
+                // This register is used for the ECC, we will just write all zero to this register.  The ECC will be auto generated
+                // when the aacr MCA_WREITE_AACR_ECCGEN bit is set
+                fapi2::putScom(p, PT::RMW_WRT_BUF_ECC_REG, 0);
+                // No need to increment the address because the logic does it automatically when MCA_WREITE_AACR_AUTOINC is set
+                fapi2::putScom(p, PT::RMW_WRT_BUF_DATA_REG, l_value_second);
+                // In order for the data to actually be written into the RMW buffer, we must issue a putscom to the MCA_AAER register
+                // This register is used for the ECC, we will just write all zero to this register.  The ECC will be auto generated
+                // when the aacr MCA_WREITE_AACR_ECCGEN bit is set
+                fapi2::putScom(p, PT::RMW_WRT_BUF_ECC_REG, 0);
+            }
+            l_aacr.template insertFromRight<PT::RMW_WRT_ADDRESS, PT::RMW_WRT_ADDRESS_LEN>(PT::MAINT_DATA_INDEX_END);
+        }
+    }
+}
+
+template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
+inline fapi2::ReturnCode load_config( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
+{
+    // Copy the program's config settings - we want to modify them if we're in sim.
+    fapi2::buffer<uint64_t> l_config = i_program.iv_config;
+    // If we're running in Cronus, there is no interrupt so any attention bits will
+    // hang something somewhere. Make sure there's nothing in this config which can
+    // turn on attention bits unless we're running in hostboot
+#ifndef __HOSTBOOT_MODULE
+    if(TT::CFG_ENABLE_ATTN_SUPPORT == mss::states::YES)
+    {
+        l_config.template clearBit<TT::CFG_ENABLE_HOST_ATTN>();
+        l_config.template clearBit<TT::CFG_ENABLE_SPEC_ATTN>();
+    }
+#endif
+    fapi2::putScom(i_target, TT::CFGQ_REG, l_config);
+}
+
+template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
+inline fapi2::ReturnCode load_fifo_mode( const fapi2::Target<T>& i_target, const mcbist::program<MC>& i_program )
+{
+    // Checks if FIFO mode is required by checking all subtests
+    const auto l_subtest_it = std::find_if(i_program.iv_subtests.begin(),
+                                           i_program.iv_subtests.end(),
+                                           []( const mss::mcbist::subtest_t<MC, T, TT>& i_rhs) -> bool
+                                           {
+                                               return i_rhs.fifo_mode_required();
+                                           });
+
+    // if the FIFO load is not needed (no subtest requiring it was found), just exit out
+    if(l_subtest_it == i_program.iv_subtests.end())
+    {
+        return;
+    }
+
+    // ----
+    // configure_wrq(i_target, FIFO_ON);
+    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target) )
+    {
+        fapi2::buffer<uint64_t> l_data;
+        mss::getScom(l_port, TT::WRQ_REG, l_data);
+        l_data.writeBit<TT::WRQ_FIFO_MODE>(1);
+        mss::putScom(l_port, TT::WRQ_REG, l_data);
+    }
+    // ----
+    // configure_rrq(i_target, FIFO_ON);
+    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
+    {
+        fapi2::buffer<uint64_t> l_data;
+        mss::getScom(l_port, TT::RRQ_REG, l_data);
+        l_data.writeBit<TT::RRQ_FIFO_MODE>(1);
+        mss::putScom(l_port, TT::RRQ_REG, l_data);
+    }
+    // ----
 }
 
 template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T>, typename ET = mcbistMCTraits<MC> >
@@ -362,8 +375,14 @@ fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i
     // Init the fapi2 return code
     fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
 
-    clear_errors(i_target);
-    load_fifo_mode<MC>( i_target, i_program);
+    // ----
+    // clear_errors(i_target);
+    fapi2::putScom(i_target, TT::MCBSTATQ_REG, 0);
+    fapi2::putScom(i_target, TT::SRERR0_REG, 0);
+    fapi2::putScom(i_target, TT::SRERR1_REG, 0);
+    fapi2::putScom(i_target, TT::FIRQ_REG, 0);
+    // ----
+    load_fifo_mode<MC>(i_target, i_program);
     load_addr_gen<MC>(i_target, i_program);
     // ----
     // load_mcbparm<MC>(i_target, i_program);
@@ -376,14 +395,22 @@ fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i
     fapi2::putScom(i_target, TT::MCBAMR3A0Q_REG, i_program.iv_addr_map3);
     // ----
     load_config<MC>( i_target, i_program);
-    load_control<MC>( i_target, i_program);
+    // ----
+    // load_control<MC>(i_target, i_program);
+    return fapi2::putScom(i_target, TT::CNTLQ_REG, i_program.iv_control);
+    // ----
     load_data_config<MC>( i_target, i_program);
     // ----
-    // load_thresholds<MC>( i_target, i_program);
+    // load_thresholds<MC>(i_target, i_program);
     fapi2::putScom(i_target, TT::THRESHOLD_REG, i_program);
     // ----
     load_mcbmr<MC>(i_target, i_program);
-    start_stop<MC>(i_target, mss::START);
+    // ----
+    // start_stop<MC>(i_target, mss::START);
+    fapi2::buffer<uint64_t> l_buf;
+    fapi2::getScom(i_target, TT::CNTLQ_REG, l_buf);
+    fapi2::putScom(i_target, TT::CNTLQ_REG, l_buf.setBit<TT::MCBIST_START>());
+    // ----
     // Verify that the in-progress bit has been set, so we know we started
     // Don't use the program's poll as it could be a very long time. Use the default poll.
     l_poll_result = mss::poll(i_target, TT::STATQ_REG, l_poll_parameters,
@@ -403,28 +430,8 @@ inline fapi2::ReturnCode execute()
     return mss::mcbist::execute(iv_target, iv_program);
 }
 
-template< mss::mc_type MC, fapi2::TargetType T = mss::mcbistMCTraits<MC>::MC_TARGET_TYPE , typename TT = mcbistTraits<MC, T> >
-fapi2::ReturnCode sf_read( const fapi2::Target<T>& i_target,
-                           const stop_conditions<MC>& i_stop,
-                           const mss::mcbist::address& i_address = mss::mcbist::address(),
-                           const end_boundary i_end = end_boundary::STOP_AFTER_SLAVE_RANK,
-                           const mss::mcbist::address& i_end_address = mss::mcbist::address(TT::LARGEST_ADDRESS) )
-{
-    using ET = mss::mcbistMCTraits<MC>;
-
-    pre_maint_read_settings<MC>(i_target);
-
-    fapi2::ReturnCode l_rc;
-    constraints<MC> l_const(i_stop, speed::LUDICROUS, i_end, i_address, i_end_address);
-    sf_read_operation<MC> l_read_op(i_target, l_const, l_rc);
-
-    // calls inline fapi2::ReturnCode execute()
-    return l_read_op.execute();
-}
-
 errlHndl_t StateMachine::doMaintCommand(WorkFlowProperties & i_wfp)
 {
-    errlHndl_t err = nullptr;
     uint64_t workItem;
 
     TargetHandle_t target;
@@ -461,10 +468,9 @@ errlHndl_t StateMachine::doMaintCommand(WorkFlowProperties & i_wfp)
 
         // We will always do ce setup though CE calculation
         // is only done during MNFG. This will give use better ffdc.
-        err = ceErrorSetup<TYPE_MBA>( target );
+        ceErrorSetup<TYPE_MBA>( target );
 
-        FAPI_INVOKE_HWP( err, mss_get_address_range, fapiMba, MSS_ALL_RANKS,
-                            startAddr, endAddr );
+        mss_get_address_range(fapiMba, MSS_ALL_RANKS, startAddr, endAddr);
 
         // new command...use the full range
 
@@ -510,7 +516,7 @@ errlHndl_t StateMachine::doMaintCommand(WorkFlowProperties & i_wfp)
 
         // Command and address configured.
         // Invoke the command.
-        FAPI_INVOKE_HWP(err, cmd->setupAndExecuteCmd);
+        cmd->setupAndExecuteCmd();
     }
 }
 
@@ -543,10 +549,7 @@ bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
                     {
                         PRDF::restoreDramRepairs<TYPE_MCA>( mca );
                     }
-                }
-                else if (TYPE_OCMB_CHIP == trgtType)
-                {
-                    PRDF::restoreDramRepairs<TYPE_OCMB_CHIP>( target );
+                }cmdmRepairs<TYPE_OCMB_CHIP>( target );
                 }
                 break;
             }
@@ -668,43 +671,13 @@ errlHndl_t runStep(const TargetHandleList & i_targetList)
 
 errlHndl_t __runMemDiags(TargetHandleList i_trgtList)
 {
-    ATTN::startService();
+    // The service is started to handle all the interrupts
+    // ATTN::startService();
     MDIA::runStep(i_trgtList);
-    ATTN::stopService();
+    // ATTN::stopService();
 }
 
-template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = portTraits<MC> >
-inline fapi2::ReturnCode reset_reorder_queue_settings(const fapi2::Target<T>& i_target)
-{
-    uint8_t l_reorder_queue = 0;
-    reorder_queue_setting<MC>(i_target, l_reorder_queue);
-
-    // Changes the reorder queue settings
-    // Two settings are FIFO and REORDER.  FIFO is a 1 in the registers, while reorder is a 0 state
-    const mss::states l_state = ((l_reorder_queue == fapi2::ENUM_ATTR_MEM_REORDER_QUEUE_SETTING_FIFO) ?
-                                  mss::states::ON : mss::states::OFF);
-    // ----
-    // configure_rrq(i_target, l_state);
-    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
-    {
-        fapi2::buffer<uint64_t> l_data;
-        mss::getScom(l_port, TT::RRQ_REG, l_data);
-        l_data.writeBit<TT::RRQ_FIFO_MODE>(l_state == mss::states::ON);
-        mss::putScom(l_port, TT::RRQ_REG, l_data);
-    }
-    // -----
-    // configure_wrq(i_target, l_state);
-    for(const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
-    {
-        fapi2::buffer<uint64_t> l_data;
-        mss::getScom(l_port, TT::WRQ_REG, l_data);
-        l_data.writeBit<TT::WRQ_FIFO_MODE>(l_state == mss::states::ON);
-        mss::putScom(l_port, TT::WRQ_REG, l_data);
-    }
-    // ----
-}
-
-void* call_mss_memdiag (void* io_pArgs)
+void* call_mss_memdiag(void* io_pArgs)
 {
     TARGETING::Target* masterproc = nullptr;
     TARGETING::targetService().masterProcChipTargetHandle(masterproc);
@@ -720,7 +693,36 @@ void* call_mss_memdiag (void* io_pArgs)
         // Unmask mainline FIRs.
         mss::unmask::after_memdiags(ft);
         // Turn off FIFO mode to improve performance.
-        mss::reset_reorder_queue_settings(ft);
+
+        // ****
+        // mss::reset_reorder_queue_settings(ft);
+        uint8_t l_reorder_queue = 0;
+        FAPI_ATTR_GET(fapi2::ATTR_MSS_REORDER_QUEUE_SETTING, i_target, l_reorder_queue)
+
+        // Changes the reorder queue settings
+        // Two settings are FIFO and REORDER.  FIFO is a 1 in the registers, while reorder is a 0 state
+        const mss::states l_state =  ((l_reorder_queue == fapi2::ENUM_ATTR_MEM_REORDER_QUEUE_SETTING_FIFO) ?
+                                        mss::states::ON : mss::states::OFF);
+        // ----
+        // configure_rrq(i_target, l_state);
+        for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
+        {
+            fapi2::buffer<uint64_t> l_data;
+            mss::getScom(l_port, TT::RRQ_REG, l_data);
+            l_data.writeBit<TT::RRQ_FIFO_MODE>(l_state == mss::states::ON);
+            mss::putScom(l_port, TT::RRQ_REG, l_data);
+        }
+        // -----
+        // configure_wrq(i_target, l_state);
+        for(const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
+        {
+            fapi2::buffer<uint64_t> l_data;
+            mss::getScom(l_port, TT::WRQ_REG, l_data);
+            l_data.writeBit<TT::WRQ_FIFO_MODE>(l_state == mss::states::ON);
+            mss::putScom(l_port, TT::WRQ_REG, l_data);
+        }
+        // ----
+        // ****
     }
 }
 ```
