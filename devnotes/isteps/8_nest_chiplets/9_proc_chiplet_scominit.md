@@ -3,7 +3,8 @@
 ```cpp
 void *call_proc_chiplet_fabric_scominit(void *io_pArgs)
 {
-    for each target:
+    // i_targetType = TARGETING::TYPE_PROC
+    for each target in getAllChips():
         // p9_chiplet_fabric_scominit()
         fapi2::ReturnCode l_rc;
         char l_chipletTargetStr[fapi2::MAX_ECMD_STRING_LEN];

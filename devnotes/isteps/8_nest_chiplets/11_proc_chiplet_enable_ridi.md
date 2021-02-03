@@ -5,7 +5,8 @@ void *call_proc_xbus_enable_ridi(void *io_pArgs)
     fapiHWPCallWrapper(P9_XBUS_ENABLE_RIDI, HWPF_COMP_ID, TYPE_PROC);
     if(INITSERVICE::isSMPWrapConfig())
     {
-        for each target:
+        // i_targetType = TARGETING::TYPE_PROC
+        for each target in getAllChips():
         {
             // Make the FAPI call to p9_chiplet_scominit
             // Make the FAPI call to p9_io_obus_firmask_save_restore, ifprevious call succeeded
