@@ -124,29 +124,13 @@ fapi2::ReturnCode p9_fbc_ioe_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_XBUS
     {
         PB.IOE.LL0.IOEL_CONFIG.insert<0, 1, 63, uint64_t>(0x0)
     }
-    if    ((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13)
-        || (l_chip_id == 0x7 && l_chip_ec == 0x10))
-    {
-        PB.IOE.LL0.IOEL_CONFIG.insert<11, 5, 59, uint64_t>(0x0F)
-        PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<8, 3, 61, uint64_t>(0b111)
-    }
-    if (l_chip_id == 0x5 && l_chip_ec == 0x10)
-    {
-        PB.IOE.LL0.IOEL_CONFIG.insert<12, 4, 60, uint64_t>(0x0F)
-        PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<8, 2, 62, uint64_t>(0b111)
-    }
+    PB.IOE.LL0.IOEL_CONFIG.insert<11, 5, 59, uint64_t>(0x0F)
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<8, 3, 61, uint64_t>(0x7)
     PB.IOE.LL0.IOEL_CONFIG.insert<2, 1, 63, uint64_t>(0x1)
     PB.IOE.LL0.IOEL_CONFIG.insert<28, 4, 60, uint64_t>(0xF)
     PB.IOE.LL0.IOEL_CONFIG.insert<4, 1, 63, uint64_t>(0x1)
 
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<8, 3, 61, uint64_t>(0b111)
+    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<8, 3, 61, uint64_t>(0x7)
     PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<4, 4, 60, uint64_t>(0xF)
     PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<0, 4, 60, uint64_t>(0x6)
 
@@ -762,12 +746,6 @@ fapi2::ReturnCode p9_fbc_no_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
 
         PB.COM.PB_EAST_MODE.insert<16, 7, 57, uint64_t>(0xfdfbf)
         PB.COM.PB_EAST_MODE.insert<23, 7, 57, uint64_t>(0xfdfbf)
-    }
-    if (l_chip_id == 0x7 && l_chip_ec == 0x10)
-    {
-        PB.COM.PB_WEST_MODE.insert<49, 1, 61, uint64_t>(0x7)
-        PB.COM.PB_CENT_MODE.insert<49, 1, 62, uint64_t>(0x7)
-        PB.COM.PB_EAST_MODE.insert<49, 1, 63, uint64_t>(0x7)
     }
 
     PB.COM.PB_WEST_MODE.insert<30, 6, 46, uint64_t>(0x2aaaa)
