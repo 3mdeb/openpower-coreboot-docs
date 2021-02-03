@@ -471,9 +471,6 @@ fapi2::ReturnCode p9_fbc_ioo_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_OBUS
         fapi2::ATTR_PROC_FABRIC_LINK_ACTIVE_Type l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE;
         l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE = fapi2::ATTR_PROC_FABRIC_LINK_ACTIVE[TGT0];
         uint64_t l_def_OBUS_FBC_ENABLED = l_TGT0_ATTR_OPTICS_CONFIG_MODE == fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_SMP && l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE;
-        fapi2::ATTR_CHIP_EC_FEATURE_HW419022_Type l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022;
-        l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022 = fapi2::ATTR_CHIP_EC_FEATURE_HW419022[TGT1];
-        uint64_t l_def_DLL_DD10_TRAIN = (l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022 != 0);
         fapi2::buffer<uint64_t> l_scom_buffer;
 
         // Power Bus OLL Configuration Register
@@ -521,20 +518,11 @@ fapi2::ReturnCode p9_fbc_ioo_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_OBUS
         {
             l_scom_buffer.insert<59, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_OFF
         }
-        if(l_def_DLL_DD10_TRAIN)
-        {
-            l_scom_buffer.insert<8, 4, 60, uint64_t>(0xE);
-            l_scom_buffer.insert<12, 4, 60, uint64_t>(0xE);
-            l_scom_buffer.insert<4, 4, 60, uint64_t>(0);
-        }
-        else
-        {
-            l_scom_buffer.insert<0, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_A_ADJ_USE4
-            l_scom_buffer.insert<2, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_B_ADJ_USE12
-            l_scom_buffer.insert<8, 4, 60, uint64_t>(0);
-            l_scom_buffer.insert<12, 4, 60, uint64_t>(0);
-            l_scom_buffer.insert<4, 4, 60, uint64_t>(0x0F);
-        }
+        l_scom_buffer.insert<0, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_A_ADJ_USE4
+        l_scom_buffer.insert<2, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_B_ADJ_USE12
+        l_scom_buffer.insert<8, 4, 60, uint64_t>(0);
+        l_scom_buffer.insert<12, 4, 60, uint64_t>(0);
+        l_scom_buffer.insert<4, 4, 60, uint64_t>(0x0F);
         fapi2::putScom(TGT0, 0x901080C, l_scom_buffer);
         // Power Bus OLL Optical Configuration Register
         // PB.IOO.LL0.IOOL_OPTICAL_CONFIG

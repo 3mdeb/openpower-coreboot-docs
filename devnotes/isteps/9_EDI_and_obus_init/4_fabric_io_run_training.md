@@ -217,25 +217,24 @@ for each bus, connection, group:
             OBUS_LL0_IOOL_LINK1_TX_LANE_CONTROL[target] = 0;
 
         # DD1.1+ HW Start training sequence
-        if not fapi2::ATTR_CHIP_EC_FEATURE_HW419022:
-            mask = 0
-            data = 0
-            if l_even:
-                data[OBUS_LL0_IOOL_CONTROL_LINK0_PHY_TRAINING] = 1
-                mask[OBUS_LL0_IOOL_CONTROL_LINK0_PHY_TRAINING] = 1
-            if l_odd:
-                data[OBUS_LL0_IOOL_CONTROL_LINK1_PHY_TRAINING] = 1
-                mask[OBUS_LL0_IOOL_CONTROL_LINK1_PHY_TRAINING] = 1
-            OBUS_LL0_IOOL_CONTROL[target] |= data & mask
+        mask = 0
+        data = 0
+        if l_even:
+            data[OBUS_LL0_IOOL_CONTROL_LINK0_PHY_TRAINING] = 1
+            mask[OBUS_LL0_IOOL_CONTROL_LINK0_PHY_TRAINING] = 1
+        if l_odd:
+            data[OBUS_LL0_IOOL_CONTROL_LINK1_PHY_TRAINING] = 1
+            mask[OBUS_LL0_IOOL_CONTROL_LINK1_PHY_TRAINING] = 1
+        OBUS_LL0_IOOL_CONTROL[target] |= data & mask
 
-            mask = 0
-            data = 0
-            if l_even and fapi2::ATTR_IO_OBUS_TRAIN_FOR_RECOVERY:
-                data[OBUS_LL0_IOOL_CONTROL_LINK0_STARTUP] = 1
-                mask[OBUS_LL0_IOOL_CONTROL_LINK0_STARTUP] = 1
-            if l_odd and fapi2::ATTR_IO_OBUS_TRAIN_FOR_RECOVERY:
-                data[OBUS_LL0_IOOL_CONTROL_LINK1_STARTUP] = 1
-                mask[OBUS_LL0_IOOL_CONTROL_LINK1_STARTUP] = 1
+        mask = 0
+        data = 0
+        if l_even and fapi2::ATTR_IO_OBUS_TRAIN_FOR_RECOVERY:
+            data[OBUS_LL0_IOOL_CONTROL_LINK0_STARTUP] = 1
+            mask[OBUS_LL0_IOOL_CONTROL_LINK0_STARTUP] = 1
+        if l_odd and fapi2::ATTR_IO_OBUS_TRAIN_FOR_RECOVERY:
+            data[OBUS_LL0_IOOL_CONTROL_LINK1_STARTUP] = 1
+            mask[OBUS_LL0_IOOL_CONTROL_LINK1_STARTUP] = 1
 
-            OBUS_LL0_IOOL_CONTROL[target] |= data & mask
+        OBUS_LL0_IOOL_CONTROL[target] |= data & mask
 ```
