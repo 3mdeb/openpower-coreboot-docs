@@ -12,7 +12,7 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
 {
     static constexpr uint32_t maintBufferDataRegs[MAX_MBA_PER_CEN][NUM_BEATS][NUM_WORDS] =
     {
-        // port0
+            // port0
         {   {CEN_MAINT0_MAINT_BUFF0_DATA0_WO, CEN_MAINT0_MAINT_BUFF0_DATA_ECC0_WO},// DW0
             {CEN_MAINT0_MAINT_BUFF2_DATA0_WO, CEN_MAINT0_MAINT_BUFF2_DATA_ECC0_WO}, // DW2
             {CEN_MAINT0_MAINT_BUFF0_DATA1_WO, CEN_MAINT0_MAINT_BUFF0_DATA_ECC1_WO}, // DW4
@@ -30,10 +30,10 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
             {CEN_MAINT0_MAINT_BUFF1_DATA2_WO, CEN_MAINT0_MAINT_BUFF1_DATA_ECC2_WO}, // DW9
             {CEN_MAINT0_MAINT_BUFF3_DATA2_WO, CEN_MAINT0_MAINT_BUFF3_DATA_ECC2_WO}, // DW11
             {CEN_MAINT0_MAINT_BUFF1_DATA3_WO, CEN_MAINT0_MAINT_BUFF1_DATA_ECC3_WO}, // DW13
-            {CEN_MAINT0_MAINT_BUFF3_DATA3_WO, CEN_MAINT0_MAINT_BUFF3_DATA_ECC3_WO}
-        },// DW15
+            {CEN_MAINT0_MAINT_BUFF3_DATA3_WO, CEN_MAINT0_MAINT_BUFF3_DATA_ECC3_WO}  // DW15
+        },
 
-        // port2
+            // port2
         {   {CEN_MAINT1_MAINT_BUFF0_DATA0_WO, CEN_MAINT1_MAINT_BUFF0_DATA_ECC0_WO},// DW0
             {CEN_MAINT1_MAINT_BUFF2_DATA0_WO, CEN_MAINT1_MAINT_BUFF2_DATA_ECC0_WO}, // DW2
             {CEN_MAINT1_MAINT_BUFF0_DATA1_WO, CEN_MAINT1_MAINT_BUFF0_DATA_ECC1_WO}, // DW4
@@ -51,14 +51,14 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
             {CEN_MAINT1_MAINT_BUFF1_DATA2_WO, CEN_MAINT1_MAINT_BUFF1_DATA_ECC2_WO}, // DW9
             {CEN_MAINT1_MAINT_BUFF3_DATA2_WO, CEN_MAINT1_MAINT_BUFF3_DATA_ECC2_WO}, // DW11
             {CEN_MAINT1_MAINT_BUFF1_DATA3_WO, CEN_MAINT1_MAINT_BUFF1_DATA_ECC3_WO}, // DW13
-            {CEN_MAINT1_MAINT_BUFF3_DATA3_WO, CEN_MAINT1_MAINT_BUFF3_DATA_ECC3_WO}
+            {CEN_MAINT1_MAINT_BUFF3_DATA3_WO, CEN_MAINT1_MAINT_BUFF3_DATA_ECC3_WO}  // DW15
         }
-    };// DW15
+    };
 
 
     static constexpr uint32_t maintBuffer65thRegs[4][2] =
     {
-        // MBA01                                                 MBA23
+        // MBA01                                         MBA23
         {CEN_MAINT0_MAINT_BUFF_65TH_BYTE_64B_ECC0_WO,    CEN_MAINT1_MAINT_BUFF_65TH_BYTE_64B_ECC0_WO}, // 1st 64B of cacheline
         {CEN_MAINT0_MAINT_BUFF_65TH_BYTE_64B_ECC1_WO,    CEN_MAINT1_MAINT_BUFF_65TH_BYTE_64B_ECC1_WO}, // 1st 64B of cacheline
         {CEN_MAINT0_MAINT_BUFF_65TH_BYTE_64B_ECC2_WO,    CEN_MAINT1_MAINT_BUFF_65TH_BYTE_64B_ECC2_WO}, // 2nd 64B of cacheline
@@ -73,12 +73,10 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
     uint32_t loop = 0;
     uint8_t l_dramWidth = 0;
     uint8_t l_attr_centaur_ec_enable_rce_with_other_errors_hw246685 = 0;
-
     //----------------------------------------------------
     // Get l_dramWidth
     //----------------------------------------------------
     FAPI_ATTR_GET(fapi2::ATTR_CEN_EFF_DRAM_WIDTH, iv_target,  l_dramWidth);
-
     // Convert from attribute enum values: 8,4 to index values: 0,1
     if(l_dramWidth == mss_memconfig::X8)
     {
@@ -88,19 +86,14 @@ fapi2::ReturnCode mss_MaintCmd::loadPattern(PatternIndex i_initPattern)
     {
         l_dramWidth = 1;
     }
-
-
     //----------------------------------------------------
     // Load the data: 16 loops x 64bits = 128B cacheline
     //----------------------------------------------------
-
     // Set bit 9 so that hw will generate the fabric ECC.
     // This is an 8B ECC protecting the data moving on internal buses in
     // the Centaur.
     l_ecc.flush<0>();
     l_ecc.setBit<9>();
-
-
     for(loop = 0; loop < NUM_BEATS; ++loop)
     {
         // A write to MAINT_BUFFx_DATAy will not update until the corresponding

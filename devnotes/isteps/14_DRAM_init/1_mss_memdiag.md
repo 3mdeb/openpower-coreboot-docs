@@ -419,137 +419,48 @@ fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i
         l_status = stat_reg;
         return (l_status.getBit<TT::MCBIST_IN_PROGRESS>() == true) || (l_status.getBit<TT::MCBIST_DONE>() == true);
     });
-    if (!i_program.iv_async)
-    {
-        return mcbist::poll(i_target, i_program);
-    }
+    return mcbist::poll(i_target, i_program);
 }
 
 inline fapi2::ReturnCode execute()
 {
     return mss::mcbist::execute(iv_target, iv_program);
 }
-
 errlHndl_t StateMachine::doMaintCommand(WorkFlowProperties & i_wfp)
 {
     uint64_t workItem;
-
-    TargetHandle_t target;
     // starting a maint cmd ...  register a timeout monitor
     uint64_t maintCmdTO = getTimeoutValue();
     uint64_t monitorId = CommandMonitor::INVALID_MONITOR_ID;
     i_wfp.timeoutCnt = 0; // reset for new work item
     workItem = *i_wfp.workItem;
-    target = getTarget(i_wfp);
-
-    TYPE trgtType = target->getAttr<ATTR_TYPE>();
-    // new command...use the full range
-    //target type is MBA
-    if (TYPE_MBA == trgtType)
-    {
-        uint32_t stopCondition =
-            mss_MaintCmd::STOP_END_OF_RANK                  |
-            mss_MaintCmd::STOP_ON_MPE                       |
-            mss_MaintCmd::STOP_ON_UE                        |
-            mss_MaintCmd::STOP_ON_END_ADDRESS               |
-            mss_MaintCmd::ENABLE_CMD_COMPLETE_ATTENTION;
-
-        if( TARGETING::MNFG_FLAG_IPL_MEMORY_CE_CHECKING
-            & iv_globals.mfgPolicy )
-        {
-            // For MNFG mode, check CE also
-            stopCondition |= mss_MaintCmd::STOP_ON_HARD_NCE_ETE;
-        }
-
-        fapi2::buffer<uint64_t> startAddr, endAddr;
-        mss_MaintCmd * cmd = nullptr;
-        cmd = static_cast<mss_MaintCmd *>(i_wfp.data);
-        fapi2::Target<fapi2::TARGET_TYPE_MBA> fapiMba(target);
-
-        // We will always do ce setup though CE calculation
-        // is only done during MNFG. This will give use better ffdc.
-        ceErrorSetup<TYPE_MBA>( target );
-
-        mss_get_address_range(fapiMba, MSS_ALL_RANKS, startAddr, endAddr);
-
-        // new command...use the full range
-
-        switch(workItem)
-        {
-            case START_RANDOM_PATTERN:
-
-                cmd = new mss_SuperFastRandomInit(
-                        fapiMba,
-                        startAddr,
-                        endAddr,
-                        mss_MaintCmd::PATTERN_RANDOM,
-                        stopCondition,
-                        false);
-                break;
-
-            case START_SCRUB:
-
-                cmd = new mss_SuperFastRead(
-                        fapiMba,
-                        startAddr,
-                        endAddr,
-                        stopCondition,
-                        false);
-                break;
-
-            case START_PATTERN_0:
-            case START_PATTERN_1:
-            case START_PATTERN_2:
-            case START_PATTERN_3:
-            case START_PATTERN_4:
-            case START_PATTERN_5:
-            case START_PATTERN_6:
-            case START_PATTERN_7:
-                cmd = new mss_SuperFastInit(
-                        fapiMba, startAddr, endAddr,
-                        static_cast<mss_MaintCmd::PatternIndex>(workItem),
-                        stopCondition, false);
-                break;
-        }
-
-        i_wfp.data = cmd;
-
-        // Command and address configured.
-        // Invoke the command.
-        cmd->setupAndExecuteCmd();
-    }
+    // Start a timeout monitor
+    monitorId = getMonitor().addMonitor(maintCmdTO);
+    i_wfp.timer = monitorId;
 }
 
 bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
 {
     bool dispatched = false;
+    // ensure this thread sees the most recent state
+
     if(!iv_shutdown)
     {
-        bool async = workItemIsAsync(*i_wfp);
         uint64_t workItem = *i_wfp->workItem;
         errlHndl_t err = 0;
+        int32_t rc = 0;
 
         switch(workItem)
         {
-
             case RESTORE_DRAM_REPAIRS:
             {
-                TargetHandle_t target = getTarget( *i_wfp );
-                TYPE trgtType = target->getAttr<ATTR_TYPE>();
-
-                if (TYPE_MBA == trgtType)
+                TargetHandle_t target = getTarget(*i_wfp);
+                // Get the connected MCAs.
+                TargetHandleList mcaList;
+                getChildAffinityTargets(mcaList, target, CLASS_UNIT, TYPE_MCA);
+                for (auto & mca : mcaList)
                 {
-                    PRDF::restoreDramRepairs<TYPE_MBA>( target );
-                }
-                else if (TYPE_MCBIST == trgtType)
-                {
-                    TargetHandleList mcaList;
-                    getChildAffinityTargets(mcaList, target, CLASS_UNIT, TYPE_MCA);
-                    for (auto & mca : mcaList)
-                    {
-                        PRDF::restoreDramRepairs<TYPE_MCA>( mca );
-                    }
-                }cmdmRepairs<TYPE_OCMB_CHIP>( target );
+                    PRDF::restoreDramRepairs<TYPE_MCA>(mca);
                 }
                 break;
             }
@@ -565,25 +476,20 @@ bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
             case START_SCRUB:
                 err = doMaintCommand(*i_wfp);
                 break;
+
             case CLEAR_HW_CHANGED_STATE:
                 clearHWStateChanged(getTarget(*i_wfp));
                 break;
             case ANALYZE_IPL_MNFG_CE_STATS:
-                TargetHandle_t target = getTarget( *i_wfp );
+                TargetHandle_t target = getTarget(*i_wfp);
                 rc = PRDF::analyzeIplCEStats(target, false);
                 break;
-        }
 
-        if(!async)
-        {
-            // sync work item -
-            // move the workFlow pointer to the next phase
-            ++i_wfp->workItem;
-            // check to see if this was the last workFlow
-            // in progress (if there was an error), or for sync
-            // work items, schedule the next work item
-            dispatched = scheduleWorkItem(*i_wfp);
+            default:
+                break;
         }
+        ++i_wfp->workItem;
+        dispatched = scheduleWorkItem(*i_wfp);
     }
     return dispatched;
 }
@@ -592,8 +498,7 @@ void StateMachine::start()
 {
     // schedule the first work items for all target / workFlow associations
     for(WorkFlowPropertiesIterator wit = iv_workFlowProperties.begin();
-        wit != iv_workFlowProperties.end();
-        ++wit)
+        wit != iv_workFlowProperties.end(); ++wit)
     {
         // bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
         // this is probably later called on it
