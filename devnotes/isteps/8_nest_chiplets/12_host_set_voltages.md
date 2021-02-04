@@ -587,7 +587,6 @@ fapi2::ReturnCode p9_io_obus_image_build(CONST_OBUS& iTgt, void* const iHwImageP
     uint8_t configMode = 0;
     int xipSectionId = 0;
     bool loadImage = false;
-    fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE_Type l_hw446279_use_ppe;
 
     FAPI_ATTR_GET(fapi2::ATTR_OPTICS_CONFIG_MODE, iTgt, configMode);
 
@@ -602,17 +601,6 @@ fapi2::ReturnCode p9_io_obus_image_build(CONST_OBUS& iTgt, void* const iHwImageP
     else if(fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_SMP == configMode)
     {
         xipSectionId = P9_XIP_SECTION_IOPPE_IOO_ABUS;
-        auto l_chip = iTgt.getParent<fapi2::TARGET_TYPE_PROC_CHIP>();
-        FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE, l_chip, l_hw446279_use_ppe);
-        if(l_hw446279_use_ppe)
-        {
-            loadImage = true;
-            // Enable the PPE to communicate with the PHY
-            fapi2::buffer<uint64_t> data64;
-            fapi2::getScom(iTgt, OBUS_SCOM_MODE_PB, data64);
-            data64.setBit<OBUS_SCOM_MODE_PB_PPE_GCR>();
-            fapi2::putScom(iTgt, OBUS_SCOM_MODE_PB, data64);
-        }
     }
     if(loadImage)
     {

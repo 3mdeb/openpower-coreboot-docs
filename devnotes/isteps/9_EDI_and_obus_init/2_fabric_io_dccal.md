@@ -154,18 +154,6 @@ For each bus:
             # set_lanes_invalid()
             For each lane:
                 EDIP_RX_LANE_INVALID[target, group, lane] = 1
-            # src/import/chips/p9/procedures/hwp/io/p9_io_xbus_dccal.C:740
-            # p9x_cm_workaround()
-            # attribute, not a register!!!
-            if fapi2::ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND:
-                EDIP_RX_PG_SPARE_MODE_0[target, i_grp, lane0] = 1
-                EDIP_RX_PG_SPARE_MODE_1[target, i_grp, lane0] = 0
-                EDIP_RX_PG_SPARE_MODE_2[target, i_grp, lane0] = 1
-                EDIP_RX_RC_ENABLE_CM_FINE_CAL[target, i_grp, lane0] = 0
-                EDIP_RX_EO_ENABLE_DAC_H1_TO_A_CAL[target, i_grp, lane0] = 1
-                EDIP_RX_EO_ENABLE_DAC_H1_CAL[target, i_grp, lane0] = 1
-                for each lane:
-                    EDIP_RX_A_INTEG_COARSE_GAIN[target, i_grp, lane] /= 2
 
     else if typeof(bus) == TYPE_OBUS:
         for each connection:
@@ -184,12 +172,6 @@ For each bus:
 
                 if fapi2::ATTR_PROC_FABRIC_LINK_ACTIVE:
                     fapi2::ATTR_IO_OBUS_DCCAL_FLAGS = 0;
-                    ##########################
-                    # src/usr/fapi2/plat_hw_access.C:171
-                    # Halt Obus PPE if HW446279_USE_PPE is enabled
-                    if fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE:
-                        # Perform SCOM write
-                        deviceWrite(target, &i_data, 64, DEVICE_SCOM_ADDRESS(i_address, opMode));
                     ##########################
                     # src/import/chips/p9/procedures/hwp/io/p9_io_obus_dccal.C:563
                     # power up the unit
