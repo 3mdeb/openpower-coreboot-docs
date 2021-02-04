@@ -279,5 +279,61 @@ for each functional PROC:
 // Hostboot uses separate loop, can this be done in one?
 for each functional PROC:
   p9_setup_bars():
+    // No BAR is actually set. Either talos.xml isn't the proper source of ATTR values, or this is done later by Skiroot.
+    p9_setup_bars_fsp() - no-op, no FSP on Talos (talos.xml)
 
+    p9_setup_bars_psi() - no-op, no PSI (Processor Support Interface?) on Talos (talos.xml)
+
+    p9_setup_bars_npu():
+      // Run only if bit 7 is not set in ATTR_PG for west Nest (N3)
+      if N3_CHIPLET.ATTR_PG[7] == 0:
+        // ATTR_PROC_NPU_PHY{0,1}_BAR_ENABLE are both 0 in talos.xml
+        //
+        // These addresses are strange. First one is in documentation as NPU.MISC.FIR_ACTION0_REG_0, none of the rest is.
+        // They come from NPU_PHY0_BAR_REGS in the code. It seems that the documentation (both on Raptor's wiki and IBM
+        // site) describes DD1.0 and doesn't even mention that DD2.* uses different addresses, even though differentiation
+        // between those is mentioned in some of the fields, implying that the documentation was updated after DD2 was
+        // released.
+        //
+        // There are also P9N2_PU_NPU0_SM*_PHY_BAR registers in p9n2_misc_scom_addresses.H, with addresses different from
+        // NPU_PHY0_BAR_REGS (which are the same as NPU_PHY0_BAR_REGS_ADD1 - Axone?) and NPU_PHY0_BAR_REGS_NDD1 (same as
+        // PU_NPU0_SM*_PHY_BAR in p9_misc_scom_addresses.H and documentation).
+        //
+        // Unless there is more reliable source, follow the code...
+        0x05011406,
+        0x05011436,
+        0x05011466,
+        0x05011496
+            [all]   0
+
+        // Same as above. This time the first one hits the BAR (pun intended), the rest doesn't.
+        0x05011206,
+        0x05011236,
+        0x05011266,
+        0x05011296
+            [all]   0
+
+        // ATTR_PROC_NPU_MMIO_BAR_ENABLE is 0 in talos.xml
+        // Same as above.
+        0x05011006,
+        0x05011036,
+        0x05011066,
+        0x05011096
+            [all]   0
+
+    // mask MCD FIRs
+    MCD1.MCD_FIR_MASK_REG                                         // 0x03011403
+      [all]   1
+    MCD0.MCD_FIR_MASK_REG                                         // 0x03011003
+      [all]   1
+
+    p9_setup_bars_int():
+      // ATTR_PROC_INT_CQ_PC_BAR_ENABLE is 0 in talos.xml
+      // ATTR_PROC_INT_CQ_VC_BAR_ENABLE is 0 in talos.xml
+      // ATTR_PROC_INT_CQ_TM1_BAR_ENABLE is 0 in talos.xml
+      // ATTR_PROC_INT_CQ_IC_BAR_ENABLE is 0 in talos.xml
+      // No-op?
+
+    p9_setup_bars_check_overlap():
+      // We didn't enable any BARs, so no overlap. This is no-op.
 ```
