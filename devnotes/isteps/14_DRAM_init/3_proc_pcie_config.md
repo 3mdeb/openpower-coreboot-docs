@@ -50,6 +50,7 @@ fapi2::ReturnCode p9_pcie_config(
     FAPI_ATTR_GET(fapi2::ATTR_PROC_PCIE_BAR_SIZE, FAPI_SYSTEM, l_bar_sizes);
 
     // Grab attribute to determine fabric pump mode for cache inject setup
+    // fapi2::ATTR_PROC_FABRIC_PUMP_MODE = 1 by default
     FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_PUMP_MODE, FAPI_SYSTEM, l_fabric_pump_mode);
 
     // determine base address of chip MMIO range
@@ -60,6 +61,7 @@ fapi2::ReturnCode p9_pcie_config(
     {
         uint8_t l_pec_id = 0;
         // Get the PEC unit id
+        // fapi2::ATTR_CHIP_UNIT_POS = 0 by default
         FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_pec_chiplet, l_pec_id);
         // Grab the IOVALID attribute to determine if PEC is bifurcated or not.
         FAPI_ATTR_GET(fapi2::ATTR_PROC_PCIE_IOVALID_ENABLE, l_pec_chiplet, l_attr_proc_pcie_iovalid_enable);
@@ -147,6 +149,7 @@ fapi2::ReturnCode p9_pcie_config(
         //
         // Different cache inject modes will affect DMA write performance. The attribute default was
         // selected based on various workloads and was to be the most optimal settings for Power9.
+        // fapi2::ATTR_PROC_PCIE_CACHE_INJ_MODE = 3 by default
         FAPI_ATTR_GET(fapi2::ATTR_PROC_PCIE_CACHE_INJ_MODE, l_pec_chiplet, l_cache_inject_mode);
 
         //Attribute to control the cache inject throttling when cache inject is enable.
@@ -377,7 +380,7 @@ fapi2::ReturnCode p9_pcie_config(
 
         // step 19: NestBase+StackBase+0xF<software programmed>Set MMIO BASE
         // Address Register Mask 0 (MMIOBAR0_MASK)
-        // PHB_MMIOBAR0_MASK_REG =
+        // PHB_MMIOBAR0_MASK_REG = 0x4010c4f
         fapi2::putScom(l_phb_chiplet, PHB_MMIOBAR0_MASK_REG, l_bar_sizes[0]);
 
         // step 20: NestBase+StackBase+0x10<software programmed>Set MMIO Base
