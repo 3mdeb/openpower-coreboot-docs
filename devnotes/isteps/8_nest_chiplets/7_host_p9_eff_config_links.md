@@ -1,6 +1,6 @@
 # 8.7 host_p9_eff_config_links: Powerbuslinkconfig
 
-```
+```py
 void fapiHWPCallWrapper(HWP_CALL_TYPE    P9_FBC_EFF_CONFIG_LINKS_T_F,
                         IStepError      &o_stepError,
                         compId_t         HWPF_COMP_ID,

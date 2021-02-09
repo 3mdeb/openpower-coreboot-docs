@@ -55,114 +55,12 @@ for link_index in range(0, 7):
           break
       remote_target = local_target.getOtherEnd()
 
-      if not fapi2::ATTR_CHIP_EC_FEATURE_HW419022[target]:
-        if even:
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
-            (1 << 0) | (1 << 1)
-        if odd:
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
-            (1 << 32) | (1 << 33)
-      else:
-        if even:
-          # force assertion of run_lane
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 5
-          # ensure that DL RX sees lane lock
-
-          # loop a maximum of two times to determine lane lock status
-          # 1st check is prior to application of any PHY TX inversions
-          # if any lanes do not lock, apply inversions and check again
-          # assert if any lane is unlocked at this point
-          for phase in range(0, 2):
-            rx_control_stable = 0
-            stable_reads = 1
-            # poll for stable pattern
-            for _ in range(0, 10):
-              sleep(100000000ns)
-              # read from REGISTER!!!!
-              dl_rx_control = *(P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr+7)[target]
-              if (dl_rx_control & 0xFFF0000) == rx_control_stable:
-                stable_reads++
-                if stable_reads == 3:
-                  break
-              else:
-                rx_control_stable = (dl_rx_control & 0xFFF0000)
-                stable_reads = 1
-
-            # apply PHY TX inversions only if needed
-            if phase == 0 and ((dl_rx_control & 0xFFF0000) != 0xFFE0000):
-              for lane_index in range(0, 11):
-                # set PHY TX lane address, start at:
-                # - PHY lane 0 for even (work up)
-                # - PHY lane 23 for odd (work down) DD1.0
-
-                # REGISTER address
-                phy_tx_mode1_pl_addr = 0x8004040009010c3f
-                phy_tx_mode1_pl_addr |= lane_index << 32
-
-                # read DL RX per-lane lock indicator bit
-                # if locked: do nothing
-                # if not locked: apply lane-invert to associated PHY TX side
-                if not dl_rx_control & (1 << (36+lane_index)):
-                  # REGISTER!!!
-                  *phy_tx_mode1_pl_addr[remote_target] |= 1 << 49
-            if (dl_rx_control & 0xFFF0000) == 0xFFE0000:
-              break
-          # enable link startup
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 1
-          # disable run lane override
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 5
-          # clear TX lane control override, set to ENABLED
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target]+5 = 0
-        if odd:
-          # force assertion of run_lane
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 37
-          # ensure that DL RX sees lane lock
-
-          # loop a maximum of two times to determine lane lock status
-          # 1st check is prior to application of any PHY TX inversions
-          # if any lanes do not lock, apply inversions and check again
-          # assert if any lane is unlocked at this point
-          for phase in range(0, 2):
-            rx_control_stable = 0
-            stable_reads = 1
-            # poll for stable pattern
-            for _ in range(0, 10):
-              sleep(100000000ns)
-              # read from REGISTER!!!!
-              dl_rx_control = *(control.dl_control_addr+8)[target]
-              if (dl_rx_control & 0xFFF0000) == rx_control_stable:
-                stable_reads++
-                if stable_reads == 3:
-                  break
-              else:
-                rx_control_stable = (dl_rx_control & 0xFFF0000)
-                stable_reads = 1
-
-            # apply PHY TX inversions only if needed
-            if phase == 0 and ((dl_rx_control & 0xFFF0000) != 0xFFE0000):
-              for lane_index in range(0, 11):
-                # set PHY TX lane address, start at:
-                # - PHY lane 0 for even (work up)
-                # - PHY lane 23 for odd (work down) DD1.0
-
-                # REGISTER address
-                phy_tx_mode1_pl_addr = 0x8004040009010c3f
-                phy_tx_mode1_pl_addr |= (23-lane_index) << 32
-
-                # read DL RX per-lane lock indicator bit
-                # if locked: do nothing
-                # if not locked: apply lane-invert to associated PHY TX side
-                if not dl_rx_control & (1 << (36+lane_index)):
-                  # REGISTER!!!
-                  *phy_tx_mode1_pl_addr[remote_target] |= 1 << 49
-            if (dl_rx_control & 0xFFF0000) == 0xFFE0000:
-              break
-          # enable link startup
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 33
-          # disable run lane override
-          P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 37
-          # clear TX lane control override, set to ENABLED
-          control.dl_control_addr[target]+6 = 0
+      if even:
+        P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
+          (1 << 0) | (1 << 1)
+      if odd:
+        P9_FBC_XBUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
+          (1 << 32) | (1 << 33)
       # CQ: HW453889 :: MFG Abus Stress >>>
       # Use rx_pr_data_a_offset to shift the offset by +1/2 or +2/4
       if even and (fapi2::ATTR_IO_O_MFG_STRESS_PR_OFFSET_EVEN[target] != 0):
@@ -219,114 +117,12 @@ for link_index in range(0, 4):
       break
   remote_target = local_target.getOtherEnd()
 
-  if not fapi2::ATTR_CHIP_EC_FEATURE_HW419022[target]:
-    if even:
+  if even:
+    P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
+      (1 << 0) | (1 << 1)
+  if odd:
       P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
-        (1 << 0) | (1 << 1)
-    if odd:
-        P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |=
-          (1 << 32) | (1 << 1)
-  else:
-    if even:
-      # force assertion of run_lane
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= (1 << 5)
-      # ensure that DL RX sees lane lock
-
-      # loop a maximum of two times to determine lane lock status
-      # 1st check is prior to application of any PHY TX inversions
-      # if any lanes do not lock, apply inversions and check again
-      # assert if any lane is unlocked at this point
-      for phase in range(0, 2):
-        rx_control_stable = 0
-        stable_reads = 1
-        # poll for stable pattern
-        for _ in range(0, 10):
-          sleep(100000000ns)
-          # read from REGISTER!!!!
-          dl_rx_control = *(P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr+7)[target]
-          if (dl_rx_control & 0xFFF0000) == rx_control_stable:
-            stable_reads++
-            if stable_reads == 3:
-              break
-          else:
-            rx_control_stable = (dl_rx_control & 0xFFF0000)
-            stable_reads = 1
-
-        # apply PHY TX inversions only if needed
-        if phase == 0 and ((dl_rx_control & 0xFFF0000) != 0xFFE0000):
-          for lane_index in range(0, 11):
-            # set PHY TX lane address, start at:
-            # - PHY lane 0 for even (work up)
-            # - PHY lane 23 for odd (work down) DD1.0
-
-            # REGISTER address
-            phy_tx_mode1_pl_addr = 0x8004040009010c3f
-            phy_tx_mode1_pl_addr |= lane_index << 32
-
-            # read DL RX per-lane lock indicator bit
-            # if locked: do nothing
-            # if not locked: apply lane-invert to associated PHY TX side
-            if not dl_rx_control & (1 << (36+lane_index)):
-              # REGISTER!!!
-              *phy_tx_mode1_pl_addr[remote_target] |= 1 << 49
-        if (dl_rx_control & 0xFFF0000) == 0xFFE0000:
-          break
-      # enable link startup
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 0
-      # disable run lane override
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 5
-      # clear TX lane control override, set to ENABLED
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target]+5 = 0
-    if odd:
-      # force assertion of run_lane
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 1 << 37
-      # ensure that DL RX sees lane lock
-
-      # loop a maximum of two times to determine lane lock status
-      # 1st check is prior to application of any PHY TX inversions
-      # if any lanes do not lock, apply inversions and check again
-      # assert if any lane is unlocked at this point
-      for phase in range(0, 2):
-        rx_control_stable = 0
-        stable_reads = 1
-        # poll for stable pattern
-        for _ in range(0, 10):
-          sleep(100000000ns)
-          # read from REGISTER!!!!
-          dl_rx_control = *(control.dl_control_addr+8)[target]
-          if (dl_rx_control & 0xFFF0000) == rx_control_stable:
-            stable_reads++
-            if stable_reads == 3:
-              break
-          else:
-            rx_control_stable = (dl_rx_control & 0xFFF0000)
-            stable_reads = 1
-
-        # apply PHY TX inversions only if needed
-        if phase == 0 and ((dl_rx_control & 0xFFF0000) != 0xFFE0000):
-          for lane_index in range(0, 11):
-            # set PHY TX lane address, start at:
-            # - PHY lane 0 for even (work up)
-            # - PHY lane 23 for odd (work down) DD1.0
-
-            # REGISTER address
-            phy_tx_mode1_pl_addr = 0x8004040009010c3f
-            phy_tx_mode1_pl_addr |= (23-lane_index) << 32
-
-            # read DL RX per-lane lock indicator bit
-            # if locked: do nothing
-            # if not locked: apply lane-invert to associated PHY TX side
-            if not dl_rx_control & (1 << (36+lane_index)):
-              # REGISTER!!!
-              *phy_tx_mode1_pl_addr[remote_target] |= 1 << 49
-        if (dl_rx_control & 0xFFF0000) == 0xFFE0000:
-          break
-      # enable link startup
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 33
-      # disable run lane override
-      P9_FBC_ABUS_LINK_CTL_ARR[link_index].dl_control_addr[target] |= 37
-      # clear TX lane control override, set to ENABLED
-      control.dl_control_addr[target]+6 = 0
+        (1 << 32) | (1 << 1)
   # CQ: HW453889 :: MFG Abus Stress >>>
   # Use rx_pr_data_a_offset to shift the offset by +1/2 or +2/4
   if even and (fapi2::ATTR_IO_O_MFG_STRESS_PR_OFFSET_EVEN[target] != 0)
