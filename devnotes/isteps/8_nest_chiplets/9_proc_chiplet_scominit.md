@@ -111,24 +111,20 @@ fapi2::ReturnCode p9_fbc_ioe_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_XBUS
     PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD = TGT0[0x6011819]; // ELL SL ECC Threshold Register
     if (fapi2::ATTR_LINK_TRAIN[TGT0] == fapi2::ENUM_ATTR_LINK_TRAIN_BOTH)
     {
-        PB.IOE.LL0.IOEL_CONFIG.insert<0, 1, 63, uint64_t>(0x01)
+        PB.IOE.LL0.IOEL_CONFIG |= 0x8000000000000000
     }
     else
     {
-        PB.IOE.LL0.IOEL_CONFIG.insert<0, 1, 63, uint64_t>(0x00)
+        PB.IOE.LL0.IOEL_CONFIG &= 0x7FFFFFFFFFFFFFFF
     }
-    PB.IOE.LL0.IOEL_CONFIG.insert<11, 5, 59, uint64_t>(0x0F)
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<8, 3, 61, uint64_t>(0b111)
-    PB.IOE.LL0.IOEL_CONFIG.insert<2, 1, 63, uint64_t>(0x01)
-    PB.IOE.LL0.IOEL_CONFIG.insert<28, 4, 60, uint64_t>(0x0F)
-    PB.IOE.LL0.IOEL_CONFIG.insert<4, 1, 63, uint64_t>(0x01)
+    PB.IOE.LL0.IOEL_CONFIG &= 0xFFEFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_CONFIG |= 0x280F000F00000000
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD |= 0x0070000000000000
+    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD &= 0x0FFFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD |= 0x6FE0000000000000
 
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<8, 3, 61, uint64_t>(0b111)
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<4, 4, 60, uint64_t>(0x0F)
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<0, 4, 60, uint64_t>(0x06)
-
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<4, 4, 60, uint64_t>(0x0F)
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<0, 4, 60, uint64_t>(0x07)
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD &= 0x7FFFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD |= 0x7F00000000000000
     // REGISTERS write
     TGT0[0x601180A] = PB.IOE.LL0.IOEL_CONFIG;
     TGT0[0x6011818] = PB.IOE.LL0.IOEL_REPLAY_THRESHOLD;
@@ -184,20 +180,12 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     PB.IOE.SCOM.PB_TRACE_CFG = TGT0[0x5013424]; // Power Bus Electrical Link Trace Configuration Register
     if (l_def_X0_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<22, 2, 62, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<12, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<20, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<25, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<44, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<52, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<57, 1, 63, uint64_t>(0x00)
+        PB.IOE.SCOM.PB_FP01_CFG &= 0xfff004fffff007bf
+        PB.IOE.SCOM.PB_FP01_CFG |= 0x0002010000020000
     }
     else
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<20, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<25, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<52, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<57, 1, 63, uint64_t>(0x01)
+        PB.IOE.SCOM.PB_FP01_CFG |= 0x84000000840
     }
 
     if (l_def_X0_ENABLED && l_def_DD2X_PARTS)
@@ -220,20 +208,12 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
     if (l_def_X2_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<22, 2, 62, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<12, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<20, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<25, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<52, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<57, 1, 63, uint64_t>(0x00)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<44, 8, 56, uint64_t>(0x20)
+        PB.IOE.SCOM.PB_FP45_CFG &= 0xfff004bffff007bf
+        PB.IOE.SCOM.PB_FP45_CFG |= 0x0002010000020000
     }
     else
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<20, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<25, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<52, 1, 63, uint64_t>(0x01)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<57, 1, 63, uint64_t>(0x01)
+        PB.IOE.SCOM.PB_FP45_CFG |= 0x84000000840
     }
     if (l_def_X2_ENABLED && l_def_DD2X_PARTS)
     {
