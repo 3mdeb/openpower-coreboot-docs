@@ -515,25 +515,25 @@ fapi2::ReturnCode p9_fbc_no_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
     }
     if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_IS_FLAT_8)
     {
-        PB.COM.PB_WEST_MODE.insert<16, 7, 43, uint64_t>(0x7cf9f)
-        PB.COM.PB_WEST_MODE.insert<23, 7, 43, uint64_t>(0x81020)
+        PB.COM.PB_WEST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_WEST_MODE |= 0x00003E8000000000
 
-        PB.COM.PB_CENT_MODE.insert<16, 7, 50, uint64_t>(0x7cf9f)
-        PB.COM.PB_CENT_MODE.insert<23, 7, 50, uint64_t>(0x81020)
+        PB.COM.PB_CENT_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_CENT_MODE |= 0x00003E8000000000
 
-        PB.COM.PB_EAST_MODE.insert<16, 7, 57, uint64_t>(0x7cf9f)
-        PB.COM.PB_EAST_MODE.insert<23, 7, 57, uint64_t>(0x81020)
+        PB.COM.PB_EAST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_EAST_MODE |= 0x00003E8000000000
     }
     else
     {
-        PB.COM.PB_WEST_MODE.insert<16, 7, 43, uint64_t>(0xfdfbf)
-        PB.COM.PB_WEST_MODE.insert<23, 7, 43, uint64_t>(0xfdfbf)
+        PB.COM.PB_WEST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_WEST_MODE |= 0x0000FAFC00000000
 
-        PB.COM.PB_CENT_MODE.insert<16, 7, 50, uint64_t>(0xfdfbf)
-        PB.COM.PB_CENT_MODE.insert<23, 7, 50, uint64_t>(0xfdfbf)
+        PB.COM.PB_CENT_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_CENT_MODE |= 0x00007EFC00000000
 
-        PB.COM.PB_EAST_MODE.insert<16, 7, 57, uint64_t>(0xfdfbf)
-        PB.COM.PB_EAST_MODE.insert<23, 7, 57, uint64_t>(0xfdfbf)
+        PB.COM.PB_EAST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_EAST_MODE |= 0x000007EFC0000000
     }
 
     PB.COM.PB_WEST_MODE &= 0xFFFFFFFC0FFFFFFF
