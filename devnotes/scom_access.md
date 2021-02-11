@@ -106,7 +106,7 @@ XSCOM read failed at @<address> pcba=0x0001e002
 
 ### Assembly instruction **`ldcix`**
 *`ldcix`* - Load Doubleword Caching Inhibited Indexed - loads doubleword from memory avoiding loading to cache.\
-`0x800623FC00000000ull` base address will is not working because it tagets processor with id 2. Base address should be `0x800603FC00000000`.
+`0x800623FC00000000ull` base address will is not working because it tagets processor with id 2. Base address should be `0x800603FC00000000`.\
 Tested code:
 ```
 #include <arch/io.h>
