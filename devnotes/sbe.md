@@ -60,6 +60,111 @@ relative to the beginning of SEEPROM (0x105 with ECC). For the current
 and padding it lands entirely in last quarter of SEEPROM. Note that Secure ROM
 (SHA512 algorithm) is a big part of that 20kB.
 
+#### SBE to HBBL hand-off
+
+The following is a dump of first 12KB + 16B of memory, starting at what was the
+HRMOR at the beginning of HBBL execution (4GB - 128MB + 2MB, even though every
+piece of information says it should be at 128MB + 2MB). The dump was obtained
+after HBBL passed execution to coreboot.
+
+```
+root@talos:~# pdbg -p0 -c1 -t0 getmem 0xf8200000 $((12*1024 + 16)) 2>/dev/null | hexdump -C
+00000000  48 00 30 00 00 09 00 05  00 00 00 00 00 00 00 00  |H.0.............|
+00000010  00 00 80 00 00 00 00 00  00 00 00 00 00 06 03 fc  |................|
+00000020  00 00 00 00 00 06 03 00  00 00 00 00 ff ff ff ff  |................|
+00000030  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
+*
+00000070  ff ff ff ff 48 00 00 00  48 00 00 00 48 00 00 00  |....H...H...H...|
+00000080  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00000100  48 00 30 c0 48 00 00 00  48 00 00 00 48 00 00 00  |H.0.H...H...H...|
+00000110  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00000200  48 00 2f d0 48 00 00 00  48 00 00 00 48 00 00 00  |H./.H...H...H...|
+00000210  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00000300  48 00 2e e0 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000310  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+(more of the same)
+*
+00000d00  48 00 25 a0 48 00 00 00  48 00 00 00 48 00 00 00  |H.%.H...H...H...|
+00000d10  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00000e00  48 00 24 b0 48 00 00 00  48 00 00 00 48 00 00 00  |H.$.H...H...H...|
+00000e10  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000e20  48 00 24 a0 48 00 00 00  48 00 00 00 48 00 00 00  |H.$.H...H...H...|
+00000e30  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000e40  48 00 24 90 48 00 00 00  48 00 00 00 48 00 00 00  |H.$.H...H...H...|
+00000e50  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000e60  48 00 24 80 48 00 00 00  48 00 00 00 48 00 00 00  |H.$.H...H...H...|
+00000e70  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000e80  48 00 24 70 48 00 00 00  48 00 00 00 48 00 00 00  |H.$pH...H...H...|
+00000e90  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00000f00  48 00 24 00 48 00 00 00  48 00 00 00 48 00 00 00  |H.$.H...H...H...|
+00000f10  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000f20  48 00 23 f0 48 00 00 00  48 00 00 00 48 00 00 00  |H.#.H...H...H...|
+00000f30  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000f40  48 00 23 e0 48 00 00 00  48 00 00 00 48 00 00 00  |H.#.H...H...H...|
+00000f50  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000f60  48 00 23 d0 48 00 00 00  48 00 00 00 48 00 00 00  |H.#.H...H...H...|
+00000f70  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+00000f80  48 00 23 c0 48 00 00 00  48 00 00 00 48 00 00 00  |H.#.H...H...H...|
+00000f90  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00001500  48 00 1e 50 48 00 00 00  48 00 00 00 48 00 00 00  |H..PH...H...H...|
+00001510  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00001600  48 00 1d 60 48 00 00 00  48 00 00 00 48 00 00 00  |H..`H...H...H...|
+00001610  48 00 00 00 48 00 00 00  48 00 00 00 48 00 00 00  |H...H...H...H...|
+*
+00003000  7c 42 13 78 7c 40 00 a6  78 42 08 40 78 42 f8 02  ||B.x|@..xB.@xB..|
+00003010
+```
+
+Most of that data was prepared by SBE. At the very beginning we can see a jump
+instruction (as almost all instructions, this is 4B long) to 0x3000, where HBBL
+image is loaded from SEEPROM. Immediately after that is a structure defined in
+[p9_sbe_hb_structures.H](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/nest/p9_sbe_hb_structures.H#L81),
+with misleading comment as for the starting address and alignment of the
+structure:
+
+```c
+// Structure starts at the bootloader zero address
+//   Note - this structure must remain 64-bit aligned to
+//          maintain compatibility with Hostboot
+struct BootloaderConfigData_t
+{
+    uint32_t version;         // bytes  4:7  Version identifier
+    uint8_t sbeBootSide;      // byte   8    0=SBE side 0, 1=SBE side 1
+    //                                         [ATTR_SBE_BOOT_SIDE]
+    uint8_t pnorBootSide;     // byte   9    0=PNOR side A, 1=PNOR side B
+    //                                         [ATTR_PNOR_BOOT_SIDE]
+    uint16_t pnorSizeMB;      // bytes 10:11 Size of PNOR in MB
+    //                                         [ATTR_PNOR_SIZE]
+    uint64_t blLoadSize;      // bytes 12:19 Size of Load
+    //                                         Exception vectors and Bootloader
+    BootloaderSecureSettings  secureSettings  ; // byte  20
+    uint8_t reserved[7];      // bytes 21:27 Reserved space to maintain 64-bit alignment
+    uint64_t xscomBAR;        // bytes 28:35 XSCOM MMIO BAR
+    uint64_t lpcBAR;          // bytes 36:43 LPC MMIO BAR
+    keyAddrPair_t pair;       // total of 72 Bytes (8+8*8) for Key/Addr Pair
+}; // Note: Want to use '__attribute__((packed))' but compiler won't let us
+```
+
+`uint64_t` variables are not naturally aligned, which may have implications
+later in the code. All of the fields are [filled by SBE](https://github.com/open-power/sbe/blob/master/src/import/chips/p9/procedures/hwp/nest/p9_sbe_load_bootloader.C#L505).
+Note that `blLoadSize` includes 12K reserved for exception vectors.
+
+Space between the end of that structure (0x74) and main payload is filled with
+`48 00 00 00`, which corresponds to `b .` assembly instruction. Some of these
+instructions are later [updated by HBBL](https://github.com/open-power/hostboot/blob/master/src/bootloader/bl_start.S#L167)
+to jump into proper handlers.
+
+At `0x3000` HBBL image begins. When CPU is released, it starts executing at
+address `0`, but immediately jumps here.
+
 ## Reading SEEPROM from BMC
 
 There are at least two ways of reading (and possibly writing) SEEPROM from BMC.

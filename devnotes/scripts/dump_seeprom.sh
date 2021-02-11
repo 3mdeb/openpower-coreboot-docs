@@ -20,6 +20,7 @@ echo 0xa0d7 > /sys/bus/i2c/devices/i2c-0/delete_device
 # padded with zeros. 64k % 9 = 7, that is the number of bytes to skip. Not sure
 # if globbing keeps the proper order, use explicit file names just in case.
 # Also, output file extension must be '.ecc', otherwise 'ecc' tool complains.
+## FIXME: Busybox's 'head' on BMC does not support '-c', find an alternative
 head -c-7 -q _seeprom0 _seeprom1 _seeprom2 _seeprom3 > seeprom.bin.ecc
 
 # Remove temporary files
