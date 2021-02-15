@@ -57,8 +57,9 @@ A part of that structure is an array of [P9XipSection structures](https://github
 one of such structures is the one describing HBBL. It is located at offset 0xE8
 relative to the beginning of SEEPROM (0x105 with ECC). For the current
 `07-25-2019` branch of SBE HBBL is 20kB big, located at offset 0x2F008. With ECC
-and padding it lands entirely in last quarter of SEEPROM. Note that Secure ROM
-(SHA512 algorithm) is a big part of that 20kB.
+and padding it lands entirely in last quarter of SEEPROM, at offsets
+0x4E1E-0xA81D. Note that Secure ROM (SHA512 algorithm) is a big part of that
+20kB.
 
 #### SBE to HBBL hand-off
 

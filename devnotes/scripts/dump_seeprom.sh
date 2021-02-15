@@ -38,12 +38,15 @@ ecc -R seeprom.bin.ecc -p -o seeprom.bin
 #echo 24c512 0xa0d6 > /sys/bus/i2c/devices/i2c-0/new_device
 #echo 24c512 0xa0d7 > /sys/bus/i2c/devices/i2c-0/new_device
 #
-## This is slow, 10-12 min per part. Can we use bigger block size? Log in dmesg:
-## [  815.919492] at24 0-a0d4: 65536 byte 24c512 EEPROM, writable, 1 bytes/write
+## This is slow, about 10 min per part. We can use bigger block size (blocks of
+## up to 32 bytes were tested), but this saves just a few seconds.
 #dd of=/sys/bus/i2c/devices/0-a0d4/eeprom if=_seeprom0 bs=1
 #dd of=/sys/bus/i2c/devices/0-a0d5/eeprom if=_seeprom1 bs=1
 #dd of=/sys/bus/i2c/devices/0-a0d6/eeprom if=_seeprom2 bs=1
 #dd of=/sys/bus/i2c/devices/0-a0d7/eeprom if=_seeprom3 bs=1
+#
+## To write HBBL part only (may be different if SEEPROM layout changes!):
+##dd of=/sys/bus/i2c/devices/0-a0d7/eeprom if=_seeprom3 bs=1 skip=$((0x4e1e)) seek=$((0x4e1e)) count=$((0x5a00))
 #
 #echo 0xa0d4 > /sys/bus/i2c/devices/i2c-0/delete_device
 #echo 0xa0d5 > /sys/bus/i2c/devices/i2c-0/delete_device
