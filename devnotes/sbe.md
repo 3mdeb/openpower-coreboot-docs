@@ -205,6 +205,80 @@ that are different to save time.
 
 So far I haven't found a way to access secondary SEEPROM using this approach.
 
+Below are some of the commands that can be used to modify the contents of
+SEEPROM. Use at your own risk, and most importantly, **make a copy** and move it
+to safe place (i.e. out of BMC's ramdisk) before doing anything else.
+
+###### Preparations
+
+* Mount a device for last quadrant of SEEPROM:
+
+```
+echo 24c512 0xa0d7 > /sys/bus/i2c/devices/i2c-0/new_device
+```
+
+* Make a copy of last quadrant of SEEPROM (~6 seconds):
+
+```
+cp /sys/bus/i2c/devices/0-a0d7/eeprom /tmp/_seeprom3
+```
+
+###### Overwriting ECC word + checksum
+
+Note that all offsets in this group of commands must be a multiple of 9.
+
+* Dump 9 bytes from offset 0x4e1e (start of HBBL):
+
+```
+dd if=/sys/bus/i2c/devices/0-a0d7/eeprom bs=1 skip=$((0x4e1e)) count=9 | hexdump -C
+```
+
+* Overwrite first two instructions with `b .; nop`:
+
+```
+echo -e -n "\x48\0\0\0\x60\0\0\0\xf9" | dd of=/sys/bus/i2c/devices/0-a0d7/eeprom bs=1 seek=$((0x4e1e))
+```
+
+This is the least time-consuming way of changing a checkstop into a watchdog
+timeout. After a checkstop CPU registers (GPRs, SPRs, MSR, NIA) and memory can't
+be read with `pdbg`, which makes debugging much harder.
+
+* Restore original instructions (result of previous dump):
+
+```
+echo -e -n "\x7c\x42\x13\x78\x7c\x40\0\xa6\x03" | dd of=/sys/bus/i2c/devices/0-a0d7/eeprom bs=1 seek=$((0x4e1e))
+```
+
+###### Flashing new HBBL image
+
+* Overwrite whole HBBL (note bootblock has ECC, but is not signed; execution time
+  depends on the size of bootblock, max 3.5 minutes):
+
+```
+time dd of=/sys/bus/i2c/devices/0-a0d7/eeprom if=/tmp/bootblock.ecc bs=1 seek=$((0x4e1e)) count=$((0x5a00))
+```
+
+Make sure input file is 0x5a00 at most: 20kB HBBL + 2.5kB ECC, this includes HW
+key hash - 64 bytes (72 bytes with ECC). If the bootblock doesn't change HW key
+and is appropriately smaller, you can omit `count`.
+
+* Restore HBBL, assuming `/tmp/_seeprom3` is original copy of HBBL (~3.5 minutes):
+
+```
+time dd of=/sys/bus/i2c/devices/0-a0d7/eeprom if=/tmp/_seeprom3 bs=1 skip=$((0x4e1e)) seek=$((0x4e1e)) count=$((0x5a00))
+```
+
+* Restore whole quadrant (if you really messed up, ~10 minutes):
+
+```
+time dd of=/sys/bus/i2c/devices/0-a0d7/eeprom if=/tmp/_seeprom3 bs=32
+```
+
+We can't use `cp` for restoration, it uses bigger block sizes which don't work
+for SEEPROM. Block size of 32 bytes is the maximal tested size. Using 32 instead
+of 1 saves just about 4 seconds, which is negligible when compared to total time
+required, so no bigger chunks were tested.
+
 #### SCOM
 
 Internally it also uses I2C. Host must be powered on in order to access SCOM.
