@@ -190,6 +190,8 @@ Tasks performed by HBBL which may impact the execution:
     - unless unusual address hashing function is used for cache tags
 - `dcbz` before and after HBBL
   - security feature, zeroes cache
+    - but not only, it also makes it valid so it won't get fetched from RAM
+      which is not usable yet
   - first range: blLoadSize, HRMOR+2MB
     - stack
     - HBB ECC working space
@@ -262,7 +264,7 @@ they just report the exception with no further handling.
 131MB = HBB working address
 
 HBB HRMOR may be also at 4GB - 128MB (that is the case for the current code),
-but all addresses are the same relative to each other. Comments in multiple
+but all addresses are the same relatively to each other. Comments in multiple
 places mention only 128MB HRMOR.
 
 What happens in C:
@@ -344,7 +346,7 @@ In main, before creating stack frame: timeout
   // code writes to 16(r1), this is above our stack, but unused
 In main, after creating stack frame: checkstop
 
-This means that the faulting instruction is one these:
+This means that the faulting instruction is one of these:
 
 ```
 	std     r0,16(r1)
@@ -367,4 +369,18 @@ None of the following (inserted between move to r1 and store) seems to help:
 
 `tlbia` is not implemented, causes a hypervisor emulation assistance interrupt.
 
-// TODO: try with stack inside bootblock or in the 12kB space for vectors
+---
+
+Main issue: L3 is marked invalid after power-on.
+
+First 0x8000 of it (relative to HBBL HRMOR) is filled (and consequently
+validated) by LCO (lateral cast out) performed by SBE. The rest must be made
+valid by e.g. `dcbz` before it is used, otherwise, because of cache miss, L3
+will try to fetch the data from RAM.
+
+When doing `dcbz` for more than 2MB we are overwriting the code. We should have
+10MB of L3 cache according to all documentation. It is possible that it is
+hashed in a way that generates discontinuity at this address, however this point
+isn't on multiply of 10MB (HRMOR = 0xF8200000 = 3970MB, + 2MB = 3972MB).
+
+HBBL uses 2MB above its HRMOR and 2MB below.
