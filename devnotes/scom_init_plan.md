@@ -8,7 +8,8 @@ Here files that are directly responsible for soc
     - Add Kconfig specific to POWER9 family
     - Add bootblock, and romstage that are responsible for cpu configuration
     - Memlayout is already defined in Motherboard section,\
-      so it is probably not needed here
+      so it is probably not needed here.\
+      Memlayout should be moved to SoC directory
     - Add chip.c for cpu structures
   - Add Kconfig for all POWER processors
 
