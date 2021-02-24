@@ -137,30 +137,18 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     fapi2::ATTR_EC_Type l_chip_ec;
     fapi2::ATTR_NAME_Type l_chip_id;
     fapi2::ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG_Type l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG;
-    fapi2::ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS_Type l_TGT0_ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS;
-    fapi2::ATTR_FREQ_X_MHZ_Type l_TGT1_ATTR_FREQ_X_MHZ;
     fapi2::ATTR_FREQ_PB_MHZ_Type l_TGT1_ATTR_FREQ_PB_MHZ;
     fapi2::ATTR_PROC_FABRIC_SMP_OPTICS_MODE_Type l_TGT1_ATTR_PROC_FABRIC_SMP_OPTICS_MODE;
-    fapi2::ATTR_CHIP_EC_FEATURE_HW384245_Type l_TGT0_ATTR_CHIP_EC_FEATURE_HW384245;
 
     l_chip_id = fapi2::ATTR_NAME[TGT0];
     l_chip_ec = fapi2::ATTR_EC[TGT0];
     l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG = fapi2::ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG[TGT0];
-    l_TGT0_ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS = fapi2::ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS[TGT0];
-    l_TGT1_ATTR_FREQ_X_MHZ = fapi2::ATTR_FREQ_X_MHZ[TGT1];
     l_TGT1_ATTR_FREQ_PB_MHZ = fapi2::ATTR_FREQ_PB_MHZ[TGT1];
     l_TGT1_ATTR_PROC_FABRIC_SMP_OPTICS_MODE = fapi2::ATTR_PROC_FABRIC_SMP_OPTICS_MODE[TGT1];
-    l_TGT0_ATTR_CHIP_EC_FEATURE_HW384245 = fapi2::ATTR_CHIP_EC_FEATURE_HW384245[TGT0];
 
-    uint64_t l_def_DD2X_PARTS = l_TGT0_ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS != 1;
-    uint64_t l_def_DD2_LO_LIMIT_D = l_TGT1_ATTR_FREQ_X_MHZ * 10;
     uint64_t l_def_DD2_LO_LIMIT_N = l_TGT1_ATTR_FREQ_PB_MHZ * 82;
-    uint64_t l_def_DD1_LO_LIMIT_D = l_TGT1_ATTR_FREQ_X_MHZ * 100;
-    uint64_t l_def_DD1_LO_LIMIT_H = l_def_DD1_LO_LIMIT_D / 2;
     uint64_t l_def_DD1_LO_LIMIT_N = l_TGT1_ATTR_FREQ_PB_MHZ * 1075;
-    uint64_t l_def_DD1_LO_LIMIT_R = l_def_DD1_LO_LIMIT_N % l_def_DD1_LO_LIMIT_D;
-    uint64_t l_def_DD1_PARTS = l_TGT0_ATTR_CHIP_EC_FEATURE_DD1_FBC_SETTINGS == 1;
-    uint64_t l_def_DD1_LO_LIMIT_P = l_def_DD1_LO_LIMIT_D % 2;
+    uint64_t l_def_DD1_LO_LIMIT_R = l_def_DD1_LO_LIMIT_N % 200000;
     uint64_t l_def_OPTICS_IS_A_BUS = l_TGT1_ATTR_PROC_FABRIC_SMP_OPTICS_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_SMP_OPTICS_MODE_OPTICS_IS_A_BUS;
     uint64_t l_def_X0_ENABLED = l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG[0] != fapi2::ENUM_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG_FALSE;
     uint64_t l_def_X1_ENABLED = l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG[1] != fapi2::ENUM_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG_FALSE;
@@ -188,22 +176,15 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         PB.IOE.SCOM.PB_FP01_CFG |= 0x84000000840
     }
 
-    if (l_def_X0_ENABLED && l_def_DD2X_PARTS)
+    if (l_def_X0_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP01_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP01_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
+        PB.IOE.SCOM.PB_FP01_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
     }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R < l_def_DD1_LO_LIMIT_H)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && l_def_DD1_LO_LIMIT_P))
+    else
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP01_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-    }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && !l_def_DD1_LO_LIMIT_P)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R > l_def_DD1_LO_LIMIT_H))
-    {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<4, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP01_CFG.insert<36, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP01_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
+        PB.IOE.SCOM.PB_FP01_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
     }
 
     if (l_def_X2_ENABLED)
@@ -215,22 +196,15 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     {
         PB.IOE.SCOM.PB_FP45_CFG |= 0x84000000840
     }
-    if (l_def_X2_ENABLED && l_def_DD2X_PARTS)
+    if (l_def_X2_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP45_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
+        PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
     }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R < l_def_DD1_LO_LIMIT_H)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && l_def_DD1_LO_LIMIT_P))
+    else
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-    }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && !l_def_DD1_LO_LIMIT_P)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R > l_def_DD1_LO_LIMIT_H))
-    {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<4, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP45_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
+        PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
     }
 
     if (l_def_X0_ENABLED)IOEL_REPLAY_THRESHOLD
@@ -241,16 +215,8 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<24, 5, 59, uint64_t>(0x1F)
         }
-        if (l_TGT0_ATTR_CHIP_EC_FEATURE_HW384245 != 0)
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<1, 7, 57, uint64_t>(0x3F)
-            PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<33, 7, 57, uint64_t>(0x3F)
-        }
-        else
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
-            PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
-        }
+        PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
+        PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
         PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<9, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<41, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<17, 7, 57, uint64_t>(0x3C)
@@ -276,24 +242,16 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         PB.IOE.SCOM.PB_TRACE_CFG.insert<44, 4, 60, uint64_t>(0b0001)
     }
 
-    if (l_def_X1_ENABLED && l_def_DD2X_PARTS)
+    if (l_def_X1_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP23_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP23_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / l_def_DD2_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP23_CFG.insert<4, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
+        PB.IOE.SCOM.PB_FP23_CFG.insert<36, 8, 56, uint64_t>(0x15 - (l_def_DD2_LO_LIMIT_N / 20000))
     }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R < l_def_DD1_LO_LIMIT_H)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && l_def_DD1_LO_LIMIT_P))
+    else
     {
-        PB.IOE.SCOM.PB_FP23_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP23_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
+        PB.IOE.SCOM.PB_FP23_CFG.insert<4, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
+        PB.IOE.SCOM.PB_FP23_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
     }
-    else if ((l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R == l_def_DD1_LO_LIMIT_H && !l_def_DD1_LO_LIMIT_P)
-          || (l_def_X0_ENABLED && l_def_DD1_PARTS && l_def_DD1_LO_LIMIT_R > l_def_DD1_LO_LIMIT_H))
-    {
-        PB.IOE.SCOM.PB_FP23_CFG.insert<4, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-        PB.IOE.SCOM.PB_FP23_CFG.insert<36, 8, 56, uint64_t>(0x19 - (l_def_DD1_LO_LIMIT_N / l_def_DD1_LO_LIMIT_D))
-    }
-
 
     if(l_def_X1_ENABLED)
     {
@@ -312,16 +270,8 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<24, 5, 59, uint64_t>(0x1F)
         }
-        if (l_TGT0_ATTR_CHIP_EC_FEATURE_HW384245 != 0)
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<1, 7, 57, uint64_t>(0x3F)
-            PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<33, 7, 57, uint64_t>(0x3F)
-        }
-        else
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
-            PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
-        }
+        PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
+        PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
         PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<9, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<41, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<17, 7, 57, uint64_t>(0x3C)
@@ -345,16 +295,8 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<24, 5, 59, uint64_t>(0x1F)
         }
-        if (l_TGT0_ATTR_CHIP_EC_FEATURE_HW384245 != 0)
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<1, 7, 57, uint64_t>(0x3F)
-            PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<33, 7, 57, uint64_t>(0x3F)
-        }
-        else
-        {
-            PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
-            PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
-        }
+        PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<1, 7, 57, uint64_t>(0x40)
+        PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<33, 7, 57, uint64_t>(0x40)
         PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<9, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<41, 7, 57, uint64_t>(0x3C)
         PB.IOE.SCOM.PB_ELINK_DATA_45_CFG_REG.insert<17, 7, 57, uint64_t>(0x3C)

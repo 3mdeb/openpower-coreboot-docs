@@ -471,9 +471,6 @@ fapi2::ReturnCode p9_fbc_ioo_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_OBUS
         fapi2::ATTR_PROC_FABRIC_LINK_ACTIVE_Type l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE;
         l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE = fapi2::ATTR_PROC_FABRIC_LINK_ACTIVE[TGT0];
         uint64_t l_def_OBUS_FBC_ENABLED = l_TGT0_ATTR_OPTICS_CONFIG_MODE == fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_SMP && l_TGT0_ATTR_PROC_FABRIC_LINK_ACTIVE;
-        fapi2::ATTR_CHIP_EC_FEATURE_HW419022_Type l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022;
-        l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022 = fapi2::ATTR_CHIP_EC_FEATURE_HW419022[TGT1];
-        uint64_t l_def_DLL_DD10_TRAIN = (l_TGT1_ATTR_CHIP_EC_FEATURE_HW419022 != 0);
         fapi2::buffer<uint64_t> l_scom_buffer;
 
         // Power Bus OLL Configuration Register
@@ -488,23 +485,8 @@ fapi2::ReturnCode p9_fbc_ioo_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_OBUS
         {
             l_scom_buffer.insert<0, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK_PAIR_OFF
         }
-        if((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13)
-        || (l_chip_id == 0x7 && l_chip_ec == 0x10))
-        {
-            l_scom_buffer.insert<11, 5, 59, uint64_t>(0x0F);
-            l_scom_buffer.insert<32, 4, 60, uint64_t>(0);
-        }
-        if(l_chip_id == 0x5 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<12, 4, 60, uint64_t>(0x0F);
-        }
+        l_scom_buffer.insert<11, 5, 59, uint64_t>(0x0F);
+        l_scom_buffer.insert<32, 4, 60, uint64_t>(0);
         l_scom_buffer.insert<28, 4, 60, uint64_t>(0x0F);
         l_scom_buffer.insert<2, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_CRC_LANE_ID_ON
         l_scom_buffer.insert<4, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_SL_UE_CRC_ERR_ON
@@ -514,130 +496,49 @@ fapi2::ReturnCode p9_fbc_ioo_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_OBUS
         // PB.IOO.LL0.IOOL_PHY_CONFIG
         // Processor bus OLL PHY training configuration register
         fapi2::getScom(TGT0, 0x901080C, l_scom_buffer);
-        if((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13))
+        if(l_def_OBUS_NV_ENABLED)
         {
-            if(l_def_OBUS_NV_ENABLED)
-            {
-                l_scom_buffer.insert<61, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV0_NPU_ENABLED_ON
-                l_scom_buffer.insert<62, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV1_NPU_ENABLED_ON
-                l_scom_buffer.insert<63, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV2_NPU_ENABLED_ON
-            }
+            l_scom_buffer.insert<61, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV0_NPU_ENABLED_ON
+            l_scom_buffer.insert<62, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV1_NPU_ENABLED_ON
+            l_scom_buffer.insert<63, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV2_NPU_ENABLED_ON
         }
-        if((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13)
-        || (l_chip_id == 0x7 && l_chip_ec == 0x10))
+        if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_ODD_ONLY)
         {
-            if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_ODD_ONLY)
-            {
-                l_scom_buffer.insert<58, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_ON
-            }
-            else
-            {
-                l_scom_buffer.insert<58, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_OFF
-            }
-            if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_EVEN_ONLY)
-            {
-                l_scom_buffer.insert<59, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_ON
-            }
-            else
-            {
-                l_scom_buffer.insert<59, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_OFF
-            }
-        }
-        if(l_def_DLL_DD10_TRAIN)
-        {
-            l_scom_buffer.insert<8, 4, 60, uint64_t>(0xE);
-            l_scom_buffer.insert<12, 4, 60, uint64_t>(0xE);
-            l_scom_buffer.insert<4, 4, 60, uint64_t>(0);
+            l_scom_buffer.insert<58, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_ON
         }
         else
         {
-            l_scom_buffer.insert<0, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_A_ADJ_USE4
-            l_scom_buffer.insert<2, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_B_ADJ_USE12
-            l_scom_buffer.insert<8, 4, 60, uint64_t>(0);
-            l_scom_buffer.insert<12, 4, 60, uint64_t>(0);
-            l_scom_buffer.insert<4, 4, 60, uint64_t>(0x0F);
+            l_scom_buffer.insert<58, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_OFF
         }
+        if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_EVEN_ONLY)
+        {
+            l_scom_buffer.insert<59, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_ON
+        }
+        else
+        {
+            l_scom_buffer.insert<59, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_OFF
+        }
+        l_scom_buffer.insert<0, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_A_ADJ_USE4
+        l_scom_buffer.insert<2, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_PHY_TRAIN_B_ADJ_USE12
+        l_scom_buffer.insert<8, 4, 60, uint64_t>(0);
+        l_scom_buffer.insert<12, 4, 60, uint64_t>(0);
+        l_scom_buffer.insert<4, 4, 60, uint64_t>(0x0F);
         fapi2::putScom(TGT0, 0x901080C, l_scom_buffer);
         // Power Bus OLL Optical Configuration Register
         // PB.IOO.LL0.IOOL_OPTICAL_CONFIG
         // Processor bus OLL optical configuration register
         fapi2::getScom(TGT0, 0x901080F, l_scom_buffer);
-        if(l_chip_id == 0x5 && l_chip_ec == 0x10)
-        {
-            if(l_def_OBUS_NV_ENABLED)
-            {
-                l_scom_buffer.insert<61, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV0_NPU_ENABLED_ON
-                l_scom_buffer.insert<62, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV1_NPU_ENABLED_ON
-                l_scom_buffer.insert<63, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_NV2_NPU_ENABLED_ON
-            }
-            if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_ODD_ONLY)
-            {
-                l_scom_buffer.insert<58, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_ON
-            }
-            else
-            {
-                l_scom_buffer.insert<58, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK0_OLL_ENABLED_OFF
-            }
-            if(l_def_OBUS_FBC_ENABLED && l_TGT0_ATTR_LINK_TRAIN != fapi2::ENUM_ATTR_LINK_TRAIN_EVEN_ONLY)
-            {
-                l_scom_buffer.insert<59, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_ON
-            }
-            else
-            {
-                l_scom_buffer.insert<59, 1, 63, uint64_t>(0); // l_PB_IOO_LL0_CONFIG_LINK1_OLL_ENABLED_OFF
-            }
-        }
         l_scom_buffer.insert<4, 4, 60, uint64_t>(0x5);
         l_scom_buffer.insert<9, 7, 57, uint64_t>(0x0F);
         l_scom_buffer.insert<37, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_ELEVEN_LANE_MODE_ON
-        if((l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13)
-        || (l_chip_id == 0x7 && l_chip_ec == 0x10))
-        {
-            l_scom_buffer.insert<59, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_FAST_ASYNC_CROSS_ON
-        }
-        if((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x11)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x12)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x13)
-        || (l_chip_id == 0x7 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<3, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK_FAIL_CRC_ERROR_ON
-            l_scom_buffer.insert<2, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK_FAIL_NO_SPARE_ON
-        }
+        l_scom_buffer.insert<3, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK_FAIL_CRC_ERROR_ON
+        l_scom_buffer.insert<2, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_CONFIG_LINK_FAIL_NO_SPARE_ON
         l_scom_buffer.insert<20, 4, 60, uint64_t>(0x5);
         l_scom_buffer.insert<25, 7, 57, uint64_t>(0x3F);
         l_scom_buffer.insert<56, 2, 62, uint64_t>(0x2); // l_PB_IOO_LL0_CONFIG_REPLAY_BUFFER_SIZE_REPLAY
         l_scom_buffer.insert<39, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_LINK1_ELEVEN_LANE_SHIFT_ON
-        if((l_chip_id == 0x5 && l_chip_ec == 0x20)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x21)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x22)
-        || (l_chip_id == 0x5 && l_chip_ec == 0x23)
-        || (l_chip_id == 0x6 && l_chip_ec == 0x10))
-        {
-            l_scom_buffer.insert<42, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_LINK1_RX_LANE_SWAP_ON
-            l_scom_buffer.insert<43, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_LINK1_TX_LANE_SWAP_ON
-        }
+        l_scom_buffer.insert<42, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_LINK1_RX_LANE_SWAP_ON
+        l_scom_buffer.insert<43, 1, 63, uint64_t>(1); // l_PB_IOO_LL0_LINK1_TX_LANE_SWAP_ON
         fapi2::putScom(TGT0, 0x901080F, l_scom_buffer);
         // Power Bus OLL Replay Threshold Register
         // PB.IOO.LL0.IOOL_REPLAY_THRESHOLD
@@ -686,7 +587,6 @@ fapi2::ReturnCode p9_io_obus_image_build(CONST_OBUS& iTgt, void* const iHwImageP
     uint8_t configMode = 0;
     int xipSectionId = 0;
     bool loadImage = false;
-    fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE_Type l_hw446279_use_ppe;
 
     FAPI_ATTR_GET(fapi2::ATTR_OPTICS_CONFIG_MODE, iTgt, configMode);
 
@@ -701,17 +601,6 @@ fapi2::ReturnCode p9_io_obus_image_build(CONST_OBUS& iTgt, void* const iHwImageP
     else if(fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_SMP == configMode)
     {
         xipSectionId = P9_XIP_SECTION_IOPPE_IOO_ABUS;
-        auto l_chip = iTgt.getParent<fapi2::TARGET_TYPE_PROC_CHIP>();
-        FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE, l_chip, l_hw446279_use_ppe);
-        if(l_hw446279_use_ppe)
-        {
-            loadImage = true;
-            // Enable the PPE to communicate with the PHY
-            fapi2::buffer<uint64_t> data64;
-            fapi2::getScom(iTgt, OBUS_SCOM_MODE_PB, data64);
-            data64.setBit<OBUS_SCOM_MODE_PB_PPE_GCR>();
-            fapi2::putScom(iTgt, OBUS_SCOM_MODE_PB, data64);
-        }
     }
     if(loadImage)
     {
@@ -1326,28 +1215,10 @@ fapi2::ReturnCode p9_fbc_ioo_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             l_scom_buffer.insert<24, 5, 59, uint64_t>(0x1F);
         }
-        if(l_chip_id == 0x5 && l_chip_ec == 0x20
-        || l_chip_id == 0x5 && l_chip_ec == 0x21
-        || l_chip_id == 0x5 && l_chip_ec == 0x22
-        || l_chip_id == 0x5 && l_chip_ec == 0x23
-        || l_chip_id == 0x6 && l_chip_ec == 0x10
-        || l_chip_id == 0x6 && l_chip_ec == 0x11
-        || l_chip_id == 0x6 && l_chip_ec == 0x12
-        || l_chip_id == 0x6 && l_chip_ec == 0x13
-        || l_chip_id == 0x7 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<9, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<17, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<41, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<49, 7, 57, uint64_t>(0x3C);
-        }
-        if (l_chip_id == 0x5 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<8, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<16, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<40, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<48, 8, 56, uint64_t>(0x3C);
-        }
+        l_scom_buffer.insert<9, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<17, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<41, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<49, 7, 57, uint64_t>(0x3C);
     }
     fapi2::putScom(TGT0, 0x5013810, l_scom_buffer);
     fapi2::getScom(TGT0, 0x5013811, l_scom_buffer);
@@ -1403,29 +1274,10 @@ fapi2::ReturnCode p9_fbc_ioo_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             l_scom_buffer.insert<24, 5, 59, uint64_t>(0x1C);
         }
-        if(l_chip_id == 0x5 && l_chip_ec == 0x20
-        || l_chip_id == 0x5 && l_chip_ec == 0x21
-        || l_chip_id == 0x5 && l_chip_ec == 0x22
-        || l_chip_id == 0x5 && l_chip_ec == 0x23
-        || l_chip_id == 0x6 && l_chip_ec == 0x10
-        || l_chip_id == 0x6 && l_chip_ec == 0x11
-        || l_chip_id == 0x6 && l_chip_ec == 0x12
-        || l_chip_id == 0x6 && l_chip_ec == 0x13
-        || l_chip_id == 0x7 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<9, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<17, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<41, 7, 57, uint64_t>(0x3C);
-            l_scom_buffer.insert<49, 7, 57, uint64_t>(0x3C);
-        }
-
-        if (l_chip_id == 0x5 && l_chip_ec == 0x10)
-        {
-            l_scom_buffer.insert<8, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<16, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<40, 8, 56, uint64_t>(0x3C);
-            l_scom_buffer.insert<48, 8, 56, uint64_t>(0x3C);
-        }
+        l_scom_buffer.insert<9, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<17, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<41, 7, 57, uint64_t>(0x3C);
+        l_scom_buffer.insert<49, 7, 57, uint64_t>(0x3C);
     }
     fapi2::putScom(TGT0, 0x5013813, l_scom_buffer);
     // Power Bus Optical Miscellaneous Configuration Register
