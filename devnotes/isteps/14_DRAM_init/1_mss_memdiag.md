@@ -86,6 +86,7 @@ fapi2::ReturnCode after_memdiags<mss::mc_type::NIMBUS>( const fapi2::Target<fapi
         l_cal_fir_reg.recoverable_error<MCA_MBACALFIRQ_PORT_FAIL>();
 
         // If ATTR_CHIP_EC_FEATURE_HW414700 is enabled set checkstops
+        // True for Nimbus DD2.0 chip_ec == 0x20
         FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_HW414700, l_chip_target, l_checkstop_flag);
 
         // If the system is running DD2 chips override some recoverable firs with checkstop
@@ -314,17 +315,20 @@ inline fapi2::ReturnCode load_config( const fapi2::Target<T>& i_target, const mc
 {
     // Copy the program's config settings - we want to modify them if we're in sim.
     fapi2::buffer<uint64_t> l_config = i_program.iv_config;
-    // If we're running in Cronus, there is no interrupt so any attention bits will
-    // hang something somewhere. Make sure there's nothing in this config which can
-    // turn on attention bits unless we're running in hostboot
-#ifndef __HOSTBOOT_MODULE
-    if(TT::CFG_ENABLE_ATTN_SUPPORT == mss::states::YES)
-    {
-        l_config.template clearBit<TT::CFG_ENABLE_HOST_ATTN>();
-        l_config.template clearBit<TT::CFG_ENABLE_SPEC_ATTN>();
-    }
-#endif
     fapi2::putScom(i_target, TT::CFGQ_REG, l_config);
+}
+
+inline bool fifo_mode_required() const
+{
+    // Gets the op type for this subtest
+    uint64_t l_value_to_find = 0;
+    iv_mcbmr.extractToRight<TT::OP_TYPE, TT::OP_TYPE_LEN>(l_value_to_find);
+
+    // Finds if this op type is in the vector that stores the OP types that require FIFO mode to be run
+    const auto l_op_type_it = std::find(TT::FIFO_MODE_REQUIRED_OP_TYPES.begin(), TT::FIFO_MODE_REQUIRED_OP_TYPES.end(), l_value_to_find);
+    // If the op type is required (aka was found), it will be less than end
+    // std::find returns the ending iterator if it was not found, so this will return false in that case
+    return l_op_type_it != TT::FIFO_MODE_REQUIRED_OP_TYPES.end();
 }
 
 template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = mcbistTraits<MC, T> >
@@ -346,7 +350,7 @@ inline fapi2::ReturnCode load_fifo_mode( const fapi2::Target<T>& i_target, const
 
     // ----
     // configure_wrq(i_target, FIFO_ON);
-    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target) )
+    for(const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target) )
     {
         fapi2::buffer<uint64_t> l_data;
         mss::getScom(l_port, TT::WRQ_REG, l_data);
@@ -355,7 +359,7 @@ inline fapi2::ReturnCode load_fifo_mode( const fapi2::Target<T>& i_target, const
     }
     // ----
     // configure_rrq(i_target, FIFO_ON);
-    for( const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
+    for(const auto& l_port : mss::find_targets<TT::PORT_TYPE>(i_target))
     {
         fapi2::buffer<uint64_t> l_data;
         mss::getScom(l_port, TT::RRQ_REG, l_data);
@@ -369,7 +373,6 @@ template< mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T, typename TT = 
 fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i_program)
 {
     fapi2::buffer<uint64_t> l_status;
-    bool l_poll_result = false;
     poll_parameters l_poll_parameters;
 
     // Init the fapi2 return code
@@ -397,7 +400,7 @@ fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i
     load_config<MC>( i_target, i_program);
     // ----
     // load_control<MC>(i_target, i_program);
-    return fapi2::putScom(i_target, TT::CNTLQ_REG, i_program.iv_control);
+    fapi2::putScom(i_target, TT::CNTLQ_REG, i_program.iv_control);
     // ----
     load_data_config<MC>( i_target, i_program);
     // ----
@@ -413,7 +416,7 @@ fapi2::ReturnCode execute(const fapi2::Target<T>& i_target, const program<MC>& i
     // ----
     // Verify that the in-progress bit has been set, so we know we started
     // Don't use the program's poll as it could be a very long time. Use the default poll.
-    l_poll_result = mss::poll(i_target, TT::STATQ_REG, l_poll_parameters,
+    mss::poll(i_target, TT::STATQ_REG, l_poll_parameters,
                               [&l_status](const size_t poll_remaining, const fapi2::buffer<uint64_t>& stat_reg) -> bool
     {
         l_status = stat_reg;
@@ -426,44 +429,72 @@ inline fapi2::ReturnCode execute()
 {
     return mss::mcbist::execute(iv_target, iv_program);
 }
+
 errlHndl_t StateMachine::doMaintCommand(WorkFlowProperties & i_wfp)
 {
+    errlHndl_t err = nullptr;
     uint64_t workItem;
+
+    TargetHandle_t target;
+
     // starting a maint cmd ...  register a timeout monitor
     uint64_t maintCmdTO = getTimeoutValue();
+
     uint64_t monitorId = CommandMonitor::INVALID_MONITOR_ID;
     i_wfp.timeoutCnt = 0; // reset for new work item
     workItem = *i_wfp.workItem;
-    // Start a timeout monitor
-    monitorId = getMonitor().addMonitor(maintCmdTO);
-    i_wfp.timer = monitorId;
-}
 
-bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
-{
-    bool dispatched = false;
-    // ensure this thread sees the most recent state
+    target = getTarget(i_wfp);
 
-    if(!iv_shutdown)
+    TYPE trgtType = target->getAttr<ATTR_TYPE>();
+    // new command...use the full range
+    // target type is MBA
+    if (TYPE_MBA == trgtType)
     {
-        uint64_t workItem = *i_wfp->workItem;
-        errlHndl_t err = 0;
-        int32_t rc = 0;
+        uint32_t stopCondition =
+            mss_MaintCmd::STOP_END_OF_RANK                  |
+            mss_MaintCmd::STOP_ON_MPE                       |
+            mss_MaintCmd::STOP_ON_UE                        |
+            mss_MaintCmd::STOP_ON_END_ADDRESS               |
+            mss_MaintCmd::ENABLE_CMD_COMPLETE_ATTENTION;
 
+        if(TARGETING::MNFG_FLAG_IPL_MEMORY_CE_CHECKING & iv_globals.mfgPolicy)
+        {
+            // For MNFG mode, check CE also
+            stopCondition |= mss_MaintCmd::STOP_ON_HARD_NCE_ETE;
+        }
+
+        fapi2::buffer<uint64_t> startAddr, endAddr;
+        mss_MaintCmd * cmd = nullptr;
+        cmd = static_cast<mss_MaintCmd *>(i_wfp.data);
+        fapi2::Target<fapi2::TARGET_TYPE_MBA> fapiMba(target);
+
+        // We will always do ce setup though CE calculation
+        // is only done during MNFG. This will give use better ffdc.
+        err = ceErrorSetup<TYPE_MBA>(target);
+
+        FAPI_INVOKE_HWP(err, mss_get_address_range, fapiMba, MSS_ALL_RANKS, startAddr, endAddr);
+        // new command...use the full range
         switch(workItem)
         {
-            case RESTORE_DRAM_REPAIRS:
-            {
-                TargetHandle_t target = getTarget(*i_wfp);
-                // Get the connected MCAs.
-                TargetHandleList mcaList;
-                getChildAffinityTargets(mcaList, target, CLASS_UNIT, TYPE_MCA);
-                for (auto & mca : mcaList)
-                {
-                    PRDF::restoreDramRepairs<TYPE_MCA>(mca);
-                }
+            case START_RANDOM_PATTERN:
+                cmd = new mss_SuperFastRandomInit(
+                        fapiMba,
+                        startAddr,
+                        endAddr,
+                        mss_MaintCmd::PATTERN_RANDOM,
+                        stopCondition,
+                        false);
                 break;
-            }
+            case START_SCRUB:
+
+                cmd = new mss_SuperFastRead(
+                        fapiMba,
+                        startAddr,
+                        endAddr,
+                        stopCondition,
+                        false);
+                break;
             case START_PATTERN_0:
             case START_PATTERN_1:
             case START_PATTERN_2:
@@ -472,25 +503,128 @@ bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
             case START_PATTERN_5:
             case START_PATTERN_6:
             case START_PATTERN_7:
-            case START_RANDOM_PATTERN:
-            case START_SCRUB:
-                err = doMaintCommand(*i_wfp);
+                cmd = new mss_SuperFastInit(
+                        fapiMba,
+                        startAddr,
+                        endAddr,
+                        static_cast<mss_MaintCmd::PatternIndex>(workItem),
+                        stopCondition,
+                        false);
                 break;
-
-            case CLEAR_HW_CHANGED_STATE:
-                clearHWStateChanged(getTarget(*i_wfp));
-                break;
-            case ANALYZE_IPL_MNFG_CE_STATS:
-                TargetHandle_t target = getTarget(*i_wfp);
-                rc = PRDF::analyzeIplCEStats(target, false);
-                break;
-
             default:
                 break;
         }
-        ++i_wfp->workItem;
-        dispatched = scheduleWorkItem(*i_wfp);
+        i_wfp.data = cmd;
+        // Command and address configured.
+        // Invoke the command.
+        FAPI_INVOKE_HWP(err, cmd->setupAndExecuteCmd );
     }
+    //target type is MCBIST
+    else if(TYPE_MCBIST == trgtType)
+    {
+        fapi2::Target<fapi2::TARGET_TYPE_MCBIST> fapiMcbist(target);
+        mss::mcbist::stop_conditions<mss::mc_type::NIMBUS> stopCond;
+        switch(workItem)
+        {
+            case START_RANDOM_PATTERN:
+                FAPI_INVOKE_HWP(err, sf_init, fapiMcbist, mss::mcbist::PATTERN_RANDOM);
+                break;
+            case START_SCRUB:
+                //set stop conditions
+                stopCond.set_pause_on_mpe(mss::ON);
+                stopCond.set_pause_on_ue(mss::ON);
+                stopCond.set_pause_on_aue(mss::ON);
+                stopCond.set_nce_inter_symbol_count_enable(mss::ON);
+                stopCond.set_nce_soft_symbol_count_enable(mss::ON);
+                stopCond.set_nce_hard_symbol_count_enable(mss::ON);
+                if(TARGETING::MNFG_FLAG_IPL_MEMORY_CE_CHECKING & iv_globals.mfgPolicy)
+                {
+                    stopCond.set_pause_on_nce_hard(mss::ON);
+                }
+                FAPI_INVOKE_HWP(err, nim_sf_read, fapiMcbist, stopCond);
+                break;
+            case START_PATTERN_0:
+            case START_PATTERN_1:
+            case START_PATTERN_2:
+            case START_PATTERN_3:
+            case START_PATTERN_4:
+            case START_PATTERN_5:
+            case START_PATTERN_6:
+            case START_PATTERN_7:
+                FAPI_INVOKE_HWP(err, sf_init, fapiMcbist, workItem);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+template<  mss::mc_type MC = DEFAULT_MC_TYPE, fapi2::TargetType T >
+fapi2::ReturnCode sf_init( const fapi2::Target<T>& i_target,
+                           const uint64_t i_pattern = PATTERN_0 )
+{
+    using ET = mss::mcbistMCTraits<MC>;
+    fapi2::ReturnCode l_rc;
+    constraints<MC> l_const(i_pattern);
+    sf_init_operation<MC> l_init_op(i_target, l_const, l_rc);
+    return l_init_op.execute();
+}
+
+fapi2::ReturnCode custom_read_ctr::execute( const fapi2::Target<fapi2::TARGET_TYPE_MCA>& i_target,
+        const uint64_t i_rp,
+        const uint8_t i_abort_on_error ) const
+{
+    reset_data_pattern();
+    return step::execute(i_target, i_rp, i_abort_on_error);
+}
+
+bool StateMachine::executeWorkItem(WorkFlowProperties * i_wfp)
+{
+    bool dispatched = false;
+    uint64_t workItem = *i_wfp->workItem;
+    errlHndl_t err = 0;
+    int32_t rc = 0;
+
+    switch(workItem)
+    {
+        case RESTORE_DRAM_REPAIRS:
+        {
+            TargetHandle_t target = getTarget(*i_wfp);
+            // Get the connected MCAs.
+            TargetHandleList mcaList;
+            getChildAffinityTargets(mcaList, target, CLASS_UNIT, TYPE_MCA);
+            for (auto & mca : mcaList)
+            {
+                PRDF::restoreDramRepairs<TYPE_MCA>(mca);
+            }
+            break;
+        }
+        case START_PATTERN_0:
+        case START_PATTERN_1:
+        case START_PATTERN_2:
+        case START_PATTERN_3:
+        case START_PATTERN_4:
+        case START_PATTERN_5:
+        case START_PATTERN_6:
+        case START_PATTERN_7:
+        case START_RANDOM_PATTERN:
+        case START_SCRUB:
+            err = doMaintCommand(*i_wfp);
+            break;
+
+        case CLEAR_HW_CHANGED_STATE:
+            clearHWStateChanged(getTarget(*i_wfp));
+            break;
+        case ANALYZE_IPL_MNFG_CE_STATS:
+            TargetHandle_t target = getTarget(*i_wfp);
+            rc = PRDF::analyzeIplCEStats(target, false);
+            break;
+
+        default:
+            break;
+    }
+    ++i_wfp->workItem;
+    dispatched = scheduleWorkItem(*i_wfp);
     return dispatched;
 }
 

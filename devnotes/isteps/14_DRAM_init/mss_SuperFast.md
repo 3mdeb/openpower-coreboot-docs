@@ -744,6 +744,37 @@ fapi2::ReturnCode mss_SuperFastInit::setupAndExecuteCmd()
     collectFFDC();
 }
 
+ enum PatternIndex
+{
+    PATTERN_0       = 0,  //0x00
+    PATTERN_1       = 1,  //0xFF
+    PATTERN_2       = 2,  //0xF0
+    PATTERN_3       = 3,  //0x0F
+    PATTERN_4       = 4,  //0xAA
+    PATTERN_5       = 5,  //0x55
+    PATTERN_6       = 6,  //0xCC
+    PATTERN_7       = 7,  //0x33
+    PATTERN_RANDOM  = 8,  // random seed
+};
+
+mss_SuperFastInit::mss_SuperFastInit( const fapi2::Target<fapi2::TARGET_TYPE_MBA>& i_target,
+                                      const fapi2::buffer<uint64_t>& i_start_addr,
+                                      const fapi2::buffer<uint64_t>& i_end_addr,
+                                      const PatternIndex i_initPattern,
+                                      const uint32_t i_stop_condition,
+                                      const bool i_poll ) :
+    mss_MaintCmd(
+        i_target,
+        i_start_addr,
+        i_end_addr,
+        i_stop_condition,
+        i_poll,
+        cv_cmd_type),
+    iv_initPattern(i_initPattern) // NOTE: iv_initPattern is instance
+// variable of SuperFastInit, since not
+// needed in parent class
+{}
+
 const mss_MaintCmd::CmdType mss_TimeBaseScrub::cv_cmd_type = TIMEBASE_SCRUB;
 
 ///
@@ -773,6 +804,19 @@ mss_TimeBaseScrub::mss_TimeBaseScrub( const fapi2::Target<fapi2::TARGET_TYPE_MBA
 // needed in parent class
     iv_speed(i_speed)
 {}
+
+mss_MaintCmd::mss_MaintCmd(const fapi2::Target<fapi2::TARGET_TYPE_MBA>& i_target,
+                           const fapi2::buffer<uint64_t>& i_start_addr,
+                           const fapi2::buffer<uint64_t>& i_end_addr,
+                           const uint32_t i_stop_condition,
+                           const bool i_poll,
+                           const CmdType i_cmd_type ) :
+    iv_target( i_target ), // const fapi2::Target<fapi2::TARGET_TYPE_MBA> iv_target;
+    iv_start_addr( i_start_addr ), // fapi2::buffer<uint64_t> iv_start_addr;
+    iv_end_addr( i_end_addr ), // fapi2::buffer<uint64_t> iv_end_addr;
+    iv_stop_condition( i_stop_condition), // uint32_t iv_stop_condition;
+    iv_poll (i_poll), // bool iv_poll;
+    iv_cmd_type(i_cmd_type) {} // const CmdType iv_cmd_type;
 
 class mss_TimeBaseScrub : public mss_MaintCmd
 {

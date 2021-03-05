@@ -44,7 +44,6 @@ fapi2::ReturnCode p9_mss_thermal_init( const fapi2::Target<TARGET_TYPE_MCS>& i_t
 {
     // Prior to starting OCC, we go into "safemode" throttling
     // After OCC is started, they can change throttles however they want
-#ifdef __HOSTBOOT_MODULE
     for (const auto& l_mca : mss::find_targets<TARGET_TYPE_MCA>(i_target))
     {
         // ----
@@ -61,7 +60,6 @@ fapi2::ReturnCode p9_mss_thermal_init( const fapi2::Target<TARGET_TYPE_MCS>& i_t
         mss::putScom(l_mca, MCA_MBA_FARB3Q, l_data);
         // ----
     }
-#endif
     // ----
     // mss::mc::disable_emergency_throttle(i_target);
     fapi2::buffer<uint64_t> l_data;
