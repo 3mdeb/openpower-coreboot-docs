@@ -684,8 +684,34 @@ errlHndl_t runStep(const TargetHandleList & i_targetList)
         getDiagnosticMode(globals, *tit, mode);
         // create a list with patterns
         // for ONE_PATTERN the list is as follows
-        // list[0] = 12 (START_SCRUB)
-        // list[1] = 0 (START_PATTERN_0)
+        // list[0] = RESTORE_DRAM_REPAIRS
+        // list[1] = START_PATTERN_0
+        // list[2] = START_SCRUB
+        // list[3] = CLEAR_HW_CHANGED_STATE
+        //
+        // for FOUR_PATTERNS it can also be
+        // list[0] = RESTORE_DRAM_REPAIRS
+        // list[1] START_RANDOM_PATTERN
+        // list[2] START_SCRUB
+        // list[3] START_PATTERN_2
+        // list[4] START_SCRUB
+        // list[5] START_PATTERN_1
+        // list[6] START_SCRUB
+        // list[7] CLEAR_HW_CHANGED_STATE
+        //
+        // or dor NINE_PATTERNS
+        // list[0] = RESTORE_DRAM_REPAIRS
+        // list[1] START_PATTERN_7
+        // list[2] START_SCRUB
+        // list[3] START_PATTERN_6
+        // list[4] START_SCRUB
+        // list[5] START_PATTERN_5
+        // list[6] START_SCRUB
+        // list[7] START_PATTERN_4
+        // list[8] START_SCRUB
+        // list[9] START_PATTERN_3
+        // list[10] START_SCRUB
+        // list[11] CLEAR_HW_CHANGED_STATE
         getWorkFlow(mode, list[*tit], globals);
     }
 
