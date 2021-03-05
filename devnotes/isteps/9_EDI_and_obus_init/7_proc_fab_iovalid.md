@@ -52,23 +52,6 @@ p9_fab_iovalid(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
             P9_FBC_XBUS_LINK_CTL_ARR[l_link_id],
             P9_FBC_XBUS_LINK_CTL_ARR[l_x_rem_link_id[l_link_id]])
 
-          if fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE[i_target]:
-            # At this point, both halves of the SMP ABUS have completed training and
-            # we will kick off the ppe if we need HW446279_USE_PPE
-
-            # p9_fab_iovalid_enable_ppe()
-            # src/import/chips/p9/procedures/hwp/nest/p9_fab_iovalid.C:889
-            # obtain link endpoints for FFDC
-            for child_target in i_target.getChildren(TYPE_OBUS):
-              if  P9_FBC_XBUS_LINK_CTL_ARR[l_link_id].endp_type == TYPE_OBUS
-              and P9_FBC_XBUS_LINK_CTL_ARR[l_link_id].endp_unit_id == fapi2::ATTR_CHIP_UNIT_POS[child_target]:
-                # REGISTER write
-                # src/import/chips/p9/procedures/hwp/nest/p9_fab_iovalid.C:913
-                # OBUS_PPE_XCR_ADDR = 0x9011050
-                OBUS_PPE_XCR_ADDR[child_target] = 0x6000000000000000
-                OBUS_PPE_XCR_ADDR[child_target] = 0x2000000000000000
-                break
-
         # form data buffers for iovalid/RAS FIR mask updates
         l_iovalid_mask = 0
         if (l_x_en[l_link_id] == fapi2::ENUM_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG_TRUE)
@@ -115,24 +98,6 @@ p9_fab_iovalid(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
           i_target,
           P9_FBC_ABUS_LINK_CTL_ARR[l_link_id],
           P9_FBC_ABUS_LINK_CTL_ARR[l_a_rem_link_id[l_link_id]])
-
-        if T == fapi2::TARGET_TYPE_OBUS
-        and fapi2::ATTR_CHIP_EC_FEATURE_HW446279_USE_PPE[i_target]:
-          # At this point, both halves of the SMP ABUS have completed training and
-          # we will kick off the ppe if we need HW446279_USE_PPE
-
-          # p9_fab_iovalid_enable_ppe()
-          # src/import/chips/p9/procedures/hwp/nest/p9_fab_iovalid.C:889
-          # obtain link endpoints for FFDC
-          for child_target in i_target.getChildren(TYPE_OBUS):
-            if  P9_FBC_ABUS_LINK_CTL_ARR[l_link_id].endp_type == TYPE_OBUS
-            and P9_FBC_ABUS_LINK_CTL_ARR[l_link_id].endp_unit_id == fapi2::ATTR_CHIP_UNIT_POS[child_target]:
-              # REGISTER write
-              # src/import/chips/p9/procedures/hwp/nest/p9_fab_iovalid.C:913
-              # OBUS_PPE_XCR_ADDR = 0x9011050
-              OBUS_PPE_XCR_ADDR[child_target] = 0x6000000000000000
-              OBUS_PPE_XCR_ADDR[child_target] = 0x2000000000000000
-              break
 
         l_iovalid_mask = 0
         if (l_a_en[l_link_id] == fapi2::ENUM_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG_TRUE)

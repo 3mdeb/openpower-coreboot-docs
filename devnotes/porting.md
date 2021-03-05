@@ -308,18 +308,42 @@ The result full PNOR image will be placed in `output/images/talos.pnor`.
 
 ## Remote debugging
 
-There are very few debugging methods except the serial port. Additionally,
-serial port typically requires certain advancement in boot process to be
-available (at least C code running) which might be quite late already. In order
-to debug earlier stages where serial is not available, one may use post codes
-(yes, the same post codes as in x86 architecture). In order to access these
-post codes, the BMC implements LPC bus snooping on ports 0x81 and 0x82.
-Sniffing these ports can be done with following commands:
-`cat /dev/aspeed-lpc-snoop0 | hexdump -e '/1 "%02x\n"' -v` for port 0x81 and
-`cat /dev/aspeed-lpc-snoop1 | hexdump -e '/1 "%02x\n"' -v` for port 0x82.
+The most obvious way of debugging is serial port. See [Enabling console](#enabling-console)
+for information about how it was implemented in coreboot. You can either use a
+physical port or BMC to collect the output. The GUI version for Serial over LAN
+console does not flush the output after a new line character, so it sometimes
+trims a few last characters. It also doesn't support copying or pasting and has
+problems with some ANSI escape codes. `obmc-console-client` run from the BMC
+shell is more reliable - it simply redirects serial connection to the shell. To
+exit from this tool use `<Return>~~.`. [Readme](https://github.com/openbmc/obmc-console)
+tells to use `~.`, but this shuts down the entire SSH connection to the BMC.
 
-One may change the printf formatting to decimal for example with `%02d` in the
-hexdump expression.
+Istep number is sent to ports 0x81 (major) and 0x82 (minor). These ports can be
+read with following commands:
+`cat /dev/aspeed-lpc-snoop0 | hexdump -e '/1 "%02x\n"' -v` for port 0x81 and
+`cat /dev/aspeed-lpc-snoop1 | hexdump -e '/1 "%02x\n"' -v` for port 0x82. One
+may change the printf formatting to decimal for example with `%02d` in the
+hexdump expression. Currently coreboot does not implement reporting isteps yet,
+but this can be used to debug earlier stages - SBE or HBBL. Those do not print
+on serial console by default.
+
+[pdbg](https://github.com/open-power/pdbg) is another powerful debugging tool.
+It can be used to read and write SCOM registers, thread registers (both general
+purpose and SPRs) and even modify contents of RAM. Most of these commands
+require that the threads are stopped, which can be done with `pdbg -P thread stop`.
+For other uses refer to tool's README.
+
+After a checkstop or when a watchdog timeout occurs the platform automatically
+reboots up to 3 times (so there are 4 attempts in total, this is the maximum
+number of reboots required for successful full PNOR + SEEPROM update) before it
+is left running (with reported power operation error). This may interfere and
+delay debugging, especially for `pdbg`. It can be turned off with:
+
+```shell
+busctl set-property xyz.openbmc_project.Settings /xyz/openbmc_project/control/host0/auto_reboot xyz.openbmc_project.Control.Boot.RebootPolicy AutoReboot b false
+```
+
+Change `false` to `true` to re-enable this feature. [Source](https://github.com/openbmc/openbmc/issues/2177)
 
 ## QEMU
 
@@ -332,6 +356,10 @@ started, i.e. with HRMOR=128MB, CIA=0, however it uses CIA=0x10 instead. This
 can be temporarily fixed by placing 4 nop instructions at the very beginning of
 bootblock. There is no way to start in a mode similar to that of Hostboot
 Bootloader (HRMOR=130MB, CIA=0x3000).
+
+HRMOR dumped with `pdbg` on the hardware is `0xf8000000`, i.e. 4GB - 128MB (+2MB
+for HBBL), despite what all of the documentation says. This shouldn't make any
+difference, all important addresses are calculated relatively to HRMOR anyway.
 
 It is possible to "mount" whole PNOR image at the place where it should land in
 memory space (LPC FW region), assuming the image is exactly 64MB. On the

@@ -26,6 +26,21 @@
 # Step 11 Hostboot - Centaur Init
 * [11.1 host_prd_hwreconfig](isteps/11_centaur_init/1_host_prd_hwreconfig.md)
 
+# Step 13 Hostboot - DRAM training
+* [13.1 host_disable_memvolt.md: Disable VDDR on Warm Reboots](isteps/13_dram_training/01_host_disable_memvolt.md)
+* [13.2 mem_pll_reset.md: Reset PLL for MCAs in async](isteps/13_dram_training/02_mem_pll_reset.md)
+* [13.3 mem_pll_initf.md: PLL Initfile for MBAs](isteps/13_dram_training/03_mem_pll_initf.md)
+* [13.4 mem_pll_setup.md: Setup PLL for MBAs](isteps/13_dram_training/04_mem_pll_setup.md)
+* [13.5 proc_mcs_skewadjust.md: Update clock mesh deskew](isteps/13_dram_training/05_proc_mcs_skewadjust.md)
+* [13.6 mem_startclocks.md: Start clocks on MBA/MCAs](isteps/13_dram_training/06_mem_startclocks.md)
+* [13.7 host_enable_memvolt.md: Enable the VDDR3 Voltage Rail](isteps/13_dram_training/07_host_enable_memvolt.md)
+* [13.8 mss_scominit.md: Perform scom inits to MC and PHY](isteps/13_dram_training/08_mss_scominit.md)
+* [13.9 mss_ddr_phy_reset.md: Soft reset of DDR PHY macros](isteps/13_dram_training/09_mss_ddr_phy_reset.md)
+* [13.10 mss_draminit.md: Dram initialize](isteps/13_dram_training/10_mss_draminit.md)
+* [13.11 mss_draminit_training.md: Dram training](isteps/13_dram_training/11_mss_draminit_training.md)
+* [13.12 mss_draminit_trainadv.md: Advanced dram training](isteps/13_dram_training/12_mss_draminit_trainadv.md)
+* [13.13 mss_draminit_mc.md: Hand off control to MC](isteps/13_dram_training/13_mss_draminit_mc.md)
+
 # Step 14 Hostboot - DRAM Init
 * [14.1 mss_memdiag: Mainstore Pattern Testing](isteps/14_DRAM_init/1_mss_memdiag.md)
 * [14.2 mss_thermal_init: Initialize the thermal sensor](isteps/14_DRAM_init/2_mss_thermal_init.md)

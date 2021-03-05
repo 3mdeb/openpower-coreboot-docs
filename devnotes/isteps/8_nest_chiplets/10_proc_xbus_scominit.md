@@ -162,8 +162,6 @@ fapi2::ReturnCode p9_xbus_g0_scom(
     l_chip_ec = fapi2::ATTR_EC[TGT2];
     l_TGT1_ATTR_IS_SIMULATION = fapi2::ATTR_IS_SIMULATION[TGT1];
     l_TGT0_ATTR_IO_XBUS_CHAN_EQ = fapi2::ATTR_IO_XBUS_CHAN_EQ[TGT0];
-    l_TGT2_ATTR_CHIP_EC_FEATURE_HW393297 = fapi2::ATTR_CHIP_EC_FEATURE_HW393297[TGT2];
-    l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND = fapi2::ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND[TGT2];
     l_TGT0_ATTR_IO_XBUS_MASTER_MODE = fapi2::ATTR_IO_XBUS_MASTER_MODE[TGT0];
 
     // P9A_XBUS_0_RX0_RXPACKS3_SLICE4_RX_DATA_DAC_SPARE_MODE_PL
@@ -1432,12 +1430,7 @@ fapi2::ReturnCode p9_xbus_g0_scom(
 
     // P9A_XBUS_0_RX0_RX_SPARE_MODE_PG
     l_scom_buffer = TGT0[0x8008000006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_HW393297 == 0) {
-        l_scom_buffer.insert<49, 1, 63, uint64_t>(0x1); // l_IOF1_RX_RX0_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_ON
-    }
-    else {
-        l_scom_buffer.insert<49, 1, 63, uint64_t>(0x0); // l_IOF1_RX_RX0_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_OFF
-    }
+    l_scom_buffer.insert<49, 1, 63, uint64_t>(0x1); // l_IOF1_RX_RX0_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_ON
     TGT0[0x8008000006010C3F] = l_scom_buffer;
 
     // P9A_XBUS_0_RX0_RX_ID1_PG
@@ -1463,12 +1456,7 @@ fapi2::ReturnCode p9_xbus_g0_scom(
 
     // P9A_XBUS_0_RX0_RX_CTL_MODE23_EO_PG
     l_scom_buffer = TGT0[0x8008C00006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<48, 2, 62, uint64_t>(0);
-    }
-    else {
-        l_scom_buffer.insert<48, 2, 62, uint64_t>(0b01);
-    }
+    l_scom_buffer.insert<48, 2, 62, uint64_t>(0x1);
     l_scom_buffer.insert<55, 1, 63, uint64_t>(0x0); // l_IOF1_RX_RX0_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PEAK_TUNE_OFF
     l_scom_buffer.insert<57, 2, 62, uint64_t>(0x3);
     l_scom_buffer.insert<59, 1, 63, uint64_t>(0x1); // l_IOF1_RX_RX0_RXCTL_CTL_REGS_RX_CTL_REGS_RX_DFEHISPD_EN_ON
@@ -1483,11 +1471,7 @@ fapi2::ReturnCode p9_xbus_g0_scom(
 
     // P9A_XBUS_0_RX0_RX_CTL_MODE29_EO_PG
     l_scom_buffer = TGT0[0x8008D00006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<48, 8, 56, uint64_t>(0b01010000);
-        l_scom_buffer.insert<56, 8, 56, uint64_t>(0b00110111);
-    }
-    else if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
+    if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
         l_scom_buffer.insert<48, 8, 56, uint64_t>(0b01011100);
         l_scom_buffer.insert<56, 8, 56, uint64_t>(0b00111101);
     }
@@ -1581,9 +1565,6 @@ fapi2::ReturnCode p9_xbus_g0_scom(
     // P9A_XBUS_0_RX0_RX_DATASM_SPARE_MODE_PG
     l_scom_buffer = TGT0[0x800B800006010C3F];
     l_scom_buffer.insert<60, 1, 63, uint64_t>(0x0); // l_IOF1_RX_RX0_RXCTL_DATASM_DATASM_REGS_RX_CTL_DATASM_CLKDIST_PDWN_OFF
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<56, 4, 60, uint64_t>(0x02);
-    }
     TGT0[0x800B800006010C3F] = l_scom_buffer;
 
     // P9A_XBUS_0_TX0_TX_SPARE_MODE_PG
@@ -1660,8 +1641,6 @@ fapi2::ReturnCode p9_xbus_g1_scom(
     l_chip_ec = fapi2::ATTR_EC[TGT2];
     l_TGT1_ATTR_IS_SIMULATION = fapi2::ATTR_IS_SIMULATION[TGT1];
     l_TGT0_ATTR_IO_XBUS_CHAN_EQ = fapi2::ATTR_IO_XBUS_CHAN_EQ[TGT0];
-    l_TGT2_ATTR_CHIP_EC_FEATURE_HW393297 = fapi2::ATTR_CHIP_EC_FEATURE_HW393297[TGT2];
-    l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND = fapi2::ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND[TGT2];
     l_TGT0_ATTR_IO_XBUS_MASTER_MODE = fapi2::ATTR_IO_XBUS_MASTER_MODE[TGT0];
     fapi2::buffer<uint64_t> l_scom_buffer;
 
@@ -2930,12 +2909,7 @@ fapi2::ReturnCode p9_xbus_g1_scom(
 
     // P9A_XBUS_0_RX1_RX_SPARE_MODE_PG
     l_scom_buffer = TGT0[0x8008002006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_HW393297 == 0) {
-        l_scom_buffer.insert<49, 1, 63, uint64_t>(0x1); // l_IOF1_RX_RX1_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_ON
-    }
-    else {
-        l_scom_buffer.insert<49, 1, 63, uint64_t>(0x0); // l_IOF1_RX_RX1_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_OFF
-    }
+    l_scom_buffer.insert<49, 1, 63, uint64_t>(0x1); // l_IOF1_RX_RX1_RXCTL_CTL_REGS_RX_CTL_REGS_RX_PG_SPARE_MODE_1_ON
     TGT0[0x8008002006010C3F] = l_scom_buffer;
 
     // P9A_XBUS_0_RX1_RX_ID1_PG
@@ -2961,12 +2935,7 @@ fapi2::ReturnCode p9_xbus_g1_scom(
 
     // P9A_XBUS_0_RX0_RX_CTL_MODE23_EO_PG
     l_scom_buffer = TGT0[0x8008C00006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<48, 2, 62, uint64_t>(0);
-    }
-    else {
-        l_scom_buffer.insert<48, 2, 62, uint64_t>(0b01);
-    }
+    l_scom_buffer.insert<48, 2, 62, uint64_t>(0x1);
     TGT0[0x8008C00006010C3F] = l_scom_buffer;
 
     // P9A_XBUS_0_RX1_RX_CTL_MODE23_EO_PG
@@ -2985,19 +2954,13 @@ fapi2::ReturnCode p9_xbus_g1_scom(
 
     // P9A_XBUS_0_RX1_RX_CTL_MODE29_EO_PG
     l_scom_buffer = TGT0[0x8008D02006010C3F];
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<48, 8, 56, uint64_t>(0b01010000);
-    }
-    else if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
+    if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
         l_scom_buffer.insert<48, 8, 56, uint64_t>(0b01011100);
     }
     else {
         l_scom_buffer.insert<48, 8, 56, uint64_t>(0x0C110);
     }
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<56, 8, 56, uint64_t>(0b00110111);
-    }
-    else if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
+    if(l_TGT0_ATTR_IO_XBUS_CHAN_EQ & ENUM_ATTR_IO_XBUS_CHAN_EQ_LOWER_VGA_GAIN_TARGET) {
         l_scom_buffer.insert<56, 8, 56, uint64_t>(0b00111101);
     }
     else {
@@ -3089,9 +3052,6 @@ fapi2::ReturnCode p9_xbus_g1_scom(
     // P9A_XBUS_0_RX1_RX_DATASM_SPARE_MODE_PG
     l_scom_buffer = TGT0[0x800B802006010C3F];
     l_scom_buffer.insert<60, 1, 63, uint64_t>(0x0); // l_IOF1_RX_RX1_RXCTL_DATASM_DATASM_REGS_RX_CTL_DATASM_CLKDIST_PDWN_OFF
-    if(l_TGT2_ATTR_CHIP_EC_FEATURE_XBUS_COMPRESSION_WORKAROUND) {
-        l_scom_buffer.insert<56, 4, 60, uint64_t>(0x02);
-    }
     TGT0[0x800B802006010C3F] = l_scom_buffer;
 
     // P9A_XBUS_0_TX1_TX_SPARE_MODE_PG

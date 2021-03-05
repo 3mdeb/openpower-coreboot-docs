@@ -13,7 +13,6 @@ for l_cpu_target in l_cpuTargetList:
 
 ```python
 def p9_start_cbs(i_target_chip, i_sbe_start):
-    temp8_PIBRESET_DELAY = fapi2::i_target_chip.ATTR_CHIP_EC_FEATURE_HW402019_PIBRESET_DELAY
     temp8_RESET_SKIP = fapi2::FAPI_SYSTEM.ATTR_START_CBS_FIFO_RESET_SKIP
     i_target_chip.PERV_SB_MSG = 0
     # PERV_CBS_CS.setBit<3>()
@@ -59,11 +58,6 @@ def p9_start_cbs(i_target_chip, i_sbe_start):
         l_poll_data = temp32_PERV_CBS_CS & 0xffff
         #fapi2::delay(P9_CBS_IDLE_HW_NS_DELAY, P9_CBS_IDLE_SIM_CYCLE_DELAY)
         sleep(640000ns)
-
-    if temp8_PIBRESET_DELAY:
-        i_target_chip.PERV_FSI2PIB_SET_PIB_RESET = ~0ULL
-        #fapi2::delay(P9_PIBRESET_HW_NS_DELAY, P9_PIBRESET_SIM_CYCLE_DELAY)
-        sleep(4000ns)
 
     if temp8_RESET_SKIP:
         i_target_chip.PERV_FSB_FSB_DOWNFIFO_RESET = 0x80000000
