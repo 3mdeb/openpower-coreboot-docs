@@ -3,8 +3,8 @@
 ```cpp
 void *call_proc_chiplet_fabric_scominit(void *io_pArgs)
 {
-    // i_targetType = TARGETING::TYPE_PROC
-    for each target in getAllChips():
+    l_targetList = getAllChips(TARGETING::TYPE_PROC);
+    for each target in l_targetList:
         // p9_chiplet_fabric_scominit()
         fapi2::ReturnCode l_rc;
         char l_chipletTargetStr[fapi2::MAX_ECMD_STRING_LEN];
@@ -12,27 +12,20 @@ void *call_proc_chiplet_fabric_scominit(void *io_pArgs)
         std::vector<fapi2::Target<fapi2::TARGET_TYPE_XBUS>> l_xbus_chiplets;
         std::vector<fapi2::Target<fapi2::TARGET_TYPE_OBUS>> l_obus_chiplets;
         fapi2::buffer<uint64_t> l_fbc_cent_fir_data;
-
         fapi2::ATTR_PROC_FABRIC_OPTICS_CONFIG_MODE_Type l_fbc_optics_cfg_mode = {fapi2::ENUM_ATTR_PROC_FABRIC_OPTICS_CONFIG_MODE_SMP};
-
         // apply FBC non-hotplug initfile
-        FAPI_EXEC_HWP(l_rc, p9_fbc_no_hp_scom, i_target, FAPI_SYSTEM);
-
+        p9_fbc_no_hp_scom(i_target, FAPI_SYSTEM);
         // setup IOE (XBUS FBC IO) TL SCOMs
-        FAPI_EXEC_HWP(l_rc, p9_fbc_ioe_tl_scom, i_target, FAPI_SYSTEM);
-
+        p9_fbc_ioe_tl_scom(i_target, FAPI_SYSTEM);
         l_xbus_chiplets = i_target.getChildren<fapi2::TARGET_TYPE_XBUS>();
-
         // configure TL FIR, only if not already setup by SBE
         l_fbc_cent_fir_data = i_target[PU_PB_CENT_SM0_PB_CENT_FIR_REG];
-
         if (!l_fbc_cent_fir_data.getBit<PU_PB_CENT_SM0_PB_CENT_FIR_MASK_REG_SPARE_13>())
         {
             // FBC_IOE_TL_FIR_ACTION0 = 0x0000000000000000ULL
             PU_PB_IOE_FIR_ACTION0_REG[i_target] = FBC_IOE_TL_FIR_ACTION0;
             // FBC_IOE_TL_FIR_ACTION1 = 0x0049000000000000ULL
             PU_PB_IOE_FIR_ACTION1_REG[i_target] = FBC_IOE_TL_FIR_ACTION1;
-
             // FBC_IOE_TL_FIR_MASK = 0xFF24F0303FFFF11FULL
             fapi2::buffer<uint64_t> l_fir_mask = FBC_IOE_TL_FIR_MASK;
 
@@ -61,7 +54,6 @@ void *call_proc_chiplet_fabric_scominit(void *io_pArgs)
                     FBC_IOE_TL_FIR_MASK_X1_NF,
                     FBC_IOE_TL_FIR_MASK_X2_NF
                 };
-
                 for l_iter in l_xbus_chiplets:
                 {
                     uint8_t l_unit_pos;
@@ -83,7 +75,7 @@ void *call_proc_chiplet_fabric_scominit(void *io_pArgs)
         // setup IOE (XBUS FBC IO) DL SCOMs
         for l_iter in l_xbus_chiplets:
         {
-            FAPI_EXEC_HWP(l_rc, p9_fbc_ioe_dl_scom, *l_iter, i_target);
+            p9_fbc_ioe_dl_scom(*l_iter, i_target);
             // configure DL FIR, only if not already setup by SBE
             if (!l_fbc_cent_fir_data.getBit<PU_PB_CENT_SM0_PB_CENT_FIR_MASK_REG_SPARE_13>())
             {
@@ -119,24 +111,20 @@ fapi2::ReturnCode p9_fbc_ioe_dl_scom(const fapi2::Target<fapi2::TARGET_TYPE_XBUS
     PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD = TGT0[0x6011819]; // ELL SL ECC Threshold Register
     if (fapi2::ATTR_LINK_TRAIN[TGT0] == fapi2::ENUM_ATTR_LINK_TRAIN_BOTH)
     {
-        PB.IOE.LL0.IOEL_CONFIG.insert<0, 1, 63, uint64_t>(0x1)
+        PB.IOE.LL0.IOEL_CONFIG |= 0x8000000000000000
     }
     else
     {
-        PB.IOE.LL0.IOEL_CONFIG.insert<0, 1, 63, uint64_t>(0x0)
+        PB.IOE.LL0.IOEL_CONFIG &= 0x7FFFFFFFFFFFFFFF
     }
-    PB.IOE.LL0.IOEL_CONFIG.insert<11, 5, 59, uint64_t>(0x0F)
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<8, 3, 61, uint64_t>(0x7)
-    PB.IOE.LL0.IOEL_CONFIG.insert<2, 1, 63, uint64_t>(0x1)
-    PB.IOE.LL0.IOEL_CONFIG.insert<28, 4, 60, uint64_t>(0xF)
-    PB.IOE.LL0.IOEL_CONFIG.insert<4, 1, 63, uint64_t>(0x1)
+    PB.IOE.LL0.IOEL_CONFIG &= 0xFFEFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_CONFIG |= 0x280F000F00000000
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD |= 0x0070000000000000
+    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD &= 0x0FFFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD |= 0x6FE0000000000000
 
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<8, 3, 61, uint64_t>(0x7)
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<4, 4, 60, uint64_t>(0xF)
-    PB.IOE.LL0.IOEL_REPLAY_THRESHOLD.insert<0, 4, 60, uint64_t>(0x6)
-
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<4, 4, 60, uint64_t>(0xF)
-    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD.insert<0, 4, 60, uint64_t>(0x7)
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD &= 0x7FFFFFFFFFFFFFFF
+    PB.IOE.LL0.IOEL_SL_ECC_THRESHOLD |= 0x7F00000000000000
     // REGISTERS write
     TGT0[0x601180A] = PB.IOE.LL0.IOEL_CONFIG;
     TGT0[0x6011818] = PB.IOE.LL0.IOEL_REPLAY_THRESHOLD;
@@ -180,20 +168,12 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     PB.IOE.SCOM.PB_TRACE_CFG = TGT0[0x5013424]; // Power Bus Electrical Link Trace Configuration Register
     if (l_def_X0_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<22, 2, 62, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<12, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<20, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<25, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<44, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<52, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<57, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_FP01_CFG &= 0xfff004fffff007bf
+        PB.IOE.SCOM.PB_FP01_CFG |= 0x0002010000020000
     }
     else
     {
-        PB.IOE.SCOM.PB_FP01_CFG.insert<20, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<25, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<52, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP01_CFG.insert<57, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_FP01_CFG |= 0x84000000840
     }
 
     if (l_def_X0_ENABLED)
@@ -209,20 +189,12 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
     if (l_def_X2_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<22, 2, 62, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<12, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<20, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<25, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<52, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<57, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<44, 8, 56, uint64_t>(0x20)
+        PB.IOE.SCOM.PB_FP45_CFG &= 0xfff004bffff007bf
+        PB.IOE.SCOM.PB_FP45_CFG |= 0x0002010000020000
     }
     else
     {
-        PB.IOE.SCOM.PB_FP45_CFG.insert<20, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<25, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<52, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP45_CFG.insert<57, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_FP45_CFG |= 0x84000000840
     }
     if (l_def_X2_ENABLED)
     {
@@ -235,9 +207,7 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         PB.IOE.SCOM.PB_FP45_CFG.insert<36, 8, 56, uint64_t>(0x1A - (l_def_DD1_LO_LIMIT_N / 200000))
     }
 
-    if (l_def_X0_ENABLED)
-    {
-        if (l_def_OPTICS_IS_A_BUS)
+    if (l_def_X0_ENABLED)IOEL_REPLAY_THRESHOLD
         {
             PB.IOE.SCOM.PB_ELINK_DATA_01_CFG_REG.insert<24, 5, 59, uint64_t>(0x10)
         }
@@ -285,13 +255,13 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
     if(l_def_X1_ENABLED)
     {
-        PB.IOE.SCOM.PB_FP23_CFG.insert<22, 2, 62, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<22, 2, 62, uint64_t>(0x01)
         PB.IOE.SCOM.PB_FP23_CFG.insert<12, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<20, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<25, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<20, 1, 63, uint64_t>(0x00)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<25, 1, 63, uint64_t>(0x00)
         PB.IOE.SCOM.PB_FP23_CFG.insert<44, 8, 56, uint64_t>(0x20)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<52, 1, 63, uint64_t>(0x0)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<57, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<52, 1, 63, uint64_t>(0x00)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<57, 1, 63, uint64_t>(0x00)
         if (l_def_OPTICS_IS_A_BUS)
         {
             PB.IOE.SCOM.PB_ELINK_DATA_23_CFG_REG.insert<24, 5, 59, uint64_t>(0x10)
@@ -309,10 +279,10 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     }
     else
     {
-        PB.IOE.SCOM.PB_FP23_CFG.insert<20, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<25, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<52, 1, 63, uint64_t>(0x1)
-        PB.IOE.SCOM.PB_FP23_CFG.insert<57, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<20, 1, 63, uint64_t>(0x01)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<25, 1, 63, uint64_t>(0x01)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<52, 1, 63, uint64_t>(0x01)
+        PB.IOE.SCOM.PB_FP23_CFG.insert<57, 1, 63, uint64_t>(0x01)
     }
 
     if(l_def_X2_ENABLED)
@@ -335,27 +305,27 @@ fapi2::ReturnCode p9_fbc_ioe_tl_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
     if (l_def_X0_IS_PAIRED)
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<0, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<0, 1, 63, uint64_t>(0x01)
     }
     else
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<0, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<0, 1, 63, uint64_t>(0x00)
     }
     if (l_def_X1_IS_PAIRED)
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<1, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<1, 1, 63, uint64_t>(0x01)
     }
     else
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<1, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<1, 1, 63, uint64_t>(0x00)
     }
     if (l_def_X2_IS_PAIRED)
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<2, 1, 63, uint64_t>(0x1)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<2, 1, 63, uint64_t>(0x01)
     }
     else
     {
-        PB.IOE.SCOM.PB_MISC_CFG.insert<2, 1, 63, uint64_t>(0x0)
+        PB.IOE.SCOM.PB_MISC_CFG.insert<2, 1, 63, uint64_t>(0x00)
     }
 
     // REGISTERS write
@@ -404,296 +374,98 @@ fapi2::ReturnCode p9_fbc_no_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
     if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP
     || (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG == 0))
     {
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x0)
-
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x0)
+        PB.COM.PB_CENT_GP_CMD_RATE_DP0 = 0
+        PB.COM.PB_CENT_GP_CMD_RATE_DP1 = 0
     }
-    else if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG > 0 && l_def_NUM_X_LINKS_CFG < 3)
+    else if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP
+          && l_def_NUM_X_LINKS_CFG > 0 && l_def_NUM_X_LINKS_CFG < 3)
     {
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x17)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x1C)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x24)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x34)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x48)
-
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x19)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x1F)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x3A)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x50)
+        PB.COM.PB_CENT_GP_CMD_RATE_DP0 = 0x030406171C243448
+        PB.COM.PB_CENT_GP_CMD_RATE_DP1 = 0x040508191F283A50
     }
     else if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG > 2)
     {
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x32)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x40)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x5C)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x80)
-
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x2F)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x3B)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x4C)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x6D)
-        PB.COM.PB_CENT_GP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x98)
+        PB.COM.PB_CENT_GP_CMD_RATE_DP0 = 0x0304062832405C80
+        PB.COM.PB_CENT_GP_CMD_RATE_DP1 = 0x0405082F3B4C6D98
     }
 
     if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG == 0)
     {
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x0)
-
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x0)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x0)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x0)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x0)
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP0 = 0
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP1 = 0
+        PB.COM.PB_CENT_SP_CMD_RATE_DP0 = 0
+        PB.COM.PB_CENT_SP_CMD_RATE_DP1 = 0
     }
     else if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG > 0 && l_def_NUM_X_LINKS_CFG < 3)
     {
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0xC)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x12)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x18)
-
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0xC)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x12)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x18)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0xC)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x12)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x18)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0xC)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x12)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x18)
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP0 = 0x030406080A0C1218
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP1 = 0x040508080A0C1218
+        PB.COM.PB_CENT_SP_CMD_RATE_DP0 = 0x030406080A0C1218
+        PB.COM.PB_CENT_SP_CMD_RATE_DP1 = 0x030406080A0C1218
     }
     else if ((l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG == 3)
           || (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG == 0))
     {
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0xD)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x10)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x1D)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x28)
-
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0xD)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x10)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x1D)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x28)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x7)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0xD)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x10)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x1D)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x28)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x7)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0xD)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x10)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x1D)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x28)
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP0 = 0x0304060D10141D28
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP1 = 0x0405080D10141D28
+        PB.COM.PB_CENT_SP_CMD_RATE_DP0 = 0x05070A0D10141D28
+        PB.COM.PB_CENT_SP_CMD_RATE_DP1 = 0x05070A0D10141D28
     }
     else if ((l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_IS_FLAT_8)
           || (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG > 0 && l_def_NUM_X_LINKS_CFG < 3))
     {
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x17)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x1C)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x24)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x34)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x48)
-
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x19)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x1F)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x3A)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x50)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0xC)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x12)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x17)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x1C)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x24)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x34)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x48)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0xD)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x19)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x1F)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x3A)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x50)
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP0 = 0x030406171C243448
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP1 = 0x040508191F283A50
+        PB.COM.PB_CENT_SP_CMD_RATE_DP0 = 0x080C12171C243448
+        PB.COM.PB_CENT_SP_CMD_RATE_DP1 = 0x0A0D14191F283A50
     }
     else if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_NUM_X_LINKS_CFG > 2)
     {
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x3)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x6)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x32)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x40)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x5C)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x80)
-
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0x4)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x5)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x2F)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x3B)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x4C)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x6D)
-        PB.COM.PB_CENT_RGP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x98)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<0, 8, 56, uint64_t>(0x8)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<8, 8, 56, uint64_t>(0x14)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<16, 8, 56, uint64_t>(0x1F)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<24, 8, 56, uint64_t>(0x28)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<32, 8, 56, uint64_t>(0x32)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<40, 8, 56, uint64_t>(0x40)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<48, 8, 56, uint64_t>(0x5C)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP0.insert<56, 8, 56, uint64_t>(0x80)
-
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<0, 8, 56, uint64_t>(0xA)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<8, 8, 56, uint64_t>(0x18)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<16, 8, 56, uint64_t>(0x25)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<24, 8, 56, uint64_t>(0x2F)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<32, 8, 56, uint64_t>(0x3B)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<40, 8, 56, uint64_t>(0x4C)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<48, 8, 56, uint64_t>(0x6D)
-        PB.COM.PB_CENT_SP_CMD_RATE_DP1.insert<56, 8, 56, uint64_t>(0x98)
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP0 = 0x0304062832405C80
+        PB.COM.PB_CENT_RGP_CMD_RATE_DP1 = 0x0405082F3B4C6D98
+        PB.COM.PB_CENT_SP_CMD_RATE_DP0 = 0x08141F2832405C80
+        PB.COM.PB_CENT_SP_CMD_RATE_DP1 = 0x0A18252F3B4C6D98
     }
 
     if (l_def_NUM_X_LINKS_CFG == 0 && l_def_NUM_A_LINKS_CFG == 0)
     {
-        PB.COM.PB_WEST_MODE.insert<4, 1, 61, uint64_t>(0x7)
-        PB.COM.PB_CENT_MODE.insert<4, 1, 62, uint64_t>(0x7)
-        PB.COM.PB_EAST_MODE.insert<4, 1, 63, uint64_t>(0x7)
+        PB.COM.PB_EAST_MODE |= 0x0300000000000000
     }
     else
     {
-        PB.COM.PB_WEST_MODE.insert<4, 1, 61, uint64_t>(0x0)
-        PB.COM.PB_CENT_MODE.insert<4, 1, 62, uint64_t>(0x0)
-        PB.COM.PB_EAST_MODE.insert<4, 1, 63, uint64_t>(0x0)
+        PB.COM.PB_EAST_MODE &= 0xF1FFFFFFFFFFFFFF
     }
     if (l_TGT1_ATTR_PROC_FABRIC_PUMP_MODE != fapi2::ENUM_ATTR_PROC_FABRIC_PUMP_MODE_CHIP_IS_GROUP && l_def_IS_FLAT_8)
     {
-        PB.COM.PB_WEST_MODE.insert<16, 7, 43, uint64_t>(0x7cf9f)
-        PB.COM.PB_WEST_MODE.insert<23, 7, 43, uint64_t>(0x81020)
+        PB.COM.PB_WEST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_WEST_MODE |= 0x00003E8000000000
 
-        PB.COM.PB_CENT_MODE.insert<16, 7, 50, uint64_t>(0x7cf9f)
-        PB.COM.PB_CENT_MODE.insert<23, 7, 50, uint64_t>(0x81020)
+        PB.COM.PB_CENT_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_CENT_MODE |= 0x00003E8000000000
 
-        PB.COM.PB_EAST_MODE.insert<16, 7, 57, uint64_t>(0x7cf9f)
-        PB.COM.PB_EAST_MODE.insert<23, 7, 57, uint64_t>(0x81020)
+        PB.COM.PB_EAST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_EAST_MODE |= 0x00003E8000000000
     }
     else
     {
-        PB.COM.PB_WEST_MODE.insert<16, 7, 43, uint64_t>(0xfdfbf)
-        PB.COM.PB_WEST_MODE.insert<23, 7, 43, uint64_t>(0xfdfbf)
+        PB.COM.PB_WEST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_WEST_MODE |= 0x0000FAFC00000000
 
-        PB.COM.PB_CENT_MODE.insert<16, 7, 50, uint64_t>(0xfdfbf)
-        PB.COM.PB_CENT_MODE.insert<23, 7, 50, uint64_t>(0xfdfbf)
+        PB.COM.PB_CENT_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_CENT_MODE |= 0x00007EFC00000000
 
-        PB.COM.PB_EAST_MODE.insert<16, 7, 57, uint64_t>(0xfdfbf)
-        PB.COM.PB_EAST_MODE.insert<23, 7, 57, uint64_t>(0xfdfbf)
+        PB.COM.PB_EAST_MODE &= 0xFFFF0003FFFFFFFF
+        PB.COM.PB_EAST_MODE |= 0x000007EFC0000000
     }
 
-    PB.COM.PB_WEST_MODE.insert<30, 6, 46, uint64_t>(0x2aaaa)
-    PB.COM.PB_CENT_MODE.insert<30, 6, 52, uint64_t>(0x2aaaa)
-    PB.COM.PB_EAST_MODE.insert<30, 6, 58, uint64_t>(0x2aaaa)
+    PB.COM.PB_WEST_MODE &= 0xFFFFFFFC0FFFFFFF
+    PB.COM.PB_WEST_MODE |= 0x00000002a0000000
+
+    PB.COM.PB_CENT_MODE &= 0xFFFFFFFC0FFFFFFF
+    PB.COM.PB_CENT_MODE |= 0x00000002a0000000
+
+    PB.COM.PB_EAST_MODE &= 0xFFFFFFFC0FFFFFFF
+    PB.COM.PB_EAST_MODE |= 0x00000002a0000000
 
     // REGISTERS write
     TGT0[0x501180A] = PB.COM.PB_WEST_MODE;
@@ -706,5 +478,4 @@ fapi2::ReturnCode p9_fbc_no_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
     TGT0[0x5011C2B] = PB.COM.PB_CENT_SP_CMD_RATE_DP1;
     TGT0[0x501200A] = PB.COM.PB_EAST_MODE;
 }
-
 ```
