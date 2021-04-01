@@ -22,13 +22,17 @@ environment, ensure that:
 In order to start from a common point, flash the original OpenPOWER firmware
 for Talos II.
 
+0. Checkout Talos II in [snipeit](http://snipeit) to avoid conflicts when
+   someone else is also working with the device.\
+   Note: `snipeit` is only avilable from 3mdeb's internal network
+   or via VPN connection
+
 1. Log into the BMC via SSH:
 
    ```
-   ssh root@<IP>
+   ssh root@<BMC_IP>
    ```
-
-   > The password is `wfv978h4JSG`
+   Ask the administrator for IP address and password to the Talos II BMC.
 
 2. Download the stock firmware image:
 
@@ -53,14 +57,17 @@ for Talos II.
    ```
    About to program "/tmp/flash.pnor" at 0x00000000..0x04000000 !
    Programming & Verifying...
-   [==================================================] 100% ETA:0s 
+   [==================================================] 100% ETA:0s
    ```
 
-4. Log into the BMC GUI at https://<IP>/. Enter the Server power operations
-   (https://<IP>/#/server-control/power-operations) and invoke warm reboot.
-   Then move to Serial over LAN remote console
-   (https://<IP>/#/server-control/remote-console) to observe whether the
-   platform is booting. It should boot up to Debian.
+4. * Log into the BMC GUI at https://\<BMC_IP\>/.\
+     Make sure to use `https`.\
+   * Enter the Server power operations
+     `https://\<BMC_IP\>/#/server-control/power-operations` and invoke
+     warm reboot.\
+   * Then move to Serial over LAN remote console
+     `https://\<BMC_IP\>/#/server-control/remote-console` to observe
+     whether the platform is booting.
 
 ---
 
@@ -71,10 +78,13 @@ In order to build coreboot image, follow the steps below:
 1. Clone the coreboot repository:
 
    ```
-   git clone git@github.com:InsurgoTech/coreboot.git -b power_bootblock
+   git clone git@github.com:3mdeb/coreboot.git -b talos_2_support
    # or HTTPS alternatively
-   git clone https://github.com/InsurgoTech/coreboot.git -b power_bootblock
+   git clone https://github.com/3mdeb/coreboot.git -b talos_2_support
    ```
+   `talos_2_support` is the main development branch for Talos II support,
+   but keep in mind, if you are working on some specific features,
+   different branch may be the better choice.
 
 2. Get the submodules:
 
