@@ -22,26 +22,26 @@ environment, ensure that:
 In order to start from a common point, flash the original OpenPOWER firmware
 for Talos II.
 
-0. Checkout Talos II in [snipeit](http://snipeit) to avoid conflicts when
+1. Checkout Talos II in [snipeit](http://snipeit) to avoid conflicts when
    someone else is also working with the device.\
-   Note: `snipeit` is only avilable from 3mdeb's internal network
-   or via VPN connection
+   **Note:** `snipeit` is an internal tool avilable only from 3mdeb's LAN
+   network or via VPN connection.
 
-1. Log into the BMC via SSH:
+2. Log into the BMC via SSH:
 
    ```
    ssh root@<BMC_IP>
    ```
    Ask the administrator for IP address and password to the Talos II BMC.
 
-2. Download the stock firmware image:
+3. Download the stock firmware image:
 
    ```
    wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download \
          -O /tmp/flash.pnor
    ```
 
-3. Flash the firmware:
+4. Flash the firmware:
 
    ```
    pflash -E -p /tmp/flash.pnor
@@ -60,7 +60,7 @@ for Talos II.
    [==================================================] 100% ETA:0s
    ```
 
-4. * Log into the BMC GUI at https://\<BMC_IP\>/.\
+5. * Log into the BMC GUI at https://\<BMC_IP\>/.\
      Make sure to use `https`.\
    * Enter the Server power operations
      `https://\<BMC_IP\>/#/server-control/power-operations` and invoke
@@ -158,8 +158,20 @@ In order to build coreboot image, follow the steps below:
 
    ![](../images/cb_bootblock.png)
 
-5. Enjoy coreboot bootblock running on Talos II.
+5. Enjoy the coreboot running on Talos II.
 
-> OPTIONAL: in order to recovery the platform quickly to healthy state, flash
-> the HBB partition back with:
+> **Optional:** In order to recovery the platform quickly to healthy state, flash
+> the HBB partition back with:\
 > `pflash -e -P HBB -p /tmp/hbb.bin`
+
+## Running the coreboot on QEMU
+
+Please keep in mind, that `QEMU` doesn't implement many of the HW properties,
+that Talos II has. There may be many compatibility issues, or registers missing.
+
+1. Clone `QEMU` repository
+2. Build ppc64 version
+3. Run it with correct image
+   ````
+   qemu/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio
+   ````
