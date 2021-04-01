@@ -107,11 +107,14 @@ In order to build coreboot image, follow the steps below:
    make menuconfig
    ```
 
-   Navigate to the Mainboard submenu and select the:
-   `Raptor Computign Systems -> Talos II`. Then save the configuration and
-   exit.
+   * Navigate to the **Mainboard** submenu.
+   * As a **Mainboard vendor** select `Raptor Computing Systems`
+   * If it wasn't selected autmatically, as **Mainboard model** select `Talos II`
+   * In the **ROM chip size** option select `512 KB`
+   * As **Size of CBFS filesystem in ROM** set `0x80000`
+   * Save the configuration and exit.
 
-   .center[.image-90[![](images/cb_menuconfig.png)]]
+   ![](images/cb_menuconfig.png)
 
 5. Start the build process of coreboot inside the container:
 
@@ -128,7 +131,7 @@ In order to build coreboot image, follow the steps below:
    (assuming in the coreboot root directory):
 
    ```
-   scp build/coreboot.rom root@<IP>:/tmp
+   scp build/coreboot.rom root@<BMC_IP>:/tmp
    ```
 
 2. Backup the HBB partition (for faster later recovery) by invoking this
@@ -146,14 +149,14 @@ In order to build coreboot image, follow the steps below:
 
    Answer yes to the prompt and wait for the process to finish.
 
-4. Log into the BMC GUI again at https://<IP>/. Enter the Server power
-   operations (https://<IP>/#/server-control/power-operations) and invoke warm
+4. Log into the BMC GUI again at https://\<BMC_IP\>/. Enter the Server power
+   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke warm
    reboot. Then move to Serial over LAN remote console
-   (https://<IP>/#/server-control/remote-console)
+   (https://\<BMC_IP\>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
 
-   .center[.image-90[![](images/cb_bootblock.png)]]
+   ![](images/cb_bootblock.png)
 
 5. Enjoy coreboot bootblock running on Talos II.
 
