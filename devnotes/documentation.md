@@ -114,7 +114,7 @@ In order to build coreboot image, follow the steps below:
    * As **Size of CBFS filesystem in ROM** set `0x80000`
    * Save the configuration and exit.
 
-   ![](images/cb_menuconfig.png)
+   ![](../images/cb_menuconfig.png)
 
 5. Start the build process of coreboot inside the container:
 
@@ -156,7 +156,7 @@ In order to build coreboot image, follow the steps below:
 
    Wait for a while until coreboot shows up:
 
-   ![](images/cb_bootblock.png)
+   ![](../images/cb_bootblock.png)
 
 5. Enjoy coreboot bootblock running on Talos II.
 
