@@ -131,8 +131,9 @@ In order to build coreboot image, follow the steps below:
    (assuming in the coreboot root directory):
 
    ```
-   scp build/coreboot.rom root@<BMC_IP>:/tmp
+   scp build/coreboot.rom.signed.ecc root@<BMC_IP>:/tmp
    ```
+   > If that file is not present, use `coreboot.rom` instead
 
 2. Backup the HBB partition (for faster later recovery) by invoking this
    command on BMC:
@@ -144,8 +145,9 @@ In order to build coreboot image, follow the steps below:
 3. Flash the binary by replacing HBB partition (execute from BMC):
 
    ```
-   pflash -e -P HBB -p /tmp/coreboot.rom
+   pflash -e -P HBB -p /tmp/coreboot.signed.ecc
    ```
+   > Again, if that file is not present, use `coreboot.rom` instead
 
    Answer yes to the prompt and wait for the process to finish.
 
