@@ -37,8 +37,7 @@ for Talos II.
 3. Download the stock firmware image:
 
    ```
-   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download \
-         -O /tmp/flash.pnor
+   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download-O /tmp/flash.pnor
    ```
 
 4. Flash the firmware:
@@ -97,8 +96,7 @@ In order to build coreboot image, follow the steps below:
    directory):
 
    ```
-   docker run --rm -it -v $PWD:/home/coreboot/coreboot \
-      -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
+   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
    ```
 
 4. When inside of the container, configure the build for Talos II:
@@ -111,7 +109,7 @@ In order to build coreboot image, follow the steps below:
    * As a **Mainboard vendor** select `Raptor Computing Systems`
    * If it wasn't selected autmatically, as **Mainboard model** select `Talos II`
    * In the **ROM chip size** option select `512 KB`
-   * As **Size of CBFS filesystem in ROM** set `0x80000`
+   * As **Size of CBFS filesystem in ROM** set `0x80000` (Only if this option is present)
    * Save the configuration and exit.
 
    ![](../images/cb_menuconfig.png)
@@ -168,12 +166,21 @@ In order to build coreboot image, follow the steps below:
 
 ## Running the coreboot on QEMU
 
-Please keep in mind, that `QEMU` doesn't implement many of the HW properties,
+Please keep in mind, that QEMU doesn't implement many of the HW properties,
 that Talos II has. There may be many compatibility issues, or registers missing.
 
-1. Clone `QEMU` repository
-2. Build ppc64 version
-3. Run it with correct image
+1. Clone the QEMU repository
+   ```
+   git clone git@github.com:qemu/qemu.git
+   # or HTTPS alternatively
+   git clone https://github.com/qemu/qemu.git
+   ```
+2. Build the QEMU ppc64 version
+   ```
+   cd qemu
+    ./configure --target-list=ppc64-softmmu && make
+   ```
+3. Start QEMU with coreboot image
    ````
-   qemu/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio
+   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio
    ````
