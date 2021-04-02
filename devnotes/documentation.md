@@ -60,10 +60,10 @@ for Talos II.
    ```
 
 5. * Log into the BMC GUI at https://\<BMC_IP\>/.\
-     Make sure to use `https`.\
+     Make sure to use `https`.
    * Enter the Server power operations
      `https://\<BMC_IP\>/#/server-control/power-operations` and invoke
-     warm reboot.\
+     warm reboot.
    * Then move to Serial over LAN remote console
      `https://\<BMC_IP\>/#/server-control/remote-console` to observe
      whether the platform is booting.
