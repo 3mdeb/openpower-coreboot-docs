@@ -37,7 +37,7 @@ for Talos II.
 3. Download the stock firmware image:
 
    ```
-   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download-O /tmp/flash.pnor
+   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download -O /tmp/flash.pnor
    ```
 
 4. Flash the firmware:
@@ -169,6 +169,8 @@ In order to build coreboot image, follow the steps below:
 Please keep in mind, that QEMU doesn't implement many of the HW properties,
 that Talos II has. There may be many compatibility issues, or registers missing.
 
+More detailed informations can be found in [porting.md#qemu](porting.md#qemu)
+
 1. Clone the QEMU repository
    ```
    git clone git@github.com:qemu/qemu.git
@@ -182,5 +184,5 @@ that Talos II has. There may be many compatibility issues, or registers missing.
    ```
 3. Start QEMU with coreboot image
    ````
-   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio
+   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio -drive file=flash.pnor,format=raw,readonly=on,if=mtd
    ````
