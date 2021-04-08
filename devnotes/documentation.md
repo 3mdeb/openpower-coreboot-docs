@@ -22,22 +22,25 @@ environment, ensure that:
 In order to start from a common point, flash the original OpenPOWER firmware
 for Talos II.
 
-1. Log into the BMC via SSH:
+1. Checkout Talos II in [snipeit](http://snipeit) to avoid conflicts when
+   someone else is also working with the device.\
+   **Note:** `snipeit` is an internal tool avilable only from 3mdeb's LAN
+   network or via VPN connection.
+
+2. Log into the BMC via SSH:
 
    ```
-   ssh root@<IP>
+   ssh root@<BMC_IP>
+   ```
+   Ask the administrator for IP address and password to the Talos II BMC.
+
+3. Download the stock firmware image:
+
+   ```
+   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download -O /tmp/flash.pnor
    ```
 
-   > The password is `wfv978h4JSG`
-
-2. Download the stock firmware image:
-
-   ```
-   wget https://cloud.3mdeb.com/index.php/s/canxPx5d4X8c2wk/download \
-         -O /tmp/flash.pnor
-   ```
-
-3. Flash the firmware:
+4. Flash the firmware:
 
    ```
    pflash -E -p /tmp/flash.pnor
@@ -53,14 +56,17 @@ for Talos II.
    ```
    About to program "/tmp/flash.pnor" at 0x00000000..0x04000000 !
    Programming & Verifying...
-   [==================================================] 100% ETA:0s 
+   [==================================================] 100% ETA:0s
    ```
 
-4. Log into the BMC GUI at https://<IP>/. Enter the Server power operations
-   (https://<IP>/#/server-control/power-operations) and invoke warm reboot.
-   Then move to Serial over LAN remote console
-   (https://<IP>/#/server-control/remote-console) to observe whether the
-   platform is booting. It should boot up to Debian.
+5. * Log into the BMC GUI at https://\<BMC_IP\>/.\
+     Make sure to use `https`.
+   * Enter the Server power operations
+     `https://\<BMC_IP\>/#/server-control/power-operations` and invoke
+     warm reboot.
+   * Then move to Serial over LAN remote console
+     `https://\<BMC_IP\>/#/server-control/remote-console` to observe
+     whether the platform is booting.
 
 ---
 
@@ -71,10 +77,13 @@ In order to build coreboot image, follow the steps below:
 1. Clone the coreboot repository:
 
    ```
-   git clone git@github.com:InsurgoTech/coreboot.git -b power_bootblock
+   git clone git@github.com:3mdeb/coreboot.git -b talos_2_support
    # or HTTPS alternatively
-   git clone https://github.com/InsurgoTech/coreboot.git -b power_bootblock
+   git clone https://github.com/3mdeb/coreboot.git -b talos_2_support
    ```
+   `talos_2_support` is the main development branch for Talos II support,
+   but keep in mind, if you are working on some specific features,
+   different branch may be the better choice.
 
 2. Get the submodules:
 
@@ -87,8 +96,7 @@ In order to build coreboot image, follow the steps below:
    directory):
 
    ```
-   docker run --rm -it -v $PWD:/home/coreboot/coreboot \
-      -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
+   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
    ```
 
 4. When inside of the container, configure the build for Talos II:
@@ -97,11 +105,14 @@ In order to build coreboot image, follow the steps below:
    make menuconfig
    ```
 
-   Navigate to the Mainboard submenu and select the:
-   `Raptor Computign Systems -> Talos II`. Then save the configuration and
-   exit.
+   * Navigate to the **Mainboard** submenu.
+   * As a **Mainboard vendor** select `Raptor Computing Systems`
+   * If it wasn't selected autmatically, as **Mainboard model** select `Talos II`
+   * In the **ROM chip size** option select `512 KB`
+   * As **Size of CBFS filesystem in ROM** set `0x80000` (Only if this option is present)
+   * Save the configuration and exit.
 
-   .center[.image-90[![](images/cb_menuconfig.png)]]
+   ![](../images/cb_menuconfig.png)
 
 5. Start the build process of coreboot inside the container:
 
@@ -118,8 +129,9 @@ In order to build coreboot image, follow the steps below:
    (assuming in the coreboot root directory):
 
    ```
-   scp build/coreboot.rom root@<IP>:/tmp
+   scp build/coreboot.rom.signed.ecc root@<BMC_IP>:/tmp
    ```
+   > If that file is not present, use `coreboot.rom` instead
 
 2. Backup the HBB partition (for faster later recovery) by invoking this
    command on BMC:
@@ -131,22 +143,46 @@ In order to build coreboot image, follow the steps below:
 3. Flash the binary by replacing HBB partition (execute from BMC):
 
    ```
-   pflash -e -P HBB -p /tmp/coreboot.rom
+   pflash -e -P HBB -p /tmp/coreboot.signed.ecc
    ```
+   > Again, if that file is not present, use `coreboot.rom` instead
 
    Answer yes to the prompt and wait for the process to finish.
 
-4. Log into the BMC GUI again at https://<IP>/. Enter the Server power
-   operations (https://<IP>/#/server-control/power-operations) and invoke warm
+4. Log into the BMC GUI again at https://\<BMC_IP\>/. Enter the Server power
+   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke warm
    reboot. Then move to Serial over LAN remote console
-   (https://<IP>/#/server-control/remote-console)
+   (https://\<BMC_IP\>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
 
-   .center[.image-90[![](images/cb_bootblock.png)]]
+   ![](../images/cb_bootblock.png)
 
-5. Enjoy coreboot bootblock running on Talos II.
+5. Enjoy the coreboot running on Talos II.
 
-> OPTIONAL: in order to recovery the platform quickly to healthy state, flash
-> the HBB partition back with:
+> **Optional:** In order to recovery the platform quickly to healthy state, flash
+> the HBB partition back with:\
 > `pflash -e -P HBB -p /tmp/hbb.bin`
+
+## Running the coreboot on QEMU
+
+Please keep in mind, that QEMU doesn't implement many of the HW properties,
+that Talos II has. There may be many compatibility issues, or registers missing.
+
+More detailed informations can be found in [porting.md#qemu](porting.md#qemu)
+
+1. Clone the QEMU repository
+   ```
+   git clone git@github.com:qemu/qemu.git
+   # or HTTPS alternatively
+   git clone https://github.com/qemu/qemu.git
+   ```
+2. Build the QEMU ppc64 version
+   ```
+   cd qemu
+    ./configure --target-list=ppc64-softmmu && make
+   ```
+3. Start QEMU with coreboot image
+   ````
+   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio -drive file=flash.pnor,format=raw,readonly=on,if=mtd
+   ````

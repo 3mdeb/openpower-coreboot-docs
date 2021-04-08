@@ -10,6 +10,8 @@ project has been initiated and is sponsored by Insurgo Technologies Libres/Open
 Technologies. The development process is open and anyone can join. See
 [How to help and contribute](#how-to-help-and-contribute) section.
 
+To start working on the project, see the [project introduction](devnotes/documentation.md).
+
 ## Repository overview
 
 * [devnotes](devnotes/) - various developer notes created during the porting
