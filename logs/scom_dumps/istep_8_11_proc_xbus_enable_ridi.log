@@ -1,0 +1,16 @@
+399.14879|ISTEP  8.11 - proc_xbus_enable_ridi
+399.15322|ISTEPS_TRACE|>>call_proc_xbus_enable_ridi entry
+399.15324|ISTEPS_TRACE|>>fapiHWPCallWrapper (p9_xbus_enable_ridi) entry
+399.15393|ISTEPS_TRACE|Running p9_xbus_enable_ridi HWP on target HUID 00050000
+399.16506|FAPI|p9_xbus_enable_ridi.C: Call p9_xbus_enable_ridi_net_ctrl_action_function
+399.16508|FAPI|p9_xbus_enable_ridi.C: Check for chiplet enable
+399.16513|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c6 : 00000000000F0040 A006030100000000
+399.16515|FAPI|p9_xbus_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+399.16520|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c6 : 00000000000F0042 00001C0000000000
+399.16524|ISTEPS_TRACE|SUCCESS: p9_xbus_enable_ridi HWP returned success with target HUID 0x00050000
+399.16525|ISTEPS_TRACE|<<fapiHWPCallWrapper (p9_xbus_enable_ridi) exit
+399.16526|ISTEPS_TRACE|<<call_proc_xbus_enable_ridi exit
+399.17619|ERRL|I>Got an error log Msg - Type: 0x00000039
+399.17621|ERRL|I>Flush message received
+399.17623|INITSVC|<<doIstep: step 8, substep 11
+399.17625|INITSVC|>>doIstep: step 8, substep 12, task host_set_voltages

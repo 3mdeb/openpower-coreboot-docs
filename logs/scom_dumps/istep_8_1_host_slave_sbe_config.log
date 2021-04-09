@@ -1,0 +1,20 @@
+398.58951|ISTEP  8. 1 - host_slave_sbe_config
+398.60022|INITSVC|unloading [libistep07.so]
+398.61510|INITSVC|unloading [libnestmemutils.so]
+398.61641|INITSVC|unloading [libisteps_mss.so]
+398.71819|INITSVC|unloading [libsbe.so]
+398.73118|INITSVC|unloading [libimageprocs.so]
+398.73479|INITSVC|unloading [libcen.so]
+398.73725|INITSVC|unloading [libnvram.so]
+398.73736|INITSVC|loading [libistep08.so]
+398.75243|INITSVC|loading [libisteps_nest.so]
+398.76824|INITSVC|loading [libsbe.so]
+398.78081|INITSVC|loading [libimageprocs.so]
+398.79780|ISTEPS_TRACE|call_host_slave_sbe_config entry
+398.79781|ISTEPS_TRACE|ATTR_BOOT_FLAGS=00000000
+398.80946|HWAS_I|I>hwas.C: EQ Gard Bit:0x3f EC Gard Bit:0xa6ffffff on proc with HUID: 0x50000 
+398.81887|ISTEPS_TRACE|call_host_slave_sbe_config exit
+398.81993|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.81994|ERRL|I>Flush message received
+398.81996|INITSVC|<<doIstep: step 8, substep 1
+398.81998|INITSVC|>>doIstep: step 8, substep 2, task host_setup_sbe

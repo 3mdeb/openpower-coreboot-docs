@@ -1,0 +1,19 @@
+460.83634|ISTEP 14. 7 - proc_exit_cache_contained
+460.85399|HWAS_I|I>hwas.C: checkMinimumHardware entry
+460.85400|HWAS_I|I>hwas.C: checkMinimumHardware: i_nodeOrSys 00010000
+460.90161|HWAS_I|I>hwas.C: checkMinimumHardware exit - minimum hardware available
+460.90334|HWAS_I|I>hwas.C: check_for_missing_memory: looking for a proc with grp=0x0 chip=0x0, found 1 procs
+460.90369|HWAS_I|I>hwas.C: check_for_missing_memory: kept PROC_MEM_TO_USE same 0x0
+460.90370|HWAS_I|I>hwas.C: PROC_MEM_TO_USE currentVal=0x0 reComputedVal=0x0
+460.92078|ISTEPS_TRACE|Payload base address is 0x0000000000000000
+460.92216|ISTEPS_TRACE|Memory range : 0-200000000
+460.92217|FAPI|p9_exit_cache_contained.C: Start
+460.92218|FAPI|p9_exit_cache_contained.C: End
+460.92220|ISTEPS_TRACE|SUCCESS : call_proc_exit_cache_contained on all procs
+460.94122|ISTEPS_TRACE|SUCCESS : call_proc_exit_cache_contained - extendVMM
+460.94713|SCOM|doMulticastWorkaround on 00050000 for 50040018
+460.94805|SCOM|doMulticastWorkaround on 00050000 for 50040009
+460.94868|ERRL|I>Got an error log Msg - Type: 0x00000039
+460.94869|ERRL|I>Flush message received
+460.94871|INITSVC|<<doIstep: step 14, substep 7
+460.94873|INITSVC|>>doIstep: step 15, substep 1, task host_build_stop_image

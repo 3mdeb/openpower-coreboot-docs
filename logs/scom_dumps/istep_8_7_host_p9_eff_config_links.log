@@ -1,0 +1,14 @@
+398.94585|ISTEP  8. 7 - host_p9_eff_config_links
+398.95019|ISTEPS_TRACE|>>call_host_p9_fbc_eff_config_links entry
+398.97425|ISTEPS_TRACE|>>fapiHWPCallWrapper (p9_fbc_eff_config_links) entry
+398.97497|ISTEPS_TRACE|Running p9_fbc_eff_config_links HWP on target HUID 00050000
+398.97966|FAPI|p9_fbc_smp_utils.C: (PROC): Start
+399.01145|TARG|[TARG] >> TARGETING::getPeerTargets 
+399.01148|TARG|[TARG] << TARGETING::getPeerTargets 
+399.02478|ISTEPS_TRACE|SUCCESS: p9_fbc_eff_config_links HWP returned success with target HUID 0x00050000
+399.02480|ISTEPS_TRACE|<<fapiHWPCallWrapper (p9_fbc_eff_config_links) exit
+399.02481|ISTEPS_TRACE|<<call_host_p9_fbc_eff_config_links exit
+399.02890|ERRL|I>Got an error log Msg - Type: 0x00000039
+399.02891|ERRL|I>Flush message received
+399.02893|INITSVC|<<doIstep: step 8, substep 7
+399.02895|INITSVC|>>doIstep: step 8, substep 8, task proc_attr_update

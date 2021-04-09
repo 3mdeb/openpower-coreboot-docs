@@ -1,0 +1,20 @@
+480.37443|ISTEP 16. 3 - host_secure_rng
+480.38249|IPMI|wd: resetWatchDogTimer
+480.38250|IPMI|rp: queuing sync 18:22
+480.38251|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+480.38255|IPMI|dd: I>write ok 18:22 seq 18 len 0
+480.39677|IPMI|dd: I>read b2h ok 1c:22 seq 18 len 0 cc 0
+480.39683|ISTEPS_TRACE|call_host_secure_rng entry
+480.43332|FAPI|p9_rng_init_phase2.C: Start
+480.43480|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000020110E0 000040006CF01F41
+480.43639|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 00000000020110E0 000040006CF01F41
+480.43642|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000000010005 0808000000000000
+480.43644|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000000010005 0848000000000000
+480.43645|FAPI|p9_rng_init_phase2.C: End
+480.43646|ISTEPS_TRACE|call_host_secure_rng exit
+480.41760|SCOM|doMulticastWorkaround on 00050000 for 50040018
+480.41381|SCOM|doMulticastWorkaround on 00050000 for 50040009
+480.41435|ERRL|I>Got an error log Msg - Type: 0x00000039
+480.41436|ERRL|I>Flush message received
+480.41438|INITSVC|<<doIstep: step 16, substep 3
+480.41440|INITSVC|>>doIstep: step 16, substep 4, task mss_scrub

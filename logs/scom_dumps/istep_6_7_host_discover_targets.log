@@ -1,0 +1,390 @@
+  7.34153|ISTEP  6. 7 - host_discover_targets
+  7.35945|ISTEPS_TRACE|host_discover_targets: Normal IPL mode
+  7.42447|VPD|>>getPnAndSnRecordAndKeywords()
+  7.65921|VPD|VPD::ensureCacheIsInSync: PNOR_PN/SN == SEEPROM_PN/SN for target 00020000
+  7.65923|VPD|>>getPnAndSnRecordAndKeywords()
+  7.66044|HWAS_I|I>hwasPlat.C: pTarget 00020000 - detected present
+  7.67833|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  7.84295|HWAS_I|I>hwasPlat.C: pTarget 00030000 - no presence
+  7.84419|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.00365|HWAS_I|I>hwasPlat.C: pTarget 00030001 - no presence
+  8.00402|VPD|>>getPnAndSnRecordAndKeywords()
+  8.02203|VPD|VPD::ensureCacheIsInSync: PNOR_PN/SN == SEEPROM_PN/SN for target 00030002
+  8.02205|HWAS_I|I>hwasPlat.C: pTarget 00030002 - detected present
+  8.02217|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.19047|HWAS_I|I>hwasPlat.C: pTarget 00030003 - no presence
+  8.19174|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.35512|HWAS_I|I>hwasPlat.C: pTarget 00030008 - no presence
+  8.35637|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.52484|HWAS_I|I>hwasPlat.C: pTarget 00030009 - no presence
+  8.52610|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.68447|HWAS_I|I>hwasPlat.C: pTarget 0003000A - no presence
+  8.68571|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E5000)> 
+  8.84508|HWAS_I|I>hwasPlat.C: pTarget 0003000B - no presence
+  8.84525|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  8.84646|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.00762|HWAS_I|I>hwasPlat.C: pTarget 00030010 - no presence
+  9.00778|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.00898|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.17653|HWAS_I|I>hwasPlat.C: pTarget 00030011 - no presence
+  9.17669|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.17787|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.34047|HWAS_I|I>hwasPlat.C: pTarget 00030012 - no presence
+  9.34065|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.34182|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.50320|HWAS_I|I>hwasPlat.C: pTarget 00030013 - no presence
+  9.50337|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.50455|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.66520|HWAS_I|I>hwasPlat.C: pTarget 00030018 - no presence
+  9.66536|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.66656|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.82708|HWAS_I|I>hwasPlat.C: pTarget 00030019 - no presence
+  9.82724|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.82843|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+  9.99201|HWAS_I|I>hwasPlat.C: pTarget 0003001A - no presence
+  9.99217|SPD|E>dimmPresenceDetect() isSlavePresent failed
+  9.99336|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x000E6200)> 
+ 10.15377|HWAS_I|I>hwasPlat.C: pTarget 0003001B - no presence
+ 10.15387|VPD|>>getPnAndSnRecordAndKeywords()
+ 10.20404|VPD|VPD::ensureCacheIsInSync: PNOR_PN/SN == SEEPROM_PN/SN for target 00050000
+ 10.20405|VPD|>>getPnAndSnRecordAndKeywords()
+ 10.20414|HWAS_I|I>hwasPlat.C: pTarget 00050000 - detected present
+ 10.20532|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x0013F000)> 
+ 10.51913|HWAS_I|I>hwasPlat.C: pTarget 00050001 - no presence
+ 10.53680|ERRL|E>Error created : PLID=90000003, RC=0C1A, Mod=0B, Userdata=0000000000000000 0000000000000000, Sev=INFORMATIONAL
+ 10.53688|ERRL|E>Error created : PLID=90000004, RC=0C1A, Mod=0B, Userdata=0000000000000000 0000000000000000, Sev=INFORMATIONAL
+ 10.54936|HWAS_I|I>hwas.C: pDesc 0x00240007 - pgData[8]: actual 0x0100, expected 0x0000 - bad
+ 10.54940|HWAS_I|I>hwas.C: pDesc 0x00240006 - pgData[8]: actual 0x0100, expected 0x0000 - bad
+ 10.54944|HWAS_I|I>hwas.C: pDesc parent 0x000B0003 - marked bad because all of its children were bad.
+ 10.54950|HWAS_I|I>hwas.C: pDesc 0x00240003 - pgData[7]: actual 0x0100, expected 0x0000 - bad
+ 10.54954|HWAS_I|I>hwas.C: pDesc 0x00240002 - pgData[7]: actual 0x0100, expected 0x0000 - bad
+ 10.54961|HWAS_I|I>hwas.C: pDesc parent 0x000B0001 - marked bad because all of its children were bad.
+ 10.54967|HWAS_I|I>hwas.C: pDesc 0x00070016 - pgData[54]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54970|HWAS_I|I>hwas.C: pDesc 0x00070017 - pgData[55]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54974|HWAS_I|I>hwas.C: pDesc parent 0x0006000B - marked bad because all of its children were bad.
+ 10.54978|HWAS_I|I>hwas.C: pDesc 0x00070014 - pgData[52]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54982|HWAS_I|I>hwas.C: pDesc 0x00070015 - pgData[53]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54985|HWAS_I|I>hwas.C: pDesc parent 0x0006000A - marked bad because all of its children were bad.
+ 10.54989|HWAS_I|I>hwas.C: pDesc 0x00070012 - pgData[50]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54993|HWAS_I|I>hwas.C: pDesc 0x00070013 - pgData[51]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.54997|HWAS_I|I>hwas.C: pDesc parent 0x00060009 - marked bad because all of its children were bad.
+ 10.55000|HWAS_I|I>hwas.C: pDesc 0x00070010 - pgData[48]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55004|HWAS_I|I>hwas.C: pDesc 0x00070011 - pgData[49]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55008|HWAS_I|I>hwas.C: pDesc parent 0x00060008 - marked bad because all of its children were bad.
+ 10.55012|HWAS_I|I>hwas.C: pDesc 0x0007000F - pgData[47]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55015|HWAS_I|I>hwas.C: pDesc 0x0007000E - pgData[46]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55019|HWAS_I|I>hwas.C: pDesc parent 0x00060007 - marked bad because all of its children were bad.
+ 10.55023|HWAS_I|I>hwas.C: pDesc 0x0007000C - pgData[44]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55027|HWAS_I|I>hwas.C: pDesc 0x0007000D - pgData[45]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55031|HWAS_I|I>hwas.C: pDesc parent 0x00060006 - marked bad because all of its children were bad.
+ 10.55035|HWAS_I|I>hwas.C: pDesc 0x0007000B - pgData[43]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55039|HWAS_I|I>hwas.C: pDesc 0x0007000A - pgData[42]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55042|HWAS_I|I>hwas.C: pDesc parent 0x00060005 - marked bad because all of its children were bad.
+ 10.55046|HWAS_I|I>hwas.C: pDesc 0x00070008 - pgData[40]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55050|HWAS_I|I>hwas.C: pDesc 0x00070009 - pgData[41]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55054|HWAS_I|I>hwas.C: pDesc parent 0x00060004 - marked bad because all of its children were bad.
+ 10.55059|HWAS_I|I>hwas.C: pDesc 0x00070006 - pgData[38]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55063|HWAS_I|I>hwas.C: pDesc 0x00070005 - pgData[37]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55068|HWAS_I|I>hwas.C: pDesc 0x00070002 - pgData[34]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55073|HWAS_I|I>hwas.C: pDesc 0x00070000 - pgData[32]: actual 0xFFFF, expected 0xE1FF - bad
+ 10.55087|HWAS_I|I>hwas.C: pDesc parent 0x00230005 - marked bad because all of its children were bad.
+ 10.55091|HWAS_I|I>hwas.C: pDesc parent 0x00230004 - marked bad because all of its children were bad.
+ 10.55095|HWAS_I|I>hwas.C: pDesc parent 0x00230003 - marked bad because all of its children were bad.
+ 10.55098|HWAS_I|I>hwas.C: pDesc parent 0x00230002 - marked bad because all of its children were bad.
+ 10.55116|HWAS_I|I>hwas.C: pDesc 0x002C0012 - pgData[18]: actual 0x1000, expected 0x0000 - bad
+ 10.55120|HWAS_I|I>hwas.C: pDesc 0x002C0013 - pgData[19]: actual 0x1000, expected 0x0000 - bad
+ 10.55125|HWAS_I|I>hwas.C: pDesc 0x002C0014 - pgData[20]: actual 0x1000, expected 0x0000 - bad
+ 10.55129|HWAS_I|I>hwas.C: pDesc 0x002C0015 - pgData[21]: actual 0x1000, expected 0x0000 - bad
+ 10.55134|HWAS_I|I>hwas.C: pDesc 0x002C0020 - pgData[32]: actual 0x1000, expected 0x0000 - bad
+ 10.55142|HWAS_I|I>hwas.C: pDesc 0x002C0022 - pgData[34]: actual 0x1000, expected 0x0000 - bad
+ 10.55150|HWAS_I|I>hwas.C: pDesc 0x002C0025 - pgData[37]: actual 0x1000, expected 0x0000 - bad
+ 10.55154|HWAS_I|I>hwas.C: pDesc 0x002C0026 - pgData[38]: actual 0x1000, expected 0x0000 - bad
+ 10.55162|HWAS_I|I>hwas.C: pDesc 0x002C0028 - pgData[40]: actual 0x1000, expected 0x0000 - bad
+ 10.55167|HWAS_I|I>hwas.C: pDesc 0x002C0029 - pgData[41]: actual 0x1000, expected 0x0000 - bad
+ 10.55173|HWAS_I|I>hwas.C: pDesc 0x002C002A - pgData[42]: actual 0x1000, expected 0x0000 - bad
+ 10.55177|HWAS_I|I>hwas.C: pDesc 0x002C002B - pgData[43]: actual 0x1000, expected 0x0000 - bad
+ 10.55182|HWAS_I|I>hwas.C: pDesc 0x002C002C - pgData[44]: actual 0x1000, expected 0x0000 - bad
+ 10.55186|HWAS_I|I>hwas.C: pDesc 0x002C000C - pgData[12]: actual 0x1000, expected 0x0000 - bad
+ 10.55191|HWAS_I|I>hwas.C: pDesc 0x002C002D - pgData[45]: actual 0x1000, expected 0x0000 - bad
+ 10.55195|HWAS_I|I>hwas.C: pDesc 0x002C002E - pgData[46]: actual 0x1000, expected 0x0000 - bad
+ 10.55200|HWAS_I|I>hwas.C: pDesc 0x002C002F - pgData[47]: actual 0x1000, expected 0x0000 - bad
+ 10.55205|HWAS_I|I>hwas.C: pDesc 0x002C0030 - pgData[48]: actual 0x1000, expected 0x0000 - bad
+ 10.55209|HWAS_I|I>hwas.C: pDesc 0x002C0031 - pgData[49]: actual 0x1000, expected 0x0000 - bad
+ 10.55214|HWAS_I|I>hwas.C: pDesc 0x002C0032 - pgData[50]: actual 0x1000, expected 0x0000 - bad
+ 10.55219|HWAS_I|I>hwas.C: pDesc 0x002C0033 - pgData[51]: actual 0x1000, expected 0x0000 - bad
+ 10.55223|HWAS_I|I>hwas.C: pDesc 0x002C0034 - pgData[52]: actual 0x1000, expected 0x0000 - bad
+ 10.55228|HWAS_I|I>hwas.C: pDesc 0x002C0035 - pgData[53]: actual 0x1000, expected 0x0000 - bad
+ 10.55233|HWAS_I|I>hwas.C: pDesc 0x002C0036 - pgData[54]: actual 0x1000, expected 0x0000 - bad
+ 10.55238|HWAS_I|I>hwas.C: pDesc 0x002C0037 - pgData[55]: actual 0x1000, expected 0x0000 - bad
+ 10.55252|HWAS_I|I>hwas.C: pDesc 0x002C0009 - pgData[9]: actual 0x1000, expected 0x0000 - bad
+ 10.55261|HWAS_I|I>hwas.C: pDesc 0x000E0002 - pgData[6]: actual 0x0010, expected 0x0000 - bad
+ 10.55344|ERRL|commitErrLog() called by 0C00 for eid=90000004, Reasoncode=0C1A
+ 10.55346|ERRL|>>ErrlManager::sendErrlogToMessageQueue
+ 10.55347|ERRL|I>Send an error log to message queue to commit. eid=90000004
+ 10.55349|ERRL|<<ErrlManager::sendErrlogToMessageQueue
+ 10.55350|ERRL|I>Got an error log Msg - Type: 0x00000030
+ 10.55351|ERRL|WRN>> No callouts in elog 90000004
+ 10.55352|ERRL|Adding default callout EPUB_PRC_HB_CODE 
+ 10.55354|ERRL|>>addProcedureCallout(0x55, 0x1)
+ 10.55354|ERRL|E>Error created : PLID=90000005, RC=0C1A, Mod=0B, Userdata=0000000000000000 0000000000000000, Sev=INFORMATIONAL
+ 10.55356|ERRL|<<addVersionInfo()
+ 10.55357|ERRL|>>saveErrLogToPnor eid=90000004
+ 10.55359|ERRL|I>saveErrLogToPnor: INFORMATIONAL/RECOVERED log, skipping
+ 10.55360|ERRL|<<saveErrLogToPnor returning true
+ 10.55360|HWAS_I|I>hwas.C: >>discoverPmicTargetsAndEnable
+ 10.55365|ERRL|>>sendErrLogToBmc errlogId 0x90000004, i_sendSels 1
+ 10.55367|ERRL|I>sendErrLogToBmc: 90000004 is INFORMATIONAL/RECOVERED; skipping
+ 10.55368|ERRL|<<sendErrLogToBmc
+ 10.55400|HWAS_I|I>hwas.C: <<discoverPmicTargetsAndEnable exit with no error
+ 10.55410|HWAS_I|I>hwas.C: discoverTargets: Proc 00050001 not present
+ 10.55527|HWAS_I|I>deconfigGard.C: Set iv_XAOBusEndpointDeconfigured = 1
+ 10.55528|HWAS_I|I>hwas.C: validateProcessorEcLevels entry
+ 10.55661|HWAS_I|I>hwas.C: updateProcCompatibilityRiskLevel entry
+ 10.55733|HWAS_I|I>hwas.C: updateProcCompatibilityRiskLevel: Update RISK_LEVEL from 0 to 4 (EC Level: 0x23, RISK_ORIGIN: MRW, PROC_COMPATIBILITY_REQ: 0)
+ 10.55734|HWAS_I|I>hwas.C: updateProcCompatibilityRiskLevel exit
+ 10.55735|HWAS_I|I>hwas.C: validateProcessorEcLevels exit
+ 10.55853|HWAS_I|I>hwas.C: restrictECunits entry, 1 elements
+ 10.55856|HWAS_I|I>hwas.C: procRestrictList[0] - maxECs 0xFFFFFFFF, procs 1, group 327680
+ 10.55880|HWAS_I|I>hwas.C: currentECs 0x4 <= maxECs 0xFFFFFFFF -- done
+ 10.55882|HWAS_I|I>hwas.C: restrictECunits completed successfully
+ 10.55883|HWAS_I|I>hwas.C: markDisabledMcas entry
+ 10.55983|HWAS_I|I>hwas.C: markDisabledMcas exit
+ 10.56865|HWAS_I|I>hwas.C: deconfigPresentByAssoc: Target 00240000 marked present, not functional, reason ff0a
+ 10.56870|HWAS_I|I>hwas.C: deconfigPresentByAssoc: Target 00240004 marked present, not functional, reason ff0a
+ 10.56875|HWAS_I|I>hwas.C: deconfigPresentByAssoc: Target 00240005 marked present, not functional, reason ff0a
+ 10.56881|HWAS_I|I>hwas.C: deconfigPresentByAssoc: Target 000B0002 marked present, not functional, reason ff04
+ 10.56889|HWAS_I|I>hwas.C: deconfigPresentByAssoc: Target 00250001 marked present, not functional, reason ff14
+ 10.56891|HWAS_I|I>hwas.C: discoverTargets completed successfully
+ 10.56962|ISTEPS_TRACE|PRESENT> DIMM[03]=2000000000000000
+ 10.56964|ISTEPS_TRACE|PRESENT> Proc[05]=8000000000000000
+ 10.56965|ISTEPS_TRACE|PRESENT> Core[07]=5900000000000000
+ 10.58858|IPMI|IPMIFRUINV::setData - Collecting all IPMI FRU Inventory Targets with fruId: [00000001]
+ 10.59231|IPMI|IPMIFRUINV::setData - Sending IPMI FRU Inventory Data for target with fruId: [00000001] and size [00000001]
+ 10.59233|IPMI|fru: >>writeData(deviceId 0x1 size 72 offset 0)
+ 10.59352|IPMI|fru: <<writeData
+ 10.59356|IPMI|IPMIFRUINV::setData - Collecting all IPMI FRU Inventory Targets with fruId: [00000003]
+ 10.59364|IPMI|backplaneIpmiFruInv::buildChassisInfoArea -  Using NEW OSYS RECORD FOR Chassis VPD Data
+ 10.59379|IPMI|MfgDate error: 20 20 09 23 07 09 10 
+ 10.59383|IPMI|backplaneIpmiFruInv::buildBoardInfoArea - Exeeded maximum allowed build date to display. Using default MFG Date/Time.
+ 10.59398|IPMI|IPMIFRUINV::setData - Sending IPMI FRU Inventory Data for target with fruId: [00000003] and size [00000001]
+ 10.59400|IPMI|fru: >>writeData(deviceId 0x3 size 128 offset 0)
+ 10.59401|IPMI|fru: <<writeData
+ 10.59405|IPMI|IPMIFRUINV::setData - Collecting all IPMI FRU Inventory Targets with fruId: [00000006]
+ 10.59416|IPMI|fru: >>execute: fru message loop
+ 10.59417|IPMI|fru: >>sendWriteFruData for dev 0x1, size 72
+ 10.59419|IPMI|fru: I>sending write_fru_data fru size 56 offset 0
+ 10.59420|IPMI|rp: queuing sync 28:12
+ 10.59421|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 10.64787|IPMI|IPMIFRUINV::setData - Sending IPMI FRU Inventory Data for target with fruId: [00000006] and size [00000001]
+ 10.64789|IPMI|fru: >>writeData(deviceId 0x6 size 96 offset 0)
+ 10.64790|IPMI|fru: <<writeData
+ 10.64793|IPMI|IPMIFRUINV::setData - Collecting all IPMI FRU Inventory Targets with fruId: [0000001c]
+ 10.64824|IPMI|dd: I>write ok 28:12 seq 5 len 3b
+ 10.79872|IPMI|dd: I>read b2h ok 2c:12 seq 5 len 1 cc 0
+ 10.79875|IPMI|fru: I>sending write_fru_data fru size 16 offset 56
+ 10.79887|IPMI|rp: queuing sync 28:12
+ 10.79888|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 10.81217|IPMI|IPMIFRUINV::setData - Sending IPMI FRU Inventory Data for target with fruId: [0000001c] and size [00000001]
+ 10.81219|IPMI|fru: >>writeData(deviceId 0x1c size 256 offset 0)
+ 10.81220|IPMI|fru: <<writeData
+ 10.81222|IPMI|fru: >>writeData(deviceId 0x2 size 8 offset 0)
+ 10.81223|IPMI|fru: <<writeData
+ 10.81224|IPMI|fru: >>writeData(deviceId 0x4 size 8 offset 0)
+ 10.81225|IPMI|fru: <<writeData
+ 10.81227|IPMI|fru: >>writeData(deviceId 0x5 size 8 offset 0)
+ 10.81228|IPMI|fru: <<writeData
+ 10.81229|IPMI|fru: >>writeData(deviceId 0x7 size 8 offset 0)
+ 10.81230|IPMI|fru: <<writeData
+ 10.81231|IPMI|fru: >>writeData(deviceId 0x8 size 8 offset 0)
+ 10.81233|IPMI|fru: <<writeData
+ 10.81234|IPMI|fru: >>writeData(deviceId 0x9 size 8 offset 0)
+ 10.81235|IPMI|fru: <<writeData
+ 10.81236|IPMI|fru: >>writeData(deviceId 0xa size 8 offset 0)
+ 10.81237|IPMI|fru: <<writeData
+ 10.81239|IPMI|fru: >>writeData(deviceId 0xb size 8 offset 0)
+ 10.81240|IPMI|fru: <<writeData
+ 10.81241|IPMI|fru: >>writeData(deviceId 0xc size 8 offset 0)
+ 10.81242|IPMI|fru: <<writeData
+ 10.81244|IPMI|fru: >>writeData(deviceId 0xd size 8 offset 0)
+ 10.81245|IPMI|fru: <<writeData
+ 10.81246|IPMI|fru: >>writeData(deviceId 0xe size 8 offset 0)
+ 10.81247|IPMI|fru: <<writeData
+ 10.81248|IPMI|fru: >>writeData(deviceId 0xf size 8 offset 0)
+ 10.81249|IPMI|fru: <<writeData
+ 10.81251|IPMI|fru: >>writeData(deviceId 0x10 size 8 offset 0)
+ 10.81252|IPMI|fru: <<writeData
+ 10.81253|IPMI|fru: >>writeData(deviceId 0x11 size 8 offset 0)
+ 10.81254|IPMI|fru: <<writeData
+ 10.81256|IPMI|fru: >>writeData(deviceId 0x12 size 8 offset 0)
+ 10.81257|IPMI|fru: <<writeData
+ 10.81258|IPMI|fru: >>writeData(deviceId 0x13 size 8 offset 0)
+ 10.81259|IPMI|fru: <<writeData
+ 10.81266|IPMI|dd: I>write ok 28:12 seq 7 len 13
+ 10.81350|IPMI|rp: queuing async 10:30
+ 10.81352|IPMI|rp: queuing async 10:30
+ 10.81353|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81353|IPMI|rp: queuing async 10:30
+ 10.81355|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81355|IPMI|rp: queuing async 10:30
+ 10.81356|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81356|IPMI|rp: queuing async 10:30
+ 10.81358|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81358|IPMI|rp: queuing async 10:30
+ 10.81359|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81359|IPMI|rp: queuing async 10:30
+ 10.81360|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81361|IPMI|rp: queuing async 10:30
+ 10.81362|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81363|IPMI|rp: queuing async 10:30
+ 10.81363|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81364|IPMI|rp: queuing async 10:30
+ 10.81366|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81366|IPMI|rp: queuing async 10:30
+ 10.81367|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81368|IPMI|rp: queuing async 10:30
+ 10.81369|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81369|IPMI|rp: queuing async 10:30
+ 10.81370|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81371|IPMI|rp: queuing async 10:30
+ 10.81372|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81372|IPMI|rp: queuing async 10:30
+ 10.81373|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81374|IPMI|rp: queuing async 10:30
+ 10.81374|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81376|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81387|IPMI|rp: queuing async 10:30
+ 10.81388|IPMI|rp: queuing async 10:30
+ 10.81388|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81390|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81417|IPMI|rp: queuing async 10:30
+ 10.81418|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81418|IPMI|rp: queuing async 10:30
+ 10.81420|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81420|IPMI|rp: queuing async 10:30
+ 10.81422|IPMI|rp: queuing async 10:30
+ 10.81423|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81423|IPMI|rp: queuing async 10:30
+ 10.81424|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81425|IPMI|rp: queuing async 10:30
+ 10.81426|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81426|IPMI|rp: queuing async 10:30
+ 10.81427|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81428|IPMI|rp: queuing async 10:30
+ 10.81429|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81429|IPMI|rp: queuing async 10:30
+ 10.81430|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81431|IPMI|rp: queuing async 10:30
+ 10.81432|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81433|IPMI|rp: queuing async 10:30
+ 10.81433|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81434|IPMI|rp: queuing async 10:30
+ 10.81435|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81436|IPMI|rp: queuing async 10:30
+ 10.81436|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81438|IPMI|rp: queuing async 10:30
+ 10.81438|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81439|IPMI|rp: queuing async 10:30
+ 10.81439|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81441|IPMI|rp: queuing async 10:30
+ 10.81441|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81442|IPMI|rp: queuing async 10:30
+ 10.81443|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81444|IPMI|rp: queuing async 10:30
+ 10.81444|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81446|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81446|IPMI|rp: queuing async 10:30
+ 10.81448|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81448|IPMI|rp: queuing async 10:30
+ 10.81450|IPMI|rp: queuing async 10:30
+ 10.81451|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81451|IPMI|rp: queuing async 10:30
+ 10.81453|IPMI|rp: queuing async 10:30
+ 10.81453|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81454|IPMI|rp: queuing async 10:30
+ 10.81454|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81456|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81456|IPMI|rp: queuing async 10:30
+ 10.81457|IPMI|rp: queuing async 10:30
+ 10.81457|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81459|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81459|IPMI|rp: queuing async 10:30
+ 10.81460|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81461|IPMI|rp: queuing async 10:30
+ 10.81462|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81462|IPMI|rp: queuing async 10:30
+ 10.81463|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81464|IPMI|rp: queuing async 10:30
+ 10.81465|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81465|IPMI|rp: queuing async 10:30
+ 10.81467|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81467|IPMI|rp: queuing async 10:30
+ 10.81468|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81468|IPMI|rp: queuing async 10:30
+ 10.81470|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81470|IPMI|rp: queuing async 10:30
+ 10.81471|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81471|IPMI|rp: queuing async 10:30
+ 10.81473|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81473|IPMI|rp: queuing async 10:30
+ 10.81474|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81475|IPMI|rp: queuing async 10:30
+ 10.81476|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81476|IPMI|rp: queuing async 10:30
+ 10.81477|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81478|IPMI|rp: queuing async 10:30
+ 10.81479|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81479|IPMI|rp: queuing async 10:30
+ 10.81481|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81481|IPMI|rp: queuing async 10:30
+ 10.81482|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81482|IPMI|rp: queuing async 10:30
+ 10.81484|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81484|IPMI|rp: queuing async 10:30
+ 10.81485|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81486|IPMI|rp: queuing async 10:30
+ 10.81487|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81487|IPMI|rp: queuing async 10:30
+ 10.81489|IPMI|rp: queuing async 10:30
+ 10.81489|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81491|IPMI|rp: queuing async 10:30
+ 10.81492|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81493|IPMI|rp: queuing async 10:30
+ 10.81493|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81495|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81495|IPMI|I> Found fault sensor name 0xC707 and ID 0x8C for HUID 0x20000
+ 10.81497|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81497|IPMI|rp: queuing async 10:30
+ 10.81499|IPMI|I> Found fault sensor name 0xC7D4 and ID 0x8D for HUID 0x20000
+ 10.81500|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81501|IPMI|rp: queuing async 10:30
+ 10.81503|IPMI|I> Found fault sensor name 0xC7D5 and ID 0x8E for HUID 0x20000
+ 10.81504|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81505|IPMI|rp: queuing async 10:30
+ 10.81507|IPMI|I> Found fault sensor name 0xC7D6 and ID 0x8F for HUID 0x20000
+ 10.81507|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81508|IPMI|rp: queuing async 10:30
+ 10.81510|IPMI|I> Found fault sensor name 0xC7D7 and ID 0x93 for HUID 0x20000
+ 10.81510|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81511|IPMI|rp: queuing async 10:30
+ 10.81514|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+ 10.81528|SBEIO|psudd: Sending Req = 000000000006D702 0000000000000080 00000000F857F980 0000000000000000 to 00050000
+ 10.82322|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+ 10.82324|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+ 10.82327|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+ 10.82353|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+ 10.82370|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+ 10.82729|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+ 10.82730|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+ 10.82733|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+ 10.82773|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+ 10.82793|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+ 10.84827|SBEIO|getPsuSbeCapabilities:Call to performPsuChipOp returned an unexpected size: capabilities size returned:92, expected capabilities size:108, 
+ 10.84829|SBEIO|applySbeCapabilities: Retrieved SBE Version: 0x10001
+ 10.84831|SBEIO|applySbeCapabilities: Retrieved SBE Commit ID: 0x6A87332A
+ 10.84833|SBEIO|applySbeCapabilities: Retrieved SBE Release Tag: f11ead9c425241931
+ 10.84834|SBEIO|<<getPsuSbeCapabilities
+ 10.84835|ISTEPS_TRACE|host_discover_targets exit
+ 10.99246|ERRL|I>Got an error log Msg - Type: 0x00000039
+ 10.99247|ERRL|I>Flush message received
+ 10.99249|INITSVC|<<doIstep: step 6, substep 7
+ 10.99252|INITSVC|>>doIstep: step 6, substep 8, task host_update_master_tpm

@@ -1,0 +1,294 @@
+472.42356|ISTEP 15. 3 - host_establish_ex_chiplet
+472.42981|ISTEPS_TRACE|host_establish_ex_chiplet entry
+472.43204|FAPI_I|p9_update_ec_eq_state.C: > p9_update_ec_eq_state
+472.43205|FAPI|p9_update_ec_eq_state.C: > update_core_config...
+472.43406|FAPI|p9_update_ec_eq_state.C:   Number of present cores = 24; Number of functional cores = 4
+472.43409|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 0 is functional
+472.43411|FAPI|p9_update_ec_eq_state.C:   Removing EC 0 from MC group 0 (All chiplets)
+472.43564|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43568|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000200F0001 FC00000000000000
+472.43569|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43572|FAPI|p9_update_ec_eq_state.C:   Removing EC 0 from MC group 1 (All core chiplets)
+472.43573|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43576|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000200F0002 FC00000000000000
+472.43577|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43579|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 1 is functional
+472.43581|FAPI|p9_update_ec_eq_state.C:   Setting EC 1 into MC group 0 (All chiplets)
+472.43582|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43587|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0001 E000000000000000
+472.43588|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43591|FAPI|p9_update_ec_eq_state.C:   Setting EC 1 into MC group 1 (All core chiplets)
+472.43592|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43596|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0002 E400000000000000
+472.43598|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43600|FAPI|p9_update_ec_eq_state.C:   Setting EC 1 as good in value to be written to CCSR
+472.43602|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 2 is functional
+472.43604|FAPI|p9_update_ec_eq_state.C:   Removing EC 2 from MC group 0 (All chiplets)
+472.43605|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43609|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000220F0001 FC00000000000000
+472.43610|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43612|FAPI|p9_update_ec_eq_state.C:   Removing EC 2 from MC group 1 (All core chiplets)
+472.43614|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43617|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000220F0002 FC00000000000000
+472.43618|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43620|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 3 is functional
+472.43622|FAPI|p9_update_ec_eq_state.C:   Setting EC 3 into MC group 0 (All chiplets)
+472.43623|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43627|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0001 FC00000000000000
+472.43631|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0001 E0001C0000000000
+472.43633|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43635|FAPI|p9_update_ec_eq_state.C:   Setting EC 3 into MC group 1 (All core chiplets)
+472.43636|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43640|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0002 FC00000000000000
+472.43645|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0002 E4001C0000000000
+472.43646|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43649|FAPI|p9_update_ec_eq_state.C:   Setting EC 3 as good in value to be written to CCSR
+472.43650|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 4 is functional
+472.43653|FAPI|p9_update_ec_eq_state.C:   Setting EC 4 into MC group 0 (All chiplets)
+472.43654|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43658|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0001 FC00000000000000
+472.43663|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0001 E0001C0000000000
+472.43664|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43667|FAPI|p9_update_ec_eq_state.C:   Setting EC 4 into MC group 1 (All core chiplets)
+472.43668|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43672|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0002 FC00000000000000
+472.43677|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0002 E4001C0000000000
+472.43678|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43681|FAPI|p9_update_ec_eq_state.C:   Setting EC 4 as good in value to be written to CCSR
+472.43683|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 5 is functional
+472.43685|FAPI|p9_update_ec_eq_state.C:   Removing EC 5 from MC group 0 (All chiplets)
+472.43687|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43691|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000250F0001 FC00000000000000
+472.43692|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43695|FAPI|p9_update_ec_eq_state.C:   Removing EC 5 from MC group 1 (All core chiplets)
+472.43696|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43699|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000250F0002 FC00000000000000
+472.43700|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43702|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 6 is functional
+472.43704|FAPI|p9_update_ec_eq_state.C:   Removing EC 6 from MC group 0 (All chiplets)
+472.43706|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43709|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000260F0001 FC00000000000000
+472.43710|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43713|FAPI|p9_update_ec_eq_state.C:   Removing EC 6 from MC group 1 (All core chiplets)
+472.43714|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43717|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000260F0002 FC00000000000000
+472.43718|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43720|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 7 is functional
+472.43723|FAPI|p9_update_ec_eq_state.C:   Setting EC 7 into MC group 0 (All chiplets)
+472.43724|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43729|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0001 FC00000000000000
+472.43733|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0001 E0001C0000000000
+472.43735|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43737|FAPI|p9_update_ec_eq_state.C:   Setting EC 7 into MC group 1 (All core chiplets)
+472.43738|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43743|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0002 FC00000000000000
+472.43748|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0002 E4001C0000000000
+472.43749|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43752|FAPI|p9_update_ec_eq_state.C:   Setting EC 7 as good in value to be written to CCSR
+472.43756|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 8 is functional
+472.43762|FAPI|p9_update_ec_eq_state.C:   Removing EC 8 from MC group 0 (All chiplets)
+472.43765|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43773|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000280F0001 FC00000000000000
+472.43776|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43783|FAPI|p9_update_ec_eq_state.C:   Removing EC 8 from MC group 1 (All core chiplets)
+472.43786|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43793|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000280F0002 FC00000000000000
+472.43796|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.43800|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 9 is functional
+472.43806|FAPI|p9_update_ec_eq_state.C:   Removing EC 9 from MC group 0 (All chiplets)
+472.43809|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44523|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000290F0001 FC00000000000000
+472.44524|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44527|FAPI|p9_update_ec_eq_state.C:   Removing EC 9 from MC group 1 (All core chiplets)
+472.44528|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44531|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000290F0002 FC00000000000000
+472.44532|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44534|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 10 is functional
+472.44537|FAPI|p9_update_ec_eq_state.C:   Removing EC 10 from MC group 0 (All chiplets)
+472.44538|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44542|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002A0F0001 FC00000000000000
+472.44543|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44545|FAPI|p9_update_ec_eq_state.C:   Removing EC 10 from MC group 1 (All core chiplets)
+472.44547|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44550|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002A0F0002 FC00000000000000
+472.44551|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44553|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 11 is functional
+472.44556|FAPI|p9_update_ec_eq_state.C:   Removing EC 11 from MC group 0 (All chiplets)
+472.44557|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44560|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002B0F0001 FC00000000000000
+472.44561|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44565|FAPI|p9_update_ec_eq_state.C:   Removing EC 11 from MC group 1 (All core chiplets)
+472.44566|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44569|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002B0F0002 FC00000000000000
+472.44570|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44572|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 12 is functional
+472.44575|FAPI|p9_update_ec_eq_state.C:   Removing EC 12 from MC group 0 (All chiplets)
+472.44576|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44845|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002C0F0001 FC00000000000000
+472.44846|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44849|FAPI|p9_update_ec_eq_state.C:   Removing EC 12 from MC group 1 (All core chiplets)
+472.44850|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44853|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002C0F0002 FC00000000000000
+472.44854|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44857|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 13 is functional
+472.44859|FAPI|p9_update_ec_eq_state.C:   Removing EC 13 from MC group 0 (All chiplets)
+472.44860|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44864|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002D0F0001 FC00000000000000
+472.44865|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44867|FAPI|p9_update_ec_eq_state.C:   Removing EC 13 from MC group 1 (All core chiplets)
+472.44868|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44871|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002D0F0002 FC00000000000000
+472.44873|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44875|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 14 is functional
+472.44877|FAPI|p9_update_ec_eq_state.C:   Removing EC 14 from MC group 0 (All chiplets)
+472.44878|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44882|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002E0F0001 FC00000000000000
+472.44883|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44885|FAPI|p9_update_ec_eq_state.C:   Removing EC 14 from MC group 1 (All core chiplets)
+472.44887|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44890|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002E0F0002 FC00000000000000
+472.44891|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44893|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 15 is functional
+472.44895|FAPI|p9_update_ec_eq_state.C:   Removing EC 15 from MC group 0 (All chiplets)
+472.44897|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44900|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002F0F0001 FC00000000000000
+472.44901|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44904|FAPI|p9_update_ec_eq_state.C:   Removing EC 15 from MC group 1 (All core chiplets)
+472.44905|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44908|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000002F0F0002 FC00000000000000
+472.44909|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44911|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 16 is functional
+472.44913|FAPI|p9_update_ec_eq_state.C:   Removing EC 16 from MC group 0 (All chiplets)
+472.44915|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44918|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000300F0001 FC00000000000000
+472.44919|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44922|FAPI|p9_update_ec_eq_state.C:   Removing EC 16 from MC group 1 (All core chiplets)
+472.44923|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44926|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000300F0002 FC00000000000000
+472.44927|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44929|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 17 is functional
+472.44932|FAPI|p9_update_ec_eq_state.C:   Removing EC 17 from MC group 0 (All chiplets)
+472.44933|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44937|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000310F0001 FC00000000000000
+472.44938|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44940|FAPI|p9_update_ec_eq_state.C:   Removing EC 17 from MC group 1 (All core chiplets)
+472.44942|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44945|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000310F0002 FC00000000000000
+472.44946|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44948|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 18 is functional
+472.44950|FAPI|p9_update_ec_eq_state.C:   Removing EC 18 from MC group 0 (All chiplets)
+472.44952|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44955|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000320F0001 FC00000000000000
+472.44957|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44960|FAPI|p9_update_ec_eq_state.C:   Removing EC 18 from MC group 1 (All core chiplets)
+472.44961|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44964|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000320F0002 FC00000000000000
+472.44965|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44967|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 19 is functional
+472.44970|FAPI|p9_update_ec_eq_state.C:   Removing EC 19 from MC group 0 (All chiplets)
+472.44971|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44974|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000330F0001 FC00000000000000
+472.44975|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44978|FAPI|p9_update_ec_eq_state.C:   Removing EC 19 from MC group 1 (All core chiplets)
+472.44979|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44982|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000330F0002 FC00000000000000
+472.44983|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44985|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 20 is functional
+472.44988|FAPI|p9_update_ec_eq_state.C:   Removing EC 20 from MC group 0 (All chiplets)
+472.44989|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44992|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000340F0001 FC00000000000000
+472.44993|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.44996|FAPI|p9_update_ec_eq_state.C:   Removing EC 20 from MC group 1 (All core chiplets)
+472.44997|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45000|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000340F0002 FC00000000000000
+472.45001|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45003|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 21 is functional
+472.45006|FAPI|p9_update_ec_eq_state.C:   Removing EC 21 from MC group 0 (All chiplets)
+472.45007|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45011|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000350F0001 FC00000000000000
+472.45012|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45014|FAPI|p9_update_ec_eq_state.C:   Removing EC 21 from MC group 1 (All core chiplets)
+472.45016|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45018|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000350F0002 FC00000000000000
+472.45020|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45022|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 22 is functional
+472.45024|FAPI|p9_update_ec_eq_state.C:   Removing EC 22 from MC group 0 (All chiplets)
+472.45025|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45029|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000360F0001 FC00000000000000
+472.45030|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45033|FAPI|p9_update_ec_eq_state.C:   Removing EC 22 from MC group 1 (All core chiplets)
+472.45034|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45037|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000360F0002 FC00000000000000
+472.45038|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45040|FAPI|p9_update_ec_eq_state.C:   Checking if present EC 23 is functional
+472.45043|FAPI|p9_update_ec_eq_state.C:   Removing EC 23 from MC group 0 (All chiplets)
+472.45044|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45047|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000370F0001 FC00000000000000
+472.45049|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45051|FAPI|p9_update_ec_eq_state.C:   Removing EC 23 from MC group 1 (All core chiplets)
+472.45052|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45055|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000370F0002 FC00000000000000
+472.45057|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45058|FAPI|p9_update_ec_eq_state.C:   Writing OCC CCSR
+472.45061|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C090 5900000000000000
+472.45211|FAPI|p9_update_ec_eq_state.C: < update_core_config...
+472.45212|FAPI|p9_update_ec_eq_state.C: > update_cache_config...
+472.45300|FAPI|p9_update_ec_eq_state.C:   Number of present cache chiplets = 6; Number of functional cache chiplets = 2
+472.45302|FAPI|p9_update_ec_eq_state.C:   Number of functional EX regions = 4
+472.45304|FAPI|p9_update_ec_eq_state.C:   Setting EQ 0 into MC group 0 (All chiplets)
+472.45306|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45311|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c0 : 00000000100F0001 E000000000000000
+472.45312|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45314|FAPI|p9_update_ec_eq_state.C:   Setting EQ 1 into MC group 0 (All chiplets)
+472.45316|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45321|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F0001 FC00000000000000
+472.45326|SCAN|TRACE : PUTSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F0001 E0001C0000000000
+472.45327|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45330|FAPI|p9_update_ec_eq_state.C:    Remove EQ 2 from MC group 0 (All chiplets)
+472.45331|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45334|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000120F0001 FC00000000000000
+472.45336|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45338|FAPI|p9_update_ec_eq_state.C:    Remove EQ 3 from MC group 0 (All chiplets)
+472.45339|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45343|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000130F0001 FC00000000000000
+472.45344|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45347|FAPI|p9_update_ec_eq_state.C:    Remove EQ 4 from MC group 0 (All chiplets)
+472.45348|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45351|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000140F0001 FC00000000000000
+472.45353|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45355|FAPI|p9_update_ec_eq_state.C:    Remove EQ 5 from MC group 0 (All chiplets)
+472.45356|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45360|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 00000000150F0001 FC00000000000000
+472.45361|FAPI|p9_update_ec_eq_state.C: << set_mc_group
+472.45364|FAPI|p9_update_ec_eq_state.C:   Setting EX 0 as good in value to be written to QCSR
+472.45367|FAPI|p9_update_ec_eq_state.C:   Setting EX 1 as good in value to be written to QCSR
+472.45370|FAPI|p9_update_ec_eq_state.C:   Setting EX 2 as good in value to be written to QCSR
+472.45373|FAPI|p9_update_ec_eq_state.C:   Setting EX 3 as good in value to be written to QCSR
+472.45377|FAPI|p9_update_ec_eq_state.C:   Writing OCC QCSR
+472.45380|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C094 F000000000000000
+472.45381|FAPI|p9_update_ec_eq_state.C: < update_cache_config
+472.45533|FAPI|p9_update_ec_eq_state.C: >>verify_hw_state
+472.45835|FAPI|p9_update_ec_eq_state.C: Present core 1 
+472.45836|FAPI|p9_update_ec_eq_state.C:   Functional EC 1
+472.45837|FAPI|p9_update_ec_eq_state.C: Present core 3 
+472.45839|FAPI|p9_update_ec_eq_state.C:   Functional EC 1
+472.45840|FAPI|p9_update_ec_eq_state.C:   Functional EC 3
+472.45842|FAPI|p9_update_ec_eq_state.C: Present core 4 
+472.45843|FAPI|p9_update_ec_eq_state.C:   Functional EC 1
+472.45844|FAPI|p9_update_ec_eq_state.C:   Functional EC 3
+472.45846|FAPI|p9_update_ec_eq_state.C:   Functional EC 4
+472.45847|FAPI|p9_update_ec_eq_state.C: Present core 7 
+472.45848|FAPI|p9_update_ec_eq_state.C:   Functional EC 1
+472.45849|FAPI|p9_update_ec_eq_state.C:   Functional EC 3
+472.45851|FAPI|p9_update_ec_eq_state.C:   Functional EC 4
+472.45852|FAPI|p9_update_ec_eq_state.C:   Functional EC 7
+472.45854|FAPI|p9_update_ec_eq_state.C:   Functional EQ 0 present EQ 0
+472.45855|FAPI|p9_update_ec_eq_state.C:   Functional EQ 0 present EQ 1
+472.45857|FAPI|p9_update_ec_eq_state.C:   Functional EQ 1 present EQ 1
+472.45858|FAPI|p9_update_ec_eq_state.C: < update_core_config...
+472.45860|FAPI|p9_update_ec_eq_state.C: < p9_update_ec_eq_state
+472.45861|ISTEPS_TRACE|host_establish_ex_chiplet exit
+474.16296|ERRL|I>Got an error log Msg - Type: 0x00000039
+474.16297|ERRL|I>Flush message received
+474.16299|INITSVC|<<doIstep: step 15, substep 3
+474.16302|INITSVC|>>doIstep: step 15, substep 4, task host_start_stop_engine

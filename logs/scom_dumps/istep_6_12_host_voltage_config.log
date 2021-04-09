@@ -1,0 +1,299 @@
+392.44326|ISTEP  6.12 - host_voltage_config
+392.44764|IPMI|wd: resetWatchDogTimer
+392.44765|IPMI|rp: queuing sync 18:22
+392.44767|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+392.44771|IPMI|dd: I>write ok 18:22 seq c6 len 0
+392.45851|IPMI|dd: I>read b2h ok 1c:22 seq c6 len 0 cc 0
+392.47422|UTIL|getBootNestFreq::The boot frequency was 1866: Bucket Id = 2
+392.47425|ISTEPS_TRACE|call_host_voltage_config.C::ASYNC Freq specified by MRW, using 1866 Mhz
+392.51531|ISTEPS_TRACE|call_host_voltage_config.C::ATTR_FREQ_X_MHZ = 2000
+392.61189|ISTEPS_TRACE|Proc 00050000 Freq from #V: Powersave = 1867 Turbo = 3200, UltraTurbo = 3800
+392.61198|ISTEPS_TRACE|Proc 00050000 Freq from #V: Powersave = 1867 Turbo = 3200, UltraTurbo = 3800
+392.61204|ISTEPS_TRACE|Setting System Frequency Attributes: Nominal = 2700, Floor = 1867, Ceiling = 3200, Turbo = 3200, UltraTurbo = 3800
+392.61206|TARG|[TARG] >> TARGETING::Target::setFrequencyAttributes 
+392.61207|TARG|ATTR_FREQ_PB_MHZ getting set from 1866 to 1866
+392.61208|TARG|ATTR_PIB_I2C_NEST_PLL getting set from 26 to 26
+392.61210|TARG|Bucket 1 with freq 1600 and i2cdiv 25
+392.61211|TARG|Bucket 2 with freq 1866 and i2cdiv 29
+392.61212|TARG|ATTR_NEST_PLL_BUCKET getting set to 2
+392.61286|TARG|[TARG] << TARGETING::Target::setFrequencyAttributes 
+392.63003|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER - 8
+392.63124|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_ULTRATURBO                                    = 0x00000000 0
+392.63128|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_TURBO                                         = 0x00000000 0
+392.63132|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_NOMINAL                                       = 0x00000000 0
+392.63136|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_POWERSAVE                                     = 0x00000000 0
+392.63141|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+392.63145|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_TURBO                              = 0x00000000 0
+392.63149|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+392.63153|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+392.63158|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VCS_BIAS                                    = 0x00000000 0
+392.63162|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDN_BIAS                                    = 0x00000000 0
+392.63166|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+392.63170|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_TURBO                              = 0x00000000 0
+392.63174|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+392.63178|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+392.63183|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+392.63188|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_PB_MHZ                                             = 0x0000074a 1866
+392.63192|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_CEILING_MHZ                                   = 0x00000c80 3200
+392.63196|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_FREQUENCY_MHZ                                 = 0x00000000 0
+392.63200|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_VOLTAGE_MV                                    = 0x00000000 0
+392.63205|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_FLOOR_MHZ                                     = 0x0000074b 1867
+392.63326|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+392.63330|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+392.63334|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+392.63339|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+392.63343|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+392.63347|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+392.63351|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+392.63355|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+392.63359|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+392.63364|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_IVRM_DISABLE                                     = 0x00000000 0
+392.63368|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOF_DISABLE                                      = 0x00000000 0
+392.63372|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_VDM_DISABLE                                      = 0x00000000 0
+392.63376|FAPI|p9_pstate_parameter_block.C: ATTR_DPLL_VDM_RESPONSE                                       = 0x00000000 0
+392.63380|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_RESCLK_DISABLE                                   = 0x00000000 0
+392.63384|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_PSTATES_MODE                                     = 0x00000000 0
+392.63507|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_WOF_NOT_SUPPORTED                       = 0x00000000 0
+392.63511|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_VDM_NOT_SUPPORTED                       = 0x00000000 0
+392.63515|FAPI|p9_pstate_parameter_block.C: ATTR_TDP_RDP_CURRENT_FACTOR                                  = 0x00000000 0
+392.63519|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_START_NS                        = 0x00000000 0
+392.63523|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_INC_UV_PER_US              = 0x00000000 0
+392.63527|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_DEC_UV_PER_US              = 0x00000000 0
+392.63647|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_STABILIZATION_TIME_NS           = 0x00000000 0
+392.63651|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_STEPSIZE                                   = 0x00000000 0
+392.63656|FAPI|p9_pstate_parameter_block.C: ATTR_NEST_LEAKAGE_PERCENT                                    = 0x0000003c 60
+392.63660|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_BUSNUM                                       = 0x00000000 0
+392.63665|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_RAIL                                         = 0x00000000 0
+392.63669|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_BUSNUM                                       = 0x00000001 1
+392.63673|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_RAIL                                         = 0x00000000 0
+392.63677|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_BUSNUM                                       = 0x00000000 0
+392.63681|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_RAIL                                         = 0x00000001 1
+392.63685|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_BOOT_VOLTAGE                                        = 0x00000000 0
+392.63691|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_BOOT_VOLTAGE                                        = 0x00000000 0
+392.63695|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_BOOT_VOLTAGE                                        = 0x00000000 0
+392.63699|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+392.63703|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+392.63707|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+392.63711|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+392.63715|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+392.63719|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+392.63723|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+392.63727|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+392.63730|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+392.63852|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+392.63856|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER                                       = 0x00000008 8
+392.63860|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_OVERV_DISABLE                                = 0x00000000 0
+392.63865|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_UNDERV_DISABLE                               = 0x00000000 0
+392.63869|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_FORCE                                        = 0x00000000 0
+392.63873|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_SAMPLE_125US                                        = 0x00000000 0
+392.63877|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_MAX_DROOP_10THPCT                                   = 0x00000000 0
+392.63882|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_PERF_LOSS_THRESH_10THPCT                     = 0x00000000 0
+392.63886|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_INCR_10THPCT                            = 0x00000000 0
+392.63890|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_DECR_10THPCT                            = 0x00000000 0
+392.63896|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_MAX_10THPCT                                  = 0x00000000 0
+392.63900|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_VMIN_MV                                      = 0x00000000 0
+392.63904|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_VMAX_SETPOINT_MV                              = 0x00000000 0
+392.63908|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_INCR_10THPCT                             = 0x00000000 0
+392.63912|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_DECR_10THPCT                             = 0x00000000 0
+392.63916|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_MAX_10THPCT                                   = 0x00000000 0
+392.63921|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_start_ns             = 0x00001f40 8000 (internal default)
+392.63926|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_inc_uv_per_us   = 0x00002710 10000 (internal default)
+392.63930|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_dec_uv_per_us   = 0x00002710 10000 (internal default)
+392.63935|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_stabilization_time_us           = 0x00000005 5 (internal default)
+392.63939|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_step_size_mv                    = 0x00000032 50 (internal default)
+392.63944|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_sample_125us                        = 0x00000002 2 (internal default)
+392.63949|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_max_droop_pct                       = 0x0000007d 125 (internal default)
+392.63953|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_incr_pct                 = 0x00000005 5 (internal default)
+392.63958|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_decr_pct                 = 0x00000005 5 (internal default)
+392.63962|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_max_pct                       = 0x00000000 0 (internal default)
+392.63967|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_vmax_mv                       = 0x0000047e 1150 (internal default)
+392.63972|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_incr_pct                = 0x00000005 5 (internal default)
+392.63976|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_decr_pct                = 0x00000005 5 (internal default)
+392.63981|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_max_pct                      = 0x00000064 100 (internal default)
+392.63985|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_perf_loss_thresh_pct         = 0x00000005 5 (internal default)
+392.64226|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_PSTATES_ENABLED                                  = 0x00000000 0
+392.64230|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_RESCLK_ENABLED                                   = 0x00000000 0
+392.64234|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_VDM_ENABLED                                      = 0x00000000 0
+392.64238|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_IVRM_ENABLED                                     = 0x00000000 0
+392.64242|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOF_ENABLED                                      = 0x00000000 0
+392.64246|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_UNDERV_ENABLED                               = 0x00000000 0
+392.64250|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_OVERV_ENABLED                                = 0x00000000 0
+392.64486|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>> vpd_init
+392.65227|FAPI|p9_pstate_parameter_block.C: Number of EQ chiplets present => 2
+392.65228|FAPI|p9_pstate_parameter_block.C: Chip Number => 0
+392.65236|FAPI|p9_pstate_parameter_block.C: #V chiplet = 0 bucket id = 2
+392.65238|FAPI|p9_pstate_parameter_block.C: #V data = 0x0A8C  2700  
+392.65239|FAPI|p9_pstate_parameter_block.C: #V data = 0x02D8  728   
+392.65240|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+392.65242|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.65243|FAPI|p9_pstate_parameter_block.C: #V data = 0x001E  30    
+392.65244|FAPI|p9_pstate_parameter_block.C: #V data = 0x074B  1867  
+392.65246|FAPI|p9_pstate_parameter_block.C: #V data = 0x0270  624   
+392.65247|FAPI|p9_pstate_parameter_block.C: #V data = 0x0104  260   
+392.65248|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.65250|FAPI|p9_pstate_parameter_block.C: #V data = 0x0014  20    
+392.65251|FAPI|p9_pstate_parameter_block.C: #V data = 0x0C80  3200  
+392.65252|FAPI|p9_pstate_parameter_block.C: #V data = 0x0330  816   
+392.65253|FAPI|p9_pstate_parameter_block.C: #V data = 0x021C  540   
+392.65255|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.65256|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+392.65257|FAPI|p9_pstate_parameter_block.C: #V data = 0x0ED8  3800  
+392.65259|FAPI|p9_pstate_parameter_block.C: #V data = 0x03B8  952   
+392.65260|FAPI|p9_pstate_parameter_block.C: #V data = 0x02EE  750   
+392.65261|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.65263|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+392.65264|FAPI|p9_pstate_parameter_block.C: #V data = 0x074A  1866  
+392.65265|FAPI|p9_pstate_parameter_block.C: #V data = 0x02BC  700   
+392.65267|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+392.65268|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+392.65269|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+392.65502|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+392.65860|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+392.65867|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+392.65874|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+392.65881|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+392.65885|FAPI|p9_pstate_parameter_block.C: **** NOTE: WOF is disabled so the UltraTurbo VPD is not being checked
+392.65890|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+392.65895|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+392.66012|FAPI|p9_pstate_parameter_block.C: Chip Number => 1
+392.66020|FAPI|p9_pstate_parameter_block.C: #V chiplet = 1 bucket id = 2
+392.66021|FAPI|p9_pstate_parameter_block.C: #V data = 0x0A8C  2700  
+392.66022|FAPI|p9_pstate_parameter_block.C: #V data = 0x02D8  728   
+392.66024|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+392.66025|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.66026|FAPI|p9_pstate_parameter_block.C: #V data = 0x001E  30    
+392.66028|FAPI|p9_pstate_parameter_block.C: #V data = 0x074B  1867  
+392.66029|FAPI|p9_pstate_parameter_block.C: #V data = 0x0270  624   
+392.66031|FAPI|p9_pstate_parameter_block.C: #V data = 0x0104  260   
+392.66032|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.66034|FAPI|p9_pstate_parameter_block.C: #V data = 0x0014  20    
+392.66035|FAPI|p9_pstate_parameter_block.C: #V data = 0x0C80  3200  
+392.66036|FAPI|p9_pstate_parameter_block.C: #V data = 0x0330  816   
+392.66038|FAPI|p9_pstate_parameter_block.C: #V data = 0x021C  540   
+392.66039|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.66040|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+392.66042|FAPI|p9_pstate_parameter_block.C: #V data = 0x0ED8  3800  
+392.66043|FAPI|p9_pstate_parameter_block.C: #V data = 0x03B8  952   
+392.66044|FAPI|p9_pstate_parameter_block.C: #V data = 0x02EE  750   
+392.66046|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+392.66047|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+392.66048|FAPI|p9_pstate_parameter_block.C: #V data = 0x074A  1866  
+392.66050|FAPI|p9_pstate_parameter_block.C: #V data = 0x02BC  700   
+392.66051|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+392.66052|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+392.66054|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+392.66056|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+392.66062|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+392.66069|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+392.66076|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+392.66082|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+392.66087|FAPI|p9_pstate_parameter_block.C: **** NOTE: WOF is disabled so the UltraTurbo VPD is not being checked
+392.66091|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+392.66096|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+392.66325|FAPI_I|p9_pstate_parameter_block.C: Apply Biasing to #V
+392.66326|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>>>>> apply_biased_values
+392.66328|FAPI_I|p9_pstate_parameter_block.C: Apply Biasing to #V
+392.66680|FAPI|p9_pstate_parameter_block.C: Validate Biasd Voltage and Frequency values
+392.66682|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+392.66689|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+392.66696|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+392.66703|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+392.66709|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+392.66714|FAPI|p9_pstate_parameter_block.C: **** NOTE: WOF is disabled so the UltraTurbo VPD is not being checked
+392.66718|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+392.66723|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+392.66726|FAPI|p9_pstate_parameter_block.C: <<<<<<<<<<<< apply_biased_values
+392.66761|FAPI|p9_pstate_parameter_block.C: Chiplet Number => 0
+392.74166|FAPI|p9_pm_get_poundw_bucket.C: COPYING from ATTR_POUNDW_BUCKET_DATA
+392.74167|FAPI|p9_pstate_parameter_block.C: #W chiplet = 0 bucket id = 2
+392.74170|FAPI|p9_pstate_parameter_block.C: attribute ATTR_POUND_W_STATIC_DATA_ENABLE is NOT set
+392.74208|FAPI|p9_pstate_parameter_block.C: Nominal    Op Point [0] vdm_vid_compare_per_quad[0]   16  => 576 mv
+392.74212|FAPI|p9_pstate_parameter_block.C: PowerSave  Op Point [1] vdm_vid_compare_per_quad[0]   43  => 684 mv
+392.74216|FAPI|p9_pstate_parameter_block.C: Turbo      Op Point [2] vdm_vid_compare_per_quad[0]   64  => 768 mv
+392.74220|FAPI|p9_pstate_parameter_block.C: UltraTurbo Op Point [3] vdm_vid_compare_per_quad[0]   91  => 876 mv
+392.74223|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 10 10, 0
+392.74225|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 2b 2b, 0
+392.74227|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 40 40, 0
+392.74230|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 5b 5b, 0
+392.74235|FAPI|p9_pstate_parameter_block.C: Nominal    Op Point [0] vdm_vid_compare_per_quad[1]   16  => 576 mv
+392.74239|FAPI|p9_pstate_parameter_block.C: PowerSave  Op Point [1] vdm_vid_compare_per_quad[1]   43  => 684 mv
+392.74243|FAPI|p9_pstate_parameter_block.C: Turbo      Op Point [2] vdm_vid_compare_per_quad[1]   64  => 768 mv
+392.74247|FAPI|p9_pstate_parameter_block.C: UltraTurbo Op Point [3] vdm_vid_compare_per_quad[1]   91  => 876 mv
+392.74249|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 10 10, 0
+392.74252|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 2b 2b, 0
+392.74254|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 40 40, 0
+392.74256|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 5b 5b, 0
+392.74259|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_overvolt_thresholds 0x0
+392.74262|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_small_thresholds    0x6
+392.74264|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_large_thresholds    0x5
+392.74267|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_extreme_thresholds  0x0
+392.74270|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_overvolt_thresholds 0x0
+392.74273|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_small_thresholds    0x3
+392.74275|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_large_thresholds    0x6
+392.74278|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_extreme_thresholds  0x0
+392.74281|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_overvolt_thresholds 0x0
+392.74283|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_small_thresholds    0x3
+392.74286|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_large_thresholds    0x6
+392.74289|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_extreme_thresholds  0x0
+392.74292|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_overvolt_thresholds 0x0
+392.74294|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_small_thresholds    0x3
+392.74297|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_large_thresholds    0x6
+392.74300|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_extreme_thresholds  0x0
+392.74302|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_DROP   N_S = 2
+392.74305|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_DROP   N_L = 4
+392.74308|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_RETURN L_S = 2
+392.74310|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_RETURN S_N = 2
+392.74313|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_DROP   N_S = 2
+392.74316|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_DROP   N_L = 4
+392.74318|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_RETURN L_S = 2
+392.74321|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_RETURN S_N = 2
+392.74324|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_DROP   N_S = 2
+392.74326|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_DROP   N_L = 4
+392.74329|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_RETURN L_S = 2
+392.74332|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_RETURN S_N = 2
+392.74335|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_DROP   N_S = 2
+392.74337|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_DROP   N_L = 4
+392.74340|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_RETURN L_S = 2
+392.74343|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_RETURN S_N = 2
+392.74346|FAPI|p9_pstate_parameter_block.C: Skipping IQ (IDDQ) Data as WOF is disabled
+392.74347|FAPI|p9_pstate_parameter_block.C: Load RAW VPD
+392.74348|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 74b 115
+392.74349|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 a8c 66
+392.74351|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 c80 36
+392.74352|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 ed8 0
+392.74353|FAPI|p9_pstate_parameter_block.C: Load VPD
+392.74354|FAPI|p9_pstate_parameter_block.C: <<<<<<<<< vpd_init
+392.75592|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>> safe_mode_init
+392.75594|FAPI|p9_pstate_parameter_block.C: core_floor_mhz 00000074b (1867)
+392.75598|FAPI|p9_pstate_parameter_block.C: operating_point[POWERSAVE].frequency_mhz 00000074b (1867)
+392.75600|FAPI|p9_pstate_parameter_block.C: reference_freq 00039fbc0 (3800000)
+392.75601|FAPI|p9_pstate_parameter_block.C: step_frequency 00000411a (16666)
+392.75604|FAPI|p9_pstate_parameter_block.C: Core floor less than or equal to POWERSAVE
+392.75607|FAPI|p9_pstate_parameter_block.C: safe_mode_values.safe_op_freq_mhz 00000074b (1867)
+392.75611|FAPI|p9_pstate_parameter_block.C: l_safe_mode_values.safe_vdm_jump_value 4 ->  12.5 %%
+392.75613|FAPI|p9_pstate_parameter_block.C: Setting safe mode frequency to 2152 MHz (0x868) 39fbc0
+392.75617|FAPI|p9_pstate_parameter_block.C: l_safe_mode_values.safe_mode_freq_mhz 0x868 (2152)
+392.75619|FAPI|p9_pstate_parameter_block.C: l_safe_mode_values.safe_mode_ps 62 (98)
+392.75622|FAPI|p9_pstate_parameter_block.C: l_globalppb.i_operating_points[Nominal   ].vdd_mv 0x2e2 (738)
+392.75626|FAPI|p9_pstate_parameter_block.C: l_globalppb.i_operating_points[PowerSave ].vdd_mv 0x276 (630)
+392.75630|FAPI|p9_pstate_parameter_block.C: l_globalppb.i_operating_points[Nominal   ].pstate 0x42  (66)
+392.75633|FAPI|p9_pstate_parameter_block.C: l_globalppb.i_operating_points[PowerSave ].pstate 0x73  (115)
+392.75634|FAPI|p9_pstate_parameter_block.C: l_SlopeValue 2343
+392.75636|FAPI|p9_pstate_parameter_block.C: l_vdd 0x29b (667)
+392.75638|FAPI|p9_pstate_parameter_block.C: Setting safe mode voltage to 667 mv (0x29b)
+392.75641|FAPI|p9_pstate_parameter_block.C: l_safe_mode_values.safe_mode_mv 0x29b (667)
+392.75643|FAPI|p9_pstate_parameter_block.C: l_safe_mode_values.boot_mode_mv 0x29b (667)
+392.75645|FAPI|p9_pstate_parameter_block.C: <<<<<<<<<< safe_mode_init
+392.75647|FAPI|p9_pstate_parameter_block.C: VDD boot voltage override set.
+392.75652|FAPI|p9_pstate_parameter_block.C: VCS boot voltage override not set, using VPD value and correcting for applicable load line setting
+392.75658|FAPI|p9_pstate_parameter_block.C: VCS VPD voltage 957 mV; Corrected voltage: 957 mV; ICS: 3000 mA; LoadLine: 0 uOhm; DistLoss: 64 uOhm;  Offst: 0 uOhm
+392.75664|FAPI|p9_pstate_parameter_block.C: VDN boot voltage override not set, using VPD value and correcting for applicable load line setting
+392.75670|FAPI|p9_pstate_parameter_block.C: VDN VPD voltage 700 mV; Corrected voltage: 702 mV; IDN: 41000 mA; LoadLine: 0 uOhm; DistLoss: 50 uOhm;  Offst: 0 uOhm
+392.75674|FAPI|p9_pstate_parameter_block.C: Setting Boot Voltage attributes: VDD = 667mV; VCS = 957mV; VDN = 702mV
+392.75677|FAPI|p9_pstate_parameter_block.C: VDD boot voltage = 667 mV (0x29b)
+392.75678|FAPI|p9_pstate_parameter_block.C: VCS boot voltage = 957 mV (0x3bd)
+392.75681|FAPI|p9_pstate_parameter_block.C: VDN boot voltage = 702 mV (0x2be)
+394.38883|ERRL|I>Got an error log Msg - Type: 0x00000039
+394.38885|ERRL|I>Flush message received
+394.38887|INITSVC|<<doIstep: step 6, substep 12
+394.38889|INITSVC|>>doIstep: step 7, substep 1, task mss_attr_cleanup

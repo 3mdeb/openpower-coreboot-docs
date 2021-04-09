@@ -1,0 +1,215 @@
+ 10.99254|ISTEP  6. 8 - host_update_master_tpm
+ 10.99699|IPMI|wd: resetWatchDogTimer
+ 10.99700|IPMI|rp: queuing sync 18:22
+ 10.99701|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+ 11.05182|IPMI|dd: I>read b2h ok 2c:12 seq 7 len 1 cc 0
+ 11.05193|IPMI|fru: >>sendWriteFruData for dev 0x3, size 128
+ 11.05194|IPMI|fru: I>sending write_fru_data fru size 56 offset 0
+ 11.05195|IPMI|dd: I>write ok 10:30 seq 8 len a
+ 11.05195|IPMI|rp: queuing sync 28:12
+ 11.05197|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 11.06556|IPMI|dd: I>read b2h ok 14:30 seq 8 len 0 cc 0
+ 11.06565|IPMI|dd: I>write ok 10:30 seq 9 len a
+ 11.08055|IPMI|dd: I>read b2h ok 14:30 seq 9 len 0 cc 0
+ 11.08065|IPMI|dd: I>write ok 10:30 seq a len a
+ 11.09449|IPMI|dd: I>read b2h ok 14:30 seq a len 0 cc 0
+ 11.09458|IPMI|dd: I>write ok 10:30 seq b len a
+ 11.10347|IPMI|dd: I>read b2h ok 14:30 seq b len 0 cc 0
+ 11.10356|IPMI|dd: I>write ok 10:30 seq c len a
+ 11.11558|IPMI|dd: I>read b2h ok 14:30 seq c len 0 cc 0
+ 11.11567|IPMI|dd: I>write ok 10:30 seq d len a
+ 11.13059|IPMI|dd: I>read b2h ok 14:30 seq d len 0 cc 0
+ 11.13068|IPMI|dd: I>write ok 10:30 seq e len a
+ 11.14574|IPMI|dd: I>read b2h ok 14:30 seq e len 0 cc cd
+ 11.14576|IPMI|bt: E>async message (14:30 seq 14) completion code cd
+ 11.14585|IPMI|dd: I>write ok 10:30 seq f len a
+ 11.15986|IPMI|dd: I>read b2h ok 14:30 seq f len 0 cc 0
+ 11.15995|IPMI|dd: I>write ok 10:30 seq 10 len a
+ 11.17098|IPMI|dd: I>read b2h ok 14:30 seq 10 len 0 cc 0
+ 11.17107|IPMI|dd: I>write ok 10:30 seq 11 len a
+ 11.18302|IPMI|dd: I>read b2h ok 14:30 seq 11 len 0 cc cd
+ 11.18303|IPMI|bt: E>async message (14:30 seq 17) completion code cd
+ 11.18312|IPMI|dd: I>write ok 10:30 seq 12 len a
+ 11.20424|IPMI|dd: I>read b2h ok 14:30 seq 12 len 0 cc 0
+ 11.20433|IPMI|dd: I>write ok 10:30 seq 13 len a
+ 11.21385|IPMI|dd: I>read b2h ok 14:30 seq 13 len 0 cc 0
+ 11.21394|IPMI|dd: I>write ok 10:30 seq 14 len a
+ 11.23294|IPMI|dd: I>read b2h ok 14:30 seq 14 len 0 cc cd
+ 11.23296|IPMI|bt: E>async message (14:30 seq 20) completion code cd
+ 11.23305|IPMI|dd: I>write ok 10:30 seq 15 len a
+ 11.24619|IPMI|dd: I>read b2h ok 14:30 seq 15 len 0 cc 0
+ 11.24628|IPMI|dd: I>write ok 10:30 seq 16 len a
+ 11.26529|IPMI|dd: I>read b2h ok 14:30 seq 16 len 0 cc 0
+ 11.26539|IPMI|dd: I>write ok 10:30 seq 17 len a
+ 11.27941|IPMI|dd: I>read b2h ok 14:30 seq 17 len 0 cc cd
+ 11.27942|IPMI|bt: E>async message (14:30 seq 23) completion code cd
+ 11.27951|IPMI|dd: I>write ok 10:30 seq 18 len a
+ 11.28866|IPMI|dd: I>read b2h ok 14:30 seq 18 len 0 cc 0
+ 11.28875|IPMI|dd: I>write ok 10:30 seq 19 len a
+ 11.30273|IPMI|dd: I>read b2h ok 14:30 seq 19 len 0 cc 0
+ 11.30282|IPMI|dd: I>write ok 10:30 seq 1a len a
+ 11.31172|IPMI|dd: I>read b2h ok 14:30 seq 1a len 0 cc 0
+ 11.31181|IPMI|dd: I>write ok 10:30 seq 1b len a
+ 11.32380|IPMI|dd: I>read b2h ok 14:30 seq 1b len 0 cc cd
+ 11.32382|IPMI|bt: E>async message (14:30 seq 27) completion code cd
+ 11.32391|IPMI|dd: I>write ok 10:30 seq 1c len a
+ 11.34105|IPMI|dd: I>read b2h ok 14:30 seq 1c len 0 cc 0
+ 11.34114|IPMI|dd: I>write ok 10:30 seq 1d len a
+ 11.35809|IPMI|dd: I>read b2h ok 14:30 seq 1d len 0 cc 0
+ 11.35818|IPMI|dd: I>write ok 10:30 seq 1e len a
+ 11.36815|IPMI|dd: I>read b2h ok 14:30 seq 1e len 0 cc cd
+ 11.36817|IPMI|bt: E>async message (14:30 seq 30) completion code cd
+ 11.36826|IPMI|dd: I>write ok 10:30 seq 1f len a
+ 11.38331|IPMI|dd: I>read b2h ok 14:30 seq 1f len 0 cc 0
+ 11.38340|IPMI|dd: I>write ok 10:30 seq 20 len a
+ 11.39335|IPMI|dd: I>read b2h ok 14:30 seq 20 len 0 cc 0
+ 11.39344|IPMI|dd: I>write ok 10:30 seq 21 len a
+ 11.41544|IPMI|dd: I>read b2h ok 14:30 seq 21 len 0 cc cd
+ 11.41546|IPMI|bt: E>async message (14:30 seq 33) completion code cd
+ 11.41557|IPMI|dd: I>write ok 10:30 seq 22 len a
+ 11.42404|IPMI|dd: I>read b2h ok 14:30 seq 22 len 0 cc 0
+ 11.42415|IPMI|dd: I>write ok 10:30 seq 23 len a
+ 11.43617|IPMI|dd: I>read b2h ok 14:30 seq 23 len 0 cc 0
+ 11.43626|IPMI|dd: I>write ok 10:30 seq 24 len a
+ 11.44718|IPMI|dd: I>read b2h ok 14:30 seq 24 len 0 cc cd
+ 11.44719|IPMI|bt: E>async message (14:30 seq 36) completion code cd
+ 11.44728|IPMI|dd: I>write ok 10:30 seq 25 len a
+ 11.46438|IPMI|dd: I>read b2h ok 14:30 seq 25 len 0 cc 0
+ 11.46447|IPMI|dd: I>write ok 10:30 seq 26 len a
+ 11.48041|IPMI|dd: I>read b2h ok 14:30 seq 26 len 0 cc 0
+ 11.48051|IPMI|dd: I>write ok 10:30 seq 27 len a
+ 11.48939|IPMI|dd: I>read b2h ok 14:30 seq 27 len 0 cc cd
+ 11.48941|IPMI|bt: E>async message (14:30 seq 39) completion code cd
+ 11.48950|IPMI|dd: I>write ok 10:30 seq 28 len a
+ 11.50263|IPMI|dd: I>read b2h ok 14:30 seq 28 len 0 cc 0
+ 11.50273|IPMI|dd: I>write ok 10:30 seq 29 len a
+ 11.51459|IPMI|dd: I>read b2h ok 14:30 seq 29 len 0 cc 0
+ 11.51468|IPMI|dd: I>write ok 10:30 seq 2a len a
+ 11.53269|IPMI|dd: I>read b2h ok 14:30 seq 2a len 0 cc cd
+ 11.53271|IPMI|bt: E>async message (14:30 seq 42) completion code cd
+ 11.53280|IPMI|dd: I>write ok 10:30 seq 2b len a
+ 11.54175|IPMI|dd: I>read b2h ok 14:30 seq 2b len 0 cc 0
+ 11.54184|IPMI|dd: I>write ok 10:30 seq 2c len a
+ 11.55330|IPMI|dd: I>read b2h ok 14:30 seq 2c len 0 cc 0
+ 11.55339|IPMI|dd: I>write ok 10:30 seq 2d len a
+ 11.56424|IPMI|dd: I>read b2h ok 14:30 seq 2d len 0 cc cd
+ 11.56425|IPMI|bt: E>async message (14:30 seq 45) completion code cd
+ 11.56434|IPMI|dd: I>write ok 10:30 seq 2e len a
+ 11.58038|IPMI|dd: I>read b2h ok 14:30 seq 2e len 0 cc 0
+ 11.58047|IPMI|dd: I>write ok 10:30 seq 2f len a
+ 11.59038|IPMI|dd: I>read b2h ok 14:30 seq 2f len 0 cc 0
+ 11.59047|IPMI|dd: I>write ok 10:30 seq 30 len a
+ 11.60139|IPMI|dd: I>read b2h ok 14:30 seq 30 len 0 cc cd
+ 11.60140|IPMI|bt: E>async message (14:30 seq 48) completion code cd
+ 11.60149|IPMI|dd: I>write ok 10:30 seq 31 len a
+ 11.61752|IPMI|dd: I>read b2h ok 14:30 seq 31 len 0 cc 0
+ 11.61763|IPMI|dd: I>write ok 10:30 seq 32 len a
+ 11.62660|IPMI|dd: I>read b2h ok 14:30 seq 32 len 0 cc 0
+ 11.62670|IPMI|dd: I>write ok 10:30 seq 33 len a
+ 11.64058|IPMI|dd: I>read b2h ok 14:30 seq 33 len 0 cc cd
+ 11.64059|IPMI|bt: E>async message (14:30 seq 51) completion code cd
+ 11.64068|IPMI|dd: I>write ok 10:30 seq 34 len a
+ 11.65370|IPMI|dd: I>read b2h ok 14:30 seq 34 len 0 cc 0
+ 11.65379|IPMI|dd: I>write ok 10:30 seq 35 len a
+ 11.66365|IPMI|dd: I>read b2h ok 14:30 seq 35 len 0 cc 0
+ 11.66374|IPMI|dd: I>write ok 10:30 seq 36 len a
+ 11.67863|IPMI|dd: I>read b2h ok 14:30 seq 36 len 0 cc cd
+ 11.67865|IPMI|bt: E>async message (14:30 seq 54) completion code cd
+ 11.67874|IPMI|dd: I>write ok 10:30 seq 37 len a
+ 11.69075|IPMI|dd: I>read b2h ok 14:30 seq 37 len 0 cc 0
+ 11.69084|IPMI|dd: I>write ok 10:30 seq 38 len a
+ 11.71685|IPMI|dd: I>read b2h ok 14:30 seq 38 len 0 cc 0
+ 11.71694|IPMI|dd: I>write ok 10:30 seq 39 len a
+ 11.72485|IPMI|dd: I>read b2h ok 14:30 seq 39 len 0 cc cd
+ 11.72487|IPMI|bt: E>async message (14:30 seq 57) completion code cd
+ 11.72496|IPMI|dd: I>write ok 10:30 seq 3a len a
+ 11.73601|IPMI|dd: I>read b2h ok 14:30 seq 3a len 0 cc 0
+ 11.73610|IPMI|dd: I>write ok 10:30 seq 3b len a
+ 11.75130|IPMI|dd: I>read b2h ok 14:30 seq 3b len 0 cc 0
+ 11.75139|IPMI|dd: I>write ok 10:30 seq 3c len a
+ 11.76069|IPMI|dd: I>read b2h ok 14:30 seq 3c len 0 cc cd
+ 11.76070|IPMI|bt: E>async message (14:30 seq 60) completion code cd
+ 11.76080|IPMI|dd: I>write ok 10:30 seq 3d len a
+ 11.77929|IPMI|dd: I>read b2h ok 14:30 seq 3d len 0 cc 0
+ 11.77938|IPMI|dd: I>write ok 10:30 seq 3e len a
+ 11.78627|IPMI|dd: I>read b2h ok 14:30 seq 3e len 0 cc 0
+ 11.78636|IPMI|dd: I>write ok 10:30 seq 3f len a
+ 11.79678|IPMI|dd: I>read b2h ok 14:30 seq 3f len 0 cc cd
+ 11.79680|IPMI|bt: E>async message (14:30 seq 63) completion code cd
+ 11.79689|IPMI|dd: I>write ok 10:30 seq 40 len a
+ 11.81482|IPMI|dd: I>read b2h ok 14:30 seq 40 len 0 cc 0
+ 11.81491|IPMI|dd: I>write ok 10:30 seq 41 len a
+ 11.82291|IPMI|dd: I>read b2h ok 14:30 seq 41 len 0 cc 0
+ 11.82303|IPMI|dd: I>write ok 10:30 seq 42 len a
+ 11.83301|IPMI|dd: I>read b2h ok 14:30 seq 42 len 0 cc cd
+ 11.83303|IPMI|bt: E>async message (14:30 seq 66) completion code cd
+ 11.83312|IPMI|dd: I>write ok 10:30 seq 43 len a
+ 11.84313|IPMI|dd: I>read b2h ok 14:30 seq 43 len 0 cc 0
+ 11.84322|IPMI|dd: I>write ok 10:30 seq 44 len a
+ 11.86113|IPMI|dd: I>read b2h ok 14:30 seq 44 len 0 cc 0
+ 11.86122|IPMI|dd: I>write ok 10:30 seq 45 len a
+ 11.87413|IPMI|dd: I>read b2h ok 14:30 seq 45 len 0 cc cd
+ 11.87415|IPMI|bt: E>async message (14:30 seq 69) completion code cd
+ 11.87424|IPMI|dd: I>write ok 10:30 seq 46 len a
+ 11.88225|IPMI|dd: I>read b2h ok 14:30 seq 46 len 0 cc 0
+ 11.88234|IPMI|dd: I>write ok 10:30 seq 47 len a
+ 11.89222|IPMI|dd: I>read b2h ok 14:30 seq 47 len 0 cc 0
+ 11.89231|IPMI|dd: I>write ok 10:30 seq 48 len a
+ 11.90011|IPMI|dd: I>read b2h ok 14:30 seq 48 len 0 cc 0
+ 11.90020|IPMI|dd: I>write ok 10:30 seq 49 len a
+ 11.91005|IPMI|dd: I>read b2h ok 14:30 seq 49 len 0 cc 0
+ 11.91016|IPMI|dd: I>write ok 10:30 seq 4a len a
+ 11.91918|IPMI|dd: I>read b2h ok 14:30 seq 4a len 0 cc 0
+ 11.91927|IPMI|dd: I>write ok 10:30 seq 4b len a
+ 11.93529|IPMI|dd: I>read b2h ok 14:30 seq 4b len 0 cc 0
+ 11.93538|IPMI|dd: I>write ok 10:30 seq 4c len a
+ 11.94440|IPMI|dd: I>read b2h ok 14:30 seq 4c len 0 cc cd
+ 11.94443|IPMI|bt: E>async message (14:30 seq 76) completion code cd
+ 11.94452|IPMI|dd: I>write ok 10:30 seq 4d len a
+ 11.97016|IPMI|dd: I>read b2h ok 14:30 seq 4d len 0 cc 0
+ 11.97026|IPMI|dd: I>write ok 10:30 seq 4e len a
+ 11.97712|IPMI|dd: I>read b2h ok 14:30 seq 4e len 0 cc 0
+ 11.97716|IPMI|dd: I>write ok 18:22 seq 4f len 0
+ 11.99011|IPMI|dd: I>read b2h ok 1c:22 seq 4f len 0 cc 0
+ 11.99016|ISTEPS_TRACE|call_host_update_master_tpm entry
+ 11.99021|ERRL|E>Error created : PLID=90000006, RC=1E15, Mod=12, Userdata=0000000000000000 0000000000000000, Sev=INFORMATIONAL
+ 11.99025|SECURE|>> addSecurityRegistersToErrlog(): io_err rc=0x1E15, plid=0x90000006
+ 11.99026|SECURE|>> getAllSecurityRegisters: isTargetingLoaded=1 calledByRP=0
+ 11.99046|IPMI|dd: I>write ok 28:12 seq 50 len 3b
+ 11.99097|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0x00050000 reg:0x0000000000000000
+ 11.99100|SECURE|<< getAllSecurityRegisters(): err rc=0x0, plid=0x0, o_regs.size()=2
+ 11.99103|SECURE|<< addSecurityRegistersToErrlog(): io_err rc=0x1E15, plid=0x90000006
+ 11.99122|SECURE|Sys HwKeyHash
+~[0x0000] 40d487ff 7380ed6a d54775d5 795fea0d    *@...s..j.Gu.y_..*
+~[0x0010] e2f541fe a9db06b8 466a42a3 20e65f75    *..A.....FjB. ._u*
+~[0x0020] b4866546 0017d907 515dc2a5 f9fc5095    *..eF....Q]....P.*
+~[0x0030] 4d6ee0c9 b67d219d fb708535 1d01d6d1    *Mn...}!..p.5....*
+ 11.99124|ERRL|commitErrLog() called by 1E00 for eid=90000006, Reasoncode=1E15
+ 11.99126|ERRL|>>ErrlManager::sendErrlogToMessageQueue
+ 11.99127|ERRL|I>Send an error log to message queue to commit. eid=90000006
+ 11.99129|ERRL|<<ErrlManager::sendErrlogToMessageQueue
+ 11.99130|SECURE|>> traceSecuritySettings(): i_doConsoleTrace=1
+ 11.99132|SECURE|>> getAllSecurityRegisters: isTargetingLoaded=1 calledByRP=0
+ 11.99204|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0x00050000 reg:0x0000000000000000
+ 11.99207|SECURE|<< getAllSecurityRegisters(): err rc=0x0, plid=0x0, o_regs.size()=2
+ 11.99213|SECURE|I> procTgt=0x50000: ProcSecurity::SwitchRegister(0x10005): 0x0000000000000000: SabBit=0, SULBit=0, SDBBit=0, CMFSIBit=0
+ 11.99217|ERRL|I>Got an error log Msg - Type: 0x00000030
+ 11.99218|ERRL|WRN>> No callouts in elog 90000006
+ 11.99219|ERRL|Adding default callout EPUB_PRC_HB_CODE 
+ 11.99220|ERRL|>>addProcedureCallout(0x55, 0x1)
+ 11.99222|ERRL|<<addVersionInfo()
+ 11.99223|ERRL|>>saveErrLogToPnor eid=90000006
+ 11.99224|SECURE|I> procTgt=0x50000: ProcCbsControl::StatusRegister(0x50001): 0x84C0000200000000: SabBit=0, SmdBit=1
+ 11.99225|ERRL|I>saveErrLogToPnor: INFORMATIONAL/RECOVERED log, skipping
+ 11.99226|SECURE|I> Security Access Bit> 0x0000000000000000
+ 11.99226|ERRL|<<saveErrLogToPnor returning true
+ 11.99227|SECURE|I> Secure Mode Disable (via Jumper)> 0x8000000000000000
+ 11.99228|ERRL|>>sendErrLogToBmc errlogId 0x90000006, i_sendSels 1
+ 11.99228|SECURE|<< traceSecuritySettings(): err rc=0x0, plid=0x0
+ 11.99229|ERRL|I>sendErrLogToBmc: 90000006 is INFORMATIONAL/RECOVERED; skipping
+ 11.99230|ISTEPS_TRACE|call_host_update_master_tpm exit
+ 11.99230|ERRL|<<sendErrLogToBmc
+ 12.06282|ERRL|I>Got an error log Msg - Type: 0x00000039
+ 12.06283|ERRL|I>Flush message received
+ 12.06285|INITSVC|<<doIstep: step 6, substep 8
+ 12.06287|INITSVC|>>doIstep: step 6, substep 9, task host_gard

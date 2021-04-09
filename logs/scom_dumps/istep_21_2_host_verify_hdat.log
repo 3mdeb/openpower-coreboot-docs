@@ -1,0 +1,10 @@
+571.41635|ISTEP 21. 2 - host_verify_hdat
+571.39250|IPMI|wd: resetWatchDogTimer
+571.39251|IPMI|rp: queuing sync 18:22
+571.39252|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+571.39257|IPMI|dd: I>write ok 18:22 seq 8c len 0
+571.43651|IPMI|dd: I>read b2h ok 1c:22 seq 8c len 0 cc 0
+571.43767|ERRL|I>Got an error log Msg - Type: 0x00000039
+571.43768|ERRL|I>Flush message received
+571.43770|INITSVC|<<doIstep: step 21, substep 2
+571.43772|INITSVC|>>doIstep: step 21, substep 3, task host_start_payload

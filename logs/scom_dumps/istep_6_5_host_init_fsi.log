@@ -1,0 +1,73 @@
+  6.47014|ISTEP  6. 5 - host_init_fsi
+  6.47668|INITSVC|loading [libistep06.so]
+  6.51423|INITSVC|loading [libsbe.so]
+  6.52940|INITSVC|loading [libpm.so]
+  6.64288|INITSVC|loading [libnestmemutils.so]
+  6.75324|INITSVC|loading [libimageprocs.so]
+  6.77520|INITSVC|loading [libp9_cpuWkup.so]
+  6.78604|INITSVC|loading [libisteps_nest.so]
+  6.81840|IPMI|rp: queuing async 10:30
+  6.81846|IPMI|rp: W>Got message (0x10:0x30): l_is_pnor: 0
+  6.81854|IPMI|dd: I>write ok 10:30 seq c9 len a
+  6.82898|IPMI|dd: I>read b2h ok 14:30 seq c9 len 0 cc 0
+  6.84961|FSI|FsiDD::FsiDD()>
+  6.84962|FSI|Master=00050000
+  6.84964|FSI|FSI::initializeHardware>
+  6.84965|FSI|Master = 00050000 : alt=0
+  6.84984|FSI|PIB2OPB Status (00050000->00020001) after cleanup = 0000000000000000
+  6.85101|FSI|>>FsiDD::initMasterControl> Initializing Master 00050000:H
+  6.85716|FSI|FsiDD::initMasterControl> 00050000:H : Slave Detect = 00000000
+  6.85953|FSI|>>FsiDD::initMasterControl> Initializing Master 00050000:C
+  6.86069|FSI|FsiDD::initMasterControl> 00050000:C : Slave Detect = 00000000
+  6.88192|I2C|>>i2cResetActiveMasters(): i2cProcessType=0xF, i_functional=0, i_engineSelect=0xF0
+  6.88196|I2C|>>i2cProcessActiveMasters(): Type=0xF Operation=1 Bus Speed=0 Functional=0 engineSelect=0xF0
+  6.88209|I2C|I>i2cProcessActiveMasters: I2C Master Procs: 2
+  6.88220|I2C|I>i2cProcessActiveMasters: No Membuf chips found!
+  6.88221|I2C|I>i2cProcessActiveMasters: I2C Master Membufs: 0
+  6.88223|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=1
+  6.88227|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0xFFFFFFFF reg:0x0000000000000000
+  6.88228|SECURE|I> getEnabled() state:0
+  6.88232|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0x00050000 reg:0x0000000000000000
+  6.88234|I2C|I>i2cProcessActiveMasters: reset engine: 1, reset_level=1
+  6.88353|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=0
+  6.88479|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=1
+  6.88484|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=2
+  6.88490|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=3
+  6.88505|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=2
+  6.88506|I2C|I>i2cProcessActiveMasters: reset engine: 2, reset_level=1
+  6.88626|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/0 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88628|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88635|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/1 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88636|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88643|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/2 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88645|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88652|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/3 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88653|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88660|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/4 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88662|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88669|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/5 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88670|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88677|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/6 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88679|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88686|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/7 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88688|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88695|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/8 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88696|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88703|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/9 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88705|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88711|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/10 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88713|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88720|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/11 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88722|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88729|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/12 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+  6.88731|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+  6.88735|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=3
+  6.88737|I2C|I>i2cProcessActiveMasters: reset engine: 3, reset_level=1
+  6.88740|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=3, port=0
+  6.88746|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=3, port=1
+  6.88757|I2C|<<i2cProcessActiveMasters(): err rc=0x0, plid=0x0
+  6.88758|I2C|<<i2cResetActiveMasters(): err rc=0x0, plid=0x0
+  6.96379|ERRL|I>Got an error log Msg - Type: 0x00000039
+  6.96381|ERRL|I>Flush message received
+  6.96616|INITSVC|<<doIstep: step 6, substep 5
+  6.96618|INITSVC|>>doIstep: step 6, substep 6, task host_set_ipl_parms

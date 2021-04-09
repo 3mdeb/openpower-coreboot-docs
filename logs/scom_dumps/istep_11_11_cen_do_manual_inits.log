@@ -1,0 +1,9 @@
+433.96810|ISTEP 11.11 - cen_do_manual_inits
+433.98203|ISTEPS_TRACE|call_cen_do_manual_inits: 0 membufs found
+433.98204|ISTEPS_TRACE|call_cen_do_manual_inits exit
+433.98502|SCOM|doMulticastWorkaround on 00050000 for 50040018
+433.98554|SCOM|doMulticastWorkaround on 00050000 for 50040009
+433.98615|ERRL|I>Got an error log Msg - Type: 0x00000039
+433.98616|ERRL|I>Flush message received
+433.98618|INITSVC|<<doIstep: step 11, substep 11
+433.98620|INITSVC|>>doIstep: step 11, substep 12, task cen_startclocks

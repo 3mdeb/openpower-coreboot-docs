@@ -1,0 +1,14 @@
+433.24687|ISTEP 10.11 - proc_scomoverride_chiplets
+433.26240|IPMI|wd: resetWatchDogTimer
+433.26242|IPMI|rp: queuing sync 18:22
+433.26243|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+433.26248|IPMI|dd: I>write ok 18:22 seq d7 len 0
+433.28406|IPMI|dd: I>read b2h ok 1c:22 seq d7 len 0 cc 0
+433.28411|ISTEPS_TRACE|call_proc_scomoverride_chiplets entry
+433.28481|ISTEPS_TRACE|Running p9_scomoverride_chiplets HWP on processor target 00050000
+433.28633|ISTEPS_TRACE|SUCCESS :  proc_scomoverride_chiplets HWP
+433.28635|ISTEPS_TRACE|call_proc_scomoverride_chiplets exit
+433.30245|ERRL|I>Got an error log Msg - Type: 0x00000039
+433.30247|ERRL|I>Flush message received
+433.30249|INITSVC|<<doIstep: step 10, substep 11
+433.30251|INITSVC|>>doIstep: step 10, substep 12, task proc_chiplet_enable_ridi

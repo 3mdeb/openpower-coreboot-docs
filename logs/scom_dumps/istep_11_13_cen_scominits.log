@@ -1,0 +1,9 @@
+433.99736|ISTEP 11.13 - cen_scominits
+434.00420|ISTEPS_TRACE|call_cen_scominits: 0 membufs found
+434.00421|ISTEPS_TRACE|call_cen_scominits exit
+434.00711|SCOM|doMulticastWorkaround on 00050000 for 50040018
+434.00762|SCOM|doMulticastWorkaround on 00050000 for 50040009
+434.00823|ERRL|I>Got an error log Msg - Type: 0x00000039
+434.00824|ERRL|I>Flush message received
+434.00826|INITSVC|<<doIstep: step 11, substep 13
+434.00828|INITSVC|>>doIstep: step 12, substep 1, task mss_getecid

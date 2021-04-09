@@ -1,0 +1,35 @@
+483.51010|ISTEP 20. 1 - host_load_payload
+483.51427|INITSVC|unloading [libtod.so]
+483.51434|ISTEPS_TRACE|>> TOD:: TodControls destructor
+483.51435|ISTEPS_TRACE|>> TOD:: TodControls::destroy
+483.51436|ISTEPS_TRACE|>> TOD:: 
+483.51437|ISTEPS_TRACE|>> TOD:: TodProc destructor
+483.51437|ISTEPS_TRACE|<< TOD:: TodProc destructor
+483.51438|ISTEPS_TRACE|<< TOD:: 
+483.51439|ISTEPS_TRACE|<< TOD:: 
+483.51440|ISTEPS_TRACE|>> TOD:: TodControls::destroy
+483.51440|ISTEPS_TRACE|>> TOD:: 
+483.51441|ISTEPS_TRACE|>> TOD:: TodProc destructor
+483.51442|ISTEPS_TRACE|<< TOD:: TodProc destructor
+483.51443|ISTEPS_TRACE|<< TOD:: 
+483.51443|ISTEPS_TRACE|<< TOD:: 
+483.51444|ISTEPS_TRACE|<< TOD:: TodControls destructor
+483.51445|ISTEPS_TRACE|>> TOD:: 
+483.51446|ISTEPS_TRACE|>> TOD:: TodControls::destroy
+483.51446|ISTEPS_TRACE|<< TOD:: 
+483.51447|ISTEPS_TRACE|>> TOD:: TodControls::destroy
+483.51448|ISTEPS_TRACE|<< TOD:: 
+483.51448|ISTEPS_TRACE|<< TOD:: 
+483.51457|INITSVC|unloading [libistep18.so]
+483.51470|INITSVC|unloading [libp9_cpuWkup.so]
+483.48205|INITSVC|unloading [libfab_iovalid.so]
+483.51490|INITSVC|loading [libistep20.so]
+483.48521|INITSVC|loading [libxz.so]
+483.54579|INITSVC|loading [libruntime.so]
+483.56019|ISTEPS_TRACE|>>load_pnor_section()
+483.70964|ISTEPS_TRACE|load_pnor_section: is XZ_compressed: 1
+484.05893|ISTEPS_TRACE|load_pnor_section: The PAYLOAD section was decompressed.
+484.05948|ERRL|I>Got an error log Msg - Type: 0x00000039
+484.05949|ERRL|I>Flush message received
+484.05951|INITSVC|<<doIstep: step 20, substep 1
+484.05952|INITSVC|>>doIstep: step 20, substep 2, task host_load_hdat

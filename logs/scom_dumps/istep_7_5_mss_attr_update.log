@@ -1,0 +1,20 @@
+398.42204|ISTEP  7. 5 - mss_attr_update
+398.42620|IPMI|wd: resetWatchDogTimer
+398.42621|IPMI|rp: queuing sync 18:22
+398.42623|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+398.42627|IPMI|dd: I>write ok 18:22 seq f7 len 0
+398.44453|IPMI|dd: I>read b2h ok 1c:22 seq f7 len 0 cc 0
+398.45482|ISTEPS_TRACE|call_mss_attr_update entry
+398.45484|ISTEPS_TRACE|check_proc0_memory_config entry
+398.46964|ISTEPS_TRACE|check_proc0_memory_config: 1 functional dimms behind proc0 00050000
+398.48181|ISTEPS_TRACE|SUCCESS:  check_proc0_memory_config
+398.48257|ISTEPS_TRACE|Running p9_mss_attr_update HWP on MCS target HUID 000B0000
+398.49679|FAPI|p9_mss_attr_update.C: pu.mcs:k0:n0:s0:p00:c0 Start p9_mss_attr_update
+398.49686|FAPI|p9_mss_attr_update.C: Start p9_mss_attr_update_lx_mvpd
+398.58250|FAPI|p9_mss_attr_update.C: End p9_mss_attr_update_lx_mvpd
+398.58252|FAPI|p9_mss_attr_update.C: pu.mcs:k0:n0:s0:p00:c0 End p9_mss_attr_update
+398.58253|ISTEPS_TRACE|call_mss_attr_update exit
+398.58941|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.58943|ERRL|I>Flush message received
+398.58945|INITSVC|<<doIstep: step 7, substep 5
+398.58947|INITSVC|>>doIstep: step 8, substep 1, task host_slave_sbe_config

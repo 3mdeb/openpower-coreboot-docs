@@ -1,0 +1,7 @@
+398.82001|ISTEP  8. 2 - host_setup_sbe
+398.82422|ISTEPS_TRACE|call_host_setup_sbe entry
+398.82492|ISTEPS_TRACE|call_host_setup_sbe exit
+398.82608|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.82610|ERRL|I>Flush message received
+398.82612|INITSVC|<<doIstep: step 8, substep 2
+398.82614|INITSVC|>>doIstep: step 8, substep 3, task host_cbs_start

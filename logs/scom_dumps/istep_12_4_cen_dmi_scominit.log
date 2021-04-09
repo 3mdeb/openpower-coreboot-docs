@@ -1,0 +1,9 @@
+435.29876|ISTEP 12. 4 - cen_dmi_scominit
+435.30568|ISTEPS_TRACE|call_cen_dmi_scominit: 0 membufs found
+435.31962|ISTEPS_TRACE|call_cen_dmi_scominit exit
+435.32141|SCOM|doMulticastWorkaround on 00050000 for 50040018
+435.32190|SCOM|doMulticastWorkaround on 00050000 for 50040009
+435.32251|ERRL|I>Got an error log Msg - Type: 0x00000039
+435.32252|ERRL|I>Flush message received
+435.32254|INITSVC|<<doIstep: step 12, substep 4
+435.32256|INITSVC|>>doIstep: step 12, substep 5, task dmi_erepair

@@ -1,0 +1,489 @@
+
+
+--== Welcome to Hostboot hostboot-a2ddbf3/hbicore.bin ==--
+
+  3.10693|ERRL|>>ErrlManager::ErrlManager constructor
+  3.10696|ERRL|I>ErrlManager on node 0 (master proc), LogId 0x90800000
+  3.10697|ERRL|>>ErrlManager::msgQueueInit ...
+  3.10701|INITSVC|InitService::registerShutdownEvent: componentID=0x100, queue=0x3d1448, msgType=0x33, priority=0x10
+  3.10703|ERRL|<<ErrlManager::msgQueueInit
+  3.10705|ERRL|<<ErrlManager::ErrlManager constructor.
+  3.10708|DEVFW|>>Associator::Associator
+  3.10710|DEVFW|Device route registered for (4294967295, 0, 5)
+  3.10711|DEVFW|Device route registered for (4294967295, 0, 4)
+  3.10712|DEVFW|Device route registered for (4294967295, 0, 75)
+  3.10713|DEVFW|Device route registered for (4294967295, 0, 68)
+  3.10715|DEVFW|Device route registered for (4294967295, 0, 6)
+  3.10716|DEVFW|Device route registered for (4294967295, 0, 13)
+  3.10717|DEVFW|Device route registered for (4294967295, 0, 11)
+  3.10718|DEVFW|Device route registered for (4294967295, 0, 14)
+  3.10719|DEVFW|Device route registered for (4294967295, 0, 15)
+  3.10720|DEVFW|Device route registered for (4294967295, 0, 36)
+  3.10721|DEVFW|Device route registered for (4294967295, 0, 7)
+  3.10722|DEVFW|Device route registered for (4294967295, 0, 44)
+  3.10723|DEVFW|Device route registered for (4294967295, 0, 35)
+  3.10724|DEVFW|Device route registered for (4294967295, 0, 37)
+  3.10725|DEVFW|Device route registered for (4294967295, 0, 38)
+  3.10726|DEVFW|Device route registered for (4294967295, 0, 39)
+  3.10727|DEVFW|Device route registered for (4294967295, 0, 40)
+  3.10728|DEVFW|Device route registered for (4294967295, 0, 66)
+  3.10729|DEVFW|Device route registered for (4294967295, 0, 42)
+  3.10731|DEVFW|Device route registered for (4294967295, 0, 43)
+  3.10732|DEVFW|Device route registered for (4294967295, 0, 45)
+  3.10733|DEVFW|Device route registered for (4294967295, 0, 46)
+  3.10734|DEVFW|Device route registered for (4294967295, 0, 19)
+  3.10735|DEVFW|Device route registered for (4294967295, 0, 33)
+  3.10736|DEVFW|Device route registered for (4294967295, 0, 73)
+  3.10737|DEVFW|Device route registered for (4294967295, 0, 74)
+  3.10738|DEVFW|Device route registered for (4294967295, 0, 72)
+  3.10739|DEVFW|Device route registered for (4294967295, 0, 67)
+  3.10740|DEVFW|Device route registered for (4294967295, 0, 76)
+  3.10743|DEVFW|Device route registered for (4294967295, 25, 5)
+  3.10749|DEVFW|Device route registered for (0, 11, 5)
+  3.10751|DEVFW|Device route registered for (1, 11, 5)
+  3.10753|DEVFW|Device route registered for (0, 12, 5)
+  3.10754|DEVFW|Device route registered for (1, 12, 5)
+  3.10757|DEVFW|Device route registered for (0, 1, 5)
+  3.10758|DEVFW|Device route registered for (1, 1, 5)
+  3.10762|DEVFW|Device route registered for (0, 15, 5)
+  3.10764|DEVFW|Device route registered for (1, 15, 5)
+  3.10765|DEVFW|Device route registered for (0, 16, 5)
+  3.10766|DEVFW|Device route registered for (1, 16, 5)
+  3.10768|LPC|LpcDD::LpcDD> 
+  3.10772|LPC|E>LpcDD::checkForLpcErrors> Error found in OPB Master Status Register: 0x      80
+  3.10774|LPC|E>LpcDD::computeOpbmErrSev> OPB Error Acknowledged: OPBM Status Reg =0x      80, ResetLevel=1
+  3.10778|ERRL|E>Error created : PLID=90800001, RC=2404, Mod=04, Userdata=0000000080000080 0000000000000001, Sev=UNRECOVERABLE
+  3.10780|ERRL|>>ErrlManager::startup...
+  3.10781|ERRL|>>Enter ErrlManager::errlogMsgHndlr
+  3.10784|LPC|LpcDD::addFFDC> adding FFDC to Error Log EID=0x90800001, PLID=0x90800001
+  3.10785|ERRL|>>addHwCallout("MASTER_PROC_SENTINEL" 0x0 0x0 0x0)
+  3.10787|LPC|>>LpcDD::hwReset(i_resetLevel=2)>
+  3.10790|LPC|LpcDD::hwReset> Writing OPB_MASTER_LS_CONTROL_REG to disable then enable First Error Data Capture
+  3.10791|LPC|LpcDD::hwReset> Writing LPCHC_RESET_REG to reset LPCHC Logic
+  3.10793|LPC|I>LpcDD::hwReset> Successful LPC reset at level 0x2 (recovery count=1)
+  3.10794|LPC|<<LpcDD::hwReset()=00000000:0000
+  3.10798|SIO|Received error during SIO availability test, assuming absent. Reason code: 0x2404, user data: [0x80000080, 0x       1]
+  3.10807|INITSVC|Executing Initialization Service module.
+  3.10808|INITSVC|Initialization Service is starting, io_ptr=0x0.
+  3.10810|SECURE|>>SecureRomManager::initialize()
+  3.10812|SECURE|SecureRomManager::initialize(): SecureROM valid, enabling functionality
+  3.10813|secure|SecureROM valid - enabling functionality
+  3.10921|IPMI|wd: setWatchDogTimer : sec=3600, use=65, act=1, clr=2
+  3.10923|IPMI|rp: queuing async 18:24
+  3.10924|IPMI|wd: resetWatchDogTimer
+  3.10925|IPMI|rp: queuing sync 18:22
+  3.10931|INITSVC|InitService::registerShutdownEvent: componentID=0x2500, queue=0x3def68, msgType=0x4, priority=0x12
+  3.10935|IPMI|rp: W>Got message (0x18:0x24): l_is_pnor: 0
+  3.10937|IPMI|bt: I>busy, queue head 18:24
+  3.10938|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+  3.10940|IPMI|dd: >>poll_control_register
+  3.10940|IPMI|dd: >>poll_control_register
+  3.10942|IPMI|dd: I>sending state sms/event
+  3.10944|IPMI|rp: >>time out thread
+  3.10946|IPMI|rp: queuing sync 18:36
+  3.10947|IPMI|rp: W>Got message (0x18:0x36): l_is_pnor: 0
+  3.10949|IPMI|rp: event registration for e8:4
+  3.10950|IPMI|rp: event registration for e8:7
+  3.10951|IPMI|rp: queuing async 18:35
+  3.10957|IPMI|dd: I>write ok 18:24 seq 1 len 6
+  3.10959|IPMI|rp: W>Got message (0x18:0x35): l_is_pnor: 0
+  3.13063|IPMI|dd: I>read b2h ok 1c:24 seq 1 len 0 cc 0
+  3.13068|IPMI|dd: I>write ok 18:22 seq 2 len 0
+  3.13970|IPMI|dd: I>read b2h ok 1c:22 seq 2 len 0 cc 0
+  3.13975|IPMI|dd: I>write ok 18:36 seq 3 len 0
+  3.13980|INITSVC|InitService::registerShutdownEvent: componentID=0x600, queue=0x3db0d8, msgType=0x1, priority=0x80
+  3.14375|IPMI|dd: I>read b2h ok 1c:36 seq 3 len 5 cc 0
+  3.14380|IPMI|dd: I>write ok 18:35 seq 4 len 0
+  3.14382|IPMI|rp: get_capabilities: requests 1, in buf 63, out buf 63, timeout 30, retries 1
+  3.15375|IPMI|dd: I>sending state sms/event
+  3.15377|IPMI|rp: queuing async 18:35
+  3.15378|IPMI|rp: W>Got message (0x18:0x35): l_is_pnor: 0
+  3.15589|IPMI|dd: I>read b2h ok 1c:35 seq 4 len 10 cc 0
+  3.15590|IPMI|rp: queuing event 3a:f for handler
+  3.15596|IPMI|rp: last chance handler for event: 3a:f (5555 c0 a741)
+  3.16088|PNOR|PnorIpmiDD: Detected IPMI HIOMAP transport
+  3.16088|PNOR|>>pnor_ipmidd.C: PnorDD::PnorDD()
+  3.16095|IPMI|dd: I>write ok 18:35 seq 6 len 0
+  3.16096|PNOR|>>hiomap_event_task
+  3.16097|IPMI|rp: event registration for e8:f
+  3.16496|IPMI|dd: I>read b2h ok 1c:35 seq 6 len 10 cc 0
+  3.16497|IPMI|rp: queuing event 3a:f for handler
+  3.16503|PNOR|Received HIOMAP event: status is 0x81
+  3.17896|IPMI|dd: I>sending state sms/event
+  3.17898|IPMI|rp: queuing async 18:35
+  3.17899|IPMI|rp: W>Got message (0x18:0x35): l_is_pnor: 0
+  3.18509|PNOR|<<pnor_ipmidd.C: PnorDD::PnorDD()
+  3.18513|IPMI|dd: I>write ok 18:35 seq 9 len 0
+  3.18916|IPMI|dd: I>read b2h ok 1c:35 seq 9 len 10 cc 0
+  3.18917|IPMI|rp: queuing event 3a:f for handler
+  3.18924|PNOR|Received HIOMAP event: status is 0x81
+  3.25236|PNOR|findTOC> activePrimary:0x0, activeBackup:0x3FF7000
+  3.25424|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 4 in TOC 
+ Entry name is "SECBOOT"
+  3.25428|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 19 in TOC 
+ Entry name is "BMC_INV"
+  3.25431|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 23 in TOC 
+ Entry name is "IMA_CATALOG"
+  3.25435|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 30 in TOC 
+ Entry name is "UVISOR"
+  3.25437|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 31 in TOC 
+ Entry name is "BOOTKERNFW"
+  3.25439|PNOR|PNOR::parseTOC:  Unrecognized Section name(SECBOOT), skipping
+  3.25441|PNOR|PNOR::parseTOC:  Unrecognized Section name(BMC_INV), skipping
+  3.25443|PNOR|PNOR::parseTOC:  Unrecognized Section name(IMA_CATALOG), skipping
+  3.25445|PNOR|PNOR::parseTOC:  Unrecognized Section name(UVISOR), skipping
+  3.25446|PNOR|PNOR::parseTOC:  Unrecognized Section name(BOOTKERNFW), skipping
+  3.25448|PNOR|part:    secure=0x00  size=0x00002000  flash=0x00000000 misc=0x40
+  3.25449|PNOR|HBI:    secure=0x00  size=0x01337000  flash=0x00426200 misc=0x40
+  3.25452|PNOR|HBB:    secure=0x00  size=0x000E2000  flash=0x00206200 misc=0x40
+  3.25453|PNOR|SBE:    secure=0x00  size=0x000A6000  flash=0x019C6200 misc=0x40
+  3.25456|PNOR|HCODE:    secure=0x00  size=0x000FF000  flash=0x01A82200 misc=0x40
+  3.25458|PNOR|PAYLOAD:    secure=0x00  size=0x000FF000  flash=0x021A2000 misc=0x40
+  3.25459|PNOR|HBRT:    secure=0x00  size=0x00554000  flash=0x01BA2200 misc=0x40
+  3.25461|PNOR|HBD:    secure=0x00  size=0x000FF000  flash=0x00306200 misc=0x00
+  3.25462|PNOR|GUARD:    secure=0x00  size=0x00004000  flash=0x0002C000 misc=0x94
+  3.25464|PNOR|HBEL:    secure=0x00  size=0x00020000  flash=0x00008000 misc=0x14
+  3.25466|PNOR|DJVPD:    secure=0x00  size=0x00040000  flash=0x000E5000 misc=0x94
+  3.25467|PNOR|MVPD:    secure=0x00  size=0x00080000  flash=0x0012D000 misc=0x94
+  3.25468|PNOR|CVPD:    secure=0x00  size=0x00040000  flash=0x001BD000 misc=0x94
+  3.25470|PNOR|NVRAM:    secure=0x00  size=0x00090000  flash=0x00031000 misc=0x90
+  3.25472|PNOR|OCC:    secure=0x00  size=0x000FF000  flash=0x03822200 misc=0x40
+  3.25474|PNOR|FIRDATA:    secure=0x00  size=0x00002000  flash=0x03941000 misc=0x14
+  3.25475|PNOR|ATTR_TMP:    secure=0x00  size=0x00008000  flash=0x03978000 misc=0x10
+  3.25477|PNOR|ATTR_PERM:    secure=0x00  size=0x00007000  flash=0x03980000 misc=0x14
+  3.25478|PNOR|CAPP:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25481|PNOR|VERSION:    secure=0x00  size=0x00001000  flash=0x03945000 misc=0x40
+  3.25482|PNOR|HBBL:    secure=0x00  size=0x00005000  flash=0x03972200 misc=0x40
+  3.25484|PNOR|TEST:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25485|PNOR|TESTRO:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25487|PNOR|BACKUP_PART:    secure=0x00  size=0x00008000  flash=0x03FF7000 misc=0x60
+  3.25489|PNOR|POWERVM:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25491|PNOR|RINGOVD:    secure=0x00  size=0x00020000  flash=0x039C9000 misc=0x00
+  3.25492|PNOR|WOFDATA:    secure=0x00  size=0x002A9000  flash=0x039EA200 misc=0x40
+  3.25494|PNOR|SBKT:    secure=0x00  size=0x00002000  flash=0x03D03200 misc=0x40
+  3.25496|PNOR|HB_VOLATILE:    secure=0x00  size=0x00004000  flash=0x03CE9000 misc=0x1C
+  3.25497|PNOR|MEMD:    secure=0x00  size=0x0000B000  flash=0x03CEF200 misc=0x40
+  3.25499|PNOR|TESTLOAD:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25501|PNOR|CENHWIMG:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25502|PNOR|HDAT:    secure=0x00  size=0x00006000  flash=0x03D07200 misc=0x40
+  3.25505|PNOR|EECACHE:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25507|PNOR|OCMBFW:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.25509|PNOR|BOOTKERNEL:    secure=0x00  size=0x0157F000  flash=0x022A2000 misc=0x40
+  3.31793|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 4 in TOC 
+ Entry name is "SECBOOT"
+  3.31797|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 19 in TOC 
+ Entry name is "BMC_INV"
+  3.31800|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 23 in TOC 
+ Entry name is "IMA_CATALOG"
+  3.31804|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 30 in TOC 
+ Entry name is "UVISOR"
+  3.31807|PNOR|PNOR::parseEntries: Unsupported section found while parsing entry 31 in TOC 
+ Entry name is "BOOTKERNFW"
+  3.31809|PNOR|PNOR::parseTOC:  Unrecognized Section name(SECBOOT), skipping
+  3.31811|PNOR|PNOR::parseTOC:  Unrecognized Section name(BMC_INV), skipping
+  3.31812|PNOR|PNOR::parseTOC:  Unrecognized Section name(IMA_CATALOG), skipping
+  3.31814|PNOR|PNOR::parseTOC:  Unrecognized Section name(UVISOR), skipping
+  3.31816|PNOR|PNOR::parseTOC:  Unrecognized Section name(BOOTKERNFW), skipping
+  3.31818|PNOR|part:    secure=0x00  size=0x00002000  flash=0x03FF7000 misc=0x40
+  3.31819|PNOR|HBI:    secure=0x00  size=0x01337000  flash=0x00426200 misc=0x40
+  3.31820|PNOR|HBB:    secure=0x00  size=0x000E2000  flash=0x00206200 misc=0x40
+  3.31822|PNOR|SBE:    secure=0x00  size=0x000A6000  flash=0x019C6200 misc=0x40
+  3.31824|PNOR|HCODE:    secure=0x00  size=0x000FF000  flash=0x01A82200 misc=0x40
+  3.31826|PNOR|PAYLOAD:    secure=0x00  size=0x000FF000  flash=0x021A2000 misc=0x40
+  3.31827|PNOR|HBRT:    secure=0x00  size=0x00554000  flash=0x01BA2200 misc=0x40
+  3.31829|PNOR|HBD:    secure=0x00  size=0x000FF000  flash=0x00306200 misc=0x00
+  3.31831|PNOR|GUARD:    secure=0x00  size=0x00004000  flash=0x0002C000 misc=0x94
+  3.31832|PNOR|HBEL:    secure=0x00  size=0x00020000  flash=0x00008000 misc=0x14
+  3.31834|PNOR|DJVPD:    secure=0x00  size=0x00040000  flash=0x000E5000 misc=0x94
+  3.31835|PNOR|MVPD:    secure=0x00  size=0x00080000  flash=0x0012D000 misc=0x94
+  3.31837|PNOR|CVPD:    secure=0x00  size=0x00040000  flash=0x001BD000 misc=0x94
+  3.31839|PNOR|NVRAM:    secure=0x00  size=0x00090000  flash=0x00031000 misc=0x90
+  3.31840|PNOR|OCC:    secure=0x00  size=0x000FF000  flash=0x03822200 misc=0x40
+  3.31842|PNOR|FIRDATA:    secure=0x00  size=0x00002000  flash=0x03941000 misc=0x14
+  3.31843|PNOR|ATTR_TMP:    secure=0x00  size=0x00008000  flash=0x03978000 misc=0x10
+  3.31845|PNOR|ATTR_PERM:    secure=0x00  size=0x00007000  flash=0x03980000 misc=0x14
+  3.31847|PNOR|CAPP:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31848|PNOR|VERSION:    secure=0x00  size=0x00001000  flash=0x03945000 misc=0x40
+  3.31850|PNOR|HBBL:    secure=0x00  size=0x00005000  flash=0x03972200 misc=0x40
+  3.31852|PNOR|TEST:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31854|PNOR|TESTRO:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31855|PNOR|BACKUP_PART:    secure=0x00  size=0x00008000  flash=0x00000000 misc=0x60
+  3.31857|PNOR|POWERVM:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31859|PNOR|RINGOVD:    secure=0x00  size=0x00020000  flash=0x039C9000 misc=0x00
+  3.31861|PNOR|WOFDATA:    secure=0x00  size=0x002A9000  flash=0x039EA200 misc=0x40
+  3.31862|PNOR|SBKT:    secure=0x00  size=0x00002000  flash=0x03D03200 misc=0x40
+  3.31864|PNOR|HB_VOLATILE:    secure=0x00  size=0x00004000  flash=0x03CE9000 misc=0x1C
+  3.31865|PNOR|MEMD:    secure=0x00  size=0x0000B000  flash=0x03CEF200 misc=0x40
+  3.31867|PNOR|TESTLOAD:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31870|PNOR|CENHWIMG:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31871|PNOR|HDAT:    secure=0x00  size=0x00006000  flash=0x03D07200 misc=0x40
+  3.31873|PNOR|EECACHE:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31875|PNOR|OCMBFW:    secure=0x00  size=0x00000000  flash=0xFFFFFFFF misc=0x00
+  3.31877|PNOR|BOOTKERNEL:    secure=0x00  size=0x0157F000  flash=0x022A2000 misc=0x40
+  3.32603|PNOR|setSideInfo: sideId:0, isGolden:0, isGuardPresent:1, hasOtherSide:0, primaryTOC: 0x0, backupTOC:0x3FF7000, HBB:0x205000, MMIO:0x0
+  3.32605|ERRL|>>ErrlManager::sendResourcesMsg 0
+  3.32606|PNOR|< PnorRP::PnorRP : Startup Errors=0 
+  3.32610|ERRL|I>Got an error log Msg - Type: 0x00000034
+  3.32614|ERRL|>>ErrlManager::pnorSetupThread...
+  3.32615|ERRL|>>setupPnorInfo
+  3.32616|ERRL|I>setupPnorInfo sectionInfo id 9 name "HBEL" size 131072
+  3.32617|ERRL|I>setupPnorInfo iv_pnorAddr 0x81d16000 maxErrlInPnor 32
+  3.47389|INITSVC|Extended Initialization Service is starting.
+  3.62617|VFS|E>load Module not found: libconsole.so
+  3.62632|INITSVC|InitService::registerShutdownEvent: componentID=0x1300, queue=0xff888, msgType=0x1, priority=0x7f
+  4.17802|TARG|[TARG] >> TARGETING::initTargeting(errlHndl_t& io_pError) 
+  4.17805|XSCOM|Master Proc : pir=00000004, mmio=0x000603FC00000000, virt=0x20800000000
+  4.22432|ERRL|I>setupPnorInfo resetting LogId number 0x90000001
+  4.22432|ERRL|<<setupPnorInfo
+  4.22433|ERRL|<<ErrlManager::pnorSetupThread
+  4.34435|TARG|Decoded Attribute Section: 0, 0x100000000 0x81c13000 0x5365747570546872 0x4f000
+  4.34437|TARG|Decoded Attribute Section: 2, 0x108000000 0x81c62000 0x56 0x1000
+  4.34439|TARG|Decoded Attribute Section: 3, 0x110000000 0x81c63000 0x3f48d8 0x2f000
+  4.34440|TARG|Decoded Attribute Section: 10, 0x118000000 0x81c63000 0x1370b2f5 0x1000
+  4.34442|TARG|Decoded Attribute Section: 1, 0x120000000 0x81c63000 0x65747570506e6f72 0x3000
+  4.34679|TARG|>>AttrRP::attrSyncTask.
+  4.34682|INITSVC|InitService::registerShutdownEvent: componentID=0xb00, queue=0x384598, msgType=0x5, priority=0x10
+  4.34684|TARG|>>AttrRP::msgServiceTask
+  4.34796|TARG|[TARG] >> TARGETING::TargetService::init() 
+  4.34797|TARG|[TARG] I> Max Nodes to initialize is [1]
+  4.34800|TARG|[TARG] >> TARGETING::TargetService::_configureTargetPool(...) 
+  4.36740|TARG|[TARG] I> Max targets = 297
+  4.36741|TARG|[TARG] I> i_nodeContainer.targets = 0x1000304e0
+  4.36742|TARG|[TARG] << TARGETING::TargetService::_configureTargetPool(...) 
+  4.39335|TARG|[TARG] I> TargetService::init: Pushing info for node 0 with first target huid 0x00020000 and 297 total targets
+  4.39336|TARG|[TARG] >> TARGETING::TargetService::_setTopLevelTarget() 
+  4.42567|TARG|[TARG] << TARGETING::TargetService::_setTopLevelTarget() 
+  4.42568|TARG|[TARG] >> TARGETING::TargetService::setProcessorModel() 
+  4.50851|TARG|[TARG] << TARGETING::TargetService::setProcessorModel() 
+  4.50852|TARG|[TARG] << TARGETING::TargetService::init() 
+  4.52137|TARG|[TARG] >> TARGETING::initializeAttributes()...) 
+  4.53188|TARG|[TARG] I> Setting RISK_LEVEL=0
+  4.54254|TARG|[TARG] I> adjustMemoryMap> xscom=603FC00000000, lpc=6030000000000
+  4.54263|TARG|[TARG] I> Proc=00050000
+  4.54264|TARG|[TARG] I>  XSCOM=000603FC00000000
+  4.54266|TARG|[TARG] I> Master Proc 00050000 is using XSCOM BAR from 00050000, BAR=000603FC00000000
+  4.54267|TARG|[TARG] I>  LPC=0006030000000000
+  4.54268|TARG|[TARG] I>  PSI_BRIDGE_BAR =0006030203000000
+  4.54269|TARG|[TARG] I>  XIVE_CONTROLLER_BAR =0006030203100000
+  4.54270|TARG|[TARG] I>  XIVE_THREAD_MGMT1_BAR =0006020000000000
+  4.54271|TARG|[TARG] I>  PSI_HB_ESB_BAR =00060302031C0000
+  4.54272|TARG|[TARG] I>  INTP_BAR =0003FFFF80000000
+  4.54273|TARG|[TARG] I> Proc=00050001
+  4.56298|TARG|[TARG] I>  XSCOM=000623FC00000000
+  4.56299|TARG|[TARG] I>  LPC=0006230000000000
+  4.56300|TARG|[TARG] I>  PSI_BRIDGE_BAR =0006230203000000
+  4.56300|TARG|[TARG] I>  XIVE_CONTROLLER_BAR =0006230203100000
+  4.56301|TARG|[TARG] I>  XIVE_THREAD_MGMT1_BAR =0006220000000000
+  4.56302|TARG|[TARG] I>  PSI_HB_ESB_BAR =00062302031C0000
+  4.56304|TARG|[TARG] I>  INTP_BAR =00041FFF80000000
+  4.56320|TARG|[TARG] << TARGETING::initializeAttributes()...) 
+  4.56536|TARG|[TARG] >> TARGETING::checkProcessorTargeting() 
+  4.56541|TARG|[TARG] << TARGETING::checkProcessorTargeting() 
+  4.58647|TARG|[TARG] I> Initialized targeting for model: POWER9
+  4.58648|ERRL|>>ErrlManager::sendResourcesMsg 1
+  4.58649|TARG|[TARG] << TARGETING::initTargeting(errlHndl_t& io_pError) 
+  4.58654|ERRL|I>Got an error log Msg - Type: 0x00000036
+  4.61320|DEVFW|Device route registered for (1, 23, 5)
+  4.61321|DEVFW|Device route registered for (1, 23, 4)
+  4.61322|DEVFW|Device route registered for (1, 23, 75)
+  4.61902|DEVFW|Device route registered for (0, 4, 5)
+  4.61904|DEVFW|Device route registered for (0, 4, 4)
+  4.61905|DEVFW|Device route registered for (1, 4, 5)
+  4.61906|DEVFW|Device route registered for (1, 4, 4)
+  4.61907|DEVFW|Device route registered for (0, 3, 5)
+  4.61908|DEVFW|Device route registered for (0, 3, 4)
+  4.62842|INTR|IntrRp::_init() Master cpu group[0], chip[0], core[1], thread[0]
+  4.63074|INTR|INTR: Setting PSI BRIDGE Bar Address value for - Target 00050000. PSI BRIDGE BAR value: 0x0006030203000000
+  4.63077|INTR|INTR: Setting PSI BRIDGE Bar enable value for Target - 00050000. PSI BRIDGE BAR value: 0x0006030203000001
+  4.63080|INTR|INTR: Target 00050000. PSI BRIDGE ESB BASE BAR value: 0x00060302031c0000
+  4.63082|INTR|INTR: Target 00050000. PSI BRIDGE ESB BAR value: 0x00060302031c0001
+  4.63134|INTR|IntrRp::_init() Masking Interrupts
+  4.63253|INTR|IntrRp::_init() Enabling PSIHB Interrupts
+  4.63256|INTR|I>IntrRp::enableInterrupts() Set Physical Thread Enable for master core: 1, master thread: 0 
+  4.63258|INTR|I>IntrRp::enableInterrupts()  Set phys_thread_enable0_reg: 0x0800000000000000
+  4.63259|INTR|I>LSI Mode active (cams_vt)
+  4.63262|INTR|I>Routing LSI Trigger page to Master Proc chip by setting esb notification address to:6030203102000
+  4.63264|INTR|IntrRp:: enableLsiInterrupts() read 0x3 from pointer 0x22800003c00
+  4.63269|INITSVC|InitService::registerShutdownEvent: componentID=0xf00, queue=0x3d7668, msgType=0x5, priority=0x13
+  4.63271|INTR|IntrRp::_init() Threads enabled: f000000000000000
+  4.78635|DEVFW|Device route registered for (0, 31, 5)
+  4.78636|DEVFW|Device route registered for (1, 31, 5)
+  4.79886|DEVFW|Device route registered for (0, 2, 5)
+  4.79886|DEVFW|Device route registered for (1, 2, 5)
+  4.83199|SBEIO|memRegion: printIvMemRegions
+  4.83200|SBEIO|memRegion: Target HUID 0x00050000
+  4.83203|SBEIO|memRegion: - 1/1: tgt=0x00050000: start_addr=0x00000000F8000000, size=0x04000000, flags=0x11 (Read-Only)
+  4.83207|SBEIO|memRegion: >>openUnsecureMemRegion: i_tgt=0x0: i_start_addr=0x00000000F8821000, i_size=0x00010000, i_isWritable=1 (flags=0x12), count=1
+  4.83214|SBEIO|memRegion: I>openUnsecureMemRegion: Overlap Found: Req Region Starts inside existing region. Exist start=0x00000000F8000000, size=0x04000000, flags=0x11Req start=0x00000000F8821000, size=0x00010000, flags=0x12
+  4.83331|INTR|INTR::register intr type 0xd
+  4.83453|SBEIO|sendSetFFDCAddr: >>sending set FFDC address from HB -> SBE for Proc 0x0, FFDC at 0x00000000f8833000 for 8192, Comm at 0x0000000000000000 for 0
+  4.83456|SBEIO|psudd: Sending Req = 000000000001D704 0000000000000000 00000000F8833000 0000000000000000 to 00050000
+  4.83800|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+  4.83802|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+  4.83804|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+  4.83805|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+  4.83820|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+  4.85655|SBEIO|psudd: Sending Req = 000000000002D601 0000000004000000 00000000F8000000 0000000000000000 to 00050000
+  4.86335|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+  4.86336|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+  4.86338|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+  4.86340|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+  4.86353|SBEIO|psudd: Sending Req = 000000000003D601 0000000000821000 00000000F8000000 0000000000000000 to 00050000
+  4.86359|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+  4.87106|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+  4.87107|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+  4.87110|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+  4.87111|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+  4.87126|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+  4.87881|SBEIO|memRegion: I>openUnsecureMemRegion: Overlap Found: Req Region Ends inside existing region. Exist start=0x00000000F8000000, size=0x04000000, flags=0x11Req start=0x00000000F8821000, size=0x00010000, flags=0x12
+  4.87884|SBEIO|psudd: Sending Req = 000000000004D601 00000000037CF000 00000000F8831000 0000000000000000 to 00050000
+  4.88626|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+  4.88627|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+  4.88629|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+  4.88631|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+  4.88644|SBEIO|psudd: Sending Req = 000000000005D601 0000000000010000 00000000F8821000 0000000000000000 to 00050000
+  4.88650|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+  4.89406|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+  4.89407|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+  4.89409|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+  4.89410|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+  4.89425|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+  4.90160|SBEIO|memRegion: printIvMemRegions
+  4.90161|SBEIO|memRegion: Target HUID 0x00050000
+  4.90163|SBEIO|memRegion: - 1/3: tgt=0x00050000: start_addr=0x00000000F8821000, size=0x00010000, flags=0x12 (Read-Write)
+  4.90166|SBEIO|memRegion: - 2/3: tgt=0x00050000: start_addr=0x00000000F8831000, size=0x037CF000, flags=0x11 (Read-Only)
+  4.90169|SBEIO|memRegion: - 3/3: tgt=0x00050000: start_addr=0x00000000F8000000, size=0x00821000, flags=0x11 (Read-Only)
+  4.90172|SBEIO|memRegion: <<openUnsecureMemRegion: i_tgt=0x0: i_start_addr=0x00000000F8821000: err_rc=0x0000
+  4.90173|INTR|INTR::register intr type 0xf0
+  4.90175|MBOX|I>MailboxSp::msgq_register queue id 0x9
+  4.90177|ERRL|>>ErrlManager::sendResourcesMsg 2
+  4.90178|TARG|>>AttrRP::_notifyResourceReady: resource type = 0x00.
+  4.90179|TARG|>>AttrRP::_sendAttrSyncMsg: i_msgType = 0x00000003, i_sync = 0.
+  4.90181|TARG|I>AttrRP: attrSyncTask: Received message of type = 0x00000003.
+  4.90182|TARG|I>AttrRP: attrSyncTask: Attribute provider primed to synchronize attributes.
+  4.90184|TARG|<<AttrRP::_sendAttrSyncMsg: rc = 0, msgRc = 0, plid = 0x00000000.
+  4.90185|TARG|<<AttrRP::_notifyResourceReady
+  4.90190|ERRL|I>Got an error log Msg - Type: 0x00000035
+  5.10651|ERRLDISP|>>ErrLogDisplay::errLogDisplayEntryPoint
+  5.10652|ERRL|>>ErrlManager::sendResourcesMsg 4
+  5.10653|ERRLDISP|<<ErrLogDisplay::errLogDisplayEntryPoint
+  5.10657|ERRL|I>Got an error log Msg - Type: 0x00000037
+  5.11957|MBOX|I>MailboxSp::msgq_register queue id 0x7
+  5.11960|INITSVC|InitService::registerShutdownEvent: componentID=0x1500, queue=0x3d1158, msgType=0x40000000, priority=0x0
+  5.11963|INITSVC|InitService::registerShutdownEvent: componentID=0x1500, queue=0x3d1158, msgType=0x40000000, priority=0x7f
+  5.14920|IPMI|sel: >>IpmiSEL ctor
+  5.14922|ERRL|>>ErrlManager::sendResourcesMsg 3
+  5.14929|INITSVC|InitService::registerShutdownEvent: componentID=0x2500, queue=0x1dcf68, msgType=0x2, priority=0x11
+  5.14931|ERRL|I>Got an error log Msg - Type: 0x00000038
+  5.16097|DEVFW|Device route registered for (4294967295, 27, 5)
+  5.16099|DEVFW|Device route registered for (4294967295, 27, 4)
+  5.16453|DEVFW|Device route registered for (4294967295, 8, 5)
+  5.16454|DEVFW|Device route registered for (4294967295, 8, 4)
+  5.16455|DEVFW|Device route registered for (4294967295, 8, 6)
+  5.16456|DEVFW|Device route registered for (4294967295, 8, 44)
+  5.16457|DEVFW|Device route registered for (4294967295, 8, 14)
+  5.16458|DEVFW|Device route registered for (4294967295, 8, 37)
+  5.16459|DEVFW|Device route registered for (4294967295, 8, 40)
+  5.16460|DEVFW|Device route registered for (4294967295, 8, 16)
+  5.16461|DEVFW|Device route registered for (4294967295, 8, 7)
+  5.16462|DEVFW|Device route registered for (4294967295, 8, 8)
+  5.16463|DEVFW|Device route registered for (4294967295, 8, 9)
+  5.16464|DEVFW|Device route registered for (4294967295, 8, 10)
+  5.16465|DEVFW|Device route registered for (4294967295, 8, 11)
+  5.17043|DEVFW|Device route registered for (4294967295, 9, 5)
+  5.17045|DEVFW|Device route registered for (4294967295, 9, 3)
+  5.17046|DEVFW|Device route registered for (4294967295, 9, 4)
+  5.17047|DEVFW|Device route registered for (4294967295, 9, 2)
+  5.17048|DEVFW|Device route registered for (4294967295, 9, 11)
+  5.17049|DEVFW|Device route registered for (4294967295, 9, 75)
+  5.17621|DEVFW|Device route registered for (4294967295, 26, 5)
+  5.17622|DEVFW|Device route registered for (4294967295, 26, 4)
+  5.17623|DEVFW|Device route registered for (4294967295, 29, 5)
+  5.17625|DEVFW|Device route registered for (4294967295, 29, 4)
+  5.17626|DEVFW|Device route registered for (4294967295, 30, 5)
+  5.17627|DEVFW|Device route registered for (4294967295, 30, 4)
+  5.17742|DEVFW|Device route registered for (4294967295, 21, 75)
+  5.17743|DEVFW|Device route registered for (4294967295, 21, 78)
+  5.17744|DEVFW|Device route registered for (0, 3, 75)
+  5.17745|DEVFW|Device route registered for (0, 3, 77)
+  5.17746|DEVFW|Device route registered for (0, 3, 78)
+  5.18439|DEVFW|Device route registered for (0, 6, 5)
+  5.18440|DEVFW|Device route registered for (1, 6, 5)
+  5.18440|DEVFW|Device route registered for (0, 7, 4)
+  5.18441|DEVFW|Device route registered for (1, 7, 4)
+  5.18557|DEVFW|Device route registered for (0, 13, 2)
+  5.18557|DEVFW|Device route registered for (1, 13, 2)
+  5.18558|DEVFW|Device route registered for (0, 3, 2)
+  5.18559|DEVFW|Device route registered for (0, 17, 11)
+  5.18560|DEVFW|Device route registered for (1, 17, 11)
+  5.18561|DEVFW|Device route registered for (0, 3, 11)
+  5.18791|DEVFW|Device route registered for (0, 5, 3)
+  5.18792|DEVFW|Device route registered for (1, 5, 3)
+  5.18910|DEVFW|Device route registered for (0, 5, 75)
+  5.18911|DEVFW|Device route registered for (0, 3, 3)
+  5.21039|DEVFW|Device route registered for (4294967295, 28, 4)
+  5.35622|FAPI_I|plat_attr_task.C: Starting platTaskEntry
+  5.35627|FAPI_I|plat_attr_task.C: Starting platMonitorForFspMessages
+  5.46244|FAPI_I|plat_attr_override_sync.C: monitorForFspMessages starting
+  5.46246|MBOX|I>MailboxSp::msgq_register queue id 0x6
+  5.49128|FAPI|activate_threads entry
+  5.50183|FAPI|Master CPU : c1 t0 (HUID=00070001)
+  5.50185|FAPI|activate_threads max_threads=4, en_threads_master=0x0000000000000000
+  5.51307|FAPI|p9_thread_control.C: p9_thread_control : Core threads: 0x7, Command 0
+  5.54093|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A9D 0000000000000000
+  5.54097|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A9C 0008080800000000
+  5.54100|FAPI|p9_thread_control.C: p9_thread_control_sreset : sreset command issued for threads 0x7
+  5.54101|FAPI|p9_thread_control.C: p9_thread_control : Exit
+  5.54103|FAPI|SUCCESS: p9_thread_control HWP( cpu 1, thread_bitset 0x07 )
+  5.54104|FAPI|activate_threads exit
+  6.11719|DEVFW|Device route registered for (4294967295, 10, 4)
+  6.11721|DEVFW|Device route registered for (4294967295, 10, 5)
+  6.13732|DEVFW|Device route registered for (4294967295, 18, 5)
+  6.15036|DEVFW|Device route registered for (4294967295, 32, 75)
+  6.15037|DEVFW|Device route registered for (4294967295, 28, 75)
+  6.25691|DEVFW|Device route registered for (4294967295, 22, 75)
+  6.28231|INITSVC|IStepDispatcher: MPIPL Mode: 0
+  6.28233|INITSVC|IStepDispatcher: SP base Services Enabled: 0
+  6.28234|INITSVC|IStepDispatcher: Mailbox Enabled: 0
+  6.28469|INITSVC|IStepDispatcher entry.
+  6.28474|LPC|E>LpcDD::checkForLpcErrors> Error found in OPB Master Status Register: 0x      80
+  6.28477|LPC|E>LpcDD::computeOpbmErrSev> OPB Error Acknowledged: OPBM Status Reg =0x      80, ResetLevel=1
+  6.28482|ERRL|E>Error created : PLID=90000002, RC=2404, Mod=04, Userdata=0000000080000080 0000000000000001, Sev=UNRECOVERABLE
+  6.28487|LPC|LpcDD::addFFDC> adding FFDC to Error Log EID=0x90000002, PLID=0x90000002
+  6.28488|ERRL|>>addHwCallout("MASTER_PROC_SENTINEL" 0x0 0x0 0x0)
+  6.28490|LPC|>>LpcDD::hwReset(i_resetLevel=2)>
+  6.28494|LPC|LpcDD::hwReset> Writing OPB_MASTER_LS_CONTROL_REG to disable then enable First Error Data Capture
+  6.28496|LPC|LpcDD::hwReset> Writing LPCHC_RESET_REG to reset LPCHC Logic
+  6.28498|LPC|I>LpcDD::hwReset> Successful LPC reset at level 0x2 (recovery count=2)
+  6.28499|LPC|<<LpcDD::hwReset()=00000000:0000
+  6.28505|SIO|Received error during SIO availability test, assuming absent. Reason code: 0x2404, user data: [0x80000080, 0x       1]
+  6.28507|BOOT_CFG|configureBootMode() - Boot Mode = NORMAL
+  6.28508|BOOT_CFG|configurePnorDriver() using sfc driver
+  6.28509|BOOT_CFG|configureLogLevel() - Log level = NORMAL
+  6.28510|INITSVC|init: processing temporary overrides
+  6.28512|TARG|attrPlatOverride::getAttrOverrides ENTER
+  6.28513|TARG|Section id=16, size=32768
+  6.40309|TARG|attrPlatOverride::getAttrOverrides Reached termination section at chunk (0x8000)
+  6.40310|TARG|attrPlatOverride::getAttrOverrides EXIT
+  6.40312|INITSVC|init: processing permanent overrides
+  6.40313|TARG|attrPlatOverride::getAttrOverrides ENTER
+  6.40314|TARG|Section id=17, size=28672
+  6.40429|TARG|attrPlatOverride::getAttrOverrides Reached termination section at chunk (0x7000)
+  6.40430|TARG|attrPlatOverride::getAttrOverrides EXIT
+  6.40431|INITSVC|IStepDispatcher: IStep Mode: 0
+  6.40433|INITSVC|I>IStepDispatcher(): SBE boot side 0 for proc=00050000
+  6.40434|Booting from SBE side 0 on master proc=00050000
+  6.41484|IPMI|rp: queuing sync 18:6
+  6.41485|IPMI|rp: W>Got message (0x18:0x6): l_is_pnor: 0
+  6.41490|IPMI|dd: I>write ok 18:6 seq b3 len 2
+  6.43528|IPMI|dd: I>read b2h ok 1c:6 seq b3 len 0 cc ff
+  6.43530|IPMI|ps: Set ACPI Power State: BMC returned not ok CC[ff]
+  6.44957|IPMI|wd: resetWatchDogTimer
+  6.44958|IPMI|rp: queuing sync 18:22
+  6.44960|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+  6.44967|IPMI|dd: I>write ok 18:22 seq b5 len 0
+  6.46890|IPMI|dd: I>read b2h ok 1c:22 seq b5 len 0 cc 0
+  6.46891|ERRL|>>ErrlManager::sendResourcesMsg 1
+  6.46915|ERRL|I>Got an error log Msg - Type: 0x00000036
+  6.47009|INITSVC|>>IStepDispatcher::executeAllISteps()
+  6.47011|INITSVC|>>doIstep: step 6, substep 5, task host_init_fsi

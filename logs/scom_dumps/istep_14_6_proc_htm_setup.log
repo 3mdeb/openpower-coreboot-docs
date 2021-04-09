@@ -1,0 +1,41 @@
+460.52877|ISTEP 14. 6 - proc_htm_setup
+460.53475|IPMI|wd: resetWatchDogTimer
+460.53476|IPMI|rp: queuing sync 18:22
+460.53478|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+460.53483|IPMI|dd: I>write ok 18:22 seq 54 len 0
+460.55038|IPMI|dd: I>read b2h ok 1c:22 seq 54 len 0 cc 0
+460.55045|ISTEPS_TRACE|call_proc_htm_setup entry
+460.55263|FAPI|p9_htm_setup.C: Entering p9_htm_setup
+460.57968|FAPI|p9_htm_setup.C: Target pu:k0:n0:s0:p00: HTM setup attributes
+460.57969|FAPI|p9_htm_setup.C:     NHTM type: 0
+460.57970|FAPI|p9_htm_setup.C:     CHTM type: Core[0] 0
+460.57971|FAPI|p9_htm_setup.C:     CHTM type: Core[1] 0
+460.57973|FAPI|p9_htm_setup.C:     CHTM type: Core[2] 0
+460.57974|FAPI|p9_htm_setup.C:     CHTM type: Core[3] 0
+460.57975|FAPI|p9_htm_setup.C:     CHTM type: Core[4] 0
+460.57976|FAPI|p9_htm_setup.C:     CHTM type: Core[5] 0
+460.57978|FAPI|p9_htm_setup.C:     CHTM type: Core[6] 0
+460.57979|FAPI|p9_htm_setup.C:     CHTM type: Core[7] 0
+460.57980|FAPI|p9_htm_setup.C:     CHTM type: Core[8] 0
+460.57981|FAPI|p9_htm_setup.C:     CHTM type: Core[9] 0
+460.57982|FAPI|p9_htm_setup.C:     CHTM type: Core[10] 0
+460.57984|FAPI|p9_htm_setup.C:     CHTM type: Core[11] 0
+460.57985|FAPI|p9_htm_setup.C:     CHTM type: Core[12] 0
+460.57986|FAPI|p9_htm_setup.C:     CHTM type: Core[13] 0
+460.57987|FAPI|p9_htm_setup.C:     CHTM type: Core[14] 0
+460.57988|FAPI|p9_htm_setup.C:     CHTM type: Core[15] 0
+460.57989|FAPI|p9_htm_setup.C:     CHTM type: Core[16] 0
+460.57990|FAPI|p9_htm_setup.C:     CHTM type: Core[17] 0
+460.57992|FAPI|p9_htm_setup.C:     CHTM type: Core[18] 0
+460.57993|FAPI|p9_htm_setup.C:     CHTM type: Core[19] 0
+460.57994|FAPI|p9_htm_setup.C:     CHTM type: Core[20] 0
+460.57995|FAPI|p9_htm_setup.C:     CHTM type: Core[21] 0
+460.57996|FAPI|p9_htm_setup.C:     CHTM type: Core[22] 0
+460.57997|FAPI|p9_htm_setup.C:     CHTM type: Core[23] 0
+460.61197|ISTEPS_TRACE|call_proc_htm_setup exit
+460.83502|SCOM|doMulticastWorkaround on 00050000 for 50040018
+460.83558|SCOM|doMulticastWorkaround on 00050000 for 50040009
+460.83623|ERRL|I>Got an error log Msg - Type: 0x00000039
+460.83624|ERRL|I>Flush message received
+460.83626|INITSVC|<<doIstep: step 14, substep 6
+460.83629|INITSVC|>>doIstep: step 14, substep 7, task proc_exit_cache_contained

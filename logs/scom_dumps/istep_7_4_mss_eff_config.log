@@ -1,0 +1,344 @@
+396.44350|ISTEP  7. 4 - mss_eff_config
+396.44756|IPMI|wd: resetWatchDogTimer
+396.44757|IPMI|rp: queuing sync 18:22
+396.44759|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+396.44763|IPMI|dd: I>write ok 18:22 seq 7d len 0
+396.45881|IPMI|dd: I>read b2h ok 1c:22 seq 7d len 0 cc 0
+396.46621|ISTEPS_TRACE|call_mss_eff_config entry
+396.46695|ISTEPS_TRACE|p9_mss_eff_config HWP. MCS HUID 000B0000
+396.47129|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.47177|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.51122|FAPI|eff_dimm.C: pu.mcs:k0:n0:s0:p00:c0. VPD info - dimm data rate: 2666 MT/s
+396.51130|FAPI|nimbus_mss_freq.C: pu.mca:k0:n0:s0:p00:c1. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.51251|FAPI|eff_dimm.C: pu.mcs:k0:n0:s0:p00:c0. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.57189|FAPI|spd_factory.C: Retrieved dimm_type: 1, raw card reference: 0x23 from SPD for dimm:k0:n0:s0:p02
+396.57192|FAPI|spd_factory.C: Unsupported raw cards are allowed for dimm:k0:n0:s0:p02
+396.61108|FAPI|eff_dimm.H: Calculated clock period - tCK (ps): 750 for dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.61111|FAPI|eff_dimm.H: Calculated frequency (ps): 2666 for dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.63715|FAPI|p9_mss_eff_config.C: Setting up ODIC and ODT attributes on dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.67717|FAPI|spd_factory.C: Retrieved dimm_type: 1, raw card reference: 0x23 from SPD for dimm:k0:n0:s0:p02
+396.67721|FAPI|spd_factory.C: Unsupported raw cards are allowed for dimm:k0:n0:s0:p02
+396.67733|FAPI|eff_dimm.H: Calculated clock period - tCK (ps): 750 for dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.67736|FAPI|eff_dimm.H: Calculated frequency (ps): 2666 for dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.67739|FAPI|p9_mss_eff_config.C: Running eff_config on dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.69321|FAPI|rdimm_decoder_ddr4.H: dimm:k0:n0:s0:p02. Register Manufacturer ID Code: 0xb304
+396.69324|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Register Manufacturer is INPHI
+396.70322|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Register type is RCD01
+396.71681|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Register rev is 0x10
+396.72026|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02.DRAM Manufacturer ID Code: 2c80
+396.72029|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Dram Manufacturer is MICRON
+396.78389|FAPI|mss_timing.H: tREFI (ps): 7800000, refresh request (ps): 7800000, tREFI_base (ps): 7800000, REF1X
+396.78397|FAPI|eff_dimm.C: For dimm:k0:n0:s0:p02 RDIMM (DDR4), adjusting tREFI calculation by 99% calculated tREFI (nck): 10400, adjusted tREFI (nck): 4666885900188254208,
+396.78400|FAPI|eff_dimm.C: tCK (ps): 750, tREFI (ps): 7800000, tREFI (nck): 10296
+396.80101|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Refresh Recovery Delay Time 1 (tRFC1min) in MTB units: 2800
+396.80951|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tRFC (MTB): 2800, tRFC(FTB): 0
+396.80953|FAPI|eff_dimm.C: tCK (ps): 750, tRFC (ps): 350000, tRFC (nck): 467
+396.80955|FAPI|eff_dimm.C: Retrieved SDRAM density: 8, fine refresh mode: 0
+396.83022|FAPI|eff_dimm.C: tCK (ps): 750, tRFC_DLR (ps): 120000, tRFC_DLR (nck): 160
+396.84391|FAPI|eff_dimm.C: SDRAM width: 8 for target dimm:k0:n0:s0:p02 RDIMM (DDR4)
+396.86149|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tCCD_L (MTB): 40, tCCD_L(FTB): 0
+396.86151|FAPI|eff_dimm.C: tCK (ps): 750, tCCD_L (ps): 5000, tCCD_L (nck): 7
+396.87880|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC00 settting: 0x02
+396.87883|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC01 settting: 0
+396.89431|FAPI|mrs_load_ddr4.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Turning A17 off
+396.89433|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC02 settting: 1
+396.91061|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): Retrieved register output drive, for CA: 0, CS: 0
+396.91890|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC03 settting: 0
+396.93401|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): Retrieved signal driver output, for CKE: 0, ODT: 0
+396.94235|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC04 setting: 0x00
+396.95094|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): Retrieved register output drive for clock, b-side (Y0,Y2): 0, a-side (Y1,Y3): 0
+396.95101|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC05 setting: 0x00
+396.95104|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC06_07 setting: 0x0f
+396.96586|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Disabling CID's
+396.96591|FAPI|mrs_load_ddr4.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Turning A17 off
+396.96593|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Turning off DA17
+396.96596|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC08 setting: 0x0b
+396.96600|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC09 setting: 0x0c
+396.96602|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0A setting: 0x04
+396.96605|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0B setting: 0x0e
+396.96722|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0C setting: 0x00
+396.96727|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0D setting: 0x04
+396.96730|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0E setting: 0xd
+396.96733|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC0F setting: 0x00
+396.96735|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC1X setting: 0x00
+396.96738|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC2X setting: 0x00
+396.96855|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC3X setting: 0x47
+396.96857|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC4X setting: 0x00
+396.96860|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC5X setting: 0x00
+396.96863|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC6X setting: 0x00
+396.96985|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC7X setting is 0x0
+396.96988|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC8X setting: 0x00
+396.96990|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RC9X setting: 0x00
+396.97107|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RCAX setting: 0x00
+396.97113|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) Disabling CID's
+396.97116|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4): RCBX setting: 0x07
+397.02785|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Write Recovery Time (tWRmin) in MTB units: 120
+397.02791|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tWR (MTB): 120, tWR(FTB): 0
+397.02795|FAPI|eff_dimm.C: tCK (ps): 750, tWR (ps): 15000, tWR (nck): 20 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.04793|FAPI|eff_dimm.C: Calculated CAS Write Latency is 14
+397.06799|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) JEDEC range 0x00 JEDEC value 0x0d
+397.09225|FAPI|eff_dimm.C: WR preamble is 0
+397.11685|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tRP (MTB): 110, tRP(FTB): 0
+397.13358|FAPI|conversions.H: converting 7500ps to 10 cycles
+397.13363|FAPI|eff_dimm.C: tCK (ps): 750, tRP (ps): 13750, tRP (nck): 19 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.13485|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase MTB (ps): 125, fine timebase FTB (ps): 1, tRCD (MTB): 110, tRCD (FTB): 0
+397.14942|FAPI|eff_dimm.C: tCK (ps): 750, tRCD (ps): 13750, tRCD (nck): 19 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.15924|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Active to Active/Refresh Delay Time (tRCmin) in MTB units: 366
+397.16043|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase MTB (ps): 125, fine timebase FTB (ps): 1, tRCmin (MTB): 366, tRCmin(FTB): 0
+397.16048|FAPI|eff_dimm.C: tCK (ps): 750, tRC (ps): 45750, tRC (nck): 61 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.16283|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Write to Read Time - Different Bank Group (tWTR_Lmin) in MTB units: 60
+397.16289|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tWTR_S (MTB): 60, tWTR_S (FTB): 0
+397.16295|FAPI|eff_dimm.C: tCK (ps): 750,  tWTR_L (ps): 7500, tWTR_L (nck): 10 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.16415|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Write to Read Time - Different Bank Group (tWTR_Smin) in MTB units: 20
+397.16420|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tWTR_S (MTB): 20, tWTR_S (FTB): 0
+397.16425|FAPI|eff_dimm.C: tCK (ps): 750, tWTR_S (ps): 2500, tWTR_S (nck): 4 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.17374|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x00361400)> 
+397.42567|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, trrd_s (MTB): 24
+397.43512|FAPI|eff_dimm.C: SDRAM width: 8, tFAW (nck): 4 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.44969|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, trrd_l (MTB): 40
+397.44973|FAPI|eff_dimm.C: SDRAM width: 8, tFAW (nck): 7 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.44976|FAPI|eff_dimm.C: tRRD_dlr (nck): 4 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.46229|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. Minimum Four Activate Window Delay Time (tFAWmin) in MTB units: 168
+397.46234|FAPI|eff_dimm.C: dimm:k0:n0:s0:p02 RDIMM (DDR4) medium timebase (ps): 125, fine timebase (ps): 1, tfaw (MTB): 168
+397.47381|FAPI|eff_dimm.C: SDRAM width: 8, tFAW (nck): 28 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.47384|FAPI|eff_dimm.C: tFAW_dlr (nck): 16 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.47505|FAPI|eff_dimm.C: tCK (ps): 750, tRAS (ps): 32000, tRAS (nck): 43 for target: dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.47621|FAPI|eff_dimm.C: tCK (ps): 750, tRTP (ps): 7500, tRTP (nck): 10
+397.61163|FAPI|eff_dimm.C: pu.mca:k0:n0:s0:p00:c1 setting training_adv_backup_pattern as 0x69
+397.61167|FAPI|eff_dimm.C: pu.mca:k0:n0:s0:p00:c1 setting training_adv_pattern as 0x8e942bc6
+397.61170|FAPI|eff_dimm.C: pu.mca:k0:n0:s0:p00:c1 setting training_adv_backup_pattern as 0xea0ca6c9
+397.61174|FAPI|eff_dimm.C: pu.mca:k0:n0:s0:p00:c1 setting training_adv_backup_pattern2 as 0x13ec02fd
+397.67133|FAPI|plug_rules.C: (1, 0) is supported, override empty
+397.69244|FAPI_I|buffer.H: input out-of-bounds! (bit + count - 1) > 64
+397.70008|FAPI|plug_rules.C: failed accessing ATTR_MSS_MRW_NVDIMM_PLUG_RULES: 0x0000000000000000 isn't capable (target: dimm:k0:n0:s0:p02 RDIMM (DDR4))
+397.77130|ISTEPS_TRACE|SUCCESS :  p9_mss_eff_config HWP
+397.87446|ISTEPS_TRACE|p9_mss_eff_config_thermal HWP. 
+397.88914|FAPI|p9_mss_eff_config_thermal.C: Start effective config thermal
+397.90513|FAPI|throttle.C: Calculated ATTR_MSS_MEM_WATT_TARGET is 9600, power_limit dimm is 1200, max_dimms is 8, count dimms on vector is 1
+397.90515|FAPI|p9_mss_eff_config_thermal.C: Size of vectors are 100 100 10
+397.94100|FAPI|p9_mss_eff_config_thermal.C: Restoring throttles
+397.95077|FAPI|p9_mss_eff_config_thermal.C: Starting bulk_pwr
+397.96556|FAPI|p9_mss_bulk_pwr_throttles.C: Start p9_mss_bulk_pwr_throttles for POWER type throttling
+397.97260|FAPI|gen_throttle.H: Setting up throttle for target pu.mca:k0:n0:s0:p00:c1, Values are: max databus is 10000, uplifts are 0 0, runtime throttles are 128 128
+397.97266|FAPI|gen_throttle.H: The dimm power limit is 9600, dram clocks are 512, dimm power curve slopes are 442 0 for pu.mca:k0:n0:s0:p00:c1
+397.97272|FAPI|gen_throttle.H: DIMM power curve intercepts are 267 0, DIMM power thermal limits are 1800 0 for pu.mca:k0:n0:s0:p00:c1
+397.97752|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 max dram databus for DIMM in pos 0 is 10000, databus for idle is 0
+397.97869|FAPI|gen_throttle.H: POWER throttles: pu.mca:k0:n0:s0:p00:c1 max port power is 709.0
+397.97874|FAPI|gen_throttle.H: Calc_power_curve: power idle is 267.0, max is 709.0, slope is 442, int is 267 for pu.mca:k0:n0:s0:p00:c1
+397.97877|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 POWER Port power limit is 9600
+397.97879|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 POWER calc util port is 10000.0
+397.97885|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.97891|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.97914|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 max dram databus for DIMM in pos 0 is 10000, databus for idle is 0
+397.97920|FAPI|p9_mss_bulk_pwr_throttles.C: For target pu.mca:k0:n0:s0:p00:c1 Calculated power is 709, throttle per slot is 128, throttle per port is 128
+397.97930|FAPI|gen_throttle.H: Calculated min slot is 128, min port is 128 for the system
+397.97947|FAPI|gen_throttle.H: Setting up throttle for target pu.mca:k0:n0:s0:p00:c1, Values are: max databus is 10000, uplifts are 0 0, runtime throttles are 128 128
+397.97953|FAPI|gen_throttle.H: The dimm power limit is 9600, dram clocks are 512, dimm power curve slopes are 442 0 for pu.mca:k0:n0:s0:p00:c1
+397.97958|FAPI|gen_throttle.H: DIMM power curve intercepts are 267 0, DIMM power thermal limits are 1800 0 for pu.mca:k0:n0:s0:p00:c1
+397.97965|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.97970|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.97993|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 max dram databus for DIMM in pos 0 is 10000, databus for idle is 0
+397.97996|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 Calculated power is 709, limit is 9600
+397.98001|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 Final throttles values for slot 128, for port 128, power value 709
+397.98007|FAPI|p9_mss_bulk_pwr_throttles.C: End bulk_pwr_throttles
+397.98008|FAPI|p9_mss_eff_config_thermal.C: Starting update
+397.98021|FAPI|gen_throttle.H: New runtime throttles for pu.mca:k0:n0:s0:p00:c1 for slot are 128, port are  128
+397.98026|FAPI|p9_mss_eff_config_thermal.C: finished update
+397.98055|FAPI|p9_mss_eff_config_thermal.C: VDDR+VPP power curve slope is 0, int is 0, thermal_power is 0
+397.98059|FAPI|p9_mss_bulk_pwr_throttles.C: Start p9_mss_bulk_pwr_throttles for THERMAL type throttling
+397.98079|FAPI|gen_throttle.H: Setting up throttle for target pu.mca:k0:n0:s0:p00:c1, Values are: max databus is 10000, uplifts are 0 0, runtime throttles are 128 128
+397.98085|FAPI|gen_throttle.H: The dimm power limit is 9600, dram clocks are 512, dimm power curve slopes are 477 0 for pu.mca:k0:n0:s0:p00:c1
+397.98089|FAPI|gen_throttle.H: DIMM power curve intercepts are 277 0, DIMM power thermal limits are 1800 0 for pu.mca:k0:n0:s0:p00:c1
+397.98212|FAPI|gen_throttle.H: Calc_dimm_power: dimm (0) power max is 754.0, dimm slope 477, intercept 277 for dimm:k0:n0:s0:p02 RDIMM (DDR4)
+397.98233|FAPI|gen_throttle.H: Calc_power_curve: power idle is 277.0, max is 754.0, slope is 477, int is 277 for pu.mca:k0:n0:s0:p00:c1
+397.98238|FAPI|gen_throttle.H: THERMAL throttles: dimm:k0:n0:s0:p02 RDIMM (DDR4) dram databus utilization is 10000.0
+397.98242|FAPI|gen_throttle.H: THERMAL throttles: runtime slot is 128, calc n slot is 128 for pu.mca:k0:n0:s0:p00:c1
+397.98247|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.98253|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.98277|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 max dram databus for DIMM in pos 0 is 10000, databus for idle is 0
+397.98283|FAPI|p9_mss_bulk_pwr_throttles.C: For target pu.mca:k0:n0:s0:p00:c1 Calculated power is 754, throttle per slot is 128, throttle per port is 128
+397.98293|FAPI|gen_throttle.H: Calculated min slot is 128, min port is 128 for the system
+397.98310|FAPI|gen_throttle.H: Setting up throttle for target pu.mca:k0:n0:s0:p00:c1, Values are: max databus is 10000, uplifts are 0 0, runtime throttles are 128 128
+397.98316|FAPI|gen_throttle.H: The dimm power limit is 9600, dram clocks are 512, dimm power curve slopes are 477 0 for pu.mca:k0:n0:s0:p00:c1
+397.98321|FAPI|gen_throttle.H: DIMM power curve intercepts are 277 0, DIMM power thermal limits are 1800 0 for pu.mca:k0:n0:s0:p00:c1
+397.98327|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.98333|FAPI|gen_throttle.H: In calc_util_from_throttles, calculated 10000.0 for output utilization from throttles:128, dram_clocks 512
+397.98356|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 max dram databus for DIMM in pos 0 is 10000, databus for idle is 0
+397.98360|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 Calculated power is 754, limit is 1800
+397.98364|FAPI|gen_throttle.H: pu.mca:k0:n0:s0:p00:c1 Final throttles values for slot 128, for port 128, power value 754
+397.98371|FAPI|p9_mss_bulk_pwr_throttles.C: End bulk_pwr_throttles
+397.98384|FAPI|gen_throttle.H: New runtime throttles for pu.mca:k0:n0:s0:p00:c1 for slot are 128, port are  128
+397.98389|FAPI|p9_mss_eff_config_thermal.C: End effective config thermal
+397.98391|ISTEPS_TRACE|SUCCESS : p9_mss_eff_config_thermal HWP
+397.98460|ISTEPS_TRACE|p9_mss_eff_grouping HWP cpu target HUID 00050000
+397.98805|FAPI|p9_mss_eff_grouping.C: Getting system memory grouping attributes
+398.07545|FAPI|p9_mss_eff_grouping.C: EffGroupingSysAttrs: 
+398.07547|FAPI|p9_mss_eff_grouping.C:    ATTR_MEM_MIRROR_PLACEMENT_POLICY 0x00000000
+398.07549|FAPI|p9_mss_eff_grouping.C:    ATTR_MRW_HW_MIRRORING_ENABLE 0x00000000
+398.07551|FAPI|p9_mss_eff_grouping.C:    ATTR_MSS_INTERLEAVE_ENABLE 0x000000AF
+398.07552|FAPI|p9_mss_eff_grouping.C:    ATTR_SMF_ENABLED 0x0
+398.13280|FAPI|p9_mss_eff_grouping.C: EffGroupingProcAttrs::getAttrs: 
+398.13283|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_NHTM_BAR_SIZE 0x0000000000000000
+398.13285|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[0] 0x0000000000000000
+398.13288|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[1] 0x0000000000000000
+398.13291|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[2] 0x0000000000000000
+398.13293|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[3] 0x0000000000000000
+398.13295|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[4] 0x0000000000000000
+398.13298|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[5] 0x0000000000000000
+398.13300|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[6] 0x0000000000000000
+398.13302|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[7] 0x0000000000000000
+398.13305|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[8] 0x0000000000000000
+398.13307|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[9] 0x0000000000000000
+398.13309|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[10] 0x0000000000000000
+398.13312|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[11] 0x0000000000000000
+398.13314|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[12] 0x0000000000000000
+398.13316|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[13] 0x0000000000000000
+398.13319|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[14] 0x0000000000000000
+398.13321|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[15] 0x0000000000000000
+398.13323|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[16] 0x0000000000000000
+398.13326|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[17] 0x0000000000000000
+398.13328|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[18] 0x0000000000000000
+398.13330|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[19] 0x0000000000000000
+398.13332|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[20] 0x0000000000000000
+398.13335|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[21] 0x0000000000000000
+398.13337|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[22] 0x0000000000000000
+398.13339|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_CHTM_BAR_SIZES[23] 0x0000000000000000
+398.13341|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_OCC_SANDBOX_SIZE 0x0000000000000000
+398.13343|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_SMF_BAR_SIZE 0x0000000000000000
+398.13345|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_FABRIC_SYSTEM_ID 0x00000000
+398.13347|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_FABRIC_GROUP_ID 0x00000000
+398.13349|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_FABRIC_CHIP_ID 0x00000000
+398.13350|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_MEM_BASE[0] 0x0000000000000000
+398.13352|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_MEM_BASE[1] 0x0002000000000000
+398.13355|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_MIRROR_BASE[0] 0x0004000000000000
+398.13357|FAPI|p9_mss_eff_grouping.C:   ATTR_PROC_MIRROR_BASE[1] 0x0004020000000000
+398.14174|FAPI|p9_mss_eff_grouping.C: Getting memory sizes behind MC ports
+398.14517|FAPI|p9_mss_eff_grouping.C: MCA 1: Total DIMM size 8 GB; NVDIMM type = 0
+398.14518|FAPI|p9_mss_eff_grouping.C: MCport[0] = 0 GB
+398.14519|FAPI|p9_mss_eff_grouping.C: MCport[1] = 8 GB
+398.14520|FAPI|p9_mss_eff_grouping.C: MCport[2] = 0 GB
+398.14522|FAPI|p9_mss_eff_grouping.C: MCport[3] = 0 GB
+398.14523|FAPI|p9_mss_eff_grouping.C: MCport[4] = 0 GB
+398.14524|FAPI|p9_mss_eff_grouping.C: MCport[5] = 0 GB
+398.14525|FAPI|p9_mss_eff_grouping.C: MCport[6] = 0 GB
+398.14526|FAPI|p9_mss_eff_grouping.C: MCport[7] = 0 GB
+398.14528|FAPI|p9_mss_eff_grouping.C: Attempt memory grouping
+398.14531|FAPI|p9_mss_eff_grouping.C: grouping_group8PortsPerGroup: Attempting to group 8 MC ports
+398.14650|FAPI|p9_mss_eff_grouping.C: grouping_group6PortsPerGroup: Attempting to group 6 MC ports
+398.14653|FAPI|p9_mss_eff_grouping.C: grouping_group4PortsPerGroup: Attempting to group 4 MC ports
+398.14772|FAPI|p9_mss_eff_grouping.C: grouping_group3PortsPerGroup: Attempting to group 3 MC ports
+398.14894|FAPI|p9_mss_eff_grouping.C: grouping_group2PortsPerGroup: Attempting to group 2 MC ports
+398.14897|FAPI|p9_mss_eff_grouping.C: grouping_2ports_same_MCS: Attempting to group 2 ports on same MCS
+398.14902|FAPI|p9_mss_eff_grouping.C: grouping_2groupsOf2_cross_MCS: Attempting to group 2 groups of 2 on cross-MCS
+398.14904|FAPI|p9_mss_eff_grouping.C: Attempting to group the remaining ports as group of 2
+398.14908|FAPI|p9_mss_eff_grouping.C: grouping_group1PortsPerGroup: Attempting to group 1 MC port
+398.14911|FAPI|p9_mss_eff_grouping.C: grouping_group1PortsPerGroup: Successfully grouped 1 MC port: 1
+398.14947|FAPI|p9_mss_eff_grouping.C: grouping_sortGroups: Sorting Groups
+398.14949|FAPI|p9_mss_eff_grouping.C: Total non-mirrored size 8 GB
+398.15104|FAPI|p9_mss_eff_grouping.C: setupMirrorGroup: No mirror group - Num MI chiplets 0, ATTR_MRW_HW_MIRRORING_ENABLE = 0
+398.15224|FAPI|p9_mss_eff_grouping.C: Mapping groups to regions (mirroring=disabled)
+398.15343|FAPI|p9_mss_eff_grouping.C: grouping_setATTR_MSS_MEM_MC_IN_GROUP: 
+398.15345|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[0]: 0x40
+398.15347|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[1]: 0x00
+398.15350|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[2]: 0x00
+398.15351|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[3]: 0x00
+398.15353|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[4]: 0x00
+398.15355|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[5]: 0x00
+398.15357|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[6]: 0x00
+398.15358|FAPI|p9_mss_eff_grouping.C:   ATTR_MSS_MEM_MC_IN_GROUP[7]: 0x00
+398.15360|FAPI|p9_mss_eff_grouping.C: Total number of Memory groups: 1
+398.15361|FAPI|p9_mss_eff_grouping.C: NON-MIRROR - Group 0: 
+398.15362|FAPI|p9_mss_eff_grouping.C:     MC port size 8 GB
+398.15364|FAPI|p9_mss_eff_grouping.C:     Num of ports 1
+398.15365|FAPI|p9_mss_eff_grouping.C:     Group size  8 GB
+398.15366|FAPI|p9_mss_eff_grouping.C:     Base addr 0000000000000000
+398.15367|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(0) valid 0 
+398.15369|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(0) size 0 
+398.15370|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(0) base addr 0
+398.15371|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(1) valid 0 
+398.15372|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(1) size 0 
+398.15374|FAPI|p9_mss_eff_grouping.C:     ALT-BAR(1) base addr 0
+398.15375|FAPI|p9_mss_eff_grouping.C:     Contains MC 1
+398.15495|FAPI|p9_mss_eff_grouping.C: setSMFBaseSizeData: No SMF memory requested.
+398.15496|FAPI|p9_mss_eff_grouping.C: Selective Mode 0
+398.15500|FAPI|p9_mss_eff_grouping.C: l_nhtmSize 0000000000000000 bytes (0 GB), l_chtmSize 0000000000000000 bytes (0 GB) 
+398.15502|FAPI|p9_mss_eff_grouping.C: OccSize 0000000000000000 bytes (0 GB)
+398.15504|FAPI|p9_mss_eff_grouping.C: set_HTM_OCC_base_addr: No HTM/OCC memory requested.
+398.15508|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [0]: 0x0000000000000000 (0 GB)
+398.15511|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[0]: 0x0000000000000000 (0 GB)
+398.15514|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [0]: 0x0000000200000000 (8 GB)
+398.15517|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[0]: 0x0000000200000000 (8 GB)
+398.15520|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [1]: 0x0000000000000000 (0 GB)
+398.15523|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[1]: 0x0000000000000000 (0 GB)
+398.15526|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [1]: 0x0000000000000000 (0 GB)
+398.15530|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[1]: 0x0000000000000000 (0 GB)
+398.15533|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [2]: 0x0000000000000000 (0 GB)
+398.15536|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[2]: 0x0000000000000000 (0 GB)
+398.15539|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [2]: 0x0000000000000000 (0 GB)
+398.15542|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[2]: 0x0000000000000000 (0 GB)
+398.15544|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [3]: 0x0000000000000000 (0 GB)
+398.15547|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[3]: 0x0000000000000000 (0 GB)
+398.15550|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [3]: 0x0000000000000000 (0 GB)
+398.15553|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[3]: 0x0000000000000000 (0 GB)
+398.15555|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [4]: 0x0000000000000000 (0 GB)
+398.15558|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[4]: 0x0000000000000000 (0 GB)
+398.15561|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [4]: 0x0000000000000000 (0 GB)
+398.15563|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[4]: 0x0000000000000000 (0 GB)
+398.15566|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [5]: 0x0000000000000000 (0 GB)
+398.15569|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[5]: 0x0000000000000000 (0 GB)
+398.15571|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [5]: 0x0000000000000000 (0 GB)
+398.15574|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[5]: 0x0000000000000000 (0 GB)
+398.15577|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [6]: 0x0000000000000000 (0 GB)
+398.15579|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[6]: 0x0000000000000000 (0 GB)
+398.15582|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [6]: 0x0000000000000000 (0 GB)
+398.15584|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[6]: 0x0000000000000000 (0 GB)
+398.15587|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES    [7]: 0x0000000000000000 (0 GB)
+398.15590|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_BASES_ACK[7]: 0x0000000000000000 (0 GB)
+398.15593|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES    [7]: 0x0000000000000000 (0 GB)
+398.15596|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_MEM_SIZES_ACK[7]: 0x0000000000000000 (0 GB)
+398.15599|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_NHTM_BAR_BASE_ADDR : 0x0000000000000000 (0 GB)
+398.15601|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[0] : 0x0000000000000000 (0 GB)
+398.15604|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[1] : 0x0000000000000000 (0 GB)
+398.15607|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[2] : 0x0000000000000000 (0 GB)
+398.15610|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[3] : 0x0000000000000000 (0 GB)
+398.15612|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[4] : 0x0000000000000000 (0 GB)
+398.15615|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[5] : 0x0000000000000000 (0 GB)
+398.15618|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[6] : 0x0000000000000000 (0 GB)
+398.15620|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[7] : 0x0000000000000000 (0 GB)
+398.15623|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[8] : 0x0000000000000000 (0 GB)
+398.15626|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[9] : 0x0000000000000000 (0 GB)
+398.15628|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[10] : 0x0000000000000000 (0 GB)
+398.15632|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[11] : 0x0000000000000000 (0 GB)
+398.15635|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[12] : 0x0000000000000000 (0 GB)
+398.15637|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[13] : 0x0000000000000000 (0 GB)
+398.15640|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[14] : 0x0000000000000000 (0 GB)
+398.15643|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[15] : 0x0000000000000000 (0 GB)
+398.15645|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[16] : 0x0000000000000000 (0 GB)
+398.15648|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[17] : 0x0000000000000000 (0 GB)
+398.15651|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[18] : 0x0000000000000000 (0 GB)
+398.15653|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[19] : 0x0000000000000000 (0 GB)
+398.15656|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[20] : 0x0000000000000000 (0 GB)
+398.15659|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[21] : 0x0000000000000000 (0 GB)
+398.15662|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[22] : 0x0000000000000000 (0 GB)
+398.15664|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_CHTM_BAR_BASE_ADDR[23] : 0x0000000000000000 (0 GB)
+398.15667|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_OCC_SANDBOX_BASE_ADDR: 0x0000000000000000 (0 GB)
+398.15669|FAPI|p9_mss_eff_grouping.C: ATTR_PROC_SMF_BAR_BASE_ADDR : 0x0000000000000000 (0 GB)
+398.15671|FAPI|p9_mss_eff_grouping.C: Num of HTM queues:
+398.15672|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[0]: 0
+398.15673|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[1]: 0
+398.15674|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[2]: 0
+398.15675|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[3]: 0
+398.15677|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[4]: 0
+398.15678|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[5]: 0
+398.15679|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[6]: 0
+398.15680|FAPI|p9_mss_eff_grouping.C: ATTR_HTM_QUEUES[7]: 0
+398.15688|ISTEPS_TRACE|SUCCESS :  p9_mss_eff_grouping HWP on target 00050000
+398.24221|NVRAM|NVRAM: Partition at offset 0xffff0 extends beyond end of nvram !
+
+398.24226|ERRL|E>Error created : PLID=90000007, RC=3901, Mod=01, Userdata=FFFFFFFFFFFFFFFF 0000000081E36000, Sev=INFORMATIONAL
+398.24232|ISTEPS_TRACE|I>NVRAM read failed. Will not attempt to distribute any SMF memory.
+398.24234|ISTEPS_TRACE|call_mss_eff_config exit
+398.40556|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.40557|ERRL|I>Flush message received
+398.41613|INITSVC|<<doIstep: step 7, substep 4
+398.42084|INITSVC|>>doIstep: step 7, substep 5, task mss_attr_update

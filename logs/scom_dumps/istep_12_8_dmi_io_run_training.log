@@ -1,0 +1,13 @@
+435.42538|ISTEP 12. 8 - dmi_io_run_training
+435.43931|ISTEPS_TRACE|call_dmi_io_run_training: 1 proc chips found
+435.43933|ISTEPS_TRACE|p9_io_dmi_linktrain HWP target HUID 00050000
+435.44387|FAPI_I|p9_io_dmi_linktrain.C: p9_io_dmi_linktrain: P9 I/O EDI+/EDI DMI Entering
+435.44884|FAPI_I|p9_io_dmi_linktrain.C: p9_io_dmi_linktrain: P9 I/O EDI+/EDI DMI Exiting
+435.45191|ISTEPS_TRACE|SUCCESS :  p9_io_dmi_linktrain HWP
+435.45192|ISTEPS_TRACE|call_dmi_io_run_training exit
+435.46257|SCOM|doMulticastWorkaround on 00050000 for 50040018
+435.46307|SCOM|doMulticastWorkaround on 00050000 for 50040009
+435.46366|ERRL|I>Got an error log Msg - Type: 0x00000039
+435.46367|ERRL|I>Flush message received
+435.46369|INITSVC|<<doIstep: step 12, substep 8
+435.46371|INITSVC|>>doIstep: step 12, substep 9, task dmi_post_trainadv

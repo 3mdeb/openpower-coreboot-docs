@@ -1,0 +1,8 @@
+399.02898|ISTEP  8. 8 - proc_attr_update
+399.03317|ISTEPS_TRACE|call_proc_attr_update entry
+399.03390|ISTEPS_TRACE|Running p9_attr_update HWP on processor target 00050000
+399.03391|ISTEPS_TRACE|call_proc_attr_update exit
+399.03867|ERRL|I>Got an error log Msg - Type: 0x00000039
+399.03869|ERRL|I>Flush message received
+399.03871|INITSVC|<<doIstep: step 8, substep 8
+399.03874|INITSVC|>>doIstep: step 8, substep 9, task proc_chiplet_fabric_scominit

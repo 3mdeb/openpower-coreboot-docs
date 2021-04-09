@@ -1,0 +1,281 @@
+571.43774|ISTEP 21. 3 - host_start_payload
+571.44291|IPMI|wd: setWatchDogTimer : sec=30, use=65, act=1, clr=2
+571.44292|IPMI|rp: queuing async 18:24
+571.44294|IPMI|rp: W>Got message (0x18:0x24): l_is_pnor: 0
+571.44302|IPMI|dd: I>write ok 18:24 seq 8d len 6
+571.51345|IPMI|dd: I>read b2h ok 1c:24 seq 8d len 0 cc 0
+571.53425|INITSVC|InitService::registerShutdownEvent: componentID=0x1700, queue=0x658a88, msgType=0x1, priority=0x14
+571.53430|INITSVC|InitService::unregisterShutdownEvent: componentID=0xb00, queue=0x384598, msgType=0x5, priority=0x10
+571.53432|SBEIO|memRegion: >>closeAllUnsecureMemRegions: closing 4 region(s) among all targets
+571.53436|ISTEPS_TRACE|>>call_host_start_payload::msgHandler()
+571.53437|SBEIO|memRegion: printIvMemRegions
+571.53438|SBEIO|memRegion: Target HUID 0x00050000
+571.53440|SBEIO|memRegion: - 1/4: tgt=0x00050000: start_addr=0x00000001FD0D0000, size=0x00002000, flags=0x11 (Read-Only)
+571.53443|SBEIO|memRegion: - 2/4: tgt=0x00050000: start_addr=0x00000000F8821000, size=0x00010000, flags=0x12 (Read-Write)
+571.53446|SBEIO|memRegion: - 3/4: tgt=0x00050000: start_addr=0x00000000F8831000, size=0x037CF000, flags=0x11 (Read-Only)
+571.53449|SBEIO|memRegion: - 4/4: tgt=0x00050000: start_addr=0x00000000F8000000, size=0x00821000, flags=0x11 (Read-Only)
+571.53452|SBEIO|memRegion: closeAllUnsecureMemRegions: Closing Region - tgt=0x00050000: start_addr=0x00000001FD0D0000, size=0x00002000, flags=0x20
+571.53455|SBEIO|psudd: Sending Req = 000000000011D601 0000000000002000 00000000FD0D0000 0000000000000000 to 00050000
+571.55338|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.55339|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.55341|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.54927|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.54942|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.55367|SBEIO|memRegion: closeAllUnsecureMemRegions: Closing Region - tgt=0x00050000: start_addr=0x00000000F8821000, size=0x00010000, flags=0x20
+571.55370|SBEIO|psudd: Sending Req = 000000000012D601 0000000000010000 00000000F8821000 0000000000000000 to 00050000
+571.56778|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.56780|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.56781|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.56446|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.56460|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.56939|SBEIO|memRegion: closeAllUnsecureMemRegions: Closing Region - tgt=0x00050000: start_addr=0x00000000F8831000, size=0x037CF000, flags=0x20
+571.56942|SBEIO|psudd: Sending Req = 000000000013D601 00000000037CF000 00000000F8831000 0000000000000000 to 00050000
+571.58212|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.58213|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.58215|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.57864|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.57877|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.58335|SBEIO|memRegion: closeAllUnsecureMemRegions: Closing Region - tgt=0x00050000: start_addr=0x00000000F8000000, size=0x00821000, flags=0x20
+571.58338|SBEIO|psudd: Sending Req = 000000000014D601 0000000000821000 00000000F8000000 0000000000000000 to 00050000
+571.59487|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.59488|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.59490|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.59081|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.59517|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.59519|SBEIO|memRegion: printIvMemRegions
+571.59520|SBEIO|memRegion: Target HUID 0x00050000
+571.59522|SBEIO|memRegion: <<closeAllUnsecureMemRegions: regions left = 0 among all targets, err_rc=0x0000
+571.59523|ISTEPS_TRACE|calling enableCoreCheckstops() in node
+571.59524|RUNTIME|>>openUntrustedSpCommArea()
+571.59525|RUNTIME|>>getHostDataSection> i_section=17, i_instance=0
+571.59527|RUNTIME|<<getHostDataSection> o_dataAddr=0x11800, o_dataSize=0
+571.59529|RUNTIME|openUntrustedSpCommArea() SP ATTN addr = 0x0000000030012000 combined size 0x800
+571.59588|SBEIO|memRegion: >>openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x0000000030012000, i_size=0x00000800, i_isWritable=1 (flags=0x12), count=0
+571.59591|SBEIO|psudd: Sending Req = 000000000015D601 0000000000000800 0000000030012000 0000000000000000 to 00050000
+571.64138|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.64140|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.64142|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.60894|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.60908|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.64269|SBEIO|memRegion: printIvMemRegions
+571.64270|SBEIO|memRegion: Target HUID 0x00050000
+571.64273|SBEIO|memRegion: - 1/1: tgt=0x00050000: start_addr=0x0000000030012000, size=0x00000800, flags=0x12 (Read-Write)
+571.64276|SBEIO|memRegion: <<openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x0000000030012000: err_rc=0x0000
+571.64280|SBEIO|memRegion: >>openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x00000001FD0D0000, i_size=0x00002000, i_isWritable=0 (flags=0x11), count=1
+571.64283|SBEIO|psudd: Sending Req = 000000000016D601 0000000000002000 00000000FD0D0000 0000000000000000 to 00050000
+571.62260|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.62261|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.62263|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.62264|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.62701|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.62309|SBEIO|memRegion: printIvMemRegions
+571.62310|SBEIO|memRegion: Target HUID 0x00050000
+571.62313|SBEIO|memRegion: - 1/2: tgt=0x00050000: start_addr=0x00000001FD0D0000, size=0x00002000, flags=0x11 (Read-Only)
+571.62316|SBEIO|memRegion: - 2/2: tgt=0x00050000: start_addr=0x0000000030012000, size=0x00000800, flags=0x12 (Read-Write)
+571.62318|SBEIO|memRegion: <<openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x00000001FD0D0000: err_rc=0x0000
+571.62322|SBEIO|memRegion: >>openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x0000000031000000, i_size=0x00100000, i_isWritable=0 (flags=0x11), count=2
+571.62325|SBEIO|psudd: Sending Req = 000000000017D601 0000000000100000 0000000031000000 0000000000000000 to 00050000
+571.64001|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+571.64002|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+571.64004|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+571.63682|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+571.63695|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+571.64134|SBEIO|memRegion: printIvMemRegions
+571.64134|SBEIO|memRegion: Target HUID 0x00050000
+571.64137|SBEIO|memRegion: - 1/3: tgt=0x00050000: start_addr=0x0000000031000000, size=0x00100000, flags=0x11 (Read-Only)
+571.64140|SBEIO|memRegion: - 2/3: tgt=0x00050000: start_addr=0x00000001FD0D0000, size=0x00002000, flags=0x11 (Read-Only)
+571.64143|SBEIO|memRegion: - 3/3: tgt=0x00050000: start_addr=0x0000000030012000, size=0x00000800, flags=0x12 (Read-Write)
+571.64145|SBEIO|memRegion: <<openUnsecureMemRegion: i_tgt=0x50000: i_start_addr=0x0000000031000000: err_rc=0x0000
+571.64147|RUNTIME|>>getHostDataSection> i_section=15, i_instance=0
+571.64148|RUNTIME|<<getHostDataSection> o_dataAddr=0x2EFC, o_dataSize=96
+571.64149|RUNTIME|>>getHostDataSection> i_section=15, i_instance=1
+571.64150|RUNTIME|<<getHostDataSection> o_dataAddr=0x2F5C, o_dataSize=96
+571.64151|RUNTIME|>>getHostDataSection> i_section=15, i_instance=2
+571.64152|RUNTIME|<<getHostDataSection> o_dataAddr=0x2FBC, o_dataSize=96
+571.64153|RUNTIME|>>getHostDataSection> i_section=15, i_instance=3
+571.64154|RUNTIME|<<getHostDataSection> o_dataAddr=0x301C, o_dataSize=96
+571.64155|RUNTIME|>>getHostDataSection> i_section=15, i_instance=4
+571.64157|RUNTIME|<<getHostDataSection> o_dataAddr=0x307C, o_dataSize=96
+571.64158|RUNTIME|>>getHostDataSection> i_section=15, i_instance=5
+571.64159|RUNTIME|<<getHostDataSection> o_dataAddr=0x30DC, o_dataSize=96
+571.64160|RUNTIME|>>getHostDataSection> i_section=15, i_instance=6
+571.64161|RUNTIME|<<getHostDataSection> o_dataAddr=0x313C, o_dataSize=96
+571.64162|RUNTIME|>>getHostDataSection> i_section=15, i_instance=7
+571.64163|RUNTIME|<<getHostDataSection> o_dataAddr=0x319C, o_dataSize=96
+571.64164|RUNTIME|>>getHostDataSection> i_section=15, i_instance=8
+571.64165|RUNTIME|<<getHostDataSection> o_dataAddr=0x31FC, o_dataSize=96
+571.64166|RUNTIME|>>getHostDataSection> i_section=15, i_instance=9
+571.64167|RUNTIME|<<getHostDataSection> o_dataAddr=0x325C, o_dataSize=96
+571.64168|RUNTIME|>>getHostDataSection> i_section=15, i_instance=10
+571.64169|RUNTIME|<<getHostDataSection> o_dataAddr=0x32BC, o_dataSize=96
+571.64170|RUNTIME|>>getHostDataSection> i_section=15, i_instance=11
+571.64171|RUNTIME|<<getHostDataSection> o_dataAddr=0x331C, o_dataSize=96
+571.64172|RUNTIME|>>getHostDataSection> i_section=15, i_instance=12
+571.64173|RUNTIME|<<getHostDataSection> o_dataAddr=0x337C, o_dataSize=96
+571.64174|RUNTIME|>>getHostDataSection> i_section=15, i_instance=13
+571.64175|RUNTIME|<<getHostDataSection> o_dataAddr=0x33DC, o_dataSize=96
+571.64177|RUNTIME|>>getHostDataSection> i_section=15, i_instance=14
+571.64178|RUNTIME|<<getHostDataSection> o_dataAddr=0x343C, o_dataSize=96
+571.64179|RUNTIME|>>getHostDataSection> i_section=15, i_instance=15
+571.64180|RUNTIME|<<getHostDataSection> o_dataAddr=0x349C, o_dataSize=96
+571.64181|RUNTIME|>>getHostDataSection> i_section=15, i_instance=16
+571.64182|RUNTIME|<<getHostDataSection> o_dataAddr=0x34FC, o_dataSize=96
+571.64183|RUNTIME|>>getHostDataSection> i_section=15, i_instance=17
+571.64184|RUNTIME|<<getHostDataSection> o_dataAddr=0x355C, o_dataSize=96
+571.64185|RUNTIME|>>getHostDataSection> i_section=15, i_instance=18
+571.64186|RUNTIME|<<getHostDataSection> o_dataAddr=0x35BC, o_dataSize=96
+571.64187|RUNTIME|>>getHostDataSection> i_section=15, i_instance=19
+571.64188|RUNTIME|<<getHostDataSection> o_dataAddr=0x361C, o_dataSize=96
+571.64189|RUNTIME|<<openUntrustedSpCommArea()
+571.64190|ISTEPS_TRACE|I>Isteps disabled, send SYNC_POINT_REACHED msg
+571.64191|INITSVC|>>IStepDispatcher::sendSyncPoint
+571.64192|INITSVC|I>sendSyncPoint: Istep mode or no base services, returning
+571.64193|INITSVC|<<IStepDispatcher::sendSyncPoint
+571.64203|ISTEPS_TRACE|callShutdown finished, shutdown = 0x1230000.
+571.64204|INITSVC|_setShutdownStatus(i_status=0x0000000001230000)
+571.64205|INITSVC|_doShutdown(i_status=0000000001230000)
+571.64207|INITSVC|_doShutdown> status=0000000001230000
+571.64209|INITSVC|notify priority=0x0, queue=0x3d1158, msgType=0x40000000, componentID=0x1500
+572.77415|INITSVC|notify priority=0x10, queue=0x3d1448, msgType=0x33, componentID=0x100
+572.77417|ERRL|I>Got an error log Msg - Type: 0x00000033
+572.77418|ERRL|I>Shutdown event received
+572.77420|INITSVC|notify priority=0x11, queue=0x1dcf68, msgType=0x2, componentID=0x2500
+572.77422|IPMI|sel: I>ipmisel shutdown message from initservice
+572.77424|INITSVC|notify priority=0x12, queue=0x3def68, msgType=0x4, componentID=0x2500
+572.77425|IPMI|rp: I>reply to the MSG_STATE_SHUTDOWN message
+572.77427|INITSVC|notify priority=0x13, queue=0x3d7668, msgType=0x5, componentID=0xf00
+572.77428|INTR|Shutdown event received
+572.77429|INTR|IntrRp::shutDown - Sending shutdown message to registered handlers
+572.77430|SBEIO|psudd: SbePsu::msgHandler Handle Shutdown
+572.77432|MBOX|I>Shutdown Message sent for IPC, ignoring.
+572.77437|INTR|Reset PSIHB Interrupt Space
+572.77438|INTR|Reset PSIHB INTR Complete
+572.77443|INTR|INTR: Target 00050000. PSI BRIDGE ESB BASE BAR value: 0x00060302031c0000
+572.77446|INTR|I>INTR is shutdown
+572.77447|INITSVC|notify priority=0x14, queue=0x658a88, msgType=0x1, componentID=0x1700
+572.77448|ISTEPS_TRACE|Pre-Shutdown Inits event received
+572.74640|IPMI|sel: <<message loop
+572.74640|ERRL|I>Shutdown event processed
+572.77504|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000501300A 5000002400000000
+572.78124|IPMI|rp: I>reply to the MSG_STATE_SHUTDOWN message
+572.78697|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000501300A 5000002400000000
+572.78699|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013021 1180700210834640
+572.78701|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013021 1180700210834640
+572.78888|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013033 0000005C040081C3
+572.78890|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013033 0000005C040081C3
+572.78892|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013036 0000000000000000
+572.78894|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013036 0000000000000000
+572.78896|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013037 9554021F80110E0C
+572.78898|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013037 9554021F80110E0C
+572.78901|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013130 1010000000000000
+572.78903|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013130 1818000000000000
+572.78906|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013140 050043FF00100020
+572.78908|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013140 050043EF00100020
+572.78910|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013141 FADFBA00FFAFFFD7
+572.78912|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013141 FADFBB8CFFAFFFD7
+572.78915|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013178 0002000410000000
+572.78917|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013178 0002000610000000
+572.78919|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000501320E 1F1F1F1F1F1F0000
+572.78921|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000501320E 6262220242160000
+572.78923|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000005013214 00001BBF00020C3C
+572.78926|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000005013214 00005BBF00020C3C
+572.78928|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000501322B 0000000000000014
+572.78930|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000501322B 0000000000000018
+572.78932|INITSVC|notify priority=0x7f, queue=0xff888, msgType=0x1, componentID=0x1300
+573.27497|INITSVC|notify priority=0x7f, queue=0x3d1158, msgType=0x40000000, componentID=0x1500
+573.27679|INITSVC|Begin virtual mem flush
+573.27680|INITSVC|flushing virtual memory 0x20000000
+573.27683|INITSVC|flushing virtual memory 0x80000000
+573.28257|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x00360200)> 
+573.28789|IPMI|rp: I>reply to the MSG_STATE_SHUTDOWN message
+573.30333|IPMI|rp: I>reply to the MSG_STATE_SHUTDOWN message
+573.60599|INITSVC|Do post mem flush callbacks
+573.60600|IPMI|rp: I>reply to the MSG_STATE_SHUTDOWN message
+573.60601|PNOR|PnorRP::Shutdown message recieved
+5[  573.333831857,5] OPAL skiboot-9858186 starting...
+[  573.333834735,7] initial console log level: memory 7, driver 5
+[  573.333836769,6] CPU: P9 generation processor (max 4 threads/core)
+[  573.333838626,7] CPU: Boot CPU PIR is 0x000c PVR is 0x004e1203
+[  573.333841201,7] OPAL table: 0x30103830 .. 0x30103e10, branch table: 0x30002000
+[  573.333844291,7] Assigning physical memory map table for nimbus
+[  573.333846797,7] Parsing HDAT...
+[  573.333848088,7] SPIRA-S found.
+[  573.333850199,6] BMC #0: HW version 3, SW version 2, chip DD1.0
+[  573.333923309,6] SP Family is ibm,ast2500,openbmc
+[  573.333929348,7] LPC: IOPATH chip id = 0
+[  573.333930647,7] LPC: FW BAR       = f0000000
+[  573.333932209,7] LPC: MEM BAR      = e0000000
+[  573.333933670,7] LPC: IO BAR       = d0010000
+[  573.333935113,7] LPC: Internal BAR = c0012000
+[  573.333947908,7] LPC UART: base addr = 3f8 (3f8) size = 1 clk = 1843200, baud = 115200
+[  573.333950593,7] LPC: BT [0, 0] sms_int: 0, bmc_int: 0
+[  573.335210364,5] HDAT I2C: found e3p1 - unknown@1c dp:ff (ff:)
+[  573.335300727,5] HDAT I2C: found e3p1 - unknown@1d dp:ff (ff:)
+[  573.335358784,5] HDAT I2C: found e3p0 - unknown@19 dp:ff (ff:)
+[  573.335409019,5] HDAT I2C: found e3p1 - unknown@1e dp:ff (ff:)
+[  573.335458043,5] HDAT I2C: found e3p0 - unknown@1b dp:ff (ff:)
+[  573.335497015,5] HDAT I2C: found e3p1 - unknown@1f dp:ff (ff:)
+[  573.335549660,5] HDAT I2C: found e3p0 - unknown@1a dp:ff (ff:)
+[  573.335620830,5] HDAT I2C: found e3p0 - unknown@18 dp:ff (ff:)
+[  573.336355999,5] CHIP: Chip ID 0000 type: P9N DD2.30
+[  573.336719953,5] PLAT: Detected Talos platform
+[  573.336777590,5] PLAT: Detected BMC platform ast2500:openbmc
+[  573.354066835,5] CPU: All 16 processors called in...
+[  573.424760671,7] LPC: Routing irq 10, policy: 0 (r=1)
+[  573.424761580,7] LPC: SerIRQ 10 using route 0 targetted at OPAL
+[  575.020496679,5] HIOMAP: Negotiated hiomap protocol v2
+[  575.020546157,5] HIOMAP: Block size is 64KiB
+[  575.020583827,5] HIOMAP: BMC suggested flash timeout of 8s
+[  575.020631147,5] HIOMAP: Flash size is 64MiB
+[  575.020658982,5] HIOMAP: Erase granule size is 64KiB
+[  577.132834131,5] FLASH: Found system flash: (unnamed) id:0
+[  577.434702047,3] NVRAM: Partition at offset 0xffff0 extends beyond end of nvram !
+[  577.434767748,3] NVRAM: Re-initializing (size: 0x00090000)
+[  580.140952214,7] LPC: Routing irq 4, policy: 0 (r=1)
+[  580.140953218,7] LPC: SerIRQ 4 using route 1 targetted at OPAL
+[  580.141070694,5] OCC: All Chip Rdy after 0 ms
+[  581.137991460,3] STB: VERSION verification FAILED. log=0xffffffffffff8160
+[  581.460511085,3] STB: IMA_CATALOG verification FAILED. log=0xffffffffffff8160
+[  582.140488901,3] CAPP: Error loading ucode lid. index=203d1
+[  582.154618740,5] PCI: Resetting PHBs and training links...
+[  583.175182811,5] PCI: Probing slots...
+[  583.231578200,3] PCI: PHB  (80000) not found
+[  583.231643640,3] PCI: PHB  (80001) not found
+[  583.231716308,3] PCI: PHB  (80003) not found
+[  583.231810240,5] PCI Summary:
+[  583.231847655,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU1 Slot2 (16x) 
+[  583.231978396,5] PHB#0001:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=CPU1 Slot1 (8x) 
+[  583.232099362,5] PHB#0002:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..ff SLOT=Builtin SAS 
+[  583.232240898,5] PHB#0003:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=Builtin USB 
+[  583.232350660,5] PHB#0003:01:00.0 [EP  ] 104c 8241 R:02 C:0c0330 (      usb-xhci) LOC_CODE=Builtin USB
+[  583.232510521,5] PHB#0004:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=Builtin Ethernet 
+[  583.232670030,5] PHB#0004:01:00.0 [EP  ] 14e4 1657 R:01 C:020000 (      ethernet) LOC_CODE=Builtin Ethernet
+[  583.232779445,5] PHB#0004:01:00.1 [EP  ] 14e4 1657 R:01 C:020000 (      ethernet) LOC_CODE=Builtin Ethernet
+[  583.232937619,5] PHB#0005:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..02 SLOT=BMC 
+[  583.233046603,5] PHB#0005:01:00.0 [ETOX] 1a03 1150 R:04 C:060400 B:02..02 LOC_CODE=BMC
+[  583.233190582,5] PHB#0005:02:00.0 [PCID] 1a03 2000 R:41 C:030000 (           vga) LOC_CODE=BMC
+[  583.243070490,5] IPMI: Resetting boot count on successful boot
+[  583.243155185,5] INIT: Waiting for kernel...
+[  595.159263304,3] STB: BOOTKERNEL verification FAILED. log=0xffffffffffff8160
+[  595.161584911,5] INIT: 64-bit LE kernel discovered
+[  595.377147883,5] INIT: Starting kernel at 0x20011000, fdt at 0x306f25d0 205888 bytes
+
+zImage starting: loaded at 0x0000000020011000 (sp: 0x0000000021461ed8)
+Allocating 0x2404098 bytes for kernel...
+Decompressing (0x0000000000000000 <- 0x0000000020020000:0x000000002145fec4)...
+Done! Decompressed 0x221c5d8 bytes
+
+Linux/PowerPC load: 
+Finalizing device tree... flat tree at 0x214630c0
+[  598.047806913,3] LPC[000]: Got SYNC no-response error. Error address reg: 0xd0010080
+[  598.047819761,6] IPMI: dropping non severe PEL event
+[  598.047857564,7] UART: IRQ functional !
+[    5.585240] kAFS: failed to register: -97
+
+
+nvram process returned non-zero exit status
+dmesg: klogctl: Operation not permitted
+)0[1;24r[m[4l[?7h[?25l[?1c[H[J[H[J Petitboot (0ed84c0-p54174e6)[2d ──────────────────────────────────────────────────────────────────────────────[4;3HSystem information[5;3HSystem configuration[6;3HSystem status log[7;3HLanguage[8;3HRescan devices[9;3HRetrieve config from URL[10;3HPlugins (0)[11d *[0;10;7mExit to shell           [22;2H[m──────────────────────────────────────────────────────────────────────────────[23d Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help[24d Welcome to Petitboot Info: Waiting for device discovery[J[1;55HT2P9D01 REV 1.00 A1000640[24d [sda] Processing new USB device[24;9Harsed GRUB configuration from /boot/grub/grub.cfg Booting in 10 sec: [sda] --hotkey=g[K[?25h[?0c[3;21r[3;1H[2L[1;24r[3;3H[USB: sda / 2020-08-01-12-35-44-00]
+[5G(*) --hotkey=g[13;27H[0;10;7m           [24;37H[m[4;21r[4;1HM[1;24r[4;5H--hotkey=i[24;37H[4;21r[4;1HM[1;24r[4;5H... Graphical expert install[24;37H[4;21r[4;1HM[1;24r[4;5H... Graphical rescue mode[24;37H[4;21r[4;1HM[1;24r[4;5H... Graphical automated install[24;37H[4;21r[4;1HM[1;24r[4;5H--hotkey=x[24;37H[4;21r[4;1HM[1;24r[4;5H--hotkey=r[24;37H[4;21r[4;1HM[1;24r[4;5H--hotkey=a[24;37H[4;21r[4;1HM[1;24r[4;5H--hotkey=x[24;37H[H
+
+    --hotkey=r[K[24;37H [sda2] Processing new USB device[K[?25l[?1c Booting in 9 sec: [sda] --hotkey=g[24;13H8[24;36H[24;13H7[24;36H[24;13H6[24;36H[24;13H5[24;36H[24;13H4[24;36H [enP4p1s0f0] Processing DHCP lease response (ip: 192.168.20.7)[24;18Hbing from base tftp://192.168.20.1/pxelinux.cfg/[24;12H1] Processing DHCP lease response (ip: 192.168.4.177)[K[24;18Hbing from base tftp://192.168.4.1/pxelinux.cfg/ Booting in 3 sec: [sda] --hotkey=g[K[24;13H2[24;36H[24;13H1[24;36H[24;9H[16P[24;20H[?25h[?0c Loaded initrd from file:///var/petitboot/mnt/dev/sda/install.amd/gtk/initrd.gz[?25l[?1c[24;9Hkernel image from file:///var/petitboot/mnt/dev/sda/install.amd/vmlinuz Running boot hooks[K[?25h[?0c Performing kexec load kexec load failed: do_file_load: (-1) Function not implemented[?25l[?1c

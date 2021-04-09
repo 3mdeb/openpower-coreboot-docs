@@ -1,0 +1,32 @@
+481.77343|ISTEP 16. 6 - host_ipl_complete
+481.76788|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x03CE9000)> 
+482.06869|HWAS_I|I>deconfigGard.C: Clear GARD Records by type eb
+482.07020|HWAS_I|I>hwasPlatDeconfigGard.C: Get all GARD Records
+482.08596|HWAS_I|I>hwasPlatDeconfigGard.C: Get returning 0 GARD Records
+482.10599|IPMI|HbVolatileSensor::setHbVolatile(2)
+482.11715|IPMI|We were not able to find a sensor number in the IPMI_SENSORS attribute for sensor_name=0xc21 for target with huid=0x0, skipping call to sendSetSensorReading()
+482.11718|ERRL|E>Error created : PLID=9000000B, RC=250D, Mod=03, Userdata=00000000000000FF 00000C2100000000, Sev=UNRECOVERABLE
+482.11720|ERRL|>>addProcedureCallout(0x55, 0x6)
+482.11723|ISTEPS_TRACE|Failure in notifying BMC to clear hostboot volatile section, RC=250D
+482.13958|UTILTCE|I>utilUseTcesForDmas: FALSE
+482.13960|ISTEPS_TRACE|Initialize the runtime data attributes for HDAT consumption
+482.13961|ISTEPS_TRACE|number of HB Reserved mem sections = 60
+482.13962|ISTEPS_TRACE|number of HBRT sections = 2
+482.15284|ISTEPS_TRACE|Running p9_switch_rec_attn HWP on target HUID 00050000
+482.15286|ISTEPS_TRACE|SUCCESS: p9_switch_rec_attn HWP( ) on target HUID 00050000
+482.15758|TARG|>>AttrRP::_syncAllAttributesToFsp
+482.15760|TARG|>>AttrRP::_sendAttrSyncMsg: i_msgType = 0x00000004, i_sync = 1.
+482.15761|TARG|I>AttrRP: attrSyncTask: Received message of type = 0x00000004.
+482.15762|TARG|I>AttrRP: attrSyncTask: Invoking attribute sync.
+482.15764|TARG|I>_invokeAttrSync: FSP services not available; suppressing attribute sync.
+482.15765|TARG|<<AttrRP::_sendAttrSyncMsg: rc = 0, msgRc = 0, plid = 0x00000000.
+482.15766|TARG|<<AttrRP::_syncAllAttributesToFsp
+482.15767|ISTEPS_TRACE|I>Send SYNC_POINT_REACHED msg to Fsp
+482.15768|INITSVC|>>IStepDispatcher::sendSyncPoint
+482.15769|INITSVC|I>sendSyncPoint: Istep mode or no base services, returning
+482.15770|INITSVC|<<IStepDispatcher::sendSyncPoint
+482.15771|ISTEPS_TRACE|call_host_ipl_complete exit 
+482.17310|ERRL|I>Got an error log Msg - Type: 0x00000039
+482.17311|ERRL|I>Flush message received
+482.17313|INITSVC|<<doIstep: step 16, substep 6
+482.17315|INITSVC|>>doIstep: step 18, substep 11, task proc_tod_setup

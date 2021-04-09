@@ -1,0 +1,84 @@
+394.38892|ISTEP  7. 1 - mss_attr_cleanup
+394.39878|IPMI|wd: resetWatchDogTimer
+394.39880|IPMI|rp: queuing sync 18:22
+394.39881|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+394.39887|IPMI|dd: I>write ok 18:22 seq d8 len 0
+394.41325|IPMI|dd: I>read b2h ok 1c:22 seq d8 len 0 cc 0
+394.42361|INITSVC|unloading [libistep06.so]
+394.42388|INITSVC|unloading [libsbe.so]
+394.44973|INITSVC|unloading [libpm.so]
+394.45721|INITSVC|unloading [libnestmemutils.so]
+394.46875|INITSVC|unloading [libimageprocs.so]
+394.48144|INITSVC|unloading [libp9_cpuWkup.so]
+394.49098|INITSVC|unloading [libisteps_nest.so]
+394.51252|INITSVC|loading [libistep07.so]
+394.68108|INITSVC|loading [libnestmemutils.so]
+394.68842|INITSVC|loading [libisteps_mss.so]
+395.46609|INITSVC|loading [libsbe.so]
+395.47656|INITSVC|loading [libimageprocs.so]
+395.47796|INITSVC|loading [libcen.so]
+395.48152|INITSVC|loading [libnvram.so]
+395.50068|ISTEPS_TRACE|host_mss_attr_cleanup entry
+395.50140|ISTEPS_TRACE|Running p9c_mss_attr_cleanup HWP on DIMM target HUID 00030002
+395.51804|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Start
+395.54029|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Get SPD Data size 0x200 
+395.54148|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Get SPD Data byte 0 0x23 
+395.54150|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02: ATTR_CEN_SPD_REVISION 0x12 
+395.55184|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_DRAM_DEVICE_TYPE 0x0C 
+395.55301|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_TYPE 0x01 
+395.55304|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_CUSTOM 0x00 
+395.55307|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_DENSITY 0x05 
+395.55310|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_BANKS 0x00 
+395.55313|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_COLUMNS 0x01 
+395.55316|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_ROWS 0x04 
+395.55319|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_DEVICE_TYPE 0x00 
+395.55322|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_DIE_COUNT 0x00 
+395.55326|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_DEVICE_TYPE_SIGNAL_LOADING 0x00 
+395.55330|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_OPTIONAL_FEATURES 0x08 
+395.55334|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_SDRAM_THERMAL_AND_REFRESH_OPTIONS 0x00 
+395.55337|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_ROW_REPAIR_SPPR_SUPPORTED 0x01 
+395.55341|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_NOMINAL_VOLTAGE 0x18 
+395.55344|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_DRAM_WIDTH 0x01 
+395.55346|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_NUM_RANKS 0x00 
+395.55464|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_MEMORY_BUS_WIDTH 0x0B 
+395.55467|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_THERMAL_SENSOR 0x80 
+395.55470|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TIMEBASE_MTB_DDR4 0x00 
+395.55473|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TIMEBASE_FTB_DDR4 0x00 
+395.55475|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TCKMIN 0x06 
+395.55478|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TCKMAX_DDR4 0x0D 
+395.55482|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_CAS_LATENCIES_SUPPORTED 0xFFF8 
+395.55484|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TAAMIN 0x6E 
+395.55487|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRCDMIN 0x6E 
+395.55489|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRPMIN 0x6E 
+395.55491|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRASMIN 0x100 
+395.55495|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRCMIN 0x16E 
+395.55498|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRFC1MIN_DDR4 0xAF0 
+395.55500|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRFC2MIN_DDR4 0x820 
+395.55503|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRFC4MIN_DDR4 0x500 
+395.55506|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TFAWMIN 0xA8 
+395.55509|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRRDSMIN_DDR4 0x18 
+395.55512|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TRRDLMIN_DDR4 0x28 
+395.55627|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_TCCDLMIN_DDR4 0x28 
+395.55630|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TRCMIN 0x00 
+395.55633|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TRPMIN 0x00 
+395.55636|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TRCDMIN 0x00 
+395.55639|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TAAMIN 0x00 
+395.55643|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TCKMAX_DDR4 0xE7 
+395.55646|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_FINE_OFFSET_TCKMIN 0x00 
+395.55651|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_ADDR_MAP_REG_TO_DRAM 0x00 
+395.55656|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_ID_MODULE_MANUFACTURERS_JEDEC_ID_CODE 0x2C 
+395.55660|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_ID_MODULE_MANUFACTURING_LOCATION 0x0F 
+395.55664|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_ID_MODULE_MANUFACTURING_DATE 0x1946 
+395.55668|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_ID_MODULE_SERIAL_NUMBER 0x3576F924 
+395.55671|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_PART_NUMBER 0x39 
+395.55675|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_MODULE_REVISION_CODE_DDR4 0x31 
+395.55679|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_DRAM_MANUFACTURER_JEDEC_ID_CODE 0x2C80 
+395.55682|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_DRAM_STEPPING_DDR4 0x4A 
+395.55685|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_CRC_MNFG_SEC_DDR4 0x00 
+395.55688|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 Set ATTR_CEN_SPD_BAD_DQ_DATA 0x58F2FB50 
+395.55917|FAPI|p9c_mss_attr_cleanup.C: dimm:k0:n0:s0:p02 End
+395.55919|ISTEPS_TRACE|host_mss_attr_cleanup exit
+395.68564|ERRL|I>Got an error log Msg - Type: 0x00000039
+395.68565|ERRL|I>Flush message received
+395.68568|INITSVC|<<doIstep: step 7, substep 1
+395.68569|INITSVC|>>doIstep: step 7, substep 2, task mss_volt
