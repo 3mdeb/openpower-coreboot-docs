@@ -14,15 +14,7 @@ and registers that code analysis proofed to work diffrently than described.
 | 3-5       | PF_DROP_VALUE1            | 3                                          |                                                                                             |
 | 6-8       | PF_DROP_VALUE2            | 5                                          |                                                                                             |
 | 9-11      | PF_DROP_VALUE3            | 7                                          |                                                                                             |
-| 13-15     | REFRESH_BLOCK_CONFIG      |                                            | if has only one DIMM in MCA:                                                                |
-|           |                           |                                            |   0b000 : if master ranks = 1                                                               |
-|           |                           |                                            |   0b001 : if master ranks = 2                                                               |
-|           |                           |                                            |   0b100 : if master ranks = 4                                                               |
-|           |                           |                                            | Per allowable DIMM mixing rules, we cannot mix different number of ranks on any single port |
-|           |                           |                                            | if has both DIMMs in MCA:                                                                   |
-|           |                           |                                            |   0b010 : if master ranks = 1                                                               |
-|           |                           |                                            |   0b011 : if master ranks = 2                                                               |
-|           |                           |                                            |   0b100 : if master ranks = 4 // 4 mranks is the same for one and two DIMMs in MCA          |
+| 13-15     | REFRESH_BLOCK_CONFIG      |                                            | if has only one DIMM in MCA: <br>&nbsp&nbsp 0b000 : if master ranks = 1 <br>&nbsp&nbsp 0b001 : if master ranks = 2 <br>&nbsp&nbsp 0b100 : if master ranks = 4 <br> Per allowable DIMM mixing rules, we cannot mix different number of ranks on any single port <br> if has both DIMMs in MCA: <br>&nbsp&nbsp 0b010 : if master ranks = 1 <br>&nbsp&nbsp 0b011 : if master ranks = 2 <br>&nbsp&nbsp 0b100 : if master ranks = 4 // 4 mranks is the same for one and two DIMMs in MCA|
 | 16        | ENABLE_REFRESH_BLOCK_SQ   |                                            | Always same value as [17]                                                                   |
 | 17        | ENABLE_REFRESH_BLOCK_NSQ  |                                            | 1 : if (1 < (DIMM0 + DIMM1 logical ranks) <= 8 && not (one DIMM, 4 mranks, 2H 3DS)          |
 |           |                           |                                            | 0 : otherwise                                                                               |
