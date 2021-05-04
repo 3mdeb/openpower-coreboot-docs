@@ -838,41 +838,56 @@ NOTE: No known register bits
 **XBUS_RX0_RX_CTL_MODE23_EO_PG 0x8008C00006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-49     |      |                |             |
 
 
 **XBUS_RX1_RX_CTL_MODE23_EO_PG 0x8008C02006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                     | Assigned value | Description |
+| --------- | ------------------------ | -------------- | ----------- |
+| 55        | RX_CTL_REGS_RX_PEAK_TUNE | 0              |             |
+| 57-58     |                          | 3              |             |
+| 59        | RX_DFEHISPD_EN           | 1              |             |
+| 60        | RX_DFE12_EN              | 1              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE29_EO_PG 0x8008D02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-55     |      |                |             |
+| 56-63     |      |                |             |
 
 
 **XBUS_RX1_RX_CTL_MODE27_EO_PG 0x8009702006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                                   | Assigned value | Description |
+| --------- | -------------------------------------- | -------------- | ----------- |
+| 48        | RX_RC_ENABLE_CTLE_1ST_LATCH_OFFSET_CAL | 1              |             |
 
 
 **XBUS_RX1_RX_ID2_PG 0x8009802006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 49-55     |      | 0              |             |
+| 57-63     |      | 16             |             |
 
 
 **XBUS_RX1_RX_CTL_MODE1_E_PG 0x8009902006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                 | Assigned value | Description |
+| --------- | -------------------- | -------------- | ----------- |
+| 48        | RX_MASTER_MODE       |                |             |
+| 57        | RX_PDWN_LITE_DISABLE | 1              |             |
+| 58        | RX_FENCE             | 1              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE2_E_PG 0x8009982006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-52     |      | 1              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE3_E_PG 0x8009A02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-51     |      | 11             |             |
 
 
 **XBUS_RX1_RX_CTL_MODE5_E_PG 0x8009B02006010C3F**
@@ -883,16 +898,22 @@ NOTE: No known register bits
 **XBUS_RX1_RX_CTL_MODE6_E_PG 0x8009B82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 52-55     |      | 1              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE8_E_PG 0x8009C82006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                              | Assigned value | Description |
+| --------- | --------------------------------- | -------------- | ----------- |
+| 48-54     | RX_DYN_RPR_ERR_CNTR1_DURATION_TAP | 15             |             |
+| 55-58     |                                   | 5              |             |
+| 61-63     |                                   | 5              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE9_E_PG 0x8009D02006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                              | Assigned value | Description |
+| --------- | --------------------------------- | -------------- | ----------- |
+| 48-54     |                                   | 63             |             |
+| 55-58     | RX_DYN_RPR_ERR_CNTR2_DURATION_TAP | 5              |             |
 
 
 **XBUS_RX1_RX_CTL_MODE11_E_PG 0x8009E02006010C3F**
@@ -903,83 +924,101 @@ NOTE: No known register bits
 **XBUS_RX1_RX_CTL_MODE12_E_PG 0x8009E82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-63     |      | 0              |             |
 
 
 **XBUS_RX1_RX_GLBSM_SPARE_MODE_PG 0x800A802006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                     | Assigned value | Description |
+| --------- | ------------------------ | -------------- | ----------- |
+| 50        | RX_DESKEW_BUMP_AFTER     | 1              |             |
+| 56        | RX_PG_GLBSM_SPARE_MODE_2 | 1              |             |
 
 
 **XBUS_RX1_RX_GLBSM_CNTL3_EO_PG 0x800AE82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 56-57     |      | 2              |             |
 
 
 **XBUS_RX1_RX_GLBSM_MODE1_E_PG 0x800AF82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-51     |      | 12             |             |
+| 52-55     |      | 12             |             |
 
 
 **XBUS_RX1_RX_DATASM_SPARE_MODE_PG 0x800B802006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                       | Assigned value | Description |
+| --------- | -------------------------- | -------------- | ----------- |
+| 56-57     | RX_CTL_DATASM_CLKDIST_PDWN | 0              |             |
+| 60        |                            |                |             |
 
 
 **XBUS_TX1_TX_SPARE_MODE_PG 0x800C042006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 56-57     |      | 0              |             |
 
 
 **XBUS_TX1_TX_ID1_PG 0x800C0C2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-53     |      | 1              |             |
 
 
 **XBUS_TX1_TX_CTL_MODE1_EO_PG 0x800C142006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                        | Assigned value | Description |
+| --------- | --------------------------- | -------------- | ----------- |
+| 48        | TX_CLKDIST_PDWN             | 0              |             |
+| 53-57     | TX_CTL_REGS_TX_CLKDIST_PDWN | 1              |             |
+| 59        | TX_PDWN_LITE_DISABLE        | 1              |             |
 
 
 **XBUS_TX1_TX_CTL_MODE2_EO_PG 0x800C1C2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 56-62     |      | 17             |             |
 
 
 **XBUS_TX1_TX_CTL_CNTLG1_EO_PG 0x800C242006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                             | Assigned value | Description |
+| --------- | -------------------------------- | -------------- | ----------- |
+| 48-49     | TX_DRV_CLK_PATTERN_GCRMSG_DRV | 0              |             |
 
 
 **XBUS_TX1_TX_ID2_PG 0x800C842006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 49-55     |      | 0              |             |
+| 57-63     |      | 16             |             |
 
 
 **XBUS_TX1_TX_CTL_MODE1_E_PG 0x800C8C2006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name                                    | Assigned value | Description |
+| --------- | --------------------------------------- | -------------- | ----------- |
+| 55-57     | TX_DYN_RECAL_INTERVAL_TIMEOUT_SEL_TAP   | 5              |             |
+| 58-59     | TX_DYN_RECAL_STATUS_RPT_TIMEOUT_SEL_TAP | 1              |             |
 
 
 **XBUS_TX1_TX_CTL_MODE2_E_PG 0x800CEC2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-63     |      | 0              |             |
 
 
 **XBUS_TX1_TX_CTL_MODE3_E_PG 0x800CF42006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
+| 48-63     |      | 127            |             |
 
 
 **XBUS_TX1_TX_CTLSM_MODE1_EO_PG 0x800D2C2006010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| Bit range | Name            | Assigned value | Description |
+| --------- | --------------- | -------------- | ----------- |
+| 59        | TX_FFE_BOOST_EN |                |             |
 
 
 **XBUS_TX_IMPCAL_P_4X_PB 0x800F1C0006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
-
-
-**XBUS_RX0_RXPACKS3_SLICE3_RX_DAC_CNTL5_EO_PL 0x8000280306010C3F**
-| Bit range | Name | Assigned value | Description |
-| --------- | ---- | -------------- | ----------- |
+| 48-52     |      | 14             |             |
