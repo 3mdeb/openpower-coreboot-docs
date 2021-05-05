@@ -2,12 +2,12 @@
 This document is an attempt to gather information about undocumented registers
 and registers that code analysis proofed to work diffrently than described.
 
-**P9N2_MCS_PORT02_MCPERF0 0x05010823**
+**P9N2_MCS_PORT02_MCPERF0 0x5010823**
 | Bit range | Name      | Assigned value | Description |
 | --------- | --------- | -------------- | ----------- |
 | 22-27     | AMO_LIMIT | 0x20           |             |
 
-**P9N2_MCS_PORT02_MCPERF2 0x05010824**
+**P9N2_MCS_PORT02_MCPERF2 0x5010824**
 | Bit range | Name                      | Assigned value                             | Description                                                                                 |
 | --------- | ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | 0-2       | PF_DROP_VALUE0            | 1                                          |                                                                                             |
@@ -23,14 +23,14 @@ and registers that code analysis proofed to work diffrently than described.
 | 50-54     | NUM_RMW_BUF               | 0b11100                                    |                                                                                             |
 | 61        | EN_ALT_ECR_ERR            | ATTR_ENABLE_MEM_EARLY_DATA_SCOM probably 0 |                                                                                             |
 
-**P9N2_MCS_PORT02_MCAMOC 0x05010825**
+**P9N2_MCS_PORT02_MCAMOC 0x5010825**
 | Bit range | Name                              | Assigned value | Description |
 | --------- | --------------------------------- | -------------- | ----------- |
 | 1         | FORCE_PF_DROP0                    | 0              |             |
 | 4-28      | WRTO_AMO_COLLISION_RULES          | 0x19FFFFF      |             |
 | 29-31     | AMO_SIZE_SELECT, 128B_RW_64B_DATA | 1              |             |
 
-**P9N2_MCS_PORT02_MCEPSQ 0x05010826** \
+**P9N2_MCS_PORT02_MCEPSQ 0x5010826** \
 Note: ATTR_PROC_EPS_READ_CYCLES_T* are calculated in istep 8.6
 | Bit range | Name                 | Assigned value                         | Description |
 | --------- | -------------------- | -------------------------------------- | ----------- |
@@ -41,7 +41,7 @@ Note: ATTR_PROC_EPS_READ_CYCLES_T* are calculated in istep 8.6
 | 32-39     | REMOTE_NODAL_EPSILON | (ATTR_PROC_EPS_READ_CYCLES_T2 + 6) / 4 |             |
 | 40-47     | VECTOR_GROUP_EPSILON | (ATTR_PROC_EPS_READ_CYCLES_T2 + 6) / 4 |             |
 
-**P9N2_MCS_PORT02_MCBUSYQ 0x05010827**
+**P9N2_MCS_PORT02_MCBUSYQ 0x5010827**
 | Bit range | Name                       | Assigned value | Description          |
 | --------- | -------------------------- | -------------- | -------------------- |
 | 0         | ENABLE_BUSY_COUNTERS       | 1              |                      |
@@ -50,7 +50,7 @@ Note: ATTR_PROC_EPS_READ_CYCLES_T* are calculated in istep 8.6
 | 14-23     | BUSY_COUNTER_THRESHOLD1    | 51             |                      |
 | 24-33     | BUSY_COUNTER_THRESHOLD2    | 64             |                      |
 
-**P9N2_MCS_PORT02_MCPERF3 0x0501082B**
+**P9N2_MCS_PORT02_MCPERF3 0x501082B**
 | Bit range | Name                        | Assigned value                   | Description |
 | --------- | --------------------------- | -------------------------------- | ----------- |
 | 31        | ENABLE_CL0                  | 1                                |             |
@@ -58,6 +58,74 @@ Note: ATTR_PROC_EPS_READ_CYCLES_T* are calculated in istep 8.6
 | 43        | ENABLE_CP_M_MDI0_LOCAL_ONLY | !ATTR_ENABLE_MEM_EARLY_DATA_SCOM | !0 = 1?     |
 | 44        | DISABLE_WRTO_IG             | 1                                |             |
 | 45        | AMO_LIMIT_SEL               | 1                                |             |
+
+**MCS_MCFIRACT1 0x5010807**
+| Bit range | Name                                    | Assigned value | Description |
+| --------- | --------------------------------------- | -------------- | ----------- |
+| 0         | MCS_MCFIR_MC_INTERNAL_RECOVERABLE_ERROR | 1              |             |
+| 8         | MCS_MCFIR_COMMAND_LIST_TIMEOUT          | 1              |             |
+| 17        | MCS_MCFIR_MS_WAT_DEBUG_CONFIG_REG_ERROR |                |             |
+
+**MCS_MCFIRMASK_AND 0x5010804**
+| Bit range | Name                                          | Assigned value | Description |
+| --------- | --------------------------------------------- | -------------- | ----------- |
+| 0         | MCS_MCFIR_MC_INTERNAL_RECOVERABLE_ERROR       | 0              |             |
+| 1         | MCS_MCFIR_MC_INTERNAL_NONRECOVERABLE_ERROR    | 0              |             |
+| 2         | MCS_MCFIR_POWERBUS_PROTOCOL_ERROR             | 0              |             |
+| 3         | MCS_MCFIR_INBAND_BAR_HIT_WITH_INCORRECT_TTYPE | 1              |             |
+| 4         | MCS_MCFIR_MULTIPLE_BAR                        | 0              |             |
+| 5         | MCS_MCFIR_INVALID_ADDRESS                     | 0              |             |
+| 8         | MCS_MCFIR_COMMAND_LIST_TIMEOUT                | 0              |             |
+| 17        | MCS_MCFIR_MS_WAT_DEBUG_CONFIG_REG_ERROR       | 1              |             |
+
+**MCS_MCFGP 0x501080A**
+| Bit range | Name                                            | Assigned value | Description |
+| --------- | ----------------------------------------------- | -------------- | ----------- |
+| 0         | MCS_MCFGP_VALID                                 |                |             |
+| 1-4       | MCS_MCFGP_MC_CHANNELS_PER_GROUP                 |                |             |
+| 5-7       | MCS_MCFGP_CHANNEL_0_GROUP_MEMBER_IDENTIFICATION |                |             |
+| 8-10      | MCS_MCFGP_CHANNEL_1_GROUP_MEMBER_IDENTIFICATION |                |             |
+| 13-23     | MCS_MCFGP_GROUP_SIZE                            |                |             |
+| 24-47     | MCS_MCFGP_GROUP_BASE_ADDRESS                    |                | Group base address (bits 24:47) 0b000000000000000000000001 = 4GB<br> 000000001 (base addr of 4GB)<br> 000000010 (base addr of 8GB)<br> 000000100 (base addr of 16GB)<br> 000001000 (base addr of 32GB)<br> 000010000 (base addr of 64GB)<br> 000100000 (base addr of 128GB)<br> 001000000 (base addr of 256GB) |
+
+**MCS_MCFGPM 0x501080C**
+| Bit range | Name                          | Assigned value | Description |
+| --------- | ----------------------------- | -------------- | ----------- |
+| 0         | MCS_MCFGPM_VALID              | 1              |             |
+| 13-23     | MCS_MCFGPM_GROUP_SIZE         | 1              |             |
+| 24-47     | MCS_MCFGPM_GROUP_BASE_ADDRESS |                | Group base address (bits 24:47), 0b000000000000000000000001 = 4GB<br>000000001 (base addr of 4GB)<br>000000010 (base addr of 8GB)<br>000000100 (base addr of 16GB)<br>000001000 (base addr of 32GB)<br>000010000 (base addr of 64GB)<br>000100000 (base addr of 128GB)<br>001000000 (base addr of 256GB) |
+
+**MCS_MCFGPA 0x501080B**
+NOTE: some of the bit-fields seem to overlap
+| Bit range | Name                                              | Assigned value | Description        |
+| --------- | ------------------------------------------------- | -------------- | ------------------ |
+| 0         | MCS_MCFGPA_HOLE0_VALID                            |                |                    |
+| 2-11      | MCS_MCFGPA_HOLE0_LOWER_ADDRESS                    |                | 0b0000000001 = 4GB |
+| 14-23     | MCS_MCFGPA_HOLE0_UPPER_ADDRESS                    |                | 0b0000000001 = 4GB |
+| 24        | MCS_MCFGPA_HOLE1_VALID                            |                |                    |
+| 26-35     | MCS_MCFGPA_HOLE1_LOWER_ADDRESS                    |                | 0b0000000001 = 4GB |
+| 28        | P9N2_MCS_MCFGPA_SMF_VALID                         |                |                    |
+| 29        | P9N2_MCS_MCFGPA_SMF_UPPER_ADDRESS_AT_END_OF_RANGE |                |                    |
+| 30-43     | P9N2_MCS_MCFGPA_SMF_LOWER_ADDRESS                 |                |                    |
+| 38-47     | MCS_MCFGPA_HOLE1_UPPER_ADDRESS                    |                | 0b0000000001 = 4GB |
+| 44-57     | P9N2_MCS_MCFGPA_SMF_UPPER_ADDRESS                 |                |                    |
+
+**MCS_MCFGPMA 0x501080D**
+NOTE: some of the bit-fields seem to overlap
+| Bit range | Name                                               | Assigned value | Description           |
+| --------- | -------------------------------------------------- | -------------- | --------------------- |
+| 0         | MCS_MCFGPMA_HOLE0_VALID                            |                |                       |
+| 2-11      | MCS_MCFGPMA_HOLE0_LOWER_ADDRESS                    |                | // 0b0000000001 = 4GB |
+| 14-23     | MCS_MCFGPMA_HOLE0_UPPER_ADDRESS                    |                | // 0b0000000001 = 4GB |
+| 24        | MCS_MCFGPMA_HOLE1_VALID                            |                |                       |
+| 26-35     | MCS_MCFGPMA_HOLE1_LOWER_ADDRESS                    |                |                       |
+| 28        | P9N2_MCS_MCFGPMA_SMF_VALID                         |                |                       |
+| 29        | P9N2_MCS_MCFGPMA_SMF_UPPER_ADDRESS_AT_END_OF_RANGE |                |                       |
+| 30-43     | P9N2_MCS_MCFGPMA_SMF_LOWER_ADDRESS                 |                |                       |
+| 38-47     | MCS_MCFGPMA_HOLE1_UPPER_ADDRESS                    |                | // 0b0000000001 = 4GB |
+| 44-57     | P9N2_MCS_MCFGPMA_SMF_UPPER_ADDRESS                 |                |                       |
+
+write_scom_for_chiplet(5, 0x501080D, 0);
 
 **PU_NXCQ_PB_MODE_REG 0x2011095**
 | Bit range | Description |
@@ -828,18 +896,15 @@ NOTE: No known register bits
 | 51-53     | RX_DYN_RECAL_INTERVAL_TIMEOUT_SEL_TAP   | 5              |             |
 | 54-55     | RX_DYN_RECAL_STATUS_RPT_TIMEOUT_SEL_TAP | 1              |             |
 
-
 **XBUS_RX1_RX_CTL_MODE7_EO_PG 0x8008402006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 60-63     |      | 10             |             |
 
-
 **XBUS_RX0_RX_CTL_MODE23_EO_PG 0x8008C00006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-49     |      |                |             |
-
 
 **XBUS_RX1_RX_CTL_MODE23_EO_PG 0x8008C02006010C3F**
 | Bit range | Name                     | Assigned value | Description |
@@ -849,26 +914,22 @@ NOTE: No known register bits
 | 59        | RX_DFEHISPD_EN           | 1              |             |
 | 60        | RX_DFE12_EN              | 1              |             |
 
-
 **XBUS_RX1_RX_CTL_MODE29_EO_PG 0x8008D02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-55     |      |                |             |
 | 56-63     |      |                |             |
 
-
 **XBUS_RX1_RX_CTL_MODE27_EO_PG 0x8009702006010C3F**
 | Bit range | Name                                   | Assigned value | Description |
 | --------- | -------------------------------------- | -------------- | ----------- |
 | 48        | RX_RC_ENABLE_CTLE_1ST_LATCH_OFFSET_CAL | 1              |             |
-
 
 **XBUS_RX1_RX_ID2_PG 0x8009802006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 49-55     |      | 0              |             |
 | 57-63     |      | 16             |             |
-
 
 **XBUS_RX1_RX_CTL_MODE1_E_PG 0x8009902006010C3F**
 | Bit range | Name                 | Assigned value | Description |
@@ -877,29 +938,24 @@ NOTE: No known register bits
 | 57        | RX_PDWN_LITE_DISABLE | 1              |             |
 | 58        | RX_FENCE             | 1              |             |
 
-
 **XBUS_RX1_RX_CTL_MODE2_E_PG 0x8009982006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-52     |      | 1              |             |
-
 
 **XBUS_RX1_RX_CTL_MODE3_E_PG 0x8009A02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-51     |      | 11             |             |
 
-
 **XBUS_RX1_RX_CTL_MODE5_E_PG 0x8009B02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
-
 
 **XBUS_RX1_RX_CTL_MODE6_E_PG 0x8009B82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 52-55     |      | 1              |             |
-
 
 **XBUS_RX1_RX_CTL_MODE8_E_PG 0x8009C82006010C3F**
 | Bit range | Name                              | Assigned value | Description |
@@ -908,24 +964,20 @@ NOTE: No known register bits
 | 55-58     |                                   | 5              |             |
 | 61-63     |                                   | 5              |             |
 
-
 **XBUS_RX1_RX_CTL_MODE9_E_PG 0x8009D02006010C3F**
 | Bit range | Name                              | Assigned value | Description |
 | --------- | --------------------------------- | -------------- | ----------- |
 | 48-54     |                                   | 63             |             |
 | 55-58     | RX_DYN_RPR_ERR_CNTR2_DURATION_TAP | 5              |             |
 
-
 **XBUS_RX1_RX_CTL_MODE11_E_PG 0x8009E02006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
-
 
 **XBUS_RX1_RX_CTL_MODE12_E_PG 0x8009E82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-63     |      | 0              |             |
-
 
 **XBUS_RX1_RX_GLBSM_SPARE_MODE_PG 0x800A802006010C3F**
 | Bit range | Name                     | Assigned value | Description |
@@ -933,12 +985,10 @@ NOTE: No known register bits
 | 50        | RX_DESKEW_BUMP_AFTER     | 1              |             |
 | 56        | RX_PG_GLBSM_SPARE_MODE_2 | 1              |             |
 
-
 **XBUS_RX1_RX_GLBSM_CNTL3_EO_PG 0x800AE82006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 56-57     |      | 2              |             |
-
 
 **XBUS_RX1_RX_GLBSM_MODE1_E_PG 0x800AF82006010C3F**
 | Bit range | Name | Assigned value | Description |
@@ -946,25 +996,21 @@ NOTE: No known register bits
 | 48-51     |      | 12             |             |
 | 52-55     |      | 12             |             |
 
-
 **XBUS_RX1_RX_DATASM_SPARE_MODE_PG 0x800B802006010C3F**
 | Bit range | Name                       | Assigned value | Description |
 | --------- | -------------------------- | -------------- | ----------- |
 | 56-57     | RX_CTL_DATASM_CLKDIST_PDWN | 0              |             |
 | 60        |                            |                |             |
 
-
 **XBUS_TX1_TX_SPARE_MODE_PG 0x800C042006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 56-57     |      | 0              |             |
 
-
 **XBUS_TX1_TX_ID1_PG 0x800C0C2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-53     |      | 1              |             |
-
 
 **XBUS_TX1_TX_CTL_MODE1_EO_PG 0x800C142006010C3F**
 | Bit range | Name                        | Assigned value | Description |
@@ -973,18 +1019,15 @@ NOTE: No known register bits
 | 53-57     | TX_CTL_REGS_TX_CLKDIST_PDWN | 1              |             |
 | 59        | TX_PDWN_LITE_DISABLE        | 1              |             |
 
-
 **XBUS_TX1_TX_CTL_MODE2_EO_PG 0x800C1C2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 56-62     |      | 17             |             |
 
-
 **XBUS_TX1_TX_CTL_CNTLG1_EO_PG 0x800C242006010C3F**
-| Bit range | Name                             | Assigned value | Description |
-| --------- | -------------------------------- | -------------- | ----------- |
+| Bit range | Name                          | Assigned value | Description |
+| --------- | ----------------------------- | -------------- | ----------- |
 | 48-49     | TX_DRV_CLK_PATTERN_GCRMSG_DRV | 0              |             |
-
 
 **XBUS_TX1_TX_ID2_PG 0x800C842006010C3F**
 | Bit range | Name | Assigned value | Description |
@@ -992,31 +1035,26 @@ NOTE: No known register bits
 | 49-55     |      | 0              |             |
 | 57-63     |      | 16             |             |
 
-
 **XBUS_TX1_TX_CTL_MODE1_E_PG 0x800C8C2006010C3F**
 | Bit range | Name                                    | Assigned value | Description |
 | --------- | --------------------------------------- | -------------- | ----------- |
 | 55-57     | TX_DYN_RECAL_INTERVAL_TIMEOUT_SEL_TAP   | 5              |             |
 | 58-59     | TX_DYN_RECAL_STATUS_RPT_TIMEOUT_SEL_TAP | 1              |             |
 
-
 **XBUS_TX1_TX_CTL_MODE2_E_PG 0x800CEC2006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-63     |      | 0              |             |
-
 
 **XBUS_TX1_TX_CTL_MODE3_E_PG 0x800CF42006010C3F**
 | Bit range | Name | Assigned value | Description |
 | --------- | ---- | -------------- | ----------- |
 | 48-63     |      | 127            |             |
 
-
 **XBUS_TX1_TX_CTLSM_MODE1_EO_PG 0x800D2C2006010C3F**
 | Bit range | Name            | Assigned value | Description |
 | --------- | --------------- | -------------- | ----------- |
 | 59        | TX_FFE_BOOST_EN |                |             |
-
 
 **XBUS_TX_IMPCAL_P_4X_PB 0x800F1C0006010C3F**
 | Bit range | Name | Assigned value | Description |
