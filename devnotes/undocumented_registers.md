@@ -96,7 +96,14 @@ Note: ATTR_PROC_EPS_READ_CYCLES_T* are calculated in istep 8.6
 | 24-47     | MCS_MCFGPM_GROUP_BASE_ADDRESS |                | Group base address (bits 24:47), 0b000000000000000000000001 = 4GB<br>000000001 (base addr of 4GB)<br>000000010 (base addr of 8GB)<br>000000100 (base addr of 16GB)<br>000001000 (base addr of 32GB)<br>000010000 (base addr of 64GB)<br>000100000 (base addr of 128GB)<br>001000000 (base addr of 256GB) |
 
 **MCS_MCFGPA 0x501080B**
-NOTE: some of the bit-fields seem to overlap
+
+NOTE: some of the bit-fields overlap
+
+<a name="hole_description">
+HOLE1 and SMF cannot be both valid. Hostboot asserts in that case only now, after calculating both ranges and
+passing both sets of variables. This could be checked all the way back in 7.4
+</a>
+
 | Bit range | Name                                              | Assigned value | Description        |
 | --------- | ------------------------------------------------- | -------------- | ------------------ |
 | 0         | MCS_MCFGPA_HOLE0_VALID                            |                |                    |
@@ -104,28 +111,29 @@ NOTE: some of the bit-fields seem to overlap
 | 14-23     | MCS_MCFGPA_HOLE0_UPPER_ADDRESS                    |                | 0b0000000001 = 4GB |
 | 24        | MCS_MCFGPA_HOLE1_VALID                            |                |                    |
 | 26-35     | MCS_MCFGPA_HOLE1_LOWER_ADDRESS                    |                | 0b0000000001 = 4GB |
+| 38-47     | MCS_MCFGPA_HOLE1_UPPER_ADDRESS                    |                | 0b0000000001 = 4GB |
 | 28        | P9N2_MCS_MCFGPA_SMF_VALID                         |                |                    |
 | 29        | P9N2_MCS_MCFGPA_SMF_UPPER_ADDRESS_AT_END_OF_RANGE |                |                    |
 | 30-43     | P9N2_MCS_MCFGPA_SMF_LOWER_ADDRESS                 |                |                    |
-| 38-47     | MCS_MCFGPA_HOLE1_UPPER_ADDRESS                    |                | 0b0000000001 = 4GB |
 | 44-57     | P9N2_MCS_MCFGPA_SMF_UPPER_ADDRESS                 |                |                    |
 
 **MCS_MCFGPMA 0x501080D**
-NOTE: some of the bit-fields seem to overlap
+
+NOTE: some of the bit-fields overlap
+You can find more information [here](#hole_description).
+
 | Bit range | Name                                               | Assigned value | Description           |
 | --------- | -------------------------------------------------- | -------------- | --------------------- |
 | 0         | MCS_MCFGPMA_HOLE0_VALID                            |                |                       |
 | 2-11      | MCS_MCFGPMA_HOLE0_LOWER_ADDRESS                    |                | // 0b0000000001 = 4GB |
 | 14-23     | MCS_MCFGPMA_HOLE0_UPPER_ADDRESS                    |                | // 0b0000000001 = 4GB |
 | 24        | MCS_MCFGPMA_HOLE1_VALID                            |                |                       |
-| 26-35     | MCS_MCFGPMA_HOLE1_LOWER_ADDRESS                    |                |                       |
+| 26-35     | MCS_MCFGPMA_HOLE1_LOWER_ADDRESS                    |                | // 0b0000000001 = 4GB |
+| 38-47     | MCS_MCFGPMA_HOLE1_UPPER_ADDRESS                    |                | // 0b0000000001 = 4GB |
 | 28        | P9N2_MCS_MCFGPMA_SMF_VALID                         |                |                       |
 | 29        | P9N2_MCS_MCFGPMA_SMF_UPPER_ADDRESS_AT_END_OF_RANGE |                |                       |
 | 30-43     | P9N2_MCS_MCFGPMA_SMF_LOWER_ADDRESS                 |                |                       |
-| 38-47     | MCS_MCFGPMA_HOLE1_UPPER_ADDRESS                    |                | // 0b0000000001 = 4GB |
 | 44-57     | P9N2_MCS_MCFGPMA_SMF_UPPER_ADDRESS                 |                |                       |
-
-write_scom_for_chiplet(5, 0x501080D, 0);
 
 **PU_NXCQ_PB_MODE_REG 0x2011095**
 | Bit range | Description |
