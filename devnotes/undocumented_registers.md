@@ -588,7 +588,7 @@ at the address 800444000601143F
 | --------- | ------------------------------------------- | ---------------------- | ----------- |
 | 48-54     | TX_PRBS_SEED_VALUE_16_22_PATTERN_TX_A_16_22 |                        |             |
 
-**XBUS_RX0_RX_SPARE_MODE_PG 8008000006010C3F**
+**XBUS_RX0_RX_SPARE_MODE_PG 8008000006010C3F** \
 **XBUS_RX1_RX_SPARE_MODE_PG 8008002006010C3F**
 
 Note: Simmilar register is described in the
@@ -599,7 +599,7 @@ at the address 800800000601143F
 | --------- | ------------------------------ | ---------------------- | ----------- |
 | 49        | RX_CTL_REGS_RX_PG_SPARE_MODE_1 |                        |             |
 
-**XBUS_RX0_RX_ID1_PG 8008080006010C3F**
+**XBUS_RX0_RX_ID1_PG 8008080006010C3F** \
 **XBUS_RX1_RX_ID1_PG 8008082006010C3F**
 
 Note: Simmilar register is described in the
@@ -610,7 +610,7 @@ at the address 800808000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-53     |      |                        |             |
 
-**XBUS_RX0_RX_CTL_MODE1_EO_PG 8008100006010C3F**
+**XBUS_RX0_RX_CTL_MODE1_EO_PG 8008100006010C3F** \
 **XBUS_RX1_RX_CTL_MODE1_EO_PG 8008102006010C3F**
 
 Note: Simmilar register is described in the
@@ -621,7 +621,7 @@ at the address 800810000601143F
 | --------- | --------------------------- | ---------------------- | ----------- |
 | 48        | RX_CTL_REGS_RX_CLKDIST_PDWN | 0                      |             |
 
-**XBUS_RX0_RX_CTL_MODE5_EO_PG 8008300006010C3F**
+**XBUS_RX0_RX_CTL_MODE5_EO_PG 8008300006010C3F** \
 **XBUS_RX1_RX_CTL_MODE5_EO_PG 8008302006010C3F**
 
 Note: Simmilar register is described in the
@@ -633,7 +633,7 @@ at the address 800830000601143F
 | 51-53     | RX_DYN_RECAL_INTERVAL_TIMEOUT_SEL   | 5                      |             |
 | 54-55     | RX_DYN_RECAL_STATUS_RPT_TIMEOUT_SEL | 1                      |             |
 
-**XBUS_RX0_RX_CTL_MODE7_EO_PG 8008400006010C3F**
+**XBUS_RX0_RX_CTL_MODE7_EO_PG 8008400006010C3F** \
 **XBUS_RX1_RX_CTL_MODE7_EO_PG 8008402006010C3F**
 
 Note: Simmilar register is described in the
@@ -644,7 +644,7 @@ at the address 800840000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 60-63     |      | 10                     |             |
 
-**XBUS_RX0_RX_CTL_MODE23_EO_PG 8008C00006010C3F**
+**XBUS_RX0_RX_CTL_MODE23_EO_PG 8008C00006010C3F** \
 **XBUS_RX1_RX_CTL_MODE23_EO_PG 8008C02006010C3F**
 
 Note: Simmilar register is described in the
@@ -660,7 +660,7 @@ at the address 8008C0000601143F
 | 59        | RX_CTL_REGS_RX_DFEHISPD_EN | 1                      |             |
 | 60        | RX_DFE12_EN                | 1                      |             |
 
-**XBUS_RX0_RX_CTL_MODE29_EO_PG 8008D00006010C3F**
+**XBUS_RX0_RX_CTL_MODE29_EO_PG 8008D00006010C3F** \
 **XBUS_RX1_RX_CTL_MODE29_EO_PG 8008D02006010C3F**
 
 Note: Simmilar register is described in the
@@ -672,7 +672,7 @@ at the address 8008D0000601143F
 | 48-55     |      |                        |             |
 | 56-63     |      |                        |             |
 
-**XBUS_RX0_RX_CTL_MODE27_EO_PG 8009700006010C3F**
+**XBUS_RX0_RX_CTL_MODE27_EO_PG 8009700006010C3F** \
 **XBUS_RX1_RX_CTL_MODE27_EO_PG 8009702006010C3F**
 
 Note: Simmilar register is described in the
@@ -683,7 +683,7 @@ at the address 800970000601143F
 | --------- | ----------------------------------------------------- | ---------------------- | ----------- |
 | 48        | RX_CTL_REGS_RX_RC_ENABLE_CTLE_1ST_LATCH_OFFSET_CAL_ON | 1                      |             |
 
-**XBUS_RX0_RX_ID2_PG 8009800006010C3F**
+**XBUS_RX0_RX_ID2_PG 8009800006010C3F** \
 **XBUS_RX1_RX_ID2_PG 8009802006010C3F**
 
 Note: Simmilar register is described in the
@@ -695,7 +695,7 @@ at the address 800980200601143F
 | 49-55     |      | 0                      |             |
 | 57-63     |      | 16                     |             |
 
-**XBUS_RX0_RX_CTL_MODE1_E_PG 8009900006010C3F**
+**XBUS_RX0_RX_CTL_MODE1_E_PG 8009900006010C3F** \
 **XBUS_RX1_RX_CTL_MODE1_E_PG 8009902006010C3F**
 
 Note: Simmilar register is described in the
@@ -708,7 +708,7 @@ at the address 800990000601143F
 | 57        | RX_FENCE             | 1                      |             |
 | 58        | RX_PDWN_LITE_DISABLE | 1                      |             |
 
-**XBUS_RX0_RX_CTL_MODE2_E_PG 8009980006010C3F**
+**XBUS_RX0_RX_CTL_MODE2_E_PG 8009980006010C3F** \
 **XBUS_RX1_RX_CTL_MODE2_E_PG 8009982006010C3F**
 
 Note: Simmilar register is described in the
@@ -719,7 +719,7 @@ at the address 800998000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-52     |      | 1                      |             |
 
-**XBUS_RX0_RX_CTL_MODE3_E_PG 8009A00006010C3F**
+**XBUS_RX0_RX_CTL_MODE3_E_PG 8009A00006010C3F** \
 **XBUS_RX1_RX_CTL_MODE3_E_PG 8009A02006010C3F**
 
 Note: Simmilar register is described in the
@@ -730,8 +730,8 @@ at the address 8009A0000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-51     |      |                        |             |
 
-**XBUS_RX0_RX_CTL_MODE5_E_PG 8009B00006010C3F**
-**XBUS_RX1_RX_CTL_MODE5_E_PG 8009B02006010C3F**
+**XBUS_RX0_RX_CTL_MODE5_E_PG 8009B00006010C3F** \
+**XBUS_RX1_RX_CTL_MODE5_E_PG 8009B02006010C3F** \
 **XBUS_RX1_RX_CTL_MODE6_E_PG 8009B82006010C3F**
 
 Note: Simmilar register is described in the
@@ -753,7 +753,7 @@ at the address 8009B8000601143F
 | 48-54     |      | 11                     |             |
 | 55-61     |      | 11                     |             |
 
-**XBUS_RX0_RX_CTL_MODE8_E_PG 8009C80006010C3F**
+**XBUS_RX0_RX_CTL_MODE8_E_PG 8009C80006010C3F** \
 **XBUS_RX1_RX_CTL_MODE8_E_PG 8009C82006010C3F**
 
 Note: Simmilar register is described in the
@@ -766,7 +766,7 @@ at the address 8009C8000601143F
 | 55-58     | RX_DYN_RPR_ERR_CNTR1_DURATION | 5                      |             |
 | 61-63     |                               | 5                      |             |
 
-**XBUS_RX0_RX_CTL_MODE9_E_PG 8009D00006010C3F**
+**XBUS_RX0_RX_CTL_MODE9_E_PG 8009D00006010C3F** \
 **XBUS_RX1_RX_CTL_MODE9_E_PG 8009D02006010C3F**
 
 Note: Simmilar register is described in the
@@ -778,7 +778,7 @@ at the address 8009D0000601143F
 | 48-54     |                               | 63                     |             |
 | 55-58     | RX_DYN_RPR_ERR_CNTR2_DURATION | 5                      |             |
 
-**XBUS_RX0_RX_CTL_MODE11_E_PG 8009E00006010C3F**
+**XBUS_RX0_RX_CTL_MODE11_E_PG 8009E00006010C3F** \
 **XBUS_RX1_RX_CTL_MODE11_E_PG 8009E02006010C3F**
 
 Note: Simmilar register is described in the
@@ -789,7 +789,7 @@ at the address 8009E0000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-63     |      | 0                      |             |
 
-**XBUS_RX0_RX_CTL_MODE12_E_PG 8009E80006010C3F**
+**XBUS_RX0_RX_CTL_MODE12_E_PG 8009E80006010C3F** \
 **XBUS_RX1_RX_CTL_MODE12_E_PG 8009E82006010C3F**
 
 Note: Simmilar register is described in the
@@ -798,9 +798,9 @@ at the address 8009E8000601143F
 
 | Bit range | Name | Value assigned in code | Description |
 | --------- | ---- | ---------------------- | ----------- |
-| 48-63     |      |                     |             |
+| 48-63     |      |                        |             |
 
-**XBUS_RX0_RX_GLBSM_SPARE_MODE_PG 800A800006010C3F**
+**XBUS_RX0_RX_GLBSM_SPARE_MODE_PG 800A800006010C3F** \
 **XBUS_RX1_RX_GLBSM_SPARE_MODE_PG 800A802006010C3F**
 
 Note: Simmilar register is described in the
@@ -812,7 +812,7 @@ at the address 800A80000601143F
 | 50        | RX_PG_GLBSM_SPARE_MODE_2   | 1                      |             |
 | 56        | RX_DESKEW_BUMP_AFTER_AFTER | 1                      |             |
 
-**XBUS_RX0_RX_GLBSM_CNTL3_EO_PG 800AE80006010C3F**
+**XBUS_RX0_RX_GLBSM_CNTL3_EO_PG 800AE80006010C3F** \
 **XBUS_RX1_RX_GLBSM_CNTL3_EO_PG 800AE82006010C3F**
 
 Note: Simmilar register is described in the
@@ -823,7 +823,7 @@ at the address 800AE8000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 56-57     |      | 2                      |             |
 
-**XBUS_RX0_RX_GLBSM_MODE1_E_PG 800AF80006010C3F**
+**XBUS_RX0_RX_GLBSM_MODE1_E_PG 800AF80006010C3F** \
 **XBUS_RX1_RX_GLBSM_MODE1_E_PG 800AF82006010C3F**
 
 Note: Simmilar register is described in the
@@ -835,7 +835,7 @@ at the address 800AF8000601143F
 | 48-51     |      | 12                     |             |
 | 52-55     |      | 12                     |             |
 
-**XBUS_RX0_RX_DATASM_SPARE_MODE_PG 800B800006010C3F**
+**XBUS_RX0_RX_DATASM_SPARE_MODE_PG 800B800006010C3F** \
 **XBUS_RX1_RX_DATASM_SPARE_MODE_PG 800B802006010C3F**
 
 Note: Simmilar register is described in the
@@ -847,7 +847,7 @@ at the address 800B80000601143F
 | 56        |                            |                        |             |
 | 60        | RX_CTL_DATASM_CLKDIST_PDWN | 0                      |             |
 
-**XBUS_TX0_TX_SPARE_MODE_PG 800C040006010C3F**
+**XBUS_TX0_TX_SPARE_MODE_PG 800C040006010C3F** \
 **XBUS_TX1_TX_SPARE_MODE_PG 800C042006010C3F**
 
 Note: Simmilar register is described in the
@@ -858,7 +858,7 @@ at the address 800C04000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 56-57     |      | 0                      |             |
 
-**XBUS_TX0_TX_ID1_PG 800C0C0006010C3F**
+**XBUS_TX0_TX_ID1_PG 800C0C0006010C3F** \
 **XBUS_TX1_TX_ID1_PG 800C0C2006010C3F**
 
 Note: Simmilar register is described in the
@@ -869,7 +869,7 @@ at the address 800C0C000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-53     |      |                        |             |
 
-**XBUS_TX0_TX_CTL_MODE1_EO_PG 800C140006010C3F**
+**XBUS_TX0_TX_CTL_MODE1_EO_PG 800C140006010C3F** \
 **XBUS_TX1_TX_CTL_MODE1_EO_PG 800C142006010C3F**
 
 Note: Simmilar register is described in the
@@ -882,7 +882,7 @@ at the address 800C14000601143F
 | 53-57     |                                  | 1                      |             |
 | 59        | TX_CTL_REGS_TX_PDWN_LITE_DISABLE | 1                      |             |
 
-**XBUS_TX0_TX_CTL_MODE2_EO_PG 800C1C0006010C3F**
+**XBUS_TX0_TX_CTL_MODE2_EO_PG 800C1C0006010C3F** \
 **XBUS_TX1_TX_CTL_MODE2_EO_PG 800C1C2006010C3F**
 
 Note: Simmilar register is described in the
@@ -893,7 +893,7 @@ at the address 800C1C000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 56-62     |      | 17                     |             |
 
-**XBUS_TX0_TX_CTL_CNTLG1_EO_PG 800C240006010C3F**
+**XBUS_TX0_TX_CTL_CNTLG1_EO_PG 800C240006010C3F** \
 **XBUS_TX1_TX_CTL_CNTLG1_EO_PG 800C242006010C3F**
 
 Note: Simmilar register is described in the
@@ -905,7 +905,7 @@ at the address 800C24000601143F
 | 48-49     | TX_DRV_CLK_PATTERN_GCRMSG_DRV | 0                      |             |
 
 
-**XBUS_TX0_TX_ID2_PG 800C840006010C3F**
+**XBUS_TX0_TX_ID2_PG 800C840006010C3F** \
 **XBUS_TX1_TX_ID2_PG 800C842006010C3F**
 
 Note: Simmilar register is described in the
@@ -917,7 +917,7 @@ at the address 800C84000601143F
 | 49-55     |      | 0                      |             |
 | 57-63     |      | 16                     |             |
 
-**XBUS_TX0_TX_CTL_MODE1_E_PG 800C8C0006010C3F**
+**XBUS_TX0_TX_CTL_MODE1_E_PG 800C8C0006010C3F** \
 **XBUS_TX1_TX_CTL_MODE1_E_PG 800C8C2006010C3F**
 
 Note: Simmilar register is described in the
@@ -929,7 +929,7 @@ at the address 800C8C000601143F
 | 55-57     | TX_DYN_RECAL_INTERVAL_TIMEOUT_SEL   | 5                      |             |
 | 58-59     | TX_DYN_RECAL_STATUS_RPT_TIMEOUT_SEL | 1                      |             |
 
-**XBUS_TX0_TX_CTL_MODE2_E_PG 800CEC0006010C3F**
+**XBUS_TX0_TX_CTL_MODE2_E_PG 800CEC0006010C3F** \
 **XBUS_TX1_TX_CTL_MODE2_E_PG 800CEC2006010C3F**
 
 Note: Simmilar register is described in the
@@ -940,7 +940,7 @@ at the address 800CEC000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-63     |      | 0                      |             |
 
-**XBUS_TX0_TX_CTL_MODE3_E_PG 800CF40006010C3F**
+**XBUS_TX0_TX_CTL_MODE3_E_PG 800CF40006010C3F** \
 **XBUS_TX1_TX_CTL_MODE3_E_PG 800CF42006010C3F**
 
 Note: Simmilar register is described in the
@@ -951,7 +951,7 @@ at the address 800CF4000601143F
 | --------- | ---- | ---------------------- | ----------- |
 | 48-55     |      | 127                    |             |
 
-**XBUS_TX0_TX_CTLSM_MODE1_EO_PG 800D2C0006010C3F**
+**XBUS_TX0_TX_CTLSM_MODE1_EO_PG 800D2C0006010C3F** \
 **XBUS_TX1_TX_CTLSM_MODE1_EO_PG 800D2C2006010C3F**
 
 Note: Simmilar register is described in the
@@ -1076,7 +1076,7 @@ at the address 8002C0200601143F
 **XBUS_TX1_TXPACKS3_SLICE1_TX_MODE1_PL 8004042D06010C3F** \
 **XBUS_TX1_TXPACKS3_SLICE2_TX_MODE1_PL 8004042E06010C3F** \
 **XBUS_TX1_TXPACKS3_SLICE3_TX_MODE1_PL 8004042F06010C3F** \
-**XBUS_TX1_TXPACKS3_SLICE4_TX_MODE1_PL 8004043006010C3F**
+**XBUS_TX1_TXPACKS3_SLICE4_TX_MODE1_PL 8004043006010C3F** \
 **XBUS_TX0_TXPACKS0_SLICE0_TX_MODE1_PL 8004040006010C3F** \
 **XBUS_TX0_TXPACKS0_SLICE1_TX_MODE1_PL 8004040106010C3F** \
 **XBUS_TX0_TXPACKS0_SLICE2_TX_MODE1_PL 8004040206010C3F** \
