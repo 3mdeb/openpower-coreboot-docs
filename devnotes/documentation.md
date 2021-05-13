@@ -109,7 +109,6 @@ In order to build coreboot image, follow the steps below:
    * As a **Mainboard vendor** select `Raptor Computing Systems`
    * If it wasn't selected autmatically, as **Mainboard model** select `Talos II`
    * In the **ROM chip size** option select `512 KB`
-   * As **Size of CBFS filesystem in ROM** set `0x80000` (Only if this option is present)
    * Save the configuration and exit.
 
    ![](../images/cb_menuconfig.png)
@@ -156,7 +155,7 @@ In order to build coreboot image, follow the steps below:
 
    Wait for a while until coreboot shows up:
 
-   ![](../images/cb_bootblock.png)
+   [![asciicast](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0.svg)](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0)
 
 5. Enjoy the coreboot running on Talos II.
 
@@ -164,25 +163,3 @@ In order to build coreboot image, follow the steps below:
 > the HBB partition back with:\
 > `pflash -e -P HBB -p /tmp/hbb.bin`
 
-## Running the coreboot on QEMU
-
-Please keep in mind, that QEMU doesn't implement many of the HW properties,
-that Talos II has. There may be many compatibility issues, or registers missing.
-
-More detailed informations can be found in [porting.md#qemu](porting.md#qemu)
-
-1. Clone the QEMU repository
-   ```
-   git clone git@github.com:qemu/qemu.git
-   # or HTTPS alternatively
-   git clone https://github.com/qemu/qemu.git
-   ```
-2. Build the QEMU ppc64 version
-   ```
-   cd qemu
-    ./configure --target-list=ppc64-softmmu && make
-   ```
-3. Start QEMU with coreboot image
-   ````
-   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio -drive file=flash.pnor,format=raw,readonly=on,if=mtd
-   ````
