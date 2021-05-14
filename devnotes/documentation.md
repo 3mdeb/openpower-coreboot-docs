@@ -149,8 +149,8 @@ In order to build coreboot image, follow the steps below:
    Answer yes to the prompt and wait for the process to finish.
 
 4. Log into the BMC GUI again at https://\<BMC_IP\>/. Enter the Server power
-   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke warm
-   reboot. Then move to Serial over LAN remote console
+   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke
+   warm reboot. Then move to Serial over LAN remote console
    (https://\<BMC_IP\>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
@@ -160,6 +160,22 @@ In order to build coreboot image, follow the steps below:
 5. Enjoy the coreboot running on Talos II.
 
 > **Optional:** In order to recovery the platform quickly to healthy state, flash
-> the HBB partition back with:\
+> the HBB partition back with: \
 > `pflash -e -P HBB -p /tmp/hbb.bin`
 
+## Memory configurations
+Following RAM configurations were tested and are proved to be properly initialized.
+   ```
+   MCS0, MCA0
+      DIMM0: 1Rx4 16GB
+      DIMM1: not installed
+   MCS0, MCA1
+      DIMM0: 1Rx8 8GB
+      DIMM1: not installed
+   MCS1, MCA0
+      DIMM0: 2Rx4 32GB
+      DIMM1: not installed
+   MCS1, MCA1
+      DIMM0: 2Rx8 16GB
+      DIMM1: not installed
+   ```
