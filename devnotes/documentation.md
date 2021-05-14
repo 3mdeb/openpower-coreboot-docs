@@ -165,7 +165,8 @@ In order to build coreboot image, follow the steps below:
 
 ## Hardware configuration
 
-Configuration with IBM POWER9 64bit CPU is supported.
+Configuration with a single IBM POWER9 64bit CPU is supported. \
+Dual CPU setup not supported currenctly.
 
 Following RAM configurations were tested and are proved to be properly initialized.
    ```
