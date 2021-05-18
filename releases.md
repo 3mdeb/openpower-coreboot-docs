@@ -69,13 +69,13 @@ for Talos II.
    [==================================================] 100% ETA:0s
    ```
 
-4. * Log into the BMC GUI at https://\<BMC_IP\>/.\
+4. * Log into the BMC GUI at https://<BMC_IP>/. \
      Make sure to use `https`.
    * Enter the Server power operations
-     `https://\<BMC_IP\>/#/server-control/power-operations` and invoke
+     `https://<BMC_IP>/#/server-control/power-operations` and invoke
      warm reboot.
    * Then move to Serial over LAN remote console
-     `https://\<BMC_IP\>/#/server-control/remote-console` to observe
+     `https://<BMC_IP>/#/server-control/remote-console` to observe
      whether the platform is booting.
 
 ---
@@ -154,10 +154,10 @@ In order to build coreboot image, follow the steps below:
 
    Answer yes to the prompt and wait for the process to finish.
 
-4. Log into the BMC GUI again at https://\<BMC_IP\>/. Enter the Server power
-   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke
+4. Log into the BMC GUI again at https://<BMC_IP>/. Enter the Server power
+   operations (https://<BMC_IP>/#/server-control/power-operations) and invoke
    warm reboot. Then move to Serial over LAN remote console
-   (https://\<BMC_IP\>/#/server-control/remote-console)
+   (https://<BMC_IP>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
 
@@ -199,5 +199,5 @@ TBD
 
 ---
 ## Coming soon
-1. Building HDAT structure
-2. Booting skiboot as payload
+1. Building a HDAT structure
+2. Booting skiboot as a payload
