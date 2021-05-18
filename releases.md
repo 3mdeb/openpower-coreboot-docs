@@ -2,14 +2,16 @@
 
 ## Key changes
 
-1. Added RAM initialization
-2. Added SCOM registers support
+1. Added SCOM registers support
+2. Added RAM initialization
+3. Added support for reading from VPD partition
 
 ---
 ## Statistics
 
 Since bootblock release: \
-<span style="color:yellow">59</span> files were changed including <span style="color:lightgreen">48</span> new files created \
+<span style="color:yellow">59</span> files were changed including
+<span style="color:lightgreen">48</span> new files created \
 <span style="color:lightgreen">12407</span> lines of code were added \
 <span style="color:orangered">76</span> lines of code were removed
 
@@ -117,7 +119,7 @@ In order to build coreboot image, follow the steps below:
    * In the **ROM chip size** option select `512 KB`
    * Save the configuration and exit.
 
-   ![make menuconfig](images/cb_menuconfig.png)
+   ![make menuconfig](images/cb_menuconfig_romstage.png)
 
 5. Start the build process of coreboot inside the container:
 
@@ -136,7 +138,6 @@ In order to build coreboot image, follow the steps below:
    ```
    scp build/coreboot.rom.signed.ecc root@<BMC_IP>:/tmp
    ```
-   > If that file is not present, use `coreboot.rom` instead
 
 2. Backup the HBB partition (for faster later recovery) by invoking this
    command on BMC:
@@ -150,7 +151,6 @@ In order to build coreboot image, follow the steps below:
    ```
    pflash -e -P HBB -p /tmp/coreboot.signed.ecc
    ```
-   > Again, if that file is not present, use `coreboot.rom` instead
 
    Answer yes to the prompt and wait for the process to finish.
 
@@ -175,20 +175,22 @@ Configuration with a single IBM POWER9 64bit CPU is supported. \
 Dual CPU setup not supported currenctly.
 
 Following RAM configurations were tested and are proved to be properly initialized.
-   ```
-   MCS0, MCA0
-      DIMM0: 1Rx4 16GB PC4-2666V-RC2-12-PA0
-      DIMM1: not installed
-   MCS0, MCA1
-      DIMM0: 1Rx8 8GB
-      DIMM1: not installed
-   MCS1, MCA0
-      DIMM0: 2Rx4 32GB PC4-2666V-RB2-12-MA0
-      DIMM1: not installed
-   MCS1, MCA1
-      DIMM0: 2Rx8 16GB PC4-2666V-RE2-12
-      DIMM1: not installed
-   ```
+<pre>
+MCS0, MCA0
+   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A2K40CB2-CTD>1Rx4 16GB PC4-2666V-RC2-12-PA0</a>
+   DIMM1: not installed
+MCS0, MCA1
+   DIMM0: <a href=https://www.crucial.com/memory/server-ddr4/mta9asf1g72pz-2g6j1>1Rx8 8GB PC4-2666V-RD1-12</a>
+   DIMM1: not installed
+MCS1, MCA0
+   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A4K40CB2-CTD/>2Rx4 32GB PC4-2666V-RB2-12-MA0</a>
+   DIMM1: not installed
+MCS1, MCA1
+   DIMM0: <a href=https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/static_file/12701730956286135.pdf>2Rx8 16GB PC4-2666V-RE2-12</a>
+   DIMM1: not installed
+</pre>
+
+All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
 
 ---
 ## Binaries
