@@ -10,14 +10,13 @@
 ## Statistics
 
 Since bootblock release: \
-<span style="color:yellow">59</span> files were changed including
-<span style="color:lightgreen">48</span> new files created \
+<span style="color:yellow">60</span> files were changed including
 <span style="color:lightgreen">12407</span> lines of code were added \
-<span style="color:orangered">76</span> lines of code were removed
+<span style="color:orangered">79</span> lines of code were removed
 
 Check the statistics with:
 ```
-git diff --stat 6f5a735df6 c0fe1bbd4d
+git diff --stat 692bd9facd 40abf848c8
 ```
 ---
 ## How to build and use it
