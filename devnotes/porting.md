@@ -384,6 +384,24 @@ It is a good idea to include `-d unimp,guest_errors` in the command line, this
 will help to spot accesses to unimplemented parts of hardware, like SPRs or IO
 ports.
 
+Bellow are step by step instructions, how to run coreboot on QEMU ppc64 version.
+
+1. Clone the QEMU repository
+   ```
+   git clone git@github.com:qemu/qemu.git
+   # or HTTPS alternatively
+   git clone https://github.com/qemu/qemu.git
+   ```
+2. Build the QEMU ppc64 version
+   ```
+   cd qemu
+    ./configure --target-list=ppc64-softmmu && make
+   ```
+3. Start QEMU with coreboot image
+   ````
+   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio -drive file=flash.pnor,format=raw,readonly=on,if=mtd
+   ````
+
 ## Assumptions about target PNOR image
 
 SBE loads HBBL, so unless we choose to modify SBE code we should leave this
