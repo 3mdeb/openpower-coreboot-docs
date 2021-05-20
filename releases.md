@@ -49,13 +49,12 @@ MCS1, MCA1
 All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
 
 ### Release binaries
-
-* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256.sig](https://cloud.3mdeb.com/index.php/s/QX5CcteHppoNynT)
+* [dasharo-trustworthy-computing-v0.1.0.rom](https://cloud.3mdeb.com/index.php/s/4Aa9Et3eL44yzsn)
+* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256](https://cloud.3mdeb.com/index.php/s/xBrXpbqPWpJXydw)
 * [dasharo-trustworthy-computing-v0.1.0.rom.SHA256.sig](https://cloud.3mdeb.com/index.php/s/Kq9GbWwZegWQdpb)
 * [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc](https://cloud.3mdeb.com/index.php/s/7F9zxPcRnaBkRiD)
 * [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256](https://cloud.3mdeb.com/index.php/s/4arNninMLdYZwxt)
-* [dasharo-trustworthy-computing-v0.1.0.rom](https://cloud.3mdeb.com/index.php/s/4Aa9Et3eL44yzsn)
-* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256](https://cloud.3mdeb.com/index.php/s/xBrXpbqPWpJXydw)
+* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256.sig](https://cloud.3mdeb.com/index.php/s/QX5CcteHppoNynT)
 
 See how to verify signatures on
 [![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf?t=7)
