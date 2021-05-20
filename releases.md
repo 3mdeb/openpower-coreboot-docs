@@ -86,9 +86,9 @@ In order to build coreboot image, follow the steps below:
 1. Clone the coreboot repository:
 
    ```
-   git clone git@github.com:3mdeb/coreboot.git -b talos_2_support
+   git clone git@github.com:3mdeb/coreboot.git -b dasharo-trustworthy-computing-v0.1.0
    # or HTTPS alternatively
-   git clone https://github.com/3mdeb/coreboot.git -b talos_2_support
+   git clone https://github.com/3mdeb/coreboot.git -b dasharo-trustworthy-computing-v0.1.0
    ```
    `talos_2_support` is the main development branch for Talos II support.
 
@@ -202,7 +202,7 @@ All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
 * [dasharo-trustworthy-computing-v0.1.0.rom.SHA256](https://cloud.3mdeb.com/index.php/s/xBrXpbqPWpJXydw)
 
 See how to verify signatures on
-[![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf)
+[![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf?t=7)
 
 ---
 ## Coming soon
