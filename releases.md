@@ -1,13 +1,17 @@
-# Talos II support in coreboot
+# Dasharo Trustworthy Computing
 
-## Key changes
+Talos II support in coreboot
 
-1. Added SCOM registers support
-2. Added RAM initialization
-3. Added support for reading from VPD partition
+## v0.1.0
 
----
-## Statistics
+### Changelog
+
+Added:
+* SCOM registers support
+* RAM initialization
+* support for reading from VPD partition
+
+### Statistics
 
 Since bootblock release: \
 <span style="color:yellow">61</span> files were changed including \
@@ -18,10 +22,45 @@ Check the statistics with:
 ```
 git diff --stat 692bd9facd 34f2678e08
 ```
----
-## How to build and use it
 
-### Environment preparation
+### Hardware configuration
+
+Configuration with a single IBM POWER9 64bit CPU is supported. \
+Dual CPU setup not supported currently.
+
+Following RAM configurations were tested and are proved to be properly initialized.
+<pre>
+MCS0, MCA0
+   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A2K40CB2-CTD>1Rx4 16GB PC4-2666V-RC2-12-PA0</a>
+   DIMM1: not installed
+MCS0, MCA1
+   DIMM0: <a href=https://www.crucial.com/memory/server-ddr4/mta9asf1g72pz-2g6j1>1Rx8 8GB PC4-2666V-RD1-12</a>
+   DIMM1: not installed
+MCS1, MCA0
+   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A4K40CB2-CTD/>2Rx4 32GB PC4-2666V-RB2-12-MA0</a>
+   DIMM1: not installed
+MCS1, MCA1
+   DIMM0: <a href=https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/static_file/12701730956286135.pdf>2Rx8 16GB PC4-2666V-RE2-12</a>
+   DIMM1: not installed
+</pre>
+
+All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
+
+### Release binaries
+
+* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256.sig](https://cloud.3mdeb.com/index.php/s/QX5CcteHppoNynT)
+* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256.sig](https://cloud.3mdeb.com/index.php/s/Kq9GbWwZegWQdpb)
+* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc](https://cloud.3mdeb.com/index.php/s/7F9zxPcRnaBkRiD)
+* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256](https://cloud.3mdeb.com/index.php/s/4arNninMLdYZwxt)
+* [dasharo-trustworthy-computing-v0.1.0.rom](https://cloud.3mdeb.com/index.php/s/4Aa9Et3eL44yzsn)
+* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256](https://cloud.3mdeb.com/index.php/s/xBrXpbqPWpJXydw)
+
+See how to verify signatures on
+[![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf?t=7)
+
+### How to build and use it
+
+#### Environment preparation
 
 In order to build coreboot, we use docker container. So in order to setup
 environment, ensure that:
@@ -77,9 +116,7 @@ for Talos II.
      `https://<BMC_IP>/#/server-control/remote-console` to observe
      whether the platform is booting.
 
----
-
-### Buidling coreboot image
+#### Buidling coreboot image
 
 In order to build coreboot image, follow the steps below:
 
@@ -126,9 +163,7 @@ In order to build coreboot image, follow the steps below:
    make
    ```
 
----
-
-### Running the coreboot on Talos II
+#### Running the coreboot on Talos II
 
 1. At the end of build process you should see `Built raptor-cs/talos-2 (Talos II)`.
    Copy the result binary from `<coreboot_dir>/build/coreboot.rom.signed.ecc` to the BMC
@@ -168,43 +203,6 @@ In order to build coreboot image, follow the steps below:
 > the HBB partition back with: \
 > `pflash -e -P HBB -p /tmp/hbb.bin`
 
-### Hardware configuration
-
-Configuration with a single IBM POWER9 64bit CPU is supported. \
-Dual CPU setup not supported currenctly.
-
-Following RAM configurations were tested and are proved to be properly initialized.
-<pre>
-MCS0, MCA0
-   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A2K40CB2-CTD>1Rx4 16GB PC4-2666V-RC2-12-PA0</a>
-   DIMM1: not installed
-MCS0, MCA1
-   DIMM0: <a href=https://www.crucial.com/memory/server-ddr4/mta9asf1g72pz-2g6j1>1Rx8 8GB PC4-2666V-RD1-12</a>
-   DIMM1: not installed
-MCS1, MCA0
-   DIMM0: <a href=https://www.samsung.com/semiconductor/dram/module/M393A4K40CB2-CTD/>2Rx4 32GB PC4-2666V-RB2-12-MA0</a>
-   DIMM1: not installed
-MCS1, MCA1
-   DIMM0: <a href=https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/static_file/12701730956286135.pdf>2Rx8 16GB PC4-2666V-RE2-12</a>
-   DIMM1: not installed
-</pre>
-
-All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
-
----
-## Binaries
-
-* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256.sig](https://cloud.3mdeb.com/index.php/s/QX5CcteHppoNynT)
-* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256.sig](https://cloud.3mdeb.com/index.php/s/Kq9GbWwZegWQdpb)
-* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc](https://cloud.3mdeb.com/index.php/s/7F9zxPcRnaBkRiD)
-* [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256](https://cloud.3mdeb.com/index.php/s/4arNninMLdYZwxt)
-* [dasharo-trustworthy-computing-v0.1.0.rom](https://cloud.3mdeb.com/index.php/s/4Aa9Et3eL44yzsn)
-* [dasharo-trustworthy-computing-v0.1.0.rom.SHA256](https://cloud.3mdeb.com/index.php/s/xBrXpbqPWpJXydw)
-
-See how to verify signatures on
-[![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf?t=7)
-
----
-## Coming soon
+### Coming soon
 1. Building a HDAT structure
 2. Booting skiboot as a payload
