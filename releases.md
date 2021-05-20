@@ -10,13 +10,13 @@
 ## Statistics
 
 Since bootblock release: \
-<span style="color:yellow">60</span> files were changed including
-<span style="color:lightgreen">12407</span> lines of code were added \
-<span style="color:orangered">79</span> lines of code were removed
+<span style="color:yellow">61</span> files were changed including
+<span style="color:lightgreen">12408</span> lines of code were added \
+<span style="color:orangered">86</span> lines of code were removed
 
 Check the statistics with:
 ```
-git diff --stat 692bd9facd 40abf848c8
+git diff --stat 692bd9facd 34f2678e08
 ```
 ---
 ## How to build and use it
@@ -160,7 +160,7 @@ In order to build coreboot image, follow the steps below:
 
    Wait for a while until coreboot shows up:
 
-   [![asciicast](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0.svg)](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0)
+   [![asciicast](https://asciinema.org/a/hbeSMdHqHxJiYKxZCdRq3AIGa.svg)](https://asciinema.org/a/hbeSMdHqHxJiYKxZCdRq3AIGa)
 
 5. Enjoy the coreboot running on Talos II.
 
