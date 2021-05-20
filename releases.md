@@ -10,7 +10,7 @@
 ## Statistics
 
 Since bootblock release: \
-<span style="color:yellow">61</span> files were changed including
+<span style="color:yellow">61</span> files were changed including \
 <span style="color:lightgreen">12408</span> lines of code were added \
 <span style="color:orangered">86</span> lines of code were removed
 
