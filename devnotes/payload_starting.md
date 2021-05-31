@@ -1,5 +1,9 @@
-Payload loading and starting
-----------------------------
+# Payload loading and starting
+
+Note that we abandoned HDAT idea and decided to use Flattened Device Tree.
+You can skip next section and jump to (FDT entry)[#fdt-entry].
+
+## HDAT analysis
 
 All of the following comes from analyzing skiboot's code only.
 - every thread jumps into skiboot (at offset 0x180)
@@ -41,6 +45,8 @@ All of the following comes from analyzing skiboot's code only.
       - S stands for Support processor (FSP or BMC)
       - there is also SPIRA-H (Hypervisor), but it is written in skiboot's code
         and constant (unless it is patched by hostboot after loading skiboot?)
+      - main SPIRA is also present in LID, and is not empty (`proc_init`,
+        `cpu_ctrl`, `mdump_src`, `heap`)
     - `SPIRA_HEAP_SIZE` = 0x00800000
   - /hdata/spira.h:
     - all (?) data is in BE
@@ -58,8 +64,7 @@ All of the following comes from analyzing skiboot's code only.
       - SPIRA-H has `hs_data_area` and `proc_dump_area` but SPIRA doesn't
       - SPIRA also has `chip_tod`, `ext_cache_fru_vpd`, `heap` and `paca` fields
 
-SPIRA-S fields
-==============
+#### SPIRA-S fields
 
 Most `*_vpd` fields are parsed by `_vpd_parse` which "just adds" the data to DT.
 Unless otherwise noted, hostboot creates one entry for each field for current
@@ -104,3 +109,118 @@ Additional findings based on hostboot analysis:
     - various version and capability fields
   - pointers are probably offsets, otherwise it wouldn't be relocatable
     - or whole payload is aligned to HRMOR?
+
+## FDT entry
+
+coreboot has support for FIT payloads, which is similar to what skiboot expects
+when started through FDT entry point. It is not enabled for PPC64 as of now, but
+simple changes to Kconfig files are enough to make it build. There are however
+some subtle but important differences that have to be worked out:
+
+- in Kconfigs for `PAYLOAD_FIT` and `PAYLOAD_FIT_SUPPORT` `ARCH_PPC64` is
+  missing in `depends on`
+- previous stages were started through function descriptors in OPD section, for
+  FDT entry point we have to jump at offset 0x10 from the start of the image.
+  This is raw entry point but plain C function call would try to use OPD logic
+  so it has to be done in assembly
+- CBFS with embedded skiboot and DT will no longer fit in HBB partition, which
+  slightly complicates deployment (see [flashing instructions](#flashing) below)
+- coreboot removes existing memory nodes from the device tree and writes its
+  own. This removes `ibm,chip-id` props which are expected by skiboot to create
+  memory associativity mapping (NUMA). The final solution should recreate those
+  props, but for testing it is enough to pass the memory information in FDT blob
+  and comment out a call to `fit_update_memory()` in `fit_payload()`
+
+All changes mentioned above are on [power_fit_loading branch](https://github.com/3mdeb/coreboot/tree/power_fit_loading).
+Some of them are temporary, just to start the payload to discover how much of
+hardware initialization is still missing.
+
+### Preparing a Device Tree
+
+TBD
+
+### Obtaining skiboot.lid
+
+TBD
+
+### Preparing FIT payload
+
+This is loosely based on documentation for [qemu-aarch64 mainboard](https://doc.coreboot.org/mainboard/emulation/qemu-aarch64.html#building-coreboot-with-an-arbitrary-fit-payload)
+and [generic FIT information](https://doc.coreboot.org/lib/payloads/fit.html).
+
+1. Create `config.its` file with the following contents:
+
+```
+/dts-v1/;
+/ {
+	description = "Simple image with skiboot and FDT blob";
+	#address-cells = <1>;
+
+	images {
+		kernel {
+			description = "skiboot";
+			data = /incbin/("skiboot.lid");
+			type = "kernel";
+			arch = "powerpc";
+			compression = "none";
+			load = <0x00000>;
+			entry = <0x10>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+		fdt-1 {
+			description = "Flattened Device Tree blob";
+			data = /incbin/("fdt.bin");
+			type = "flat_dt";
+			arch = "powerpc";
+			compression = "none";
+			load = <0x1000000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+	};
+
+	configurations {
+		default = "conf-1";
+		conf-1 {
+			description = "Boot skiboot with FDT blob";
+			kernel = "kernel";
+			fdt = "fdt-1";
+		};
+	};
+};
+```
+
+2. From the directory that contains `config.its`, `skiboot.lid` and `fdt.bin`
+   run:
+
+```shell
+mkimage -f config.its uImage
+```
+
+3. Copy newly created `uImage` file somewhere coreboot can see it and point to
+   it in coreboot's config menu as a FIT payload. Remember to use at least 2MB
+   as ROM chip size.
+
+### Flashing
+
+Because HBB is no longer big enough to hold whole CBFS we have to flash
+bootblock and main CBFS separately. Build system already creates signed
+bootblock with ECC. First copy both files to BMC:
+
+```shell
+scp build/coreboot.rom.signed.ecc root@<BMC IP>:/tmp/coreboot.rom.signed.ecc
+scp build/bootblock.signed.ecc root@<BMC IP>:/tmp/bootblock.signed.ecc
+```
+
+Then log in to BMC and flash bootblock to HBB and the rest to HBI:
+
+```shell
+pflash -e -P HBB -p /tmp/bootblock.signed.ecc
+pflash -e -P HBI -p /tmp/coreboot.rom.signed.ecc
+```
+
+Start the platform as usual. It should boot up to a point where skiboot tries
+to start execution on other cores.
