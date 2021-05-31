@@ -141,7 +141,26 @@ TBD
 
 ### Obtaining skiboot.lid
 
-TBD
+Payload binary can be obtained in two ways. First one is to copy it from
+`talos-op-build/output/build/skiboot-<hash>/skiboot.lid`, it is the easiest way
+if you already have built full PNOR image, however it is very time-consuming if
+you haven't.
+
+The other way is to read it from PNOR. Its partition doesn't have ECC, but you
+have to remove STB header.
+
+1. From the BMC:
+
+```shell
+pflash -P PAYLOAD -r /tmp/skiboot.bin
+```
+
+2. Copy this file to your computer (tools included in BMC's BusyBox are lacking
+   required options), strip the header and decompress XZ file:
+
+```shell
+tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
+```
 
 ### Preparing FIT payload
 
