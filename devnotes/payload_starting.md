@@ -137,7 +137,36 @@ hardware initialization is still missing.
 
 ### Preparing a Device Tree
 
-TBD
+Unfortunately, we can't just use Device Tree [read from running system](../logs/28.05.2021_talos_ii_device-tree.dts)
+because it contains information that was filled by skiboot, and should not be
+present in the tree passed to it, otherwise skiboot will complain and abort. By
+comparing it with unit test for [Witherspoon](https://git.raptorcs.com/git/talos-skiboot/tree/hdata/test/op920.wsp.dts)
+we can deduce which information is redundant. These include:
+
+- reserved memory ranges - this includes `/memreserve/` at the beginning of the
+  file, `reserved-names` and `reserved-ranges` in the root and `reserved-memory`
+  node
+- `chosen` node
+- for each CPU: `ibm,associativity`, `ibm,dec-bits`, `interrupts` and
+  `interrupt-parent`
+- whole `ibm,powerpc-cpu-features`
+- `ibm,firmware-versions`
+- most of the `ibm,opal` node, except for `phandle`, `leds`, `phandle` and
+  `ibm,enabled-stop-levels` in `power-mgt`
+- `imc-counters`
+- `interrupt-controller` - 2 nodes (?)
+- interrupt fields for `lpc` and `ipmi-bt` node
+  - `status = "reserved"` for serial
+- `ibm,associativity` for each `memory`
+- `pciex` - all entries
+- `psi`
+- `vas`
+- `ibm,opal-id` and `ibm,port-name` for each I2C bus
+- `ibm,842-high-fifo`, `ibm,842-normal-fifo`, `ibm,gzip-high-fifo` and
+  `ibm,gzip-normal-fifo`
+
+All of the above reduced DTS file from ~7000 lines to just over 1500. Stripped
+file can be found [here](../logs/28.05.2021_talos_ii_device-tree_stripped.dts).
 
 ### Obtaining skiboot.lid
 
