@@ -6681,7 +6681,7 @@
 				};
 
 				eeprom@56 {
-					phandle = <0x5c>;d
+					phandle = <0x5c>;
 					reg = <0x56>;
 					link-id = <0x01>;
 					compatible = "spd";
