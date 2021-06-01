@@ -169,13 +169,16 @@ All of the above reduced DTS file from ~7000 lines to just over 1500. Stripped
 file can be found [here](../logs/28.05.2021_talos_ii_device-tree_stripped.dts).
 
 ### Obtaining skiboot.lid
+`skiboot.lid` can be obtained in a few different ways:
 
-Payload binary can be obtained in two ways. First one is to copy it from
-`talos-op-build/output/build/skiboot-<hash>/skiboot.lid`, it is the easiest way
+* First one is to [build it](#building-skibootlid) - it is very quick and easy.
+
+* Second one is to copy it from
+`talos-op-build/output/build/skiboot-<hash>/skiboot.lid`,
 if you already have built full PNOR image, however it is very time-consuming if
 you haven't.
 
-The other way is to read it from PNOR. Its partition doesn't have ECC, but you
+* The third way is to read it from PNOR. Its partition doesn't have ECC, but you
 have to remove STB header.
 
 1. From the BMC:
@@ -190,6 +193,27 @@ pflash -P PAYLOAD -r /tmp/skiboot.bin
 ```shell
 tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
 ```
+
+### Building skiboot.lid
+
+   1. Clone the skiboot repository
+   ```
+   git clone https://git.raptorcs.com/git/talos-skiboot
+   ```
+
+   2. Start docker container
+   ```
+   cd talos-skiboot
+   docker run --rm -it -v $PWD:/home/skiboot/skiboot -w /home/skiboot/skiboot coreboot/coreboot-sdk:65718760fa /bin/bash
+   ```
+
+   3. Build the skiboot image
+   ```
+   CROSS=powerpc64-linux-gnu- make -j`nproc`
+   ```
+
+   4. `skiboot.lid` is located in root of your skiboot repository.
+---
 
 ### Preparing FIT payload
 
