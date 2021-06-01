@@ -1,7 +1,7 @@
 # Payload loading and starting
 
 Note that we abandoned HDAT idea and decided to use Flattened Device Tree.
-You can skip next section and jump to (FDT entry)[#fdt-entry].
+You can skip next section and jump to [FDT entry](#fdt-entry).
 
 ## HDAT analysis
 
