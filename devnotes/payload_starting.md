@@ -203,13 +203,14 @@ tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
 
    2. Start docker container
    ```
-   cd talos-skiboot
    docker run --rm -it -v $PWD:/home/skiboot/skiboot -w /home/skiboot/skiboot coreboot/coreboot-sdk:65718760fa /bin/bash
    ```
 
    3. Build the skiboot image
+   It is required, to override `CWARNS` variable and disable treating warnings
+   as errors, or otherwise, skiboot won't build.
    ```
-   CROSS=powerpc64-linux-gnu- make -j`nproc`
+   make -j`nproc` CROSS=powerpc64-linux-gnu- CWARNS=-w
    ```
 
    4. `skiboot.lid` is located in root of your skiboot repository.
