@@ -203,6 +203,7 @@ tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
    
    2. Checkout correct revision
    ```
+   cd talos-skiboot
    git checkout 9858186353f2203fe477f316964e03609d12fd1d
    ```
 
