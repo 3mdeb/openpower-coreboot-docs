@@ -16,7 +16,7 @@ environment, ensure that:
 2. When you have the docker installed pull the container:
 
    ```
-   docker pull coreboot/coreboot-sdk:65718760fa
+   docker pull docker.pkg.github.com/3mdeb/coreboot/coreboot-sdk
    ```
 
 In order to start from a common point, flash the original OpenPOWER firmware
@@ -96,7 +96,7 @@ In order to build coreboot image, follow the steps below:
    directory):
 
    ```
-   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
+   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot docker.pkg.github.com/3mdeb/coreboot/coreboot-sdk /bin/bash
    ```
 
 4. When inside of the container, configure the build for Talos II:
