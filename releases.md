@@ -57,7 +57,7 @@ All 3 major DRAM vendors are supported, namely Samsung, Micron and Hynix.
 * [dasharo-trustworthy-computing-v0.1.0.rom.signed.ecc.SHA256.sig](https://cloud.3mdeb.com/index.php/s/QX5CcteHppoNynT)
 
 See how to verify signatures on
-[![asciinema](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf.svg)](https://asciinema.org/a/4HLDDfLNBshqEVi9wEBdMuFXf?t=7)
+[![asciicast](https://asciinema.org/a/XTwZHG3RMWe0Mm2VrV7VPloYB.svg)](https://asciinema.org/a/XTwZHG3RMWe0Mm2VrV7VPloYB)
 
 ### How to build and use it
 
