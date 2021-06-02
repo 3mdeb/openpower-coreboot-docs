@@ -16,7 +16,7 @@ environment, ensure that:
 2. When you have the docker installed pull the container:
 
    ```
-   docker pull coreboot/coreboot-sdk:65718760fa
+   docker pull docker.pkg.github.com/3mdeb/coreboot/coreboot-sdk
    ```
 
 In order to start from a common point, flash the original OpenPOWER firmware
@@ -77,13 +77,13 @@ In order to build coreboot image, follow the steps below:
 1. Clone the coreboot repository:
 
    ```
-   git clone git@github.com:3mdeb/coreboot.git -b talos_2_support
+   git clone git@github.com:3mdeb/coreboot.git -b talos_2_support_ramstage
    # or HTTPS alternatively
-   git clone https://github.com/3mdeb/coreboot.git -b talos_2_support
+   git clone https://github.com/3mdeb/coreboot.git -b talos_2_support_ramstage
    ```
-   `talos_2_support` is the main development branch for Talos II support,
-   but keep in mind, if you are working on some specific features,
-   different branch may be the better choice.
+   `talos_2_support_ramstage` - ramstage devlopment branch - merge requests should go here
+   `squashed_talos_2_support` - upstream branch, can be regularly pushed with force
+   `talos_2_support` - legacy branch for bootblock and romstage release - as of today nothing should be pushed here
 
 2. Get the submodules:
 
@@ -96,7 +96,7 @@ In order to build coreboot image, follow the steps below:
    directory):
 
    ```
-   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot coreboot/coreboot-sdk:65718760fa /bin/bash
+   docker run --rm -it -v $PWD:/home/coreboot/coreboot -w /home/coreboot/coreboot docker.pkg.github.com/3mdeb/coreboot/coreboot-sdk /bin/bash
    ```
 
 4. When inside of the container, configure the build for Talos II:
@@ -109,7 +109,6 @@ In order to build coreboot image, follow the steps below:
    * As a **Mainboard vendor** select `Raptor Computing Systems`
    * If it wasn't selected autmatically, as **Mainboard model** select `Talos II`
    * In the **ROM chip size** option select `512 KB`
-   * As **Size of CBFS filesystem in ROM** set `0x80000` (Only if this option is present)
    * Save the configuration and exit.
 
    ![](../images/cb_menuconfig.png)
@@ -150,39 +149,37 @@ In order to build coreboot image, follow the steps below:
    Answer yes to the prompt and wait for the process to finish.
 
 4. Log into the BMC GUI again at https://\<BMC_IP\>/. Enter the Server power
-   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke warm
-   reboot. Then move to Serial over LAN remote console
+   operations (https://\<BMC_IP\>/#/server-control/power-operations) and invoke
+   warm reboot. Then move to Serial over LAN remote console
    (https://\<BMC_IP\>/#/server-control/remote-console)
 
    Wait for a while until coreboot shows up:
 
-   ![](../images/cb_bootblock.png)
+   [![asciicast](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0.svg)](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0)
 
 5. Enjoy the coreboot running on Talos II.
 
 > **Optional:** In order to recovery the platform quickly to healthy state, flash
-> the HBB partition back with:\
+> the HBB partition back with: \
 > `pflash -e -P HBB -p /tmp/hbb.bin`
 
-## Running the coreboot on QEMU
+## Hardware configuration
 
-Please keep in mind, that QEMU doesn't implement many of the HW properties,
-that Talos II has. There may be many compatibility issues, or registers missing.
+Configuration with a single IBM POWER9 64bit CPU is supported. \
+Dual CPU setup not supported currently.
 
-More detailed informations can be found in [porting.md#qemu](porting.md#qemu)
-
-1. Clone the QEMU repository
+Following RAM configurations were tested and are proved to be properly initialized.
    ```
-   git clone git@github.com:qemu/qemu.git
-   # or HTTPS alternatively
-   git clone https://github.com/qemu/qemu.git
+   MCS0, MCA0
+      DIMM0: 1Rx4 16GB PC4-2666V-RC2-12-PA0
+      DIMM1: not installed
+   MCS0, MCA1
+      DIMM0: 1Rx8 8GB
+      DIMM1: not installed
+   MCS1, MCA0
+      DIMM0: 2Rx4 32GB PC4-2666V-RB2-12-MA0
+      DIMM1: not installed
+   MCS1, MCA1
+      DIMM0: 2Rx8 16GB PC4-2666V-RE2-12
+      DIMM1: not installed
    ```
-2. Build the QEMU ppc64 version
-   ```
-   cd qemu
-    ./configure --target-list=ppc64-softmmu && make
-   ```
-3. Start QEMU with coreboot image
-   ````
-   ./qemu/build/qemu-system-ppc64 -M powernv,hb-mode=on --cpu power9 --bios 'coreboot/build/coreboot.rom' -d unimp,guest_errors -serial stdio -drive file=flash.pnor,format=raw,readonly=on,if=mtd
-   ````
