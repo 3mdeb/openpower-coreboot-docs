@@ -200,20 +200,23 @@ tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
    ```
    git clone https://git.raptorcs.com/git/talos-skiboot
    ```
+   
+   2. Checkout correct revision
+   ```
+   git checkout 9858186353f2203fe477f316964e03609d12fd1d
+   ```
 
-   2. Start docker container
+   3. Start docker container
    ```
    docker run --rm -it -v $PWD:/home/skiboot/skiboot -w /home/skiboot/skiboot coreboot/coreboot-sdk:65718760fa /bin/bash
    ```
 
-   3. Build the skiboot image
-   It is required, to override `CWARNS` variable and disable treating warnings
-   as errors, or otherwise, skiboot won't build.
+   4. Build the skiboot image
    ```
-   make -j`nproc` CROSS=powerpc64-linux-gnu- CWARNS=-w
+   make -j`nproc` CROSS=powerpc64-linux-gnu-
    ```
 
-   4. `skiboot.lid` is located in root of your skiboot repository.
+   5. `skiboot.lid` is located in root of your skiboot repository.
 ---
 
 ### Preparing FIT payload
