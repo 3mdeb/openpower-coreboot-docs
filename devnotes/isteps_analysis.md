@@ -40,3 +40,10 @@
 * [13.11 mss_draminit_training.md: Dram training](isteps/13_dram_training/11_mss_draminit_training.md)
 * [13.12 mss_draminit_trainadv.md: Advanced dram training](isteps/13_dram_training/12_mss_draminit_trainadv.md)
 * [13.13 mss_draminit_mc.md: Hand off control to MC](isteps/13_dram_training/13_mss_draminit_mc.md)
+
+# Step 14 Hostboot - DRAM Init
+* [14.1 mss_memdiag: Mainstore Pattern Testing](isteps/14_DRAM_init/1_mss_memdiag.md)
+* [14.2 mss_thermal_init: Initialize the thermal sensor](isteps/14_DRAM_init/2_mss_thermal_init.md)
+* [14.3 proc_pcie_config: Configure the PHBs](isteps/14_DRAM_init/3_proc_pcie_config.md)
+* [14.4 mss_power_cleanup: Clean up any MCS/Centaurs](isteps/14_DRAM_init/4_mss_power_cleanup.md)
+* [14.5 proc_setup_bars: Setup Memory BARs](isteps/14_DRAM_init/5_proc_setups_bars.md)
