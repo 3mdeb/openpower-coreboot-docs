@@ -1,7 +1,10 @@
 # Payload loading and starting
 
 Note that we abandoned HDAT idea and decided to use Flattened Device Tree.
-You can skip next section and jump to [FDT entry](#fdt-entry).
+You can skip next section and jump to [FDT entry](#fdt-entry). We have decided
+to stick with FDT after some helpful discussion with IBM folks:
+* in [this githiub issue](https://github.com/open-power/skiboot/issues/264)
+* in [openpower-firmware mailing list thread](https://lists.ozlabs.org/pipermail/openpower-firmware/2021-May/000641.html)
 
 ## HDAT analysis
 
@@ -200,7 +203,7 @@ tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
    ```
    git clone https://git.raptorcs.com/git/talos-skiboot
    ```
-   
+
    2. Checkout correct revision
    ```
    cd talos-skiboot
