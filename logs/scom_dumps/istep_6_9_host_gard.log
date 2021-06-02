@@ -1,0 +1,119 @@
+ 12.06290|ISTEP  6. 9 - host_gard
+ 12.06817|IPMI|wd: resetWatchDogTimer
+ 12.06819|IPMI|rp: queuing sync 18:22
+ 12.06820|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+ 12.13816|IPMI|dd: I>read b2h ok 2c:12 seq 50 len 1 cc 0
+ 12.13818|IPMI|fru: I>sending write_fru_data fru size 56 offset 56
+ 12.13825|IPMI|dd: I>write ok 18:22 seq 51 len 0
+ 12.13828|IPMI|rp: queuing sync 28:12
+ 12.13830|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.15787|IPMI|dd: I>read b2h ok 1c:22 seq 51 len 0 cc 0
+ 12.15823|IPMI|dd: I>write ok 28:12 seq 52 len 3b
+ 12.24968|IPMI|dd: I>read b2h ok 2c:12 seq 52 len 1 cc 0
+ 12.24970|IPMI|fru: I>sending write_fru_data fru size 16 offset 112
+ 12.24983|IPMI|rp: queuing sync 28:12
+ 12.24984|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.26472|ISTEPS_TRACE|I>host_gard: invoke PRD to check for previous CS
+ 12.26473|ATTN_SLOW|I>Checking for checkstop attentions
+ 12.26486|IPMI|dd: I>write ok 28:12 seq 54 len 13
+ 12.34152|IPMI|dd: I>read b2h ok 2c:12 seq 54 len 1 cc 0
+ 12.34165|IPMI|fru: >>sendWriteFruData for dev 0x6, size 96
+ 12.34166|IPMI|fru: I>sending write_fru_data fru size 56 offset 0
+ 12.34168|IPMI|rp: queuing sync 28:12
+ 12.34169|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.35682|IPMI|dd: I>write ok 28:12 seq 56 len 3b
+ 12.39423|IPMI|dd: I>read b2h ok 2c:12 seq 56 len 1 cc 0
+ 12.39425|IPMI|fru: I>sending write_fru_data fru size 40 offset 56
+ 12.39428|IPMI|rp: queuing sync 28:12
+ 12.39437|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.40724|ATTN_SLOW|I>No PNOR data found, nothing to analyze.
+ 12.40725|ATTN_SLOW|I>checkForCSAttentions complete
+ 12.40751|IPMI|dd: I>write ok 28:12 seq 58 len 2b
+ 12.45049|IPMI|dd: I>read b2h ok 2c:12 seq 58 len 1 cc 0
+ 12.45061|IPMI|fru: >>sendWriteFruData for dev 0x1c, size 256
+ 12.45063|IPMI|fru: I>sending write_fru_data fru size 56 offset 0
+ 12.45064|IPMI|rp: queuing sync 28:12
+ 12.45065|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.46960|ISTEPS_TRACE|host_gard: Normal IPL mode
+ 12.46962|HWAS_I|I>deconfigGard.C: Clear GARD Records for replaced Targets
+ 12.46963|HWAS_I|I>hwasPlatDeconfigGard.C: Get all GARD Records
+ 12.46966|HWAS_I|I>hwasPlatDeconfigGard.C: getGardSectionInfo: Section GUARD found, size 16384
+ 12.46998|IPMI|dd: I>write ok 28:12 seq 5a len 3b
+ 12.49461|IPMI|dd: I>read b2h ok 2c:12 seq 5a len 1 cc 0
+ 12.49463|IPMI|fru: I>sending write_fru_data fru size 56 offset 56
+ 12.49476|IPMI|rp: queuing sync 28:12
+ 12.49477|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.51132|IPMI|dd: I>write ok 28:12 seq 5c len 3b
+ 12.51482|HWAS_I|I>hwasPlatDeconfigGard.C: GARD setup. maxRecords 409 nextID 1 numRecords 0
+ 12.51483|HWAS_I|I>hwasPlatDeconfigGard.C: Get returning 0 GARD Records
+ 12.53885|IPMI|dd: I>read b2h ok 2c:12 seq 5c len 1 cc 0
+ 12.53887|IPMI|fru: I>sending write_fru_data fru size 56 offset 112
+ 12.53899|IPMI|rp: queuing sync 28:12
+ 12.53900|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.55603|HWAS_I|I>hwasPlatDeconfigGard.C: Get all GARD Records
+ 12.55604|HWAS_I|I>hwasPlatDeconfigGard.C: Get returning 0 GARD Records
+ 12.55659|IPMI|dd: I>write ok 28:12 seq 5e len 3b
+ 12.57792|IPMI|dd: I>read b2h ok 2c:12 seq 5e len 1 cc 0
+ 12.57794|IPMI|fru: I>sending write_fru_data fru size 56 offset 168
+ 12.57806|IPMI|rp: queuing sync 28:12
+ 12.57807|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.59303|IPMI|dd: I>write ok 28:12 seq 60 len 3b
+ 12.61532|IPMI|dd: I>read b2h ok 2c:12 seq 60 len 1 cc 0
+ 12.61535|IPMI|fru: I>sending write_fru_data fru size 32 offset 224
+ 12.61546|IPMI|rp: queuing sync 28:12
+ 12.61548|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.63369|HWAS_I|I>deconfigGard.C: Deconfigure Targets from GARD Records for IPL
+ 12.63372|HWAS_I|I>deconfigGard.C: deconfigureTargetsFromGardRecordsForIpl: flushing the error log queue
+ 12.63374|ERRL|I>Got an error log Msg - Type: 0x00000039
+ 12.63375|ERRL|I>Flush message received
+ 12.63376|HWAS_I|I>hwasPlatDeconfigGard.C: Get all GARD Records
+ 12.63378|HWAS_I|I>hwasPlatDeconfigGard.C: Get returning 0 GARD Records
+ 12.63384|IPMI|dd: I>write ok 28:12 seq 62 len 23
+ 12.63502|HWAS_I|I>hwas.C: checkMinimumHardware entry
+ 12.63504|HWAS_I|I>hwas.C: checkMinimumHardware: i_nodeOrSys 00010000
+ 12.63820|HWAS_I|I>hwas.C: checkMinimumHardware exit - minimum hardware available
+ 12.63822|HWAS_I|I>deconfigGard.C: Clear Block Spec Deconfig for replaced Targets
+ 12.63823|HWAS_I|I>deconfigGard.C: Block Spec Deconfig already cleared
+ 12.63846|HWAS_I|I>deconfigGard.C: Clear Block Spec Deconfig for ungarded Targets
+ 12.63848|HWAS_I|I>deconfigGard.C: Block Spec Deconfig already cleared
+ 12.63869|HWAS_I|I>hwas.C: checkMinimumHardware entry
+ 12.63871|HWAS_I|I>hwas.C: checkMinimumHardware: i_nodeOrSys 00010000
+ 12.64185|HWAS_I|I>hwas.C: checkMinimumHardware exit - minimum hardware available
+ 12.64371|HWAS_I|I>deconfigGard.C: Preparing data for _deconfigureAssocProc
+ 12.64374|HWAS_I|I>deconfigGard.C: _invokeDeconfigureAssocProc: i_node 0x20000 specified
+ 12.64387|HWAS_I|I>deconfigGard.C: _invokeDeconfigureAssocProc> 00050000 : G=0, C=0, D=0, M=1
+ 12.64390|HWAS_I|I>deconfigGard.C: _invokeDeconfigureAssocProc> 00050001 : G=1, C=0, D=1, M=0
+ 12.64393|HWAS_I|I>deconfigGard.C: ----------------------------------------------------------
+ 12.64420|HWAS_I|I>deconfigGard.C: Proc 00050000 Skipping non-present endpt target 000E0004 of 000E0001 BUS
+ 12.64423|HWAS_I|I>deconfigGard.C: Proc 00050000 Skipping non-peer endpt of BUS 000E0002
+ 12.64450|HWAS_I|I>deconfigGard.C: 00050001 add X[0]> 00050000 : G=0, C=0, D=0, M=1
+ 12.64452|HWAS_I|I>deconfigGard.C: Proc 00050001 Skipping non-peer endpt of BUS 000E0005
+ 12.64454|HWAS_I|I>deconfigGard.C: Set iv_XAOBusEndpointDeconfigured = 1
+ 12.64456|HWAS_I|I>deconfigGard.C: Set iv_XAOBusEndpointDeconfigured = 0
+ 12.64458|HWAS_I|I>deconfigGard.C: FCO: node 00020000: no overrides, done.
+ 12.64576|HWAS_I|I>deconfigGard.C: collectGard completed successfully
+ 12.64596|ISTEPS_TRACE|FUNCTIONAL> DIMM[03]=2000000000000000
+ 12.64597|ISTEPS_TRACE|FUNCTIONAL> Proc[05]=8000000000000000
+ 12.64598|ISTEPS_TRACE|FUNCTIONAL> Core[07]=5900000000000000
+ 12.64600|HWAS_I|I>hwas.C: checkMinimumHardware entry
+ 12.64603|HWAS_I|I>hwas.C: checkMinimumHardware: i_nodeOrSys = NULL, using 00020000
+ 12.64616|TARG|Found Master chip with HUID: 00050000
+ 12.64931|HWAS_I|I>hwas.C: checkMinimumHardware exit - minimum hardware available
+ 12.64969|TARG|getMasterCore: found 4 cores on master proc,l_masterCore PIR:0x4
+ 12.64970|TARG|found master core: 0x1, PIR=0x4 :
+ 12.70192|IPMI|dd: I>read b2h ok 2c:12 seq 62 len 1 cc 0
+ 12.70205|IPMI|fru: >>sendWriteFruData for dev 0x2, size 8
+ 12.70207|IPMI|fru: I>sending write_fru_data fru size 8 offset 0
+ 12.70208|IPMI|rp: queuing sync 28:12
+ 12.70210|IPMI|rp: W>Got message (0x28:0x12): l_is_pnor: 0
+ 12.71606|TARG|EntityPath
+~[0x0000] 50687973 6963616c 3a2f5379 73302f4e    *Physical:/Sys0/N*
+~[0x0010] 6f646530 2f50726f 63302f45 51302f45    *ode0/Proc0/EQ0/E*
+~[0x0020] 58302f43 6f726531                      *X0/Core1        *
+ 12.71608|ISTEPS_TRACE|host_gard: Sending MSG_MASTER_CORE message with HUID 00070001
+ 12.71621|IPMI|dd: I>write ok 28:12 seq 64 len b
+ 12.71627|MBOX|W>MSGSEND - mailboxsp is disabled. Message dropped! msgQ=0x80000008 type=0x40000005
+ 12.72408|ERRL|I>Got an error log Msg - Type: 0x00000039
+ 12.72410|ERRL|I>Flush message received
+ 12.72412|INITSVC|<<doIstep: step 6, substep 9
+ 12.72414|INITSVC|>>doIstep: step 6, substep 11, task host_start_occ_xstop_handler

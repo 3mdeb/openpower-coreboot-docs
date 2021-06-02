@@ -1,0 +1,12 @@
+400.56793|ISTEP  9. 2 - fabric_io_dccal
+400.57562|ISTEPS_TRACE|>>call_fabric_io_dccal entry
+400.57639|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(14 type) returned 1 entries
+400.57640|TARG|Get other endpoint target for target HUID 000E0001
+400.57642|TARG|Other endpoint target HUID 000E0004
+400.57645|ISTEPS_TRACE|Connection bus list is empty. HWP call p9_io_xbus_dccal will not be called.
+400.57722|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(40 type) returned 0 entries
+400.57723|ISTEPS_TRACE|<<call_fabric_io_dccal exit
+400.59702|ERRL|I>Got an error log Msg - Type: 0x00000039
+400.59703|ERRL|I>Flush message received
+400.59705|INITSVC|<<doIstep: step 9, substep 2
+400.59707|INITSVC|>>doIstep: step 9, substep 3, task fabric_pre_trainadv

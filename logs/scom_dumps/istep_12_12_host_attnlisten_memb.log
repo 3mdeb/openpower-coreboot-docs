@@ -1,0 +1,7 @@
+435.50805|ISTEP 12.12 - host_attnlisten_memb
+435.51510|SCOM|doMulticastWorkaround on 00050000 for 50040018
+435.51558|SCOM|doMulticastWorkaround on 00050000 for 50040009
+435.51617|ERRL|I>Got an error log Msg - Type: 0x00000039
+435.51618|ERRL|I>Flush message received
+435.51619|INITSVC|<<doIstep: step 12, substep 12
+435.51622|INITSVC|>>doIstep: step 12, substep 13, task cen_set_inband_addr

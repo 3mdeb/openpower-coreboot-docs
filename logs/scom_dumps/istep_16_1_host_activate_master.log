@@ -1,0 +1,76 @@
+475.64471|ISTEP 16. 1 - host_activate_master
+475.65236|INITSVC|unloading [libistep15.so]
+475.65255|INITSVC|unloading [libp9_stop_util.so]
+475.65265|INITSVC|unloading [libnestmemutils.so]
+475.65276|INITSVC|unloading [libp9_cpuWkup.so]
+475.65288|INITSVC|unloading [libpm.so]
+475.65349|INITSVC|unloading [libimageprocs.so]
+475.65393|INITSVC|unloading [libisteps_mss.so]
+475.66561|INITSVC|loading [libistep16.so]
+475.67173|INITSVC|loading [libnestmemutils.so]
+475.67186|INITSVC|loading [libp9_cpuWkup.so]
+475.67201|INITSVC|loading [libisteps_mss.so]
+475.68403|INITSVC|loading [libpm.so]
+475.68448|INITSVC|loading [libimageprocs.so]
+475.68463|INITSVC|loading [libisteps_nest.so]
+475.72123|ISTEPS_TRACE|call_host_activate_master entry
+475.74407|TARG|getMasterCore: found 4 cores on master proc,l_masterCore PIR:0x4
+475.74409|TARG|found master core: 0x1, PIR=0x4 :
+475.75025|TARG|EntityPath
+~[0x0000] 50687973 6963616c 3a2f5379 73302f4e    *Physical:/Sys0/N*
+~[0x0010] 6f646530 2f50726f 63302f45 51302f45    *ode0/Proc0/EQ0/E*
+~[0x0020] 58302f43 6f726531                      *X0/Core1        *
+475.78500|MBOX|I>MailboxSp::_reclaimDmaBfrsFromFsp - Start. DmaBuffer = 
+~[0x0000] 00000000 00821000 00000000 f8821000    *................*
+~[0x0010] ffffffff ffffffff 00000000 00000000    *................*
+~[0x0020] 00000000 00000000 00000000 00000000    *................*
+~[0x0030] 00000000 00000000                      *........        *
+475.78807|MBOX|I>MBOXSP Ignored request to suspend a disabled mailbox
+475.80598|ISTEPS_TRACE|call_host_activate_master: About to start deadman loop... Target HUID 00050000
+475.83485|SBEIO|psudd: Sending Req = 00000000000AD101 0000000000002904 0000000000000000 0000000000000000 to 00050000
+475.83493|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+475.83495|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+475.83498|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+475.83535|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+475.83555|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+475.83635|ISTEPS_TRACE|startDeadManLoop SUCCESS
+475.83636|ISTEPS_TRACE|draining interrupt Q
+475.83639|ISTEPS_TRACE|call_host_activated_master: call p9_block_wakeup_intr(SET) Target HUID 00070001
+475.87235|FAPI|p9_block_wakeup_intr.C: > p9_block_wakeup_intr...
+475.87240|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0106 3822000000000000
+475.87245|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0100 0011000000000000
+475.87247|FAPI|p9_block_wakeup_intr.C: Set the CPPM PPM Write Override
+475.87251|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0108 4000000000000000
+475.87254|FAPI|p9_block_wakeup_intr.C: Setting GPMMR[Block Interrupt Sources] on Core 1
+475.87258|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0102 0200000000000000
+475.87260|FAPI|p9_block_wakeup_intr.C: Clear the CPPM PPM Write Override
+475.87264|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0107 4000000000000000
+475.87266|FAPI|p9_block_wakeup_intr.C: < p9_block_wakeup_intr...
+475.87267|ISTEPS_TRACE|p9_block_wakeup_intr SUCCESS
+475.87269|ISTEPS_TRACE|call_host_activate_master: put master into winkle...
+476.90689|ISTEPS_TRACE|Returned from Winkle.
+476.90690|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+476.90691|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+476.90693|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+476.90693|SBEIO|psudd: Sending Req = 00000000000BD101 0000000000000000 0000000000000000 0000000000000000 to 00050000
+476.90697|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+476.90714|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+476.90716|ISTEPS_TRACE|stopDeadmanLoop SUCCESS
+476.90718|ISTEPS_TRACE|Call proc_stop_deadman_timer. Target 00050000
+476.90719|MBOX|I>Mailbox function resumed
+476.92749|ISTEPS_TRACE|>>core_checkstop_helper_hwp
+476.92752|FAPI|p9_core_checkstop_handler.C: Entering ...
+476.92757|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A46 0000000000000000
+476.92764|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A47 A854009775100000
+476.92767|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A46 0000000000000000
+476.92771|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 0000000020010A47 A854009775100000
+476.92772|FAPI|p9_core_checkstop_handler.C: Exiting ...
+476.95461|ISTEPS_TRACE|<<core_checkstop_helper_hwp
+476.95462|ISTEPS_TRACE|>>core_checkstop_helper_homer
+476.95526|ISTEPS_TRACE|convertHomerPhysToVirt: phys_addr=0x1FD800000, virt_addr=0x23800000000
+476.95534|ISTEPS_TRACE|<<core_checkstop_helper_homer
+476.95902|ISTEPS_TRACE|call_host_activate_master exit
+476.96004|ERRL|I>Got an error log Msg - Type: 0x00000039
+476.96005|ERRL|I>Flush message received
+476.96007|INITSVC|<<doIstep: step 16, substep 1
+476.96009|INITSVC|>>doIstep: step 16, substep 2, task host_activate_slave_cores

@@ -1,0 +1,123 @@
+436.23157|ISTEP 13. 6 - mem_startclocks
+436.23755|ISTEPS_TRACE|call_mem_startclocks entry
+436.23823|ISTEPS_TRACE|Running p9_mem_startclocks HWP on target HUID 00050000
+436.25097|FAPI|p9_sbe_common.C: p9_sbe_common_get_pg_vector: Entering ...
+436.25141|FAPI|p9_sbe_common.C: p9_sbe_common_get_pg_vector: Exiting ...
+436.25185|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_cplt_ctrl_action_function for Mc chiplets
+436.25190|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000021 1E02000000000000
+436.25194|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000020 C000000000000000
+436.25196|FAPI|p9_mem_startclocks.C: Call module align chiplets for Mc chiplets
+436.25198|FAPI|p9_sbe_common.C: p9_sbe_common_align_chiplets: Entering ...
+436.25203|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000010 2000000000000000
+436.25207|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000010 1000000000000000
+436.25211|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030000 0800000000000000
+436.25215|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030000 0900000000000000
+436.25220|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030000 0900000000000000
+436.25224|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030000 0800000000000000
+436.25239|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000100 00C0000000000000
+436.25243|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000020 1000000000000000
+436.25245|FAPI|p9_sbe_common.C: p9_sbe_common_align_chiplets: Exiting ...
+436.26766|FAPI|p9_mem_startclocks.C: Call module clock start stop for MC01, MC23.
+436.26920|FAPI|p9_sbe_common.C: p9_sbe_common_clock_start_stop: Entering ...
+436.26924|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000010 2000000000000000
+436.26929|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030005 0000000000000000
+436.26933|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030008 FFFFFFFFFFFFFFFF
+436.26938|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030009 FFFFFFFFFFFFFFFF
+436.26942|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 000000000003000A FFFFFFFFFFFFFFFF
+436.26946|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030006 0000000000000000
+436.26950|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030006 4E0000000000E000
+436.26955|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000100 00C0000000000000
+436.26956|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.26957|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.26959|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.26960|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.26961|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.26962|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.26967|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030008 F1FFFFFFFFFFFFFF
+436.26971|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000030009 F1FFFFFFFFFFFFFF
+436.26975|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 000000000003000A F1FFFFFFFFFFFFFF
+436.26977|FAPI|p9_sbe_common.C: p9_sbe_common_clock_start_stop: Exiting ...
+436.26980|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_fence_setup_function for Mc chiplets 
+436.26984|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0041 FFFFDFFFFFFFFFFF
+436.26986|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_flushmode for Mc chiplets
+436.26990|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000020 2000000000000000
+436.26993|FAPI|p9_mem_startclocks.C: Call p9_sbe_common_configure_chiplet_FIR for MC chiplets
+436.26995|FAPI|p9_sbe_common.C: p9_sbe_common_configure_chiplet_FIR: Entering ...
+436.26999|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 000000000004000A 0000000000000000
+436.27004|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000040010 0000000000000000
+436.27008|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000040011 F000000000000000
+436.27012|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 000000000004000D 0FFFFFFFFFC00000
+436.27017|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000040000 0000000000000000
+436.27021|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000040002 0000000000000000
+436.27024|FAPI|p9_sbe_common.C: p9_sbe_common_configure_chiplet_FIR: Exiting ...
+436.27025|FAPI|p9_mem_startclocks.C: Reset FBC chiplet configuration
+436.27029|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000008 0000000040000000
+436.27033|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 0000000000000008 0000000040000000
+436.27035|FAPI|p9_mem_startclocks.C: Add to Multicast Group
+436.27039|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0001 FC00000000000000
+436.27043|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0001 E0001C0000000000
+436.27047|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0002 FC00000000000000
+436.27051|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0002 E8001C0000000000
+436.27054|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_cplt_ctrl_action_function for Mc chiplets
+436.27059|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000021 1E02000000000000
+436.27063|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000020 C000000000000000
+436.27065|FAPI|p9_mem_startclocks.C: Call module align chiplets for Mc chiplets
+436.27066|FAPI|p9_sbe_common.C: p9_sbe_common_align_chiplets: Entering ...
+436.27071|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000010 2000000000000000
+436.27075|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000010 1000000000000000
+436.27079|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030000 0800000000000000
+436.27083|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030000 0900000000000000
+436.27088|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030000 0900000000000000
+436.27092|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030000 0800000000000000
+436.27107|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000100 00C0000000000000
+436.27111|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000020 1000000000000000
+436.27112|FAPI|p9_sbe_common.C: p9_sbe_common_align_chiplets: Exiting ...
+436.27115|FAPI|p9_mem_startclocks.C: Call module clock start stop for MC01, MC23.
+436.27116|FAPI|p9_sbe_common.C: p9_sbe_common_clock_start_stop: Entering ...
+436.27120|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000010 2000000000000000
+436.27124|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030005 0000000000000000
+436.27129|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030008 FFFFFFFFFFFFFFFF
+436.27133|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030009 FFFFFFFFFFFFFFFF
+436.27137|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 000000000003000A FFFFFFFFFFFFFFFF
+436.27141|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030006 0000000000000000
+436.27145|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030006 4E0000000000E000
+436.27150|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000100 00C0000000000000
+436.27151|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.27152|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.27154|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.27155|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.27156|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Entering ...
+436.27157|FAPI|p9_sbe_common.C: p9_sbe_common_check_status: Exiting ...
+436.27161|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030008 F1FFFFFFFFFFFFFF
+436.27166|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000030009 F1FFFFFFFFFFFFFF
+436.27170|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 000000000003000A F1FFFFFFFFFFFFFF
+436.27172|FAPI|p9_sbe_common.C: p9_sbe_common_clock_start_stop: Exiting ...
+436.27174|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_fence_setup_function for Mc chiplets 
+436.27179|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0041 FFFFDFFFFFFFFFFF
+436.27181|FAPI|p9_mem_startclocks.C: Call p9_mem_startclocks_flushmode for Mc chiplets
+436.27185|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000020 2000000000000000
+436.27188|FAPI|p9_mem_startclocks.C: Call p9_sbe_common_configure_chiplet_FIR for MC chiplets
+436.27190|FAPI|p9_sbe_common.C: p9_sbe_common_configure_chiplet_FIR: Entering ...
+436.27195|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 000000000004000A 0000000000000000
+436.27200|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000040010 0000000000000000
+436.27204|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000040011 F000000000000000
+436.27209|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 000000000004000D 0FFFFFFFFFC00000
+436.27213|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000040000 0000000000000000
+436.27217|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000040002 0000000000000000
+436.27219|FAPI|p9_sbe_common.C: p9_sbe_common_configure_chiplet_FIR: Exiting ...
+436.27220|FAPI|p9_mem_startclocks.C: Reset FBC chiplet configuration
+436.27224|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000008 0000000040000000
+436.27228|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 0000000000000008 0000000040000000
+436.27230|FAPI|p9_mem_startclocks.C: Add to Multicast Group
+436.27234|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0001 FC00000000000000
+436.27238|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0001 E0001C0000000000
+436.27242|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0002 FC00000000000000
+436.27246|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0002 E8001C0000000000
+436.27249|ISTEPS_TRACE|SUCCESS running p9_mem_startclocks HWP on target HUID 00050000
+436.27250|ISTEPS_TRACE|call_mem_startclocks exit
+436.46309|SCOM|doMulticastWorkaround on 00050000 for 50040018
+436.46361|SCOM|doMulticastWorkaround on 00050000 for 50040009
+436.46425|ERRL|I>Got an error log Msg - Type: 0x00000039
+436.46426|ERRL|I>Flush message received
+436.46428|INITSVC|<<doIstep: step 13, substep 6
+436.46430|INITSVC|>>doIstep: step 13, substep 7, task host_enable_memvolt

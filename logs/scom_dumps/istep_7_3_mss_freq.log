@@ -1,0 +1,60 @@
+395.95045|ISTEP  7. 3 - mss_freq
+395.95523|ISTEPS_TRACE|p9_mss_freq HWP target HUID 000b0000
+396.00270|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.00319|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.12734|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.12786|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.25427|FAPI|nimbus_mss_freq.C: pu.mca:k0:n0:s0:p00:c1. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.25429|FAPI|nimbus_mss_freq.C: VPD info - DDR frequency: 1866 MT/s
+396.26992|VPD|>>DvpdFacade::checkForRecordOverride( MEMD, 0x000B0000 )
+396.26993|VPD|>>IpVpdFacade::getMEMDFromPNOR( 1, 000B0000 )
+396.26994|VPD|MEMD is at 0x822b3000
+396.27923|VPD|MEMD Header
+~[0x0000] 4f4b4f4b 30312e30 30312e30 00000015    *OKOK01.001.0....*
+~[0x0010] 00013030 30303030 30303030 30303030    *..00000000000000*
+396.31510|VPD|VPD VM = 599A26A0
+396.31512|VPD|Attempting to read MEMD VM keyword from override
+396.31515|VPD|Matching data was found in PNOR at 20. VM: PNOR=5DD846A0, VPD=599A26A0
+396.31516|VPD|<<getMEMDFromPNOR()
+396.31517|VPD|I> Record MEMD for target 0x000B0000 exists at 0x822b3020 in PNOR
+396.32771|FAPI|nimbus_mss_freq.C: pu.mca:k0:n0:s0:p00:c1. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.32772|FAPI|nimbus_mss_freq.C: VPD info - DDR frequency: 2133 MT/s
+396.32783|FAPI|nimbus_mss_freq.C: pu.mca:k0:n0:s0:p00:c1. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.32784|FAPI|nimbus_mss_freq.C: VPD info - DDR frequency: 2400 MT/s
+396.34116|FAPI|nimbus_mss_freq.C: pu.mca:k0:n0:s0:p00:c1. VPD info - rank count for dimm_0: 1, dimm_1: 0
+396.34117|FAPI|nimbus_mss_freq.C: VPD info - DDR frequency: 2666 MT/s
+396.34129|FAPI|sync.H: pu.mcbist:k0:n0:s0:p00:c0 is not in sync mode, skipping the sync mode check
+396.35434|FAPI|mss_freq_scoreboard.H: pu.mca:k0:n0:s0:p00:c1 after processing MRW, max freq is 2666
+396.35442|FAPI|mss_freq_scoreboard.H: pu.mca:k0:n0:s0:p00:c1 after processing VPD, max freq is 2666
+396.35563|FAPI|mss_freq_scoreboard.H: pu.mca:k0:n0:s0:p00:c1 after processing SPD, max freq is 2666
+396.35684|FAPI|gen_mss_freq.H: pu.mcbist:k0:n0:s0:p00:c0 supported freqs:
+396.35686|FAPI|gen_mss_freq.H: pu.mcbist:k0:n0:s0:p00:c0            1866
+396.35687|FAPI|gen_mss_freq.H: pu.mcbist:k0:n0:s0:p00:c0            2133
+396.35689|FAPI|gen_mss_freq.H: pu.mcbist:k0:n0:s0:p00:c0            2400
+396.35691|FAPI|gen_mss_freq.H: pu.mcbist:k0:n0:s0:p00:c0            2666
+396.35854|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.35908|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+396.37667|FAPI|spd_decoder_ddr4.H: dimm:k0:n0:s0:p02. CAS latencies supported (bitmap): 0x1FFF8
+396.37674|FAPI|cas_latency.H: Largest tAAmin (ps): 13750, tCKmin (ps): 750, and supported CL bitmap 0x1FFF8 for all modules across pu.mca:k0:n0:s0:p00:c1
+396.37682|FAPI|nimbus_mss_freq.C: Final Chosen CL: 19 for pu.mca:k0:n0:s0:p00:c1
+396.37688|FAPI|gen_mss_freq.H: Final Chosen Frequency: 2666 (pu.mcbist:k0:n0:s0:p00:c0)
+396.40335|FAPI|freq_workarounds.C: pu.mcbist:k0:n0:s0:p00:c0 Checking the MEM to NEST frequency ratio versus the allowed limit
+396.40337|FAPI|freq_workarounds.C: l_ratio = 1.4287245444801715, max_ratio = 1.5
+396.40339|ISTEPS_TRACE|SUCCESS :  p9_mss_freq HWP
+396.40341|UTIL|getBootNestFreq::The boot frequency was 1866: Bucket Id = 2
+396.41532|SBE|>>Enter getBootMcSyncMode()
+396.41533|SBE|The MC Sync Bit is 0
+396.41608|ISTEPS_TRACE|START : running mss_freq_system HWP
+396.41610|FAPI|p9_mss_freq_system.C: ----- In p9_mss_freq_system ----
+396.41617|FAPI|p9_mss_freq_system.C: Retrieved req'd sync mode: 2 and nest freq 1866
+396.41618|FAPI|sync.C: ---- In dimm_speed_pairs ----
+396.41621|FAPI|p9_mss_freq_system.C: Dimm speed for all MCBISTs are the same : true
+396.41622|FAPI|sync.C: ---- In select_sync_mode ----
+396.41625|FAPI|p9_mss_freq_system.C: Selected SYNC mode : MC NOT in sync
+396.41628|FAPI|p9_mss_freq_system.C: pu.mcbist:k0:n0:s0:p00:c0: Setting ATTR_MC_SYNC_MODE to 0
+396.41629|ISTEPS_TRACE|SUCCESS :  mss_freq_system HWP
+396.41631|ISTEPS_TRACE|call_mss_freq exit
+396.44341|ERRL|I>Got an error log Msg - Type: 0x00000039
+396.44343|ERRL|I>Flush message received
+396.44345|INITSVC|<<doIstep: step 7, substep 3
+396.44347|INITSVC|>>doIstep: step 7, substep 4, task mss_eff_config

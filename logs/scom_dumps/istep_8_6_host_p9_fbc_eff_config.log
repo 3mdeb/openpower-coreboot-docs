@@ -1,0 +1,8 @@
+398.92969|ISTEP  8. 6 - host_p9_fbc_eff_config
+398.93998|ISTEPS_TRACE|call_host_p9_fbc_eff_config entry
+398.94237|FAPI|p9_fbc_eff_config.C: End
+398.94373|ISTEPS_TRACE|call_host_p9_fbc_eff_config exit
+398.94574|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.94576|ERRL|I>Flush message received
+398.94578|INITSVC|<<doIstep: step 8, substep 6
+398.94580|INITSVC|>>doIstep: step 8, substep 7, task host_p9_eff_config_links

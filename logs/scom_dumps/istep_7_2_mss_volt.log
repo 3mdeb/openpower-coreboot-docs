@@ -1,0 +1,17 @@
+395.68572|ISTEP  7. 2 - mss_volt
+395.69008|ISTEPS_TRACE|call_mss_volt entry
+395.70211|ISTEPS_TRACE|set_eff_config_attrs_helper: setting _EFF_CONFIG attributes enter: i_base=0
+395.70215|ISTEPS_TRACE|set_eff_config_attrs_helper: DDR3 _EFF_CONFIG(0, 0): slope=0, intercept=0, max_limit=0
+395.70218|ISTEPS_TRACE|set_eff_config_attrs_helper: DDR4 _EFF_CONFIG(0, 0): slope=0, intercept=0, max_limit=0
+395.70221|ISTEPS_TRACE|set_eff_config_attrs_helper: VPP _EFF_CONFIG(0, 0): slope=0, intercept=0
+395.70224|ISTEPS_TRACE|set_eff_config_attrs_helper: setting _EFF_CONFIG attributes exit
+395.72948|ISTEPS_TRACE|Calling p9_mss_volt on list of 1 MCS targets
+395.74960|FAPI|nimbus_mss_voltage.C: Populating decoder cache for pu.mcs:k0:n0:s0:p00:c0
+395.86992|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+395.87394|FAPI|spd_factory_pattern.C: Highest valid rev 0x11, Highest valid encoding level 1, encoding level received 1 for dimm:k0:n0:s0:p02
+395.94586|FAPI|p9_mss_volt.C: End mss volt
+395.94701|ISTEPS_TRACE|call_mss_volt exit
+395.95037|ERRL|I>Got an error log Msg - Type: 0x00000039
+395.95039|ERRL|I>Flush message received
+395.95041|INITSVC|<<doIstep: step 7, substep 2
+395.95042|INITSVC|>>doIstep: step 7, substep 3, task mss_freq

@@ -1,0 +1,9 @@
+433.93145|ISTEP 11. 8 - cen_chiplet_init
+433.94097|ISTEPS_TRACE|call_cen_chiplet_init: 0 membufs found
+433.94098|ISTEPS_TRACE|call_cen_chiplet_init exit
+433.94386|SCOM|doMulticastWorkaround on 00050000 for 50040018
+433.94439|SCOM|doMulticastWorkaround on 00050000 for 50040009
+433.94499|ERRL|I>Got an error log Msg - Type: 0x00000039
+433.94500|ERRL|I>Flush message received
+433.94502|INITSVC|<<doIstep: step 11, substep 8
+433.94504|INITSVC|>>doIstep: step 11, substep 9, task cen_arrayinit

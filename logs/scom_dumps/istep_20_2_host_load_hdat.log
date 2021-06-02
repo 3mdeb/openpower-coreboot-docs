@@ -1,0 +1,1551 @@
+484.05955|ISTEP 20. 2 - host_load_hdat
+484.06627|IPMI|wd: resetWatchDogTimer
+484.06628|IPMI|rp: queuing sync 18:22
+484.06629|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+484.06633|IPMI|dd: I>write ok 18:22 seq 36 len 0
+484.08383|IPMI|dd: I>read b2h ok 1c:22 seq 36 len 0 cc 0
+484.10626|HDAT|>>[call_hdat_steps]
+484.10627|HDAT|>>[hdatGetNacaFromMem]
+484.10649|HDAT|D>creating SPIRA-H with address hi=0, lo=10400
+484.10795|HDAT|>>[HdatSpiraH]
+484.10796|HDAT|D>HdatSpiraH i_msAddr addr hi 0x00000000 lo 0x00010400
+484.10943|HDAT|>>[setSpiraHHdrs]
+484.11092|HDAT|<<[setSpiraHHdrs]
+484.11093|HDAT|>>[getSpiraH]
+484.11094|HDAT|<<[getSpiraH]
+484.11095|HDAT|<<[HdatSpiraH]
+484.11096|HDAT|>>[getSpiraHEntry]
+484.11096|HDAT|<<[getSpiraHEntry]
+484.11097|HDAT|D>CPU controls structures at 0x00011800
+484.11098|HDAT|>>[hdatGetCpuCtrlFromMem]
+484.11117|HDAT|Read Cpu Ctrl area
+~[0x0000] 00000000 00011800 00000000 00000000    *................*
+~[0x0010] 00000000 00000000 00000101 1e32ff18    *.............2..*
+~[0x0020] 00000000 00000000 00000000 00000000    *................*
+~[0x0030] 00000101 1e32ff38 00000000 40745e50    *.....2.8....@t^P*
+~[0x0040] 00000101 1e32ffc0 00000000 00000000    *.....2..........*
+~[0x0050] 00000000 40b149fc 00000000 00000000    *....@.I.........*
+~[0x0060] 00000000 00000000 00000000 40b2c900    *............@...*
+484.11163|HDAT|Read Svc Routine Area
+~[0x0000] 00000000 00000000 00000000 00000000    *................*
+~[0x0010] 00000000 00000000 00000101 1e32ff18    *.............2..*
+~[0x0020] 00000000 00000000 00000000 00000000    *................*
+~[0x0030] 00000101 1e32ff38 00000000 40745e50    *.....2.8....@t^P*
+~[0x0040] 00000101 1e32ffc0 00000000 00000000    *.....2..........*
+~[0x0050] 00000000 40b149fc 00000000 00000000    *....@.I.........*
+~[0x0060] 00000000 00000000 00000000 40b2c900    *............@...*
+~[0x0070] 00000000 00011800 00000000 00000000    *................*
+~[0x0080] 00000000 00000000 00000000 00000000    *................*
+~[0x0090] 00000000 00011800 00000001 00000000    *................*
+~[0x00a0] 00000000 00000000 00000000 00000000    *................*
+~[0x00b0] 00000000 00010400 00000000 00000000    *................*
+~[0x00c0] 00000000 00000000 00000000 00005000    *..............P.*
+~[0x00d0] 00000000 00000000 00000000 00000000    *................*
+~[0x00e0] 00000000 00010000 00000000 00005050    *..............PP*
+~[0x00f0] 00000000 00000000 00000000 00000000    *................*
+484.11166|HDAT|<<[hdatGetCpuCtrlFromMem]
+484.11167|HDAT|>>[getSpiraHEntry]
+484.11168|HDAT|<<[getSpiraHEntry]
+484.11168|HDAT|D>got spiras addrss from SPIRAH hi=0,lo=31200000
+484.11169|HDAT|D>creating all data areas through spiras
+484.11170|HDAT|D>l_spirasHostEntry.hdatAbsAddr.lo=0x31200000
+484.10897|HDAT|>>[HdatSpiraS]
+484.10898|HDAT|D>l_base_addr at SPIRA-S=0x0000000031200000
+484.10899|HDAT|D>HRMOR=0x00000000
+484.10900|HDAT|D>base address after adding HRMOR=0x31200000
+484.10900|HDAT|D>l_base_addr_down=0x0000000031200000
+484.10901|HDAT|D>reqd space=0x280, will do a block map of size 0x1000
+484.10903|HDAT|D>l_virt_addr=0x0000024800000000 after block map
+484.10903|HDAT|D>will add offset 0 to starting virtual address
+484.10904|HDAT|D>l_vaddr after adding=0x0000024800000000
+484.10905|HDAT|D>l_virt_addr=0x0000024800000000
+484.10907|HDAT|D>constructor iv_spiras addr 0x0000024800000000 virtual addr 0x0000024800000000,space allocated=0x280
+484.10908|HDAT|D>creating SPIRA-S header
+484.10909|HDAT|>>[setSpiraSHdrs]
+484.10910|HDAT|<<[setSpiraSHdrs]
+484.10911|HDAT|D>done setting the SPIRA-S header
+484.10912|HDAT|<<[HdatSpiraS]
+484.11484|HDAT|>>[loadDataArea]
+484.11485|HDAT|D>HRMOR=0x00000000
+484.11486|HDAT|D>building SLCA
+484.11487|HDAT|D>building SLCA at i_slcaMsAddr.hi=0,i_slcaMsAddr.lo=80000000
+484.25525|HDAT|D>Added SLCA Entry  FI : VV loc_code : UOPWR.A100064-Sys0
+484.25527|HDAT|D>Added SLCA Entry  FI : SV loc_code : UOPWR.A100064-Sys0
+484.25530|HDAT|D>Added SLCA Entry  FI : EV loc_code : UOPWR.A100064-Sys0
+484.25325|HDAT|D>Added SLCA Entry  FI : BP loc_code : UOPWR.A100064-Node0
+484.25489|HDAT|D>Added SLCA Entry  FI : MS loc_code : UOPWR.A100064-Node0-DIMM2
+484.25500|HDAT|D>Added SLCA Entry  FI : PF loc_code : UOPWR.A100064-Node0-Proc0
+484.30445|HDAT|D>Added Ordinal IDs for Core : 4
+484.30446|HDAT|D>Added Ordinal IDs Proc: 1 
+484.30447|HDAT|D>SLCA hdr addr 0x0000025000000000 SLCA hdr size 64
+484.30450|HDAT|D>HDAT SLCA addr 0x0000000080000000 SLCA struct size 624
+484.30451|HDAT|D>HDAT SLCA addr 0x0000025000000040 virtual addr 0x0000025000000000
+484.30452|HDAT|D>HDAT:: Loaded SLCA structures: Size: 0x2B0
+484.30473|HDAT|D>built SLCA, size=0x2b0
+484.30474|HDAT|D>size of hdatSpiraS_t:  0x00000280, hdatActualSize: 0x00000000
+484.30475|HDAT|D>for loop index=0
+484.30476|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31200280
+484.30479|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31200280
+484.30480|HDAT|D>calling SP SUBSYS from spiras
+484.27776|HDAT|>>[HdatLoadSpSubSys]
+484.27926|HDAT|>>[HdatHdif]
+484.27926|HDAT|<<[HdatHdif]
+484.27927|HDAT|>>[HdatSpSubsys]
+484.27928|HDAT|>>[hdatFillDataPtrs]
+484.27979|HDAT|>>[hdatGetPathInfo]
+484.27980|HDAT|<<[hdatGetPathInfo]
+484.27981|HDAT|D> Num of Io Paths returned : 1
+484.27982|HDAT|D> spsubsys number of vpd : B
+484.27982|HDAT|>>[hdatGetAsciiKwd]
+484.27983|HDAT|>>[hdatGetAsciiKwdForMvpd]
+484.27984|HDAT|D>fetching proc kwd size MVPD, size initialised=36f44
+484.27987|HDAT|D>fetched proc kwd size MVPD, size=10
+484.27988|HDAT|D>fetching proc kwd size MVPD, size initialised=40b30fbb
+484.27989|HDAT|D>fetched proc kwd size MVPD, size=2
+484.27990|HDAT|D>fetching proc kwd size MVPD, size initialised=10a55723
+484.27992|HDAT|D>fetched proc kwd size MVPD, size=4
+484.27993|HDAT|D>fetching proc kwd size MVPD, size initialised=40800
+484.27995|HDAT|D>fetched proc kwd size MVPD, size=1
+484.27996|HDAT|D>fetching proc kwd size MVPD, size initialised=1
+484.27998|HDAT|D>fetched proc kwd size MVPD, size=7
+484.27999|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.28002|HDAT|D>fetched proc kwd size MVPD, size=7
+484.28003|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.28005|HDAT|D>fetched proc kwd size MVPD, size=c
+484.28006|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.28009|HDAT|D>fetched proc kwd size MVPD, size=8
+484.28010|HDAT|D>fetching proc kwd size MVPD, size initialised=23c
+484.28012|HDAT|D>fetched proc kwd size MVPD, size=4
+484.28013|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.28016|HDAT|D>fetched proc kwd size MVPD, size=4
+484.28017|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.28020|HDAT|D>fetched proc kwd size MVPD, size=2
+484.28021|HDAT|D>allocating total key word size 67
+484.28022|HDAT|D>reading 0th keyword of size 16
+484.28024|HDAT|D>read PROC data PROCESSOR MODULEaH]
+
+484.28025|HDAT|D>copied to main array 0 kwd
+484.28026|HDAT|D>reading 1th keyword of size 2
+484.28027|HDAT|D>read PROC data   AK
+484.28028|HDAT|D>copied to main array 1 kwd
+484.28029|HDAT|D>reading 2th keyword of size 4
+484.28031|HDAT|D>read PROC data AB22
+484.28032|HDAT|D>copied to main array 2 kwd
+484.28032|HDAT|D>reading 3th keyword of size 1
+484.28034|HDAT|D>read PROC data 1TAK
+484.28035|HDAT|D>copied to main array 3 kwd
+484.28036|HDAT|D>reading 4th keyword of size 7
+484.28038|HDAT|D>read PROC data F120308VA
+484.28039|HDAT|D>copied to main array 4 kwd
+484.28040|HDAT|D>reading 5th keyword of size 7
+484.28042|HDAT|D>read PROC data        VA
+484.28044|HDAT|D>copied to main array 5 kwd
+484.28045|HDAT|D>reading 6th keyword of size 12
+484.28047|HDAT|D>read PROC data             DULEaH]
+
+484.28048|HDAT|D>copied to main array 6 kwd
+484.28049|HDAT|D>reading 7th keyword of size 8
+484.28052|HDAT|D>read PROC data 6
+484.28053|HDAT|D>copied to main array 7 kwd
+484.28053|HDAT|D>reading 8th keyword of size 4
+484.28056|HDAT|D>read PROC data 0001
+484.28057|HDAT|D>copied to main array 8 kwd
+484.28058|HDAT|D>reading 9th keyword of size 4
+484.28061|HDAT|D>read PROC data 
+484.28061|HDAT|D>copied to main array 9 kwd
+484.28062|HDAT|D>reading 10th keyword of size 2
+484.28065|HDAT|D>read PROC data 
+484.28066|HDAT|D>copied to main array 10 kwd
+484.28068|HDAT|D>returning keyword size 67 and data PROCESSOR MODULE  AB221F120308                   6
+484.28069|HDAT|<<[hdatGetAsciiKwdForMvpd]
+484.28070|HDAT|D>got back kwd size=43
+484.28070|HDAT|<<[hdatGetAsciiKwd]
+484.28071|HDAT|D> initial size vpd  : 43
+484.28222|HDAT|>>[hdatformatAsciiKwd]
+484.28223|HDAT|<<[hdatformatAsciiKwd]
+484.28223|HDAT|>>[addData]
+484.28224|HDAT|<<[addData]
+484.28225|HDAT|>>[addData]
+484.28225|HDAT|<<[addData]
+484.28226|HDAT|>>[addData]
+484.28227|HDAT|<<[addData]
+484.28227|HDAT|>>[addData]
+484.28228|HDAT|<<[addData]
+484.28228|HDAT|>>[addData]
+484.28229|HDAT|<<[addData]
+484.28230|HDAT|>>[addData]
+484.28230|HDAT|<<[addData]
+484.28231|HDAT|<<[hdatFillDataPtrs]
+484.28232|HDAT|D>virtual address=0x0000025000000280
+484.28233|HDAT|D> no child information were addded
+484.28234|HDAT|D>sizeof HDIF header=20
+484.28235|HDAT|D>writing Data pointers array from address=0x00000250000002A0
+484.28236|HDAT|D>wrote data array 0, at address 0x00000250000002A0
+484.28237|HDAT|D>wrote data array 1, at address 0x00000250000002A8
+484.28238|HDAT|D>wrote data array 2, at address 0x00000250000002B0
+484.28239|HDAT|D>wrote data array 3, at address 0x00000250000002B8
+484.28240|HDAT|D>wrote data array 4, at address 0x00000250000002C0
+484.28241|HDAT|D>wrote data array 5, at address 0x00000250000002C8
+484.28242|HDAT|D>wrote data array 6, at address 0x00000250000002D0
+484.28242|HDAT|D>wrote data array 7, at address 0x00000250000002D8
+484.28244|HDAT|D>writing Child pointers array from address=0x00000250000002E0
+484.28244|HDAT|<<[HdatSpSubsys]
+484.28245|HDAT|<<[HdatLoadSpSubSys]
+484.28246|HDAT|>>[~HdatSpSubsys]
+484.28264|HDAT|<<[~HdatSpSubsys]
+484.28265|HDAT|>>[~HdatHdif]
+484.28266|HDAT|<<[~HdatHdif]
+484.28267|HDAT|D>returned from SP SUBSYS, count=1size=0x188
+484.28268|HDAT|D>iv_spiras->hdatDataArea[0].hdatActualCnt=1,hdatActualSize=188
+484.28269|HDAT|D>for loop index=1
+484.28271|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31200480
+484.28274|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31200480
+484.28275|HDAT|D>calling IPL PARMS from spiras
+484.28427|HDAT|D>Ctr iv_hdatIPLParams addr 0x0000025000000480 virtual addr 0x0000025000000480
+484.28727|HDAT|D>hdatGetIplParmsData: setting hdatIPLMinorType to 0xC0
+484.28781|HDAT|D> Effective PVR :0X4e1203
+484.28785|HDAT|D>Number of Cores: 0
+484.28844|HDAT|D>Feature flag array size:0x510, Model:0x0, DD Level:0x23 Risk Level:0x4
+484.28904|HDAT|D>HDAT:: IPL Parameters Loaded :: Size : 0x1514
+484.28905|HDAT|D>returned from IPL PARMS, size=0x1514,count=1
+484.28924|HDAT|D>iv_spiras->hdatDataArea[1].hdatActualCnt=1,hdatActualSize=1514
+484.28925|HDAT|D>for loop index=2
+484.28926|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31201a00
+484.28929|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31201a00
+484.28930|HDAT|D>calling ENCLOSURE VPD from spiras
+484.29079|HDAT|>>[hdatBldSpecificVpd]
+484.29080|HDAT|>>[hdatProcessFru]
+484.29081|HDAT|D>got target list size as NULL
+484.29081|HDAT|D>returned from ENCLOSURE VPD count=0, size=0x0
+484.29082|HDAT|D>for loop index=3
+484.29084|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31201a00
+484.29086|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31201a00
+484.29087|HDAT|D>calling SLCA from spiras 
+484.29089|HDAT|D>Move SLCA from 0x0000000080000000 to 0x0000000031201A00 with size  688
+484.29126|HDAT|D>moved SLCA count=1, size=0x2b0
+484.29127|HDAT|D>iv_spiras->hdatDataArea[3].hdatActualCnt=1,hdatActualSize=2b0
+484.29128|HDAT|D>for loop index=4
+484.29130|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31201d00
+484.29132|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31201d00
+484.29133|HDAT|D>calling BACKPLANE VPD from spiras
+484.29134|HDAT|>>[hdatBldSpecificVpd]
+484.29135|HDAT|>>[hdatProcessFru]
+484.29136|HDAT|>>[HdatHdif]
+484.29137|HDAT|<<[HdatHdif]
+484.29138|HDAT|>>[HdatVpd]
+484.29139|HDAT|>>[hdatGetFullRecords]
+484.29141|HDAT|D>fetching record size PVPD, size initialised=8e 
+484.29142|HDAT|D>fetching record size PVPD, size initialised=52 
+484.29144|HDAT|D>fetching record size PVPD, size initialised=6a 
+484.29146|HDAT|D>fetching record size PVPD, size initialised=96 
+484.29147|HDAT|D>hdatGetPvpdFullRecord:: allocating total Records size 480
+484.29148|HDAT|D>hdatGetPvpdFullRecord: reading 0th record of size 142
+484.29150|HDAT|D>hdatGetPvpdFullRecord: copied to main array 0 kwd
+484.29151|HDAT|D>hdatGetPvpdFullRecord: reading 1th record of size 82
+484.29152|HDAT|D>hdatGetPvpdFullRecord: copied to main array 1 kwd
+484.29153|HDAT|D>hdatGetPvpdFullRecord: reading 2th record of size 106
+484.29155|HDAT|D>hdatGetPvpdFullRecord: copied to main array 2 kwd
+484.29156|HDAT|D>hdatGetPvpdFullRecord: reading 3th record of size 150
+484.29158|HDAT|D>hdatGetPvpdFullRecord: copied to main array 3 kwd
+484.29159|HDAT|D>hdatGetPvpdFullRecord: returning keyword size 488 and data „Œ
+484.29160|HDAT|D>got back kwd size=1e8
+484.29161|HDAT|<<[hdatGetFullRecords]
+484.29162|HDAT|D>hdatGetAsciiKwd returned kwd size =488
+484.29162|HDAT|>>[addData]
+484.29163|HDAT|<<[addData]
+484.29164|HDAT|>>[addData]
+484.29164|HDAT|<<[addData]
+484.29165|HDAT|>>[addData]
+484.29166|HDAT|<<[addData]
+484.29167|HDAT|<<[HdatVpd]
+484.29168|HDAT|D>virtual address=0x0000025000000D00
+484.29168|HDAT|D>virtual address=0x0000025000000D00
+484.29169|HDAT|D> no child information were addded
+484.29170|HDAT|D>sizeof HDIF header=20
+484.29172|HDAT|D>writing Data pointers array from address=0x0000025000000D20
+484.29173|HDAT|D>wrote data array 0, at address 0x0000025000000D20
+484.29174|HDAT|D>wrote data array 1, at address 0x0000025000000D28
+484.29175|HDAT|D>wrote data array 2, at address 0x0000025000000D30
+484.29175|HDAT|D>wrote data array 3, at address 0x0000025000000D38
+484.29177|HDAT|D>writing Child pointers array from address=0x0000025000000D40
+484.29178|HDAT|D>writing FRU ID from address=0x0000025000000D40
+484.29178|HDAT|D>writing kwd from address 0x0000025000000D48
+484.29179|HDAT|D>kwd to be added „Œ,size=0x1e8 sizeof(this->iv_kwd)=0x8
+484.29180|HDAT|D>address=0x0000025000000F30
+484.29181|HDAT|D>adding iv_padSize=0xf
+484.29182|HDAT|D>exit address=0x0000025000000F3F
+484.29182|HDAT|<<[setVpd]
+484.29183|HDAT|>>[~HdatVpd]
+484.29184|HDAT|<<[~HdatVpd]
+484.29184|HDAT|>>[~HdatHdif]
+484.29185|HDAT|<<[~HdatHdif]
+484.29204|HDAT|<<[hdatProcessFru]
+484.29205|HDAT|D>returned from BACKPLANE  VPD count=1, size=0x800
+484.29206|HDAT|D>iv_spiras->hdatDataArea[4].hdatActualCnt=1,hdatActualSize=800
+484.29207|HDAT|D>for loop index=5
+484.29209|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202500
+484.29212|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202500
+484.29212|HDAT|D>calling SYS VPD from spiras
+484.29213|HDAT|>>[hdatBldSpecificVpd]
+484.29214|HDAT|>>[hdatProcessFru]
+484.29215|HDAT|>>[HdatHdif]
+484.29216|HDAT|<<[HdatHdif]
+484.29216|HDAT|>>[HdatVpd]
+484.29218|HDAT|>>[hdatGetFullRecords]
+484.29219|HDAT|D>fetching record size PVPD, size initialised=8e 
+484.29220|HDAT|D>fetching record size PVPD, size initialised=52 
+484.29222|HDAT|D>fetching record size PVPD, size initialised=6a 
+484.29224|HDAT|D>fetching record size PVPD, size initialised=96 
+484.29225|HDAT|D>hdatGetPvpdFullRecord:: allocating total Records size 480
+484.29226|HDAT|D>hdatGetPvpdFullRecord: reading 0th record of size 142
+484.29228|HDAT|D>hdatGetPvpdFullRecord: copied to main array 0 kwd
+484.29229|HDAT|D>hdatGetPvpdFullRecord: reading 1th record of size 82
+484.29231|HDAT|D>hdatGetPvpdFullRecord: copied to main array 1 kwd
+484.29232|HDAT|D>hdatGetPvpdFullRecord: reading 2th record of size 106
+484.29233|HDAT|D>hdatGetPvpdFullRecord: copied to main array 2 kwd
+484.29234|HDAT|D>hdatGetPvpdFullRecord: reading 3th record of size 150
+484.29236|HDAT|D>hdatGetPvpdFullRecord: copied to main array 3 kwd
+484.29237|HDAT|D>hdatGetPvpdFullRecord: returning keyword size 488 and data „Œ
+484.29238|HDAT|D>got back kwd size=1e8
+484.29239|HDAT|<<[hdatGetFullRecords]
+484.29240|HDAT|D>hdatGetAsciiKwd returned kwd size =488
+484.29240|HDAT|>>[addData]
+484.29241|HDAT|<<[addData]
+484.29242|HDAT|>>[addData]
+484.29242|HDAT|<<[addData]
+484.29243|HDAT|>>[addData]
+484.29244|HDAT|<<[addData]
+484.29244|HDAT|<<[HdatVpd]
+484.29245|HDAT|D>virtual address=0x0000025000000500
+484.29246|HDAT|D>virtual address=0x0000025000000500
+484.29247|HDAT|D> no child information were addded
+484.29248|HDAT|D>sizeof HDIF header=20
+484.29250|HDAT|D>writing Data pointers array from address=0x0000025000000520
+484.29251|HDAT|D>wrote data array 0, at address 0x0000025000000520
+484.29251|HDAT|D>wrote data array 1, at address 0x0000025000000528
+484.29252|HDAT|D>wrote data array 2, at address 0x0000025000000530
+484.29253|HDAT|D>wrote data array 3, at address 0x0000025000000538
+484.29255|HDAT|D>writing Child pointers array from address=0x0000025000000540
+484.29256|HDAT|D>writing FRU ID from address=0x0000025000000540
+484.29257|HDAT|D>writing kwd from address 0x0000025000000548
+484.29258|HDAT|D>kwd to be added „Œ,size=0x1e8 sizeof(this->iv_kwd)=0x8
+484.29259|HDAT|D>address=0x0000025000000730
+484.29259|HDAT|D>adding iv_padSize=0xf
+484.29260|HDAT|D>exit address=0x000002500000073F
+484.29261|HDAT|<<[setVpd]
+484.29261|HDAT|>>[~HdatVpd]
+484.29262|HDAT|<<[~HdatVpd]
+484.29263|HDAT|>>[~HdatHdif]
+484.29263|HDAT|<<[~HdatHdif]
+484.29282|HDAT|<<[hdatProcessFru]
+484.29283|HDAT|D>returned from SYS VPD count=1, size=0x800
+484.29285|HDAT|D>iv_spiras->hdatDataArea[5].hdatActualCnt=1,hdatActualSize=800
+484.29285|HDAT|D>for loop index=6
+484.29287|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202d00
+484.29290|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202d00
+484.29291|HDAT|D>calling CLOCK VPD from spiras
+484.29291|HDAT|>>[hdatBldSpecificVpd]
+484.29292|HDAT|>>[hdatProcessFru]
+484.29293|HDAT|D>got target list size as NULL
+484.29294|HDAT|D>returned from CLOCK VPD count=0, size=0x0
+484.29294|HDAT|D>for loop index=7
+484.29296|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202d00
+484.29299|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202d00
+484.29300|HDAT|D>calling ANCHOR VPD from spiras
+484.29300|HDAT|>>[hdatBldSpecificVpd]
+484.29301|HDAT|>>[hdatProcessFru]
+484.29302|HDAT|D>got target list size as NULL
+484.29303|HDAT|D>returned from ANCHOR VPD count=0, size=0x0
+484.29303|HDAT|D>for loop index=8
+484.29305|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202d00
+484.29308|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202d00
+484.29308|HDAT|D>calling OP PANL VPD from spiras
+484.29309|HDAT|>>[hdatBldSpecificVpd]
+484.29310|HDAT|>>[hdatProcessFru]
+484.29311|HDAT|D>got target list size as NULL
+484.29311|HDAT|D>returned from OP PANL VPD count=0, size=0x0
+484.29312|HDAT|D>for loop index=9
+484.29314|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202d00
+484.29317|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202d00
+484.29317|HDAT|D>calling MISC CEC VPD from spiras
+484.29318|HDAT|>>[hdatBldSpecificVpd]
+484.29319|HDAT|>>[hdatProcessFru]
+484.29320|HDAT|D>got target list size as NULL
+484.29321|HDAT|D>returned from MISC CEC VPD count=0, size=0x0
+484.29321|HDAT|D>for loop index=10
+484.29323|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31202d00
+484.29326|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31202d00
+484.29327|HDAT|D>calling MS VPD from spiras
+484.29478|HDAT|>>[HdatHdif]
+484.29628|HDAT|<<[HdatHdif]
+484.29777|HDAT|>>[hdatLoadMsData]
+484.30674|HDAT|D>hdatFindGroupForMc::: Found group : 0
+484.30677|HDAT|D>Max MS Addr l_maxMsAddress: = 0x0000000200000000,l_maxBase= 0x0000000000000000,l_procMemSizesBytes[l_mcaInGroup]= 0x0000000200000000
+484.30678|HDAT|D>NHTM Bar size value = 0x0000000000000000 
+484.30729|HDAT|D>MaxMsAddr high:0x80000001 0xFFFFFFFF
+484.30731|HDAT|>>[addData]
+484.30731|HDAT|<<[addData]
+484.30732|HDAT|>>[addData]
+484.30733|HDAT|<<[addData]
+484.30733|HDAT|>>[addData]
+484.30734|HDAT|<<[addData]
+484.30734|HDAT|>>[addData]
+484.30735|HDAT|<<[addData]
+484.30736|HDAT|>>[addData]
+484.30736|HDAT|<<[addData]
+484.30737|HDAT|>>[addData]
+484.30737|HDAT|<<[addData]
+484.30739|HDAT|D>NHTM Bar size value = 0x0000000000000000
+484.30913|HDAT|D>hdatFindGroupForMc::: Found group : 0
+484.30942|HDAT|>>[getMemBusFreq]
+484.30943|HDAT|<<[getMemBusFreq]
+484.30945|HDAT|D>No group found for MCA
+484.30946|HDAT|D>hdatFindGroupForMc::: Found group : 0
+484.30949|HDAT|D>l_areaSizeInMB:0x00002000 l_numDimms:0x00000001 l_areas.size():0x00000001
+484.31249|HDAT|>>[HdatHdif]
+484.31250|HDAT|<<[HdatHdif]
+484.31250|HDAT|>>[HdatMsArea]
+484.31251|HDAT|>>[hdatGetAsciiKwdForMvpd]
+484.31252|HDAT|D>fetching proc kwd size MVPD, size initialised=15168
+484.31254|HDAT|D>fetched proc kwd size MVPD, size=10
+484.31255|HDAT|D>fetching proc kwd size MVPD, size initialised=40b2c900
+484.31257|HDAT|D>fetched proc kwd size MVPD, size=7
+484.31258|HDAT|D>fetching proc kwd size MVPD, size initialised=1e32f170
+484.31261|HDAT|D>fetched proc kwd size MVPD, size=7
+484.31262|HDAT|D>fetching proc kwd size MVPD, size initialised=37434335
+484.31264|HDAT|D>fetched proc kwd size MVPD, size=c
+484.31265|HDAT|D>fetching proc kwd size MVPD, size initialised=4048da04
+484.31267|HDAT|D>fetched proc kwd size MVPD, size=4
+484.31268|HDAT|D>fetching proc kwd size MVPD, size initialised=252e3136
+484.31271|HDAT|D>fetched proc kwd size MVPD, size=4
+484.31272|HDAT|D>fetching proc kwd size MVPD, size initialised=40b2fc38
+484.31275|HDAT|D>fetched proc kwd size MVPD, size=4
+484.31276|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.31279|HDAT|D>fetched proc kwd size MVPD, size=2
+484.31280|HDAT|D>allocating total key word size 56
+484.31281|HDAT|D>reading 0th keyword of size 16
+484.31283|HDAT|D>read PROC data PROCESSOR MODULE
+484.31284|HDAT|D>copied to main array 0 kwd
+484.31285|HDAT|D>reading 1th keyword of size 7
+484.31287|HDAT|D>read PROC data F120308VA
+484.31288|HDAT|D>copied to main array 1 kwd
+484.31288|HDAT|D>reading 2th keyword of size 7
+484.31291|HDAT|D>read PROC data        VA
+484.31292|HDAT|D>copied to main array 2 kwd
+484.31293|HDAT|D>reading 3th keyword of size 12
+484.31295|HDAT|D>read PROC data             DULE
+484.31296|HDAT|D>copied to main array 3 kwd
+484.31297|HDAT|D>reading 4th keyword of size 4
+484.31299|HDAT|D>read PROC data AB22
+484.31300|HDAT|D>copied to main array 4 kwd
+484.31301|HDAT|D>reading 5th keyword of size 4
+484.31304|HDAT|D>read PROC data 0001
+484.31305|HDAT|D>copied to main array 5 kwd
+484.31305|HDAT|D>reading 6th keyword of size 4
+484.31308|HDAT|D>read PROC data 
+484.31309|HDAT|D>copied to main array 6 kwd
+484.31310|HDAT|D>reading 7th keyword of size 2
+484.31313|HDAT|D>read PROC data 
+484.31314|HDAT|D>copied to main array 7 kwd
+484.31316|HDAT|D>returning keyword size 56 and data PROCESSOR MODULEF120308                   AB220001
+484.31317|HDAT|<<[hdatGetAsciiKwdForMvpd]
+484.31318|HDAT|>>[hdatformatAsciiKwd]
+484.31319|HDAT|<<[hdatformatAsciiKwd]
+484.31320|HDAT|<<[HdatMsArea]
+484.31321|HDAT|>>[addEcEntry]
+484.31321|HDAT|<<[addEcEntry]
+484.31324|HDAT|>>[setMsaI2cInfo]
+484.34327|HDAT|D>iv_msaHostI2cCnt=0, iv_msaHostI2cSize=20
+484.34328|HDAT|D>Empty Host I2C device info vector : Ms Area Id=0, Size=0
+484.34329|HDAT|<<[setMsaI2cInfo]
+484.34332|HDAT|>>[HdatHdif]
+484.34333|HDAT|<<[HdatHdif]
+484.34333|HDAT|>>[HdatRam]
+484.41877|HDAT|D>hdatGetAsciiKwdForSpd: returning keyword size 512 and data #…!
+484.41877|HDAT|>>[addData]
+484.41878|HDAT|<<[addData]
+484.41879|HDAT|>>[addData]
+484.41879|HDAT|<<[addData]
+484.41880|HDAT|>>[addData]
+484.41881|HDAT|<<[addData]
+484.41881|HDAT|>>[addData]
+484.41882|HDAT|<<[addData]
+484.41882|HDAT|<<[HdatRam]
+484.41883|HDAT|>>[addRam]
+484.41884|HDAT|<<[addRam]
+484.41886|HDAT|D>MCS:0x000B0000 l_addr_range:0x00000000 0x00000000 l_end:0x00000002 0x00000000
+484.41889|HDAT|D>Start add : 0x0000000000000000 MirrorBase : 0x0000800000000000 MirrorAddr : 0x0000800000000000 PayLoadMirrorMem : 0x0
+484.41890|HDAT|>>[addAddrRange]
+484.41890|HDAT|<<[addAddrRange]
+484.41893|HDAT|D>Added SMF memory range to HDAT at index[0]; start addr: 0x00000000; end addr: 0x00000000; size: 0x40745e50
+484.40878|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40879|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40880|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40880|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40881|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40882|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40883|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40884|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40885|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40886|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40887|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40888|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40888|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40889|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40890|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40891|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40892|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40893|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40894|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40895|HDAT|D>hdatmsvpd:addRHBAddrRange i_labelStringPtr is NULL
+484.40897|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40900|ERRL|E>Error created : PLID=9000000C, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40902|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40907|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40908|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40910|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40913|ERRL|E>Error created : PLID=9000000D, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40915|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40918|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40920|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40921|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40924|ERRL|E>Error created : PLID=9000000E, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40926|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40930|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40931|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40933|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40936|ERRL|E>Error created : PLID=9000000F, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40938|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40941|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40942|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40944|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40947|ERRL|E>Error created : PLID=90000010, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40949|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40952|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40953|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40955|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40958|ERRL|E>Error created : PLID=90000011, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40960|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40963|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40965|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40966|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40970|ERRL|E>Error created : PLID=90000012, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40972|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40975|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40976|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40978|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40981|ERRL|E>Error created : PLID=90000013, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40983|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40986|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40987|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.40989|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.40992|ERRL|E>Error created : PLID=90000014, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.40994|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.40997|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.40998|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41000|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41003|ERRL|E>Error created : PLID=90000015, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41005|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41008|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41010|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41011|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41014|ERRL|E>Error created : PLID=90000016, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41016|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41019|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41021|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41023|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41026|ERRL|E>Error created : PLID=90000017, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41028|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41031|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41032|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41034|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41037|ERRL|E>Error created : PLID=90000018, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41039|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41042|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41043|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41045|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41048|ERRL|E>Error created : PLID=90000019, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41050|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41053|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41054|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41056|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41059|ERRL|E>Error created : PLID=9000001A, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41061|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41064|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41066|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41067|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41070|ERRL|E>Error created : PLID=9000001B, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41072|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41075|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41077|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41079|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41082|ERRL|E>Error created : PLID=9000001C, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41084|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41086|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41088|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41090|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41093|ERRL|E>Error created : PLID=9000001D, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41095|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41097|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41099|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41101|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41104|ERRL|E>Error created : PLID=9000001E, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41106|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41109|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41110|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41112|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41115|ERRL|E>Error created : PLID=9000001F, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41117|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41120|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41121|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41123|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41126|ERRL|E>Error created : PLID=90000020, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41128|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41131|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41132|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41134|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41137|ERRL|E>Error created : PLID=90000021, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41139|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41142|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41143|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41145|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41148|ERRL|E>Error created : PLID=90000022, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41150|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41153|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41154|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41156|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41159|ERRL|E>Error created : PLID=90000023, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41162|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41165|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41166|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41168|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41171|ERRL|E>Error created : PLID=90000024, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41173|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41176|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41177|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41179|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41182|ERRL|E>Error created : PLID=90000025, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41183|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41186|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41188|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41189|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41192|ERRL|E>Error created : PLID=90000026, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41194|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41197|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41198|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41200|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41203|ERRL|E>Error created : PLID=90000027, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41205|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41208|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41209|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41211|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41214|ERRL|E>Error created : PLID=90000028, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41215|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41218|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41220|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41221|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41224|ERRL|E>Error created : PLID=90000029, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41226|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41229|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41230|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41232|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41235|ERRL|E>Error created : PLID=9000002A, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41237|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41240|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41241|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41243|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41246|ERRL|E>Error created : PLID=9000002B, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41248|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41250|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41252|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41253|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41256|ERRL|E>Error created : PLID=9000002C, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41258|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41261|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41263|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41264|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41267|ERRL|E>Error created : PLID=9000002D, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41269|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41272|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41274|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41275|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41279|ERRL|E>Error created : PLID=9000002E, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41280|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41283|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41285|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41286|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41289|ERRL|E>Error created : PLID=9000002F, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41291|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41294|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41296|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41297|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41300|ERRL|E>Error created : PLID=90000030, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41302|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41305|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41306|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41308|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41311|ERRL|E>Error created : PLID=90000031, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41313|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41316|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41317|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41319|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41322|ERRL|E>Error created : PLID=90000032, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41323|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41326|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41328|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41329|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41332|ERRL|E>Error created : PLID=90000033, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41334|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41337|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41338|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41340|HDAT|D>mod:0x16, rc:0x9011, data:00000014 00000014 00000000 00000000, sev:0x40
+484.41343|ERRL|E>Error created : PLID=90000034, RC=9011, Mod=16, Userdata=0000001400000014 0000000000000000, Sev=UNRECOVERABLE
+484.41345|ERRL|>>addProcedureCallout(0x55, 0x6)
+484.41348|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_DBG) rets zero.
+484.41349|ERRL|E>ErrlEntry::collectTrace(): getBuffer(HDAT_ERR) rets zero.
+484.41400|HDAT|>>[finalizeObjSize]
+484.41400|HDAT|>>[addData]
+484.41401|HDAT|<<[addData]
+484.41402|HDAT|>>[addData]
+484.41402|HDAT|<<[addData]
+484.41403|HDAT|>>[addData]
+484.41404|HDAT|<<[addData]
+484.41404|HDAT|>>[addData]
+484.41405|HDAT|<<[addData]
+484.41406|HDAT|>>[addData]
+484.41406|HDAT|<<[addData]
+484.41407|HDAT|>>[addData]
+484.41408|HDAT|<<[addData]
+484.41408|HDAT|>>[addData]
+484.41409|HDAT|<<[addData]
+484.41409|HDAT|>>[addData]
+484.41410|HDAT|<<[addData]
+484.41411|HDAT|>>[addChild]
+484.41411|HDAT|<<[addChild]
+484.41412|HDAT|<<[finalizeObjSize]
+484.41413|HDAT|>>[addChild]
+484.41414|HDAT|<<[addChild]
+484.41414|HDAT|>>[ramObjSizes]
+484.41415|HDAT|<<[ramObjSizes]
+484.41416|HDAT|>>[ramObjSizes]
+484.41416|HDAT|<<[ramObjSizes]
+484.41419|HDAT|>>[ramObjSizes]
+484.41420|HDAT|<<[ramObjSizes]
+484.41420|HDAT|D>  **** HdatMsVpd start ****
+484.41421|HDAT|D>      iv_msAddr = 0X 00000000 31202D00 
+484.41422|HDAT|D>      iv_actMsAreaCnt = 1
+484.41423|HDAT|D>      iv_maxMsAreaCnt = 16
+484.41424|HDAT|D>****** HdatHdif base object ******
+484.41425|HDAT|D>      iv_totalSize = 3632
+484.41425|HDAT|D>      iv_padSize = 4
+484.41426|HDAT|D>      iv_dataPtrSize = 48
+484.41427|HDAT|D>      iv_childPtrSize = 32
+484.41427|HDAT|D>  **hdatHDIF_t**
+484.41428|HDAT|D>      hdatStructId = 0X D1F0 
+484.41429|HDAT|D>      hdatStructName = MS VPD
+484.41430|HDAT|D>      hdatInstance = 0
+484.41430|HDAT|D>      hdatVersion = 36
+484.41431|HDAT|D>      hdatSize = 2432
+484.41432|HDAT|D>      hdatHdrSize = 32
+484.41433|HDAT|D>      hdatDataPtrOffset = 32
+484.41433|HDAT|D>      hdatDataPtrCnt = 6
+484.41434|HDAT|D>      hdatChildStrCnt = 1
+484.41435|HDAT|D>      hdatChildStrOffset = 80
+484.41435|HDAT|D>  **hdatHDIFDataHdr_t**
+484.41436|HDAT|D>      hdatOffset = 112
+484.41437|HDAT|D>      hdatSize = 36
+484.41438|HDAT|D>      hdatOffset = 148
+484.41439|HDAT|D>      hdatSize = 8
+484.41439|HDAT|D>      hdatOffset = 156
+484.41440|HDAT|D>      hdatSize = 40
+484.41441|HDAT|D>      hdatOffset = 196
+484.41442|HDAT|D>      hdatSize = 272
+484.41442|HDAT|D>      hdatOffset = 468
+484.41443|HDAT|D>      hdatSize = 24
+484.41444|HDAT|D>      hdatOffset = 492
+484.41444|HDAT|D>      hdatSize = 1936
+484.41445|HDAT|D>  **hdatHDIFChildHdr_t**
+484.41446|HDAT|D>      hdatOffset = 2432
+484.41446|HDAT|D>      hdatSize = 576
+484.41447|HDAT|D>      hdatCnt = 1
+484.41448|HDAT|D>
+484.41448|HDAT|D>  **hdatMsVpdAddr_t**
+484.41449|HDAT|D>      hdatMaxAddr = 0X 80000001 FFFFFFFF 
+484.41450|HDAT|D>    hdatMaxCcmAddr = 0X 80000001 FFFFFFFF 
+484.41451|HDAT|D> hdatMstSigAffntyDom = 0X 00000000 
+484.41452|HDAT|D>      HRMOR stash loc = 0X 00000000 00000000 
+
+484.41453|HDAT|D>  **hdatMsVpdSize_t**
+484.41453|HDAT|D>      hdatReserved1 = 0
+484.41454|HDAT|D>      hdatTotSize = 8192
+484.41455|HDAT|D>  **hdatMsVpdPageMover_t**
+484.41456|HDAT|D>      hdatFlags = 268435456
+484.41456|HDAT|D>      hdatLockCnt = 0
+484.41457|HDAT|D>      hdatLockAddr = 0X 00000000 00000000 
+484.41458|HDAT|D>      hdatMoverAddr = 0X 00000000 00000000 
+484.41459|HDAT|D>      hdatBSRAddr = 0X 00000000 00000000 
+484.41460|HDAT|D>      hdatXSCOMAddr = 0X 800603FC 00000000
+484.41461|HDAT|D>  **hdatMsVpdImtAddrRange_t**
+484.41462|HDAT|D>  **hdatHDIFDataArray_t**
+484.41462|HDAT|D>      hdatOffset = 16
+484.41463|HDAT|D>      hdatArrayCnt = 0
+484.41464|HDAT|D>      hdatAllocSize = 16
+484.41464|HDAT|D>      hdatActSize = 16
+484.41465|HDAT|D>  **hdatMsVpdUEAddrRange_t**
+484.41466|HDAT|D>  **hdatHDIFDataArray_t**
+484.41467|HDAT|D>      hdatOffset = 16
+484.41467|HDAT|D>      hdatArrayCnt = 0
+484.41468|HDAT|D>      hdatAllocSize = 8
+484.41469|HDAT|D>      hdatActSize = 8
+484.41469|HDAT|D>  **hdatMsVpdRhbAddrRange_t**
+484.41470|HDAT|D>  **hdatHDIFDataArray_t**
+484.41471|HDAT|D>      hdatOffset = 16
+484.41471|HDAT|D>      hdatArrayCnt = 20
+484.41472|HDAT|D>      hdatAllocSize = 96
+484.41473|HDAT|D>      hdatActSize = 96
+484.41474|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 80000000 00000000 
+484.41475|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 80000000 0FFFFFFF 
+484.41476|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41477|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41478|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41479|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41480|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41481|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41482|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41483|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41484|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41485|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41486|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41487|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41488|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41489|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41490|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41491|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41492|HDAT|D>     hdatRhbAddrRngStrAddr  = 0X 00000000 00000000 
+484.41493|HDAT|D>      hdatRhbAddrRngEndAddr = 0X 00000000 00000000 
+484.41494|HDAT|D>
+484.41495|HDAT|D>  **** HdatMsVpd end ****
+484.41495|HDAT|D>  **main store areas and their associated RAM areas**
+484.41496|HDAT|D>  **** HdatMsArea start ****
+484.41497|HDAT|D>      cv_actualCnt = 1
+484.41498|HDAT|D>      iv_kwdSize = 92
+484.41498|HDAT|D>      iv_maxAddrRngCnt = 4
+484.41499|HDAT|D>      iv_maxEcCnt = 5
+484.41500|HDAT|D>      iv_maxRamCnt = 1
+484.41501|HDAT|D>      iv_actRamCnt = 1
+484.41501|HDAT|D>****** HdatHdif base object ******
+484.41502|HDAT|D>      iv_totalSize = 1200
+484.41503|HDAT|D>      iv_padSize = 0
+484.41503|HDAT|D>      iv_dataPtrSize = 88
+484.41504|HDAT|D>      iv_childPtrSize = 32
+484.41505|HDAT|D>  **hdatHDIF_t**
+484.41506|HDAT|D>      hdatStructId = 0X D1F0 
+484.41506|HDAT|D>      hdatStructName = MSAREA
+484.41507|HDAT|D>      hdatInstance = 0
+484.41508|HDAT|D>      hdatVersion = 80
+484.41509|HDAT|D>      hdatSize = 576
+484.41509|HDAT|D>      hdatHdrSize = 32
+484.41510|HDAT|D>      hdatDataPtrOffset = 32
+484.41511|HDAT|D>      hdatDataPtrCnt = 8
+484.41511|HDAT|D>      hdatChildStrCnt = 1
+484.41512|HDAT|D>      hdatChildStrOffset = 120
+484.41513|HDAT|D>  **hdatHDIFDataHdr_t**
+484.41514|HDAT|D>      hdatOffset = 152
+484.41514|HDAT|D>      hdatSize = 4
+484.41515|HDAT|D>      hdatOffset = 156
+484.41516|HDAT|D>      hdatSize = 92
+484.41516|HDAT|D>      hdatOffset = 248
+484.41517|HDAT|D>      hdatSize = 76
+484.41518|HDAT|D>      hdatOffset = 324
+484.41518|HDAT|D>      hdatSize = 8
+484.41519|HDAT|D>      hdatOffset = 332
+484.41520|HDAT|D>      hdatSize = 160
+484.41520|HDAT|D>      hdatOffset = 492
+484.41521|HDAT|D>      hdatSize = 8
+484.41522|HDAT|D>      hdatOffset = 500
+484.41523|HDAT|D>      hdatSize = 56
+484.41523|HDAT|D>      hdatOffset = 556
+484.41524|HDAT|D>      hdatSize = 20
+484.41525|HDAT|D>  **hdatHDIFChildHdr_t**
+484.41525|HDAT|D>      hdatOffset = 576
+484.41526|HDAT|D>      hdatSize = 624
+484.41527|HDAT|D>      hdatCnt = 1
+484.41527|HDAT|D>
+484.41528|HDAT|D>  **ASCII keyword VPD**
+484.41529|HDAT|D>0X 84500044 52105052 4F434553 534F5220
+484.41530|HDAT|D>0X 84500044 52105052 4F434553 534F5220
+484.41531|HDAT|D>0X 84500044 52105052 4F434553 534F5220
+484.41532|HDAT|D>0X 84500044 52105052 4F434553 534F5220
+484.41533|HDAT|D>0X 84500044 52105052 4F434553 534F5220
+484.41534|HDAT|D>0X 84500044 52105052 4F434553 
+484.41535|HDAT|D>  **hdatMsAreaId_t**
+484.41535|HDAT|D>      hdatMsAreaId = 0
+484.41536|HDAT|D>      hdatMsAreaParentType = 8192
+484.41537|HDAT|D>      hdatMsAreaStatus 49152
+484.41538|HDAT|D>  **hdatMsAreaSize_t**
+484.41538|HDAT|D>      hdatMsAreaSize = 8192
+484.41539|HDAT|D>  **hdatMsAreaAddrRange_t**
+484.41540|HDAT|D>  **hdatHDIFDataArray_t**
+484.41541|HDAT|D>      hdatOffset = 16
+484.41541|HDAT|D>      hdatArrayCnt = 1
+484.41542|HDAT|D>      hdatAllocSize = 36
+484.41543|HDAT|D>      hdatActSize = 36
+484.41544|HDAT|D>      hdatMsAreaStrAddr = 0X 00000000 00000000 
+484.41545|HDAT|D>      hdatMsAreaEndAddr = 0X 00000002 00000000 
+484.41545|HDAT|D>      hatMsAreaProcChipId = 0
+484.41546|HDAT|D>      hdatSMMAttributes.hdatRangeIsMirrorable = 0
+484.41547|HDAT|D>      hdatSMMAttributes.hdatMirroringAlgorithm = 255
+484.41548|HDAT|D>      hdatStartMirrAddr = 0X 00000000 00000000 
+484.41549|HDAT|D>
+484.41549|HDAT|D>  **hdatMsAreaAffinity_t**
+484.41550|HDAT|D>      hdatMsAreaModuleId = 0
+484.41551|HDAT|D>      hdatMsAffinityDomain = 0
+484.41552|HDAT|D>  **hdatEcLvl_t**
+484.41552|HDAT|D>  **hdatHDIFDataArray_t**
+484.41553|HDAT|D>      hdatOffset = 16
+484.41554|HDAT|D>      hdatArrayCnt = 1
+484.41554|HDAT|D>      hdatAllocSize = 8
+484.41555|HDAT|D>      hdatActSize = 8
+484.41556|HDAT|D>      hdatChipManfId = 8401
+484.41557|HDAT|D>      hdatChipEcLvl = 35
+484.41557|HDAT|D>  **** HdatMsArea end ****
+484.41558|HDAT|D>  **associated RAM objects**
+484.41559|HDAT|D>  **** HdatRam start ****
+484.41559|HDAT|D>      cv_actualCnt = 1
+484.41560|HDAT|D>      iv_kwdSize = 512
+484.41561|HDAT|D>****** HdatHdif base object ******
+484.41562|HDAT|D>      iv_totalSize = 624
+484.41562|HDAT|D>      iv_padSize = 8
+484.41563|HDAT|D>      iv_dataPtrSize = 48
+484.41564|HDAT|D>      iv_childPtrSize = 0
+484.41564|HDAT|D>  **hdatHDIF_t**
+484.41565|HDAT|D>      hdatStructId = 0X D1F0 
+484.41566|HDAT|D>      hdatStructName = RAM   
+484.41567|HDAT|D>      hdatInstance = 0
+484.41567|HDAT|D>      hdatVersion = 32
+484.41568|HDAT|D>      hdatSize = 624
+484.41569|HDAT|D>      hdatHdrSize = 32
+484.41570|HDAT|D>      hdatDataPtrOffset = 32
+484.41570|HDAT|D>      hdatDataPtrCnt = 4
+484.41571|HDAT|D>      hdatChildStrCnt = 0
+484.41572|HDAT|D>      hdatChildStrOffset = 0
+484.41573|HDAT|D>  **hdatHDIFDataHdr_t**
+484.41573|HDAT|D>      hdatOffset = 80
+484.41574|HDAT|D>      hdatSize = 4
+484.41575|HDAT|D>      hdatOffset = 84
+484.41575|HDAT|D>      hdatSize = 512
+484.41576|HDAT|D>      hdatOffset = 596
+484.41577|HDAT|D>      hdatSize = 12
+484.41577|HDAT|D>      hdatOffset = 608
+484.41578|HDAT|D>      hdatSize = 8
+484.41579|HDAT|D>  **ASCII keyword VPD**
+484.41580|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41581|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41582|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41583|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41584|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41585|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41586|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41587|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41588|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41589|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41590|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41591|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41592|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41593|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41594|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41595|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41596|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41596|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41597|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41598|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41599|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41600|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41601|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41602|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41603|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41604|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41605|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41606|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41607|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41608|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41609|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41610|HDAT|D>0X 23120C01 85210008 00600003 010B8000
+484.41610|HDAT|D>  **hdatRamAreaId_t**
+484.41611|HDAT|D>      hdatRamAreaId = 0
+484.41612|HDAT|D>      hdatRamStatus = 0X C000
+484.41613|HDAT|D>  **hdatRamAreaSize_t**
+484.41613|HDAT|D>      hdatReserved1 = 2037409056
+484.41614|HDAT|D>      hdatRamTotalSize = 8192
+484.41615|HDAT|D>  **** HdatRam end ****
+484.41616|HDAT|<<[hdatLoadMsData]
+484.41616|HDAT|D>MS VPD count=1, size=0xe30
+484.41617|HDAT|>>[~HdatMsArea]
+484.41618|HDAT|>>[~HdatRam]
+484.41619|HDAT|<<[~HdatRam]
+484.41619|HDAT|>>[~HdatHdif]
+484.41620|HDAT|<<[~HdatHdif]
+484.41621|HDAT|<<[~HdatMsArea]
+484.41622|HDAT|>>[~HdatHdif]
+484.41622|HDAT|<<[~HdatHdif]
+484.41642|HDAT|>>[~HdatHdif]
+484.41643|HDAT|<<[~HdatHdif]
+484.41644|HDAT|D>iv_spiras->hdatDataArea[10].hdatActualCnt=1,hdatActualSize=e30
+484.41645|HDAT|D>for loop index=11
+484.41647|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31203b80
+484.41650|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31203b80
+484.41651|HDAT|D>calling IO HUB from spiras
+484.41651|HDAT|>>[hdatLoadIoData]
+484.41653|HDAT|D>for loop starting for index=0
+484.41654|HDAT|D>got RID value as 4096
+484.41655|HDAT|D>got ordinal id as 0
+484.41656|HDAT|D>got mru id as 65536
+484.41656|HDAT|>>[HdatHdif]
+484.41657|HDAT|<<[HdatHdif]
+484.41658|HDAT|>>[HdatIoHubFru]
+484.41659|HDAT|>>[addData]
+484.41660|HDAT|<<[addData]
+484.41660|HDAT|>>[addData]
+484.41661|HDAT|<<[addData]
+484.41662|HDAT|>>[addData]
+484.41662|HDAT|<<[addData]
+484.41663|HDAT|>>[addData]
+484.41664|HDAT|<<[addData]
+484.41664|HDAT|<<[HdatIoHubFru]
+484.41665|HDAT|D>hdatFlags 1: 0
+484.41694|HDAT|>>[bldDaughterStruct]
+484.41694|HDAT|>>[hdatGetDaughterInfoFromTarget]
+484.41696|HDAT|<<[hdatGetDaughterInfoFromTarget]
+484.41697|HDAT|D>daughter count 1
+484.41698|HDAT|D>adding daughter 2048
+484.41698|HDAT|>>[addDaughterCard]
+484.41699|HDAT|D>vpd type= 8
+484.41700|HDAT|>>[HdatHdif]
+484.41700|HDAT|<<[HdatHdif]
+484.41701|HDAT|>>[HdatVpd]
+484.41702|HDAT|>>[hdatGetAsciiKwd]
+484.41704|HDAT|D>fetching BP kwd size PVPD, size initialised=4  keyword =0010
+484.41706|HDAT|D>fetching BP kwd size PVPD, size initialised=10  keyword =0007
+484.41708|HDAT|D>fetching BP kwd size PVPD, size initialised=1  keyword =0005
+484.41710|HDAT|D>fetching BP kwd size PVPD, size initialised=2  keyword =0017
+484.41713|HDAT|D>fetching BP kwd size PVPD, size initialised=7  keyword =0009
+484.41716|HDAT|D>fetching BP kwd size PVPD, size initialised=7  keyword =000f
+484.41718|HDAT|D>fetching BP kwd size PVPD, size initialised=c  keyword =0011
+484.41721|HDAT|D>fetching BP kwd size PVPD, size initialised=4  keyword =0004
+484.41724|HDAT|D>fetching BP kwd size PVPD, size initialised=4  keyword =000a
+484.41728|HDAT|D>fetching BP kwd size PVPD, size initialised=4  keyword =0006
+484.41731|HDAT|D>fetching BP kwd size PVPD, size initialised=2  keyword =000b
+484.41735|HDAT|D>fetching BP kwd size PVPD, size initialised=6  keyword =0001
+484.41739|HDAT|D>fetching BP kwd size PVPD, size initialised=1  keyword =0002
+484.41743|HDAT|D>fetching BP kwd size PVPD, size initialised=c  keyword =0003
+484.41747|HDAT|D>fetching BP kwd size PVPD, size initialised=2  keyword =000e
+484.41748|HDAT|D>hdatGetAsciiKwdForPvpd:: allocating total key word size 84
+484.41749|HDAT|D>hdatGetAsciiKwdForPvpd: reading 0th keyword of size 4
+484.41751|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data VINI
+484.41752|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 0 kwd
+484.41753|HDAT|D>hdatGetAsciiKwdForPvpd: reading 1th keyword of size 16
+484.41755|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data I/O BACKPLANE   
+484.41756|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 1 kwd
+484.41757|HDAT|D>hdatGetAsciiKwdForPvpd: reading 2th keyword of size 1
+484.41759|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 1TAK
+484.41760|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 2 kwd
+484.41761|HDAT|D>hdatGetAsciiKwdForPvpd: reading 3th keyword of size 2
+484.41763|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 01AK
+484.41764|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 3 kwd
+484.41765|HDAT|D>hdatGetAsciiKwdForPvpd: reading 4th keyword of size 7
+484.41767|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data T2P9D01VA
+484.41768|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 4 kwd
+484.41769|HDAT|D>hdatGetAsciiKwdForPvpd: reading 5th keyword of size 7
+484.41772|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data T2P9D01VA
+484.41773|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 5 kwd
+484.41774|HDAT|D>hdatGetAsciiKwdForPvpd: reading 6th keyword of size 12
+484.41777|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41778|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 6 kwd
+484.41779|HDAT|D>hdatGetAsciiKwdForPvpd: reading 7th keyword of size 4
+484.41781|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data P000
+484.41782|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 7 kwd
+484.41783|HDAT|D>hdatGetAsciiKwdForPvpd: reading 8th keyword of size 4
+484.41786|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 0001
+484.41787|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 8 kwd
+484.41788|HDAT|D>hdatGetAsciiKwdForPvpd: reading 9th keyword of size 4
+484.41791|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41792|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 9 kwd
+484.41793|HDAT|D>hdatGetAsciiKwdForPvpd: reading 10th keyword of size 2
+484.41796|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41797|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 10 kwd
+484.41798|HDAT|D>hdatGetAsciiKwdForPvpd: reading 11th keyword of size 6
+484.41801|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41802|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 11 kwd
+484.41803|HDAT|D>hdatGetAsciiKwdForPvpd: reading 12th keyword of size 1
+484.41806|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41807|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 12 kwd
+484.41808|HDAT|D>hdatGetAsciiKwdForPvpd: reading 13th keyword of size 12
+484.41812|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41813|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 13 kwd
+484.41814|HDAT|D>hdatGetAsciiKwdForPvpd: reading 14th keyword of size 2
+484.41817|HDAT|D>hdatGetAsciiKwdForPvpd: read BP data 
+484.41818|HDAT|D>hdatGetAsciiKwdForPvpd: copied to main array 14 kwd
+484.41820|HDAT|D>hdatGetAsciiKwdForPvpd: returning keyword size 84 and data VINII/O BACKPLANE   101T2P9D01T2P9D01
+484.41821|HDAT|D>got back kwd size=54
+484.41822|HDAT|<<[hdatGetAsciiKwd]
+484.41823|HDAT|D>hdatGetAsciiKwd returned kwd size =84
+484.41823|HDAT|>>[hdatformatAsciiKwd]
+484.41824|HDAT|<<[hdatformatAsciiKwd]
+484.41825|HDAT|>>[addData]
+484.41826|HDAT|<<[addData]
+484.41827|HDAT|>>[addData]
+484.41827|HDAT|<<[addData]
+484.41828|HDAT|>>[addData]
+484.41828|HDAT|<<[addData]
+484.41829|HDAT|<<[HdatVpd]
+484.41830|HDAT|<<[addDaughterCard]
+484.41830|HDAT|D>calling addChild
+484.41831|HDAT|>>[addChild]
+484.41832|HDAT|<<[addChild]
+484.41832|HDAT|<<[bldDaughterStruct]
+484.41833|HDAT|D>fruData.bldDaughterStruct done
+484.41834|HDAT|>>[bldSlotMapInfoStruct]
+484.41835|HDAT|>>[HdatHdif]
+484.41835|HDAT|<<[HdatHdif]
+484.41836|HDAT|>>[addData]
+484.41837|HDAT|<<[addData]
+484.41840|HDAT|>>[addData]
+484.41841|HDAT|<<[addData]
+484.41842|HDAT|D>****** HdatHdif base object ******
+484.41843|HDAT|D>      iv_totalSize = 928
+484.41843|HDAT|D>      iv_padSize = 8
+484.41844|HDAT|D>      iv_dataPtrSize = 32
+484.41845|HDAT|D>      iv_childPtrSize = 0
+484.41846|HDAT|D>  **hdatHDIF_t**
+484.41846|HDAT|D>      hdatStructId = 0X D1F0 
+484.41847|HDAT|D>      hdatStructName = IOSLOT
+484.41848|HDAT|D>      hdatInstance = 0
+484.41848|HDAT|D>      hdatVersion = 32
+484.41849|HDAT|D>      hdatSize = 928
+484.41850|HDAT|D>      hdatHdrSize = 32
+484.41851|HDAT|D>      hdatDataPtrOffset = 32
+484.41851|HDAT|D>      hdatDataPtrCnt = 2
+484.41852|HDAT|D>      hdatChildStrCnt = 0
+484.41853|HDAT|D>      hdatChildStrOffset = 0
+484.41854|HDAT|D>  **hdatHDIFDataHdr_t**
+484.41854|HDAT|D>      hdatOffset = 64
+484.41855|HDAT|D>      hdatSize = 752
+484.41856|HDAT|D>      hdatOffset = 816
+484.41856|HDAT|D>      hdatSize = 104
+484.41857|HDAT|>>[addChild]
+484.41858|HDAT|<<[addChild]
+484.41859|HDAT|D>fruData.bldSlotMapInfoStruct done, will insert to the map
+484.41860|HDAT|D>done inserting into the map
+484.41860|HDAT|>>[getTotalIoKwdSize]
+484.41861|HDAT|D>got l_totKwdSize=f0
+484.41912|HDAT|D>setting count same to index=1,o_count=1
+484.41913|HDAT|D>allocating memory (l_totalsize * l_numProcs)+l_totKwdSize=1670
+484.41915|HDAT|D>l_virtAddr =0x0000025000000B80, l_virt_addr=0x0000025000000B80
+484.41916|HDAT|D>writing to main memory
+484.41916|HDAT|D>virtual address=0x0000025000000B80
+484.41917|HDAT|D>virtual address=0x0000025000000B80
+484.41919|HDAT|D>sizeof HDIF header=20
+484.41920|HDAT|D>writing Data pointers array from address=0x0000025000000BA0
+484.41921|HDAT|D>wrote data array 0, at address 0x0000025000000BA0
+484.41922|HDAT|D>wrote data array 1, at address 0x0000025000000BA8
+484.41923|HDAT|D>wrote data array 2, at address 0x0000025000000BB0
+484.41924|HDAT|D>wrote data array 3, at address 0x0000025000000BB8
+484.41925|HDAT|D>wrote data array 4, at address 0x0000025000000BC0
+484.41926|HDAT|D>wrote data array 5, at address 0x0000025000000BC8
+484.41927|HDAT|D>writing Child pointers array from address=0x0000025000000BD0
+484.41928|HDAT|D>wrote child array 0, at address 0x0000025000000BD0
+484.41929|HDAT|D>wrote child array 1, at address 0x0000025000000BDC
+484.41930|HDAT|D>wrote child array 2, at address 0x0000025000000BE8
+484.41931|HDAT|D>wrote child array 3, at address 0x0000025000000BF4
+484.41932|HDAT|D>after writing HDIF header address now 0x0000025000000C00
+484.41933|HDAT|D>writing FRU ID from address=0x0000025000000C00
+484.41934|HDAT|D>writing HUB FRU id from address=0x0000025000000C04
+484.41936|HDAT|D>writing io hub Data array header at address=0x0000025000000C14
+484.41936|HDAT|D>writing io hub array from address=0x0000025000000C24
+484.41937|HDAT|D>wrote io hub array 0
+484.41938|HDAT|D>address=0x0000025000000DE4
+484.41939|HDAT|D>adding iv_padSize=0xc
+484.41940|HDAT|D>exit address=0x0000025000000DF0
+484.41941|HDAT|D>start writing daughter cards from address 0x0000025000001DB0
+484.41942|HDAT|D>writing daughter from address 0x0000025000001DB0
+484.41943|HDAT|D>virtual address=0x0000025000001DB0
+484.41944|HDAT|D>virtual address=0x0000025000001DB0
+484.41944|HDAT|D> no child information were addded
+484.41946|HDAT|D>sizeof HDIF header=20
+484.41947|HDAT|D>writing Data pointers array from address=0x0000025000001DD0
+484.41948|HDAT|D>wrote data array 0, at address 0x0000025000001DD0
+484.41949|HDAT|D>wrote data array 1, at address 0x0000025000001DD8
+484.41950|HDAT|D>wrote data array 2, at address 0x0000025000001DE0
+484.41951|HDAT|D>wrote data array 3, at address 0x0000025000001DE8
+484.41952|HDAT|D>writing Child pointers array from address=0x0000025000001DF0
+484.41953|HDAT|D>writing FRU ID from address=0x0000025000001DF0
+484.41954|HDAT|D>writing kwd from address 0x0000025000001DF8
+484.41955|HDAT|D>kwd to be added „,size=0xa5 sizeof(this->iv_kwd)=0x8
+484.41956|HDAT|D>address=0x0000025000001E9D
+484.41957|HDAT|D>adding iv_padSize=0x2
+484.41958|HDAT|D>exit address=0x0000025000001E9F
+484.41958|HDAT|<<[setVpd]
+484.41959|HDAT|D>virtual address=0x0000025000001EA0
+484.41960|HDAT|D> no child information were addded
+484.41961|HDAT|D>sizeof HDIF header=20
+484.41962|HDAT|D>writing Data pointers array from address=0x0000025000001EC0
+484.41963|HDAT|D>wrote data array 0, at address 0x0000025000001EC0
+484.41964|HDAT|D>wrote data array 1, at address 0x0000025000001EC8
+484.41965|HDAT|D>wrote data array 2, at address 0x0000025000001ED0
+484.41966|HDAT|D>wrote data array 3, at address 0x0000025000001ED8
+484.41967|HDAT|D>writing Child pointers array from address=0x0000025000001EE0
+484.41969|HDAT|D>exiting with virtual address=0x0000025000002250
+484.41969|HDAT|D>wrote pad of 0x40 size after io object
+484.41989|HDAT|>>[~HdatIoHubFru]
+484.41990|HDAT|>>[~HdatVpd]
+484.41991|HDAT|<<[~HdatVpd]
+484.41992|HDAT|>>[~HdatHdif]
+484.41992|HDAT|<<[~HdatHdif]
+484.41993|HDAT|<<[~HdatIoHubFru]
+484.41994|HDAT|>>[~HdatHdif]
+484.41994|HDAT|<<[~HdatHdif]
+484.41995|HDAT|>>[~HdatHdif]
+484.41996|HDAT|<<[~HdatHdif]
+484.41997|HDAT|<<[hdatLoadIoData]
+484.41998|HDAT|D>returned size=0x16c0,count=1 from iohub
+484.41999|HDAT|D>iv_spiras->hdatDataArea[11].hdatActualCnt=1,hdatActualSize=16c0
+484.42000|HDAT|D>for loop index=12
+484.42001|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31205280
+484.42004|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31205280
+484.42005|HDAT|D>calling PCIA from spiras
+484.42021|HDAT|D>Constructor iv_spPcia addr 0x0000025000000280 virtual addr 0x0000025000000280
+484.42022|HDAT|D>Core Thread Count[4], Enabled[4]
+484.42051|HDAT|D>Core list size 4 PCIA offset 0x0000025000000280
+484.42052|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000000
+484.42053|HDAT|D>hw card ID:0x00000000
+484.42056|HDAT|>>[getMemBusFreq]
+484.42082|HDAT|<<[getMemBusFreq]
+484.42084|HDAT|D>HdatPcia thread idx 0, thread id 0 
+484.42085|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000000
+484.42086|HDAT|D>hw card ID:0x00000000
+484.42088|HDAT|>>[getMemBusFreq]
+484.42117|HDAT|<<[getMemBusFreq]
+484.42119|HDAT|D>HdatPcia thread idx 1, thread id 1 
+484.42120|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000000
+484.42121|HDAT|D>hw card ID:0x00000000
+484.42124|HDAT|>>[getMemBusFreq]
+484.42152|HDAT|<<[getMemBusFreq]
+484.42154|HDAT|D>HdatPcia thread idx 2, thread id 2 
+484.42155|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000000
+484.42157|HDAT|D>hw card ID:0x00000000
+484.42159|HDAT|>>[getMemBusFreq]
+484.42187|HDAT|<<[getMemBusFreq]
+484.42189|HDAT|D>HdatPcia thread idx 3, thread id 3 
+484.42190|HDAT|D>Core list size 4 PCIA offset 0x0000025000000480
+484.42191|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000001
+484.42193|HDAT|D>hw card ID:0x00000000
+484.42195|HDAT|>>[getMemBusFreq]
+484.42222|HDAT|<<[getMemBusFreq]
+484.42224|HDAT|D>HdatPcia thread idx 0, thread id 0 
+484.42225|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000001
+484.42227|HDAT|D>hw card ID:0x00000000
+484.42229|HDAT|>>[getMemBusFreq]
+484.42257|HDAT|<<[getMemBusFreq]
+484.42258|HDAT|D>HdatPcia thread idx 1, thread id 1 
+484.42259|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000001
+484.42261|HDAT|D>hw card ID:0x00000000
+484.42263|HDAT|>>[getMemBusFreq]
+484.42290|HDAT|<<[getMemBusFreq]
+484.42292|HDAT|D>HdatPcia thread idx 2, thread id 2 
+484.42293|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000001
+484.42294|HDAT|D>hw card ID:0x00000000
+484.42297|HDAT|>>[getMemBusFreq]
+484.42324|HDAT|<<[getMemBusFreq]
+484.42326|HDAT|D>HdatPcia thread idx 3, thread id 3 
+484.42327|HDAT|D>Core list size 4 PCIA offset 0x0000025000000680
+484.42328|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000002
+484.42329|HDAT|D>hw card ID:0x00000000
+484.42331|HDAT|>>[getMemBusFreq]
+484.42359|HDAT|<<[getMemBusFreq]
+484.42361|HDAT|D>HdatPcia thread idx 0, thread id 0 
+484.42362|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000002
+484.42363|HDAT|D>hw card ID:0x00000000
+484.42365|HDAT|>>[getMemBusFreq]
+484.42393|HDAT|<<[getMemBusFreq]
+484.42394|HDAT|D>HdatPcia thread idx 1, thread id 1 
+484.42395|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000002
+484.42397|HDAT|D>hw card ID:0x00000000
+484.42399|HDAT|>>[getMemBusFreq]
+484.42427|HDAT|<<[getMemBusFreq]
+484.42428|HDAT|D>HdatPcia thread idx 2, thread id 2 
+484.42429|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000002
+484.42431|HDAT|D>hw card ID:0x00000000
+484.42433|HDAT|>>[getMemBusFreq]
+484.42460|HDAT|<<[getMemBusFreq]
+484.42462|HDAT|D>HdatPcia thread idx 3, thread id 3 
+484.42463|HDAT|D>Core list size 4 PCIA offset 0x0000025000000880
+484.42464|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000003
+484.42465|HDAT|D>hw card ID:0x00000000
+484.42467|HDAT|>>[getMemBusFreq]
+484.42495|HDAT|<<[getMemBusFreq]
+484.42496|HDAT|D>HdatPcia thread idx 0, thread id 0 
+484.42497|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000003
+484.42499|HDAT|D>hw card ID:0x00000000
+484.42501|HDAT|>>[getMemBusFreq]
+484.42529|HDAT|<<[getMemBusFreq]
+484.42530|HDAT|D>HdatPcia thread idx 1, thread id 1 
+484.42531|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000003
+484.42533|HDAT|D>hw card ID:0x00000000
+484.42535|HDAT|>>[getMemBusFreq]
+484.42565|HDAT|<<[getMemBusFreq]
+484.42567|HDAT|D>HdatPcia thread idx 2, thread id 2 
+484.42568|HDAT|D>proc ord ID:0x00000000, core ord ID:0x00000003
+484.42570|HDAT|D>hw card ID:0x00000000
+484.42572|HDAT|>>[getMemBusFreq]
+484.42600|HDAT|<<[getMemBusFreq]
+484.42602|HDAT|D>HdatPcia thread idx 3, thread id 3 
+484.42655|HDAT|D>returned from PCIA count=4,size=0x200
+484.42843|HDAT|D>iv_spiras->hdatDataArea[12].hdatActualCnt=4,hdatActualSize=200
+484.42843|HDAT|D>for loop index=13
+484.42845|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31205a80
+484.42848|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31205a80
+484.42849|HDAT|D>calling PCRD from spiras
+484.43063|HDAT|D>Constructor iv_spPcrd addr 0x0000025000000A80 virtual addr 0x0000025000000A80
+484.43213|HDAT|D>Pcrd Address 0x00000A80 
+
+484.43260|HDAT|D>hw card ID:0x0
+484.43266|HDAT|>>[hdatGetAsciiKwd]
+484.43267|HDAT|>>[hdatGetAsciiKwdForMvpd]
+484.43268|HDAT|D>fetching proc kwd size MVPD, size initialised=404a7170
+484.43270|HDAT|D>fetched proc kwd size MVPD, size=4
+484.43271|HDAT|D>fetching proc kwd size MVPD, size initialised=0
+484.43273|HDAT|D>fetched proc kwd size MVPD, size=2
+484.43274|HDAT|D>fetching proc kwd size MVPD, size initialised=4483c8
+484.43276|HDAT|D>fetched proc kwd size MVPD, size=7
+484.43277|HDAT|D>fetching proc kwd size MVPD, size initialised=40800
+484.43279|HDAT|D>fetched proc kwd size MVPD, size=c
+484.43280|HDAT|D>allocating total key word size 25
+484.43281|HDAT|D>reading 0th keyword of size 4
+484.43282|HDAT|D>read PROC data VRML
+484.43283|HDAT|D>copied to main array 0 kwd
+484.43284|HDAT|D>reading 1th keyword of size 2
+484.43286|HDAT|D>read PROC data 01AK
+484.43287|HDAT|D>copied to main array 1 kwd
+484.43288|HDAT|D>reading 2th keyword of size 7
+484.43290|HDAT|D>read PROC data 02CY650VA
+484.43290|HDAT|D>copied to main array 2 kwd
+484.43291|HDAT|D>reading 3th keyword of size 12
+484.43293|HDAT|D>read PROC data YA19354257872ø
+484.43294|HDAT|D>copied to main array 3 kwd
+484.43295|HDAT|D>returning keyword size 25 and data VRML0102CY650YA1935425787
+484.43296|HDAT|<<[hdatGetAsciiKwdForMvpd]
+484.43297|HDAT|D>got back kwd size=19
+484.43298|HDAT|<<[hdatGetAsciiKwd]
+484.43298|HDAT|>>[hdatformatAsciiKwd]
+484.43299|HDAT|<<[hdatformatAsciiKwd]
+484.43300|HDAT|>>[hdatGetFullEepromVpd]
+485.13707|HDAT|<<[hdatGetFullEepromVpd]
+485.13713|HDAT|>>[hdatGetI2cDeviceInfo]
+485.13863|I2C|getDeviceInfo>>
+485.14071|I2C|getMasterInfo(00050000)
+485.14072|I2C|getMasterInfo(00050000): pushing back engine=0, scomAddr=0xA0000
+485.14074|I2C|getMasterInfo(00050000): pushing back engine=1, scomAddr=0xA1000
+485.14076|I2C|getMasterInfo(00050000): pushing back engine=2, scomAddr=0xA2000
+485.14077|I2C|getMasterInfo(00050000): pushing back engine=3, scomAddr=0xA3000
+485.17077|EEPROM|>>getEEPROMs()
+485.17078|EEPROM|Targ 00020000
+485.17081|EEPROM|--Adding i2cm=00050000, type=0, eng=2, port=0, addr=A0 for 00020000
+485.17139|EEPROM|Targ 00050000
+485.17142|EEPROM|--Adding i2cm=00050000, type=0, eng=1, port=0, addr=A0 for 00050000
+485.17144|EEPROM|--Adding i2cm=00050000, type=1, eng=1, port=2, addr=A0 for 00050000
+485.17146|EEPROM|--Adding i2cm=00050000, type=2, eng=1, port=1, addr=A8 for 00050000
+485.17149|EEPROM|--Adding i2cm=00050000, type=3, eng=1, port=3, addr=A8 for 00050000
+485.17275|EEPROM|Targ 00030002
+485.17277|EEPROM|--Adding i2cm=00050000, type=0, eng=3, port=0, addr=A4 for 00030002
+485.17321|EEPROM|<<getEEPROMs()
+485.17326|I2C|getMasterInfo(00050001)
+485.17327|I2C|getMasterInfo(00050001): pushing back engine=0, scomAddr=0xA0000
+485.17329|I2C|getMasterInfo(00050001): pushing back engine=1, scomAddr=0xA1000
+485.17330|I2C|getMasterInfo(00050001): pushing back engine=2, scomAddr=0xA2000
+485.17332|I2C|getMasterInfo(00050001): pushing back engine=3, scomAddr=0xA3000
+485.17332|EEPROM|>>getEEPROMs()
+485.17334|EEPROM|Targ 00020000
+485.17336|EEPROM|--Adding i2cm=00050000, type=0, eng=2, port=0, addr=A0 for 00020000
+485.17390|EEPROM|Targ 00050000
+485.17392|EEPROM|--Adding i2cm=00050000, type=0, eng=1, port=0, addr=A0 for 00050000
+485.17394|EEPROM|--Adding i2cm=00050000, type=1, eng=1, port=2, addr=A0 for 00050000
+485.17396|EEPROM|--Adding i2cm=00050000, type=2, eng=1, port=1, addr=A8 for 00050000
+485.17398|EEPROM|--Adding i2cm=00050000, type=3, eng=1, port=3, addr=A8 for 00050000
+485.17514|EEPROM|Targ 00030002
+485.17516|EEPROM|--Adding i2cm=00050000, type=0, eng=3, port=0, addr=A4 for 00030002
+485.17558|EEPROM|<<getEEPROMs()
+485.17570|I2C|<<getDeviceInfo
+485.17582|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0x02, slave address=0xAA, slave port=0xFF, slave purpose=0x00000006, link ID=0x00000000, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17589|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0x02, slave address=0xAC, slave port=0xFF, slave purpose=0x00000006, link ID=0x00000001, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17596|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x01, port=0x00, speed=0x03E8, slave type=0x02, slave address=0xA0, slave port=0xFF, slave purpose=0x00000005, link ID=0x00000002, SLCA index=0x0000, slave label="?atmel,28c128,vpd,module"
+485.17603|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0x02, slave address=0xAE, slave port=0xFF, slave purpose=0x00000006, link ID=0x00000003, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17610|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x01, port=0x02, speed=0x03E8, slave type=0x02, slave address=0xA0, slave port=0xFF, slave purpose=0x00000005, link ID=0x00000004, SLCA index=0x0000, slave label="?atmel,28c128,vpd,module"
+485.17617|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0xFF, slave address=0x38, slave port=0xFF, slave purpose=0x000000FF, link ID=0x00000005, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17624|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x02, port=0x00, speed=0x0190, slave type=0x02, slave address=0xA0, slave port=0xFF, slave purpose=0x00000005, link ID=0x00000006, SLCA index=0x0000, slave label="?atmel,28c128,vpd,module"
+485.17631|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0xFF, slave address=0x3A, slave port=0xFF, slave purpose=0x000000FF, link ID=0x00000007, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17638|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0xFF, slave address=0x32, slave port=0xFF, slave purpose=0x000000FF, link ID=0x00000008, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17645|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0xFF, slave address=0x3C, slave port=0xFF, slave purpose=0x000000FF, link ID=0x00000009, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17652|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0xFF, slave address=0x36, slave port=0xFF, slave purpose=0x000000FF, link ID=0x0000000A, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17659|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0xFF, slave address=0x3E, slave port=0xFF, slave purpose=0x000000FF, link ID=0x0000000B, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17666|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0x02, slave address=0xA2, slave port=0xFF, slave purpose=0x00000006, link ID=0x0000000C, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17673|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x01, speed=0x0190, slave type=0x02, slave address=0xA8, slave port=0xFF, slave purpose=0x00000006, link ID=0x0000000D, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17680|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0x02, slave address=0xA6, slave port=0xFF, slave purpose=0x00000006, link ID=0x0000000E, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17687|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0xFF, slave address=0x34, slave port=0xFF, slave purpose=0x000000FF, link ID=0x0000000F, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17694|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0x02, slave address=0xA4, slave port=0xFF, slave purpose=0x00000006, link ID=0x00000010, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17701|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0xFF, slave address=0x30, slave port=0xFF, slave purpose=0x000000FF, link ID=0x00000011, SLCA index=0x0000, slave label="unknown,unknown,unknown,unknown"
+485.17708|HDAT|D>Unique I2C device attached to HUID=0x00050000: engine=0x03, port=0x00, speed=0x0190, slave type=0x02, slave address=0xA0, slave port=0xFF, slave purpose=0x00000006, link ID=0x00000012, SLCA index=0x0000, slave label="atmel,28c128,spd,dimm"
+485.17709|HDAT|<<[hdatGetI2cDeviceInfo]
+485.17710|HDAT|D>pcrdHI2cNumEntries=0x13, l_pcrdHI2cTotalSize=0x62a
+485.17711|HDAT|D>adding pnor data to the master processor
+485.17712|HDAT|>>[hdatGetSMPLinkInfo]
+485.17716|VPD|E>IpVpdFacade::findKeywordAddr: No matching NV keyword found within VNDR record!
+485.17719|ERRL|E>Error created : PLID=90000035, RC=1D04, Mod=23, Userdata=0000025000000000 000000030000001A, Sev=UNRECOVERABLE
+485.17722|ERRL|>>addHwCallout(0x00020000 0x6 0x1 0x0)
+485.17724|ERRL|>>addProcedureCallout(0x4, 0x5)
+485.17725|ERRL|>>addProcedureCallout(0x55, 0x1)
+485.17728|HDAT|E> [ hdatutil.C ]:[ 1944 ]: deviceRead failed for NV keyword VNDR record
+485.17729|HDAT|<<[hdatGetSMPLinkInfo]
+485.17730|HDAT|D>pcrdSMPNumEntries=0x0, l_pcrdSMPTotalSize=0x10
+485.17731|HDAT|D>Empty SMP Link info vector : Size=0
+485.17782|HDAT|D>PCRD count=1,size=12c80
+485.17874|HDAT|D>iv_spiras->hdatDataArea[13].hdatActualCnt=1,hdatActualSize=12c80
+485.17875|HDAT|D>for loop index=14
+485.17877|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31218700
+485.17880|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31218700
+485.17881|HDAT|D>HOSTSR from spiras
+485.15903|HDAT|>>[HdatHdif]
+485.15904|HDAT|<<[HdatHdif]
+485.15905|HDAT|>>[HdatHostsr]
+485.15906|HDAT|>>[hdatHostServiceBuild]
+485.15906|HDAT|>>[addData]
+485.15907|HDAT|<<[addData]
+485.15908|HDAT|>>[bldNodeDataStruct]
+485.15960|HDAT|>>[HdatHdif]
+485.15961|HDAT|<<[HdatHdif]
+485.15962|HDAT|>>[HdatNodedata]
+485.15963|HDAT|<<[HdatNodedata]
+485.15963|HDAT|>>[addChild]
+485.15964|HDAT|<<[addChild]
+485.15965|HDAT|D>HdatHostSr::bldNodeDataStruct Done. Commit pending.
+485.15965|HDAT|<<[bldNodeDataStruct]
+485.15966|HDAT|D>virtual address=0x0000025000000700
+485.15968|HDAT|D>sizeof HDIF header=20
+485.15969|HDAT|D>writing Data pointers array from address=0x0000025000000720
+485.15970|HDAT|D>wrote data array 0, at address 0x0000025000000720
+485.15971|HDAT|D>writing Child pointers array from address=0x0000025000000728
+485.15972|HDAT|D>wrote child array 0, at address 0x0000025000000728
+485.15973|HDAT|D>wrote child array 1, at address 0x0000025000000734
+485.15974|HDAT|>>[setChildPtrs]
+485.15975|HDAT|>>[setNodeData]
+485.15975|HDAT|>>[addData]
+485.15976|HDAT|<<[addData]
+485.16005|HDAT|D>virtual address=0x0000025800000750
+485.16006|HDAT|D> no child information were addded
+485.16007|HDAT|D>sizeof HDIF header=20
+485.16008|HDAT|D>writing Data pointers array from address=0x0000025800000770
+485.16009|HDAT|D>wrote data array 0, at address 0x0000025800000770
+485.16010|HDAT|D>writing Child pointers array from address=0x0000025800000778
+485.16011|HDAT|<<[setNodeData]
+485.16012|HDAT|<<[setChildPtrs]
+485.16012|HDAT|<<[hdatHostServiceBuild]
+485.16013|HDAT|<<[HdatHostsr]
+485.16014|HDAT|D>HOSTSR count=1,size=3f880
+485.16015|HDAT|>>[~HdatHostsr]
+485.16036|HDAT|>>[~HdatNodedata]
+485.16065|HDAT|<<[~HdatNodedata]
+485.16066|HDAT|>>[~HdatHdif]
+485.16067|HDAT|<<[~HdatHdif]
+485.16067|HDAT|<<[~HdatHostsr]
+485.16068|HDAT|>>[~HdatHdif]
+485.16069|HDAT|<<[~HdatHdif]
+485.16070|HDAT|D>iv_spiras->hdatDataArea[14].hdatActualCnt=1,hdatActualSize=3f880
+485.16071|HDAT|D>for loop index=15
+485.16072|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31257f80
+485.16075|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31257f80
+485.16076|HDAT|D>HBRT from spiras
+485.16077|HDAT|>>[loadHbrt]
+485.16078|HDAT|>>[HdatHdif]
+485.16078|HDAT|<<[HdatHdif]
+485.16079|HDAT|>>[HdatHbrt]
+485.16080|HDAT|>>[addData]
+485.16080|HDAT|<<[addData]
+485.16081|HDAT|>>[addData]
+485.16082|HDAT|<<[addData]
+485.16082|HDAT|<<[HdatHbrt]
+485.16083|HDAT|>>[setHbrt]
+485.16268|HDAT|D>io_virt_addr=0x0000025000000F80, l_virt_addr=0x0000025000000F80
+485.16269|HDAT|D>virtual address=0x0000025000000F80
+485.16270|HDAT|D> no child information were addded
+485.16270|HDAT|D>sizeof HDIF header=20
+485.16272|HDAT|D>writing Data pointers array from address=0x0000025000000FA0
+485.16273|HDAT|D>wrote data array 0, at address 0x0000025000000FA0
+485.16274|HDAT|D>wrote data array 1, at address 0x0000025000000FA8
+485.16275|HDAT|D>writing Child pointers array from address=0x0000025000000FB0
+485.16276|HDAT|D>after writing HDIF header address now 0x0000025000000FB0
+485.16277|HDAT|D>common offset added to each is 0x60
+485.16278|HDAT|D>hdatSize=0x100000, offset=0x60
+485.16279|HDAT|D>next offset is 0x100000+0x30=0x100030 more
+485.16280|HDAT|D>hdatSize=0x100000, offset=0x100090
+485.16281|HDAT|D>next offset is 0x100000+0x30=0x100030 more
+485.16282|HDAT|D>wrote pad of 0x70 size after hbrt object
+485.16399|HDAT|<<[setHbrt]
+485.16400|HDAT|D>done building hbrt data, size = 0x200090, count= 0x1
+485.16400|HDAT|>>[~HdatHdif]
+485.16401|HDAT|<<[~HdatHdif]
+485.16402|HDAT|<<[loadHbrt]
+485.16403|HDAT|D>HBRT count=1,size=0x200090
+485.16404|HDAT|D>iv_spiras->hdatDataArea[15].hdatActualCnt=1,hdatActualSize=200090
+485.16405|HDAT|D>for loop index=16
+485.16406|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31458080
+485.16409|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31458080
+485.16410|HDAT|D>Calling IPMI Sensor Data structure from spiras
+485.16411|HDAT|>>[hdatLoadIpmi]
+485.16412|HDAT|>>[HdatHdif]
+485.16412|HDAT|<<[HdatHdif]
+485.16413|HDAT|>>[HdatIpmi]
+485.16503|HDAT|<<[HdatIpmi]
+485.16504|HDAT|>>[setIpmiData]
+485.16504|HDAT|>>[addData]
+485.16505|HDAT|<<[addData]
+485.16506|HDAT|>>[addData]
+485.16506|HDAT|<<[addData]
+485.16507|HDAT|D>virtual address=0x0000025000000080
+485.16508|HDAT|D> no child information were addded
+485.16509|HDAT|D>sizeof HDIF header=20
+485.16510|HDAT|D>writing Data pointers array from address=0x00000250000000A0
+485.16511|HDAT|D>wrote data array 0, at address 0x00000250000000A0
+485.16512|HDAT|D>wrote data array 1, at address 0x00000250000000A8
+485.16513|HDAT|D>wrote data array 2, at address 0x00000250000000B0
+485.16514|HDAT|D>wrote data array 3, at address 0x00000250000000B8
+485.16515|HDAT|D>writing Child pointers array from address=0x00000250000000C0
+485.16516|HDAT|<<[setIpmiData]
+485.16516|HDAT|>>[~HdatIpmi]
+485.16534|HDAT|<<[~HdatIpmi]
+485.16535|HDAT|>>[~HdatHdif]
+485.16535|HDAT|<<[~HdatHdif]
+485.16536|HDAT|<<[hdatLoadIpmi]
+485.16537|HDAT|D>IPMI count=1,size=0xf0
+485.16538|HDAT|D>iv_spiras->hdatDataArea[16].hdatActualCnt=1,hdatActualSize=f0
+485.16539|HDAT|D>for loop index=17
+485.16540|HDAT|D>next spiras tuple will be l_msAddr.hi=0x       0,l_msAddr.lo=0x31458180
+485.16543|HDAT|D>address to pass to next data area after adding hrmor l_addrToPass.hi=0x       0,l_addrToPass.lo=0x31458180
+485.16544|HDAT|D>calling TPM DATA from spiras
+485.16562|HDAT|D>Ctr iv_hdatTpmData addr 0x0000025000000180 virtual addr 0x0000025000000000
+485.16577|HDAT|D>returned from TPM DATA, size=0x100,count=1
+485.16596|HDAT|D>iv_spiras->hdatDataArea[17].hdatActualCnt=1,hdatActualSize=100
+485.16597|HDAT|<<[loadDataArea]
+485.16598|HDAT|D>got back total size from spiras=0x258280
+485.16599|HDAT|>>[chgSpiraHEntry]
+485.16600|HDAT|D>updating the spiraH hostdata area with count=0x1 and size=0x258280
+485.16602|HDAT|D>actual count=0x1, actual size=0x258280
+485.16603|HDAT|<<[chgSpiraHEntry]
+485.16603|HDAT|D>loaded all data areas successfully
+485.16604|HDAT|>>[~HdatSpiraS]
+485.16622|HDAT|<<[~HdatSpiraS]
+485.16623|HDAT|>>[~HdatSpiraH]
+485.16642|HDAT|<<[~HdatSpiraH]
+485.16642|HDAT|<<[call_hdat_steps]
+491.51700|ERRL|I>Got an error log Msg - Type: 0x00000039
+491.51701|ERRL|I>Flush message received
+491.51703|INITSVC|<<doIstep: step 20, substep 2
+491.51704|INITSVC|>>doIstep: step 21, substep 1, task host_runtime_setup

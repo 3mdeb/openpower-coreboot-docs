@@ -1,0 +1,91 @@
+480.41866|ISTEP 16. 4 - mss_scrub
+480.42155|ISTEPS_TRACE|call_mss_scrub: entry
+480.43253|PRDF|>>[PRDF::startScrub] 
+480.45418|FAPI|gen_mss_memdiags.H: continuous (background) scrub for pu.mcbist:k0:n0:s0:p00:c0
+480.45423|FAPI|gen_mss_mcbist_settings.H: setting up constraints with stop 0x000fffff340001c0
+480.45426|FAPI|gen_mss_mcbist_settings.H: setting up constraints with start address 0x0000001000000000
+480.45428|FAPI|gen_mss_mcbist_settings.H: setting up constraints with end boundary 1 and speed 0x1
+480.46473|FAPI|gen_mss_memdiags.H: setting up for continuous scrub for pu.mcbist:k0:n0:s0:p00:c0
+480.46477|FAPI|gen_mss_mcbist.H: config MCBIST address range 0 start: 0x0000000000000000 (0x0000000000000000), end/len 0x00000007ffffffff (0x1ffffffffc000000)
+480.46481|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CC 0000000000000000
+480.46484|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CE 1FFFFFFFFC000000
+480.46641|FAPI|gen_mss_memdiags.H: adding scrub subtest for dimm:k0:n0:s0:p02 RDIMM (DDR4) (dimm 0) ( 0x9408)
+480.46642|FAPI|gen_mss_mcbist.H: changing subtest to jump to 2 (0x7100)
+480.46645|FAPI|gen_mss_memdiags.H: last goto subtest (10) is going to subtest 2 ( 0x9408) for pu.mcbist:k0:n0:s0:p00:c0
+480.46649|FAPI|gen_mss_mcbist.H: config MCBIST address range 1 start: 0x0000001000000000 (0x4000000000000000), end/len 0x00000017ffffffff (0x5ffffffffc000000)
+480.46652|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CD 4000000000000000
+480.46655|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CF 5FFFFFFFFC000000
+480.46657|FAPI|gen_mss_mcbist.H: changed address select to index 1 (0x9009)
+480.46659|FAPI|gen_mss_memdiags.H: adding scrub subtest 0 for port 1 dimm 0 (0x9409) for pu.mcbist:k0:n0:s0:p00:c0
+480.46662|FAPI|gen_mss_memdiags.H: adding scrub subtest 1 to goto subtest 3 (port 0, dimm 0, test 0x7100) for pu.mcbist:k0:n0:s0:p00:c0
+480.46664|FAPI|gen_mss_mcbist.H: changing subtest to jump to 3 (0x7180)
+480.46665|FAPI|gen_mss_memdiags.H: memdiags base init for pu.mcbist:k0:n0:s0:p00:c0
+480.46668|FAPI|gen_mss_memdiags.H: Stopping any mcbist operations which are in progress for pu.mcbist:k0:n0:s0:p00:c0
+480.46671|SCAN|TRACE : GETSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DB 1000000000000000
+480.46674|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DB 5000000000000000
+480.46677|SCAN|TRACE : GETSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DC 0000000000000000
+480.46681|SCAN|TRACE : GETSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123D7 00FFFF3FED000000
+480.46683|FAPI|gen_mss_memdiags.H: MCBIST last address (during stop): 0x00ffff3fed000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46685|FAPI|gen_mss_mcbist.H: change MCBIST pattern index 11
+480.46686|FAPI|gen_mss_mcbist.H: load MCBIST end boundaries 0x0000000000000001 detect slave? no
+480.46704|FAPI|gen_mss_mcbist.H: pu.mcbist:k0:n0:s0:p00:c0 setting bg scrub speed: 2666MT/s, memory: 8GB, duration: 43200s, gap: 112
+480.46706|FAPI|gen_mss_mcbist.H: mcbist select ports: iv_control 0x3c00000000000000 (ports: 0xf)
+480.46708|FAPI|gen_mss_mcbist.H: Clear MCBIST error state for pu.mcbist:k0:n0:s0:p00:c0
+480.46711|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 0000000007012366 0000000000000000
+480.46714|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 0000000007012355 0000000000000000
+480.46717|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 0000000007012356 0000000000000000
+480.46720|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 0000000007012300 0000000000000000
+480.46723|FAPI|gen_mss_mcbist.H: loading MCBIST Address Generation 0x0020000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46727|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123D6 0020000000000000
+480.46730|FAPI|gen_mss_mcbist.H: load MCBIST parameter register: 0x0708000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46733|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123AF 0708000000000000
+480.46735|FAPI|gen_mss_mcbist.H: load MCBIST address map register 0: 0x0000000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46738|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123C8 0000000000000000
+480.46741|FAPI|gen_mss_mcbist.H: load MCBIST address map register 1: 0x0000000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46745|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123C9 0000000000000000
+480.46747|FAPI|gen_mss_mcbist.H: load MCBIST address map register 2: 0x0000000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46751|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CA 0000000000000000
+480.46753|FAPI|gen_mss_mcbist.H: load MCBIST address map register 3: 0x0000000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46756|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123CB 0000000000000000
+480.46759|FAPI|gen_mss_mcbist.H: pu.mcbist:k0:n0:s0:p00:c0 loading MCBIST Config 0x0000000000000021
+480.46762|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123E0 0000000000000021
+480.46764|FAPI|gen_mss_mcbist.H: loading MCBIST Control 0x3c00000000000000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46767|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DB 3C00000000000000
+480.46769|FAPI|gen_mss_mcbist.H: Loading the data pattern seeds for pu.mcbist:k0:n0:s0:p00:c0!
+480.46772|FAPI|gen_mss_mcbist.H: Loading the 24b Random data pattern seeds for pu.mcbist:k0:n0:s0:p00:c0!
+480.46774|FAPI|gen_mss_mcbist.H: Loading 24b random seed index 0 for pu.mcbist:k0:n0:s0:p00:c0
+480.46776|FAPI|gen_mss_mcbist.H: Loading 24b random seed index 1 for pu.mcbist:k0:n0:s0:p00:c0
+480.46778|FAPI|gen_mss_mcbist.H: Loading 24b random seeds 0 and 1 0x0102030405060000 for pu.mcbist:k0:n0:s0:p00:c0
+480.46781|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123B2 0102030405060000
+480.46783|FAPI|gen_mss_mcbist.H: Loading 24b random seed index 2 for pu.mcbist:k0:n0:s0:p00:c0
+480.46785|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 0  for pu.mcbist:k0:n0:s0:p00:c0
+480.46787|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 1  for pu.mcbist:k0:n0:s0:p00:c0
+480.46789|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 2  for pu.mcbist:k0:n0:s0:p00:c0
+480.46791|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 3  for pu.mcbist:k0:n0:s0:p00:c0
+480.46793|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 4  for pu.mcbist:k0:n0:s0:p00:c0
+480.46795|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 5  for pu.mcbist:k0:n0:s0:p00:c0
+480.46797|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 6  for pu.mcbist:k0:n0:s0:p00:c0
+480.46799|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 7  for pu.mcbist:k0:n0:s0:p00:c0
+480.46802|FAPI|gen_mss_mcbist.H: Loading 24b random seed map index 8  for pu.mcbist:k0:n0:s0:p00:c0
+480.46805|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123B3 0708090123456780
+480.46808|FAPI|gen_mss_mcbist.H: Loading the maint data pattern into the RMW buffer for pu.mcbist:k0:n0:s0:p00:c0!
+480.46810|FAPI|gen_mss_mcbist.H: Loading the data rotate config and seeds for pu.mcbist:k0:n0:s0:p00:c0!
+480.46813|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123BD 0000000000000000
+480.46816|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123BC 0000000000000000
+480.46819|FAPI|gen_mss_mcbist.H: load MCBIST threshold register: 0x000fffff340001c0 for pu.mcbist:k0:n0:s0:p00:c0
+480.46822|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 0000000007012357 000FFFFF340001C0
+480.46827|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123A8 9409718094087104
+480.46830|SCAN|TRACE : GETSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DB 3C00000000000000
+480.46833|SCAN|TRACE : PUTSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DB BC00000000000000
+480.46836|SCAN|TRACE : GETSCOM     :  pu.mcbist:k0:n0:s0:p00:c0 : 00000000070123DC 8000000000000000
+480.46838|PRDF|<<[PRDF::startScrub] 
+480.46845|SCAN|TRACE : GETSCOM     :  pu.mca:k0:n0:s0:p00:c1 : 0000000007010A06 0000000000000000
+480.46848|SCAN|TRACE : GETSCOM     :  pu.mca:k0:n0:s0:p00:c1 : 0000000007010A07 0002400004640000
+480.46852|SCAN|TRACE : PUTSCOM     :  pu.mca:k0:n0:s0:p00:c1 : 0000000007010A06 0000000000000000
+480.46855|SCAN|TRACE : PUTSCOM     :  pu.mca:k0:n0:s0:p00:c1 : 0000000007010A07 FFC2500005640000
+480.46859|SCAN|TRACE : PUTSCOM     :  pu.mca:k0:n0:s0:p00:c1 : 0000000007010A04 003FEFFFFEFFFFFF
+480.46860|ISTEPS_TRACE|call_mss_scrub: exit
+481.70060|ERRL|I>Got an error log Msg - Type: 0x00000039
+481.70061|ERRL|I>Flush message received
+481.70063|INITSVC|<<doIstep: step 16, substep 4
+481.70065|INITSVC|>>doIstep: step 16, substep 5, task host_load_io_ppe

@@ -1,0 +1,16 @@
+434.00833|ISTEP 12. 1 - mss_getecid
+434.02158|INITSVC|unloading [libistep11.so]
+434.02173|INITSVC|unloading [libimageprocs.so]
+434.02189|INITSVC|loading [libistep12.so]
+434.23792|INITSVC|loading [libnestmemutils.so]
+434.25377|INITSVC|loading [libisteps_io.so]
+434.26947|INITSVC|loading [libisteps_mss.so]
+435.19434|INITSVC|loading [libexpupd.so]
+435.22310|ISTEPS_TRACE|call_mss_getecid entry
+435.22311|ISTEPS_TRACE|call_mss_getecid exit
+435.23639|SCOM|doMulticastWorkaround on 00050000 for 50040018
+435.23689|SCOM|doMulticastWorkaround on 00050000 for 50040009
+435.23750|ERRL|I>Got an error log Msg - Type: 0x00000039
+435.23751|ERRL|I>Flush message received
+435.23753|INITSVC|<<doIstep: step 12, substep 1
+435.23755|INITSVC|>>doIstep: step 12, substep 2, task dmi_attr_update

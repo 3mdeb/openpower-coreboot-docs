@@ -1,0 +1,1224 @@
+460.94878|ISTEP 15. 1 - host_build_stop_image
+460.95500|INITSVC|unloading [libistep14.so]
+460.95682|INITSVC|unloading [libdump.so]
+460.96855|INITSVC|unloading [libruntime.so]
+460.97466|INITSVC|unloading [libisteps_mss.so]
+461.14419|INITSVC|unloading [libpm.so]
+461.24062|INITSVC|unloading [libimageprocs.so]
+461.25647|INITSVC|unloading [libcen.so]
+461.25967|INITSVC|unloading [libnestmemutils.so]
+461.25984|INITSVC|loading [libistep15.so]
+461.27660|INITSVC|loading [libp9_stop_util.so]
+461.29151|INITSVC|loading [libnestmemutils.so]
+461.30431|INITSVC|loading [libp9_cpuWkup.so]
+461.31041|INITSVC|loading [libpm.so]
+461.43504|INITSVC|loading [libimageprocs.so]
+461.45486|INITSVC|loading [libisteps_mss.so]
+461.99110|ISTEPS_TRACE|host_build_stop_image entry
+461.99112|ISTEPS_TRACE|HRMOR=00000000F8000000
+461.99183|ISTEPS_TRACE|HOMER base = 0x00000001FD800000
+461.99184|ISTEPS_TRACE|HCODE addr = 0x0x814c1000 
+462.01158|ISTEPS_TRACE|pullTraceBuildInfo: image build date = 20201019, build time = 1637, build tag = hw021820a.opmst
+462.01231|ISTEPS_TRACE|Found 1 functional procs in system
+462.01232|ISTEPS_TRACE|Build STOP image for proc target HUID 00050000
+462.01626|ISTEPS_TRACE|Real mem  buffer for cpu 0x00000000 = 0x1fd800000, virtAddr=0x23800000000
+462.02706|UTIL|UtilLidMgr::getLidPnorSectionInfo Lid 0x81E00620 in PNOR
+462.02708|UTIL|UtilLidMgr::getLidPnorSectionInfo Lid 0x81E00620 in PNOR
+462.07755|ISTEPS_TRACE|I>getRingOvd():No overrides in RINGOVD section found
+462.09741|FAPI_I|p9_hcode_image_build.C: >> p9_hcode_image_build 
+462.13584|FAPI|p9_hcode_image_build.C: >> validateInputArguments ...
+462.15712|FAPI|p9_hcode_image_build.C: size is 0x0009AB40; xip_image_size RC is 0x00 HARDWARE_IMG_SIZE 0x00100000  Sz 0x0009AB40
+462.17232|FAPI|p9_hcode_image_build.C: << validateInputArguments ...
+462.17387|FAPI|p9_hcode_image_build.C: SGPE building
+462.18792|FAPI|p9_hcode_image_build.C: >> buildSgpeImage
+462.19844|FAPI|p9_hcode_image_build.C: QPMR Header
+462.23621|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x05 EC : 0x23
+462.23627|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x06 EC : 0x23
+462.23633|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x07 EC : 0x23
+462.23637|FAPI|p9_hcode_image_build.C: SGPE Boot Loader QPMR Offset = 0x00000600, Size = 0x000001E8
+462.23643|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x08 EC : 0x23
+462.28082|FAPI|p9_hcode_image_build.C: SGPE Header
+462.28083|FAPI|p9_hcode_image_build.C:   Reset Addr      = 0xFFF2D840
+462.28085|FAPI|p9_hcode_image_build.C:   IVPR Addr       = 0xFFF2D800
+462.28086|FAPI|p9_hcode_image_build.C:   Build Date      = 0x07E40A13
+462.28088|FAPI|p9_hcode_image_build.C:   Version         = 0x00000003
+462.28089|FAPI|p9_hcode_image_build.C:   Timebase (Hz)   = 0x01BCE39A (29156250)
+462.28091|FAPI|p9_hcode_image_build.C:   CR OCC Offset   = 0x0000BF64
+462.28241|FAPI|p9_hcode_image_build.C:   CR Ovrd Offset  = 0x00000000
+462.28242|FAPI|p9_hcode_image_build.C: << buildSgpeImage
+462.28392|FAPI|p9_hcode_image_build.C: >> buildSgpeAux
+462.30371|FAPI|p9_hcode_image_build.C: >> initReadIntervalForAuxFunc
+462.30373|FAPI|p9_hcode_image_build.C: << initReadIntervalForAuxFunc
+462.30374|FAPI|p9_hcode_image_build.C: >> read24x7EnableStatus
+462.30376|FAPI|p9_hcode_image_build.C: << read24x7EnableStatus
+462.30377|FAPI|p9_hcode_image_build.C: << buildSgpeAux
+462.30378|FAPI|p9_hcode_image_build.C: SGPE built
+462.30379|FAPI|p9_hcode_image_build.C: CPMR / Self Restore building
+462.30381|FAPI|p9_hcode_image_build.C: >> buildCoreRestoreImage
+462.30382|FAPI|p9_hcode_image_build.C: Self Restore Image install
+462.30384|FAPI|p9_hcode_image_build.C:   Offset = 0x00030860, Size = 0x000029E8
+462.30389|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x06 EC : 0x23
+462.32747|FAPI|p9_hcode_image_build.C: Overlay CPMR Header at the beginning of CPMR
+462.32752|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x05 EC : 0x23
+462.32756|FAPI|p9_hcode_image_build.C: Padding CPMR Core Restore portion with Attn opcodes
+462.32757|FAPI|p9_hcode_image_build.C: >> initSelfRestoreRegion
+462.33004|FAPI|p9_hcode_image_build.C:  Size of SmfSprRestoreRegion_t 0x00001000
+462.33006|FAPI|p9_hcode_image_build.C: << initSelfRestoreRegion
+462.33008|FAPI|p9_hcode_image_build.C: Core Pos 0x01
+462.34566|FAPI|p9_hcode_image_build.C: Core Pos 0x03
+462.34569|FAPI|p9_hcode_image_build.C: Core Pos 0x04
+462.34572|FAPI|p9_hcode_image_build.C: Core Pos 0x07
+462.35967|FAPI|p9_hcode_image_build.C: >> updateCpmrHeaderSR
+462.35968|FAPI|p9_hcode_image_build.C: CPMR SR
+462.35969|FAPI|p9_hcode_image_build.C: Fuse Mode                 :   0x000000AA
+462.35971|FAPI|p9_hcode_image_build.C: CME Image Flag            :   0x00000000
+462.35973|FAPI|p9_hcode_image_build.C: << updateCpmrHeaderSR
+462.35974|FAPI|p9_hcode_image_build.C: << buildCoreRestoreImage
+462.35976|FAPI|p9_hcode_image_build.C: CPMR / Self Restore built 
+462.35977|FAPI|p9_hcode_image_build.C: CPMR / CME building
+462.35978|FAPI|p9_hcode_image_build.C: >> buildCmeImage
+462.35986|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x05 EC : 0x23
+462.38236|FAPI|p9_hcode_image_build.C: << buildCmeImage
+462.38238|FAPI|p9_hcode_image_build.C: CPMR / CME built
+462.38239|FAPI|p9_hcode_image_build.C: PGPE building
+462.38240|FAPI|p9_hcode_image_build.C: >> buildPgpeImage
+462.38278|FAPI|p9_hcode_image_build.C: PPMR Header
+462.38283|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x05 EC : 0x23
+462.40074|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x06 EC : 0x23
+462.40080|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x07 EC : 0x23
+462.40086|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : Yes For Sec Id 0x08 EC : 0x23
+462.44714|FAPI|p9_hcode_image_build.C: Multiple EC Level Support  : No For Sec Id 0x09 EC : 0x23
+462.44716|FAPI|p9_hcode_image_build.C: << buildPgpeImage
+462.44718|FAPI|p9_hcode_image_build.C: >> buildPgpeAux
+462.44719|FAPI|p9_hcode_image_build.C: << buildPgpeAux
+462.44720|FAPI|p9_hcode_image_build.C: PGPE built
+462.44721|FAPI|p9_hcode_image_build.C: >> getPpeScanRings
+462.54244|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE1,0x20)
+462.58282|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x20, ringId=0xe1 size=0x164 rc=0x0
+462.62925|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE1,0x0,0x20)
+462.62928|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE2,0x20)
+462.62952|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x20, ringId=0xe2 size=0x18 rc=0x0
+462.62958|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE2,0x0,0x20)
+462.62961|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x20)
+462.64700|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x20, ringId=0xe4 size=0x18 rc=0x0
+462.64706|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x20)
+462.64709|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x21)
+462.64735|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x21, ringId=0xe4 size=0x1c rc=0x0
+462.64741|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x21)
+462.64745|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x22)
+462.64771|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x22, ringId=0xe4 size=0x1c rc=0x0
+462.64777|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x22)
+462.64780|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x23)
+462.64806|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x23, ringId=0xe4 size=0x1c rc=0x0
+462.64812|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x23)
+462.64815|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x24)
+462.64841|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x24, ringId=0xe4 size=0x1c rc=0x0
+462.64847|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x24)
+462.64850|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x25)
+462.64877|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x25, ringId=0xe4 size=0x18 rc=0x0
+462.64884|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x25)
+462.64887|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x26)
+462.64912|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x26, ringId=0xe4 size=0x1c rc=0x0
+462.64918|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x26)
+462.64921|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x27)
+462.64948|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x27, ringId=0xe4 size=0x1c rc=0x0
+462.64954|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x27)
+462.64957|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x28)
+462.64983|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x28, ringId=0xe4 size=0x1c rc=0x0
+462.64989|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x28)
+462.64992|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x29)
+462.65018|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x29, ringId=0xe4 size=0x18 rc=0x0
+462.65024|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x29)
+462.65027|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2a)
+462.65054|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2a, ringId=0xe4 size=0x18 rc=0x0
+462.65060|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2A)
+462.65063|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2b)
+462.65091|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2b, ringId=0xe4 size=0x1c rc=0x0
+462.65097|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2B)
+462.65100|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2c)
+462.65127|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2c, ringId=0xe4 size=0x1c rc=0x0
+462.65133|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2C)
+462.65136|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2d)
+462.65164|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2d, ringId=0xe4 size=0x18 rc=0x0
+462.65170|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2D)
+462.65173|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2e)
+462.65200|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2e, ringId=0xe4 size=0x18 rc=0x0
+462.65207|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2E)
+462.65210|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x2f)
+462.65237|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2f, ringId=0xe4 size=0x18 rc=0x0
+462.65243|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x2F)
+462.65246|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x30)
+462.65274|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x30, ringId=0xe4 size=0x18 rc=0x0
+462.65280|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x30)
+462.65283|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x31)
+462.65309|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x31, ringId=0xe4 size=0x1c rc=0x0
+462.65314|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x31)
+462.65317|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x32)
+462.65838|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x32, ringId=0xe4 size=0x1c rc=0x0
+462.65845|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x32)
+462.65848|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x33)
+462.65876|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x33, ringId=0xe4 size=0x1c rc=0x0
+462.65882|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x33)
+462.65885|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x34)
+462.65913|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x34, ringId=0xe4 size=0x1c rc=0x0
+462.65920|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x34)
+462.65923|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x35)
+462.65950|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x35, ringId=0xe4 size=0x1c rc=0x0
+462.65956|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x35)
+462.65959|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x36)
+462.65988|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x36, ringId=0xe4 size=0x1c rc=0x0
+462.65994|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x36)
+462.65997|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x37)
+462.66025|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x37, ringId=0xe4 size=0x18 rc=0x0
+462.66031|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x37)
+462.66033|FAPI_I|p9_xip_customize.C: bootCoreMask value: 0x00ffffff
+462.66035|FAPI|p9_hcode_image_build.C: << getPpeScanRings 
+462.70457|FAPI|p9_hcode_image_build.C: << layoutCmnRingsForCme
+462.72021|FAPI|p9_hcode_image_build.C: << layoutInstRingsForCme
+462.72023|FAPI|p9_hcode_image_build.C: << layoutRingsForCME
+462.72026|FAPI|p9_hcode_image_build.C: >> getPpeScanRings
+462.72048|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAD,0x10)
+462.72071|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xad size=0x10 rc=0x0
+462.74035|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAE,0x10)
+462.74058|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xae size=0x10 rc=0x0
+462.74063|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB1,0x10)
+462.74085|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb1 size=0x18 rc=0x0
+462.74102|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB1,0x0,0x10)
+462.74105|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB2,0x10)
+462.74127|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb2 size=0x10 rc=0x0
+462.74132|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB5,0x10)
+462.74154|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb5 size=0x1c rc=0x0
+462.74172|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB5,0x0,0x10)
+462.74176|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB6,0x10)
+462.74197|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb6 size=0x10 rc=0x0
+462.74203|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB8,0x10)
+462.74224|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb8 size=0x10 rc=0x0
+462.74232|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xBB,0x10)
+462.74254|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xbb size=0x10 rc=0x0
+462.74261|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xBD,0x10)
+462.74284|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xbd size=0x10 rc=0x0
+462.74291|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x10)
+462.74312|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdc size=0x18 rc=0x0
+462.74321|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x10)
+462.74324|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x10)
+462.74344|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb9 size=0x134 rc=0x0
+462.74352|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x10)
+462.74355|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x10)
+462.74377|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdd size=0x10 rc=0x0
+462.74383|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x10)
+462.74406|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xde size=0x10 rc=0x0
+462.74411|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x10)
+462.74436|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdf size=0x30 rc=0x0
+462.74444|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x10)
+462.74448|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x10)
+462.74467|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb9 size=0x134 rc=0x0
+462.74476|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x10)
+462.74479|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x10)
+462.74501|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdd size=0x10 rc=0x0
+462.74507|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x10)
+462.74530|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xde size=0x10 rc=0x0
+462.74536|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x10)
+462.74561|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdf size=0x34 rc=0x0
+462.74570|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x10)
+462.74573|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x11)
+462.74594|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdc size=0x18 rc=0x0
+462.74603|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x11)
+462.74606|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x11)
+462.74625|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xb9 size=0x134 rc=0x0
+462.74634|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x11)
+462.74637|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x11)
+462.74659|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdd size=0x10 rc=0x0
+462.74664|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x11)
+462.74688|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xde size=0x10 rc=0x0
+462.74693|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x11)
+462.74718|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdf size=0x5c rc=0x0
+462.74727|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x11)
+462.74730|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x11)
+462.74749|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xb9 size=0x134 rc=0x0
+462.74758|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x11)
+462.74761|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x11)
+462.74783|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdd size=0x10 rc=0x0
+462.74788|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x11)
+462.74812|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xde size=0x10 rc=0x0
+462.74817|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x11)
+462.74841|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdf size=0x50 rc=0x0
+462.74850|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x11)
+462.74853|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x12)
+462.74875|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xdc size=0x18 rc=0x0
+462.74884|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x12)
+462.74887|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x12)
+462.74906|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xb9 size=0x134 rc=0x0
+462.74915|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x12)
+462.74918|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x12)
+462.74940|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xdd size=0x10 rc=0x0
+462.74945|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x12)
+462.74969|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xde size=0x10 rc=0x0
+462.74974|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x12)
+462.74999|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xdf size=0x40 rc=0x0
+462.75008|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x12)
+462.75011|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x12)
+462.75031|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xb9 size=0x134 rc=0x0
+462.75040|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x12)
+462.75043|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x12)
+462.75065|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xdd size=0x10 rc=0x0
+462.75070|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x12)
+462.75094|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xde size=0x10 rc=0x0
+462.75099|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x12)
+462.75124|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x12, ringId=0xdf size=0x1c rc=0x0
+462.75133|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x12)
+462.75136|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x13)
+462.75157|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xdc size=0x18 rc=0x0
+462.75166|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x13)
+462.75170|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x13)
+462.75190|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xb9 size=0x134 rc=0x0
+462.75199|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x13)
+462.75202|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x13)
+462.75224|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xdd size=0x10 rc=0x0
+462.75229|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x13)
+462.75252|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xde size=0x10 rc=0x0
+462.75258|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x13)
+462.75283|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xdf size=0x44 rc=0x0
+462.75292|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x13)
+462.75295|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x13)
+462.75315|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xb9 size=0x134 rc=0x0
+462.75324|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x13)
+462.75327|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x13)
+462.75349|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xdd size=0x10 rc=0x0
+462.75354|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x13)
+462.75379|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xde size=0x10 rc=0x0
+462.75384|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x13)
+462.75409|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x13, ringId=0xdf size=0x40 rc=0x0
+462.75418|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x13)
+462.75421|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x14)
+462.75442|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xdc size=0x18 rc=0x0
+462.75451|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x14)
+462.75454|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x14)
+462.75474|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xb9 size=0x134 rc=0x0
+462.75484|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x14)
+462.75487|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x14)
+462.75509|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xdd size=0x10 rc=0x0
+462.75515|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x14)
+462.75538|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xde size=0x10 rc=0x0
+462.75544|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x14)
+462.75569|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xdf size=0x74 rc=0x0
+462.75579|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x14)
+462.75582|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x14)
+462.75602|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xb9 size=0x134 rc=0x0
+462.75611|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x14)
+462.75614|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x14)
+462.75637|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xdd size=0x10 rc=0x0
+462.75642|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x14)
+462.75666|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xde size=0x10 rc=0x0
+462.75672|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x14)
+462.75698|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x14, ringId=0xdf size=0x38 rc=0x0
+462.75707|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x14)
+462.75710|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x15)
+462.75732|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xdc size=0x18 rc=0x0
+462.75741|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x15)
+462.75744|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x15)
+462.75765|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xb9 size=0x134 rc=0x0
+462.75774|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x15)
+462.75778|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x15)
+462.75801|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xdd size=0x10 rc=0x0
+462.75806|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x15)
+462.75830|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xde size=0x10 rc=0x0
+462.75835|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x15)
+462.75861|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xdf size=0x64 rc=0x0
+462.75870|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x15)
+462.75873|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x15)
+462.75894|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xb9 size=0x134 rc=0x0
+462.75903|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x15)
+462.75906|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x15)
+462.75929|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xdd size=0x10 rc=0x0
+462.75934|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x15)
+462.75958|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xde size=0x10 rc=0x0
+462.75964|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x15)
+462.75990|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x15, ringId=0xdf size=0x48 rc=0x0
+462.75999|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x15)
+462.76001|FAPI_I|p9_xip_customize.C: bootCoreMask value: 0x00ffffff
+462.76002|FAPI|p9_hcode_image_build.C: << getPpeScanRings 
+462.76004|FAPI|p9_hcode_image_build.C: >> layoutRingsForSGPE
+462.77729|FAPI|p9_hcode_image_build.C: >> layoutCmnRingsForSgpe
+462.81027|FAPI|p9_hcode_image_build.C: >> resolveEqInexBucket
+462.81028|FAPI|p9_hcode_image_build.C: >> getSelectEqInexBucketAttr
+462.81030|FAPI|p9_hcode_image_build.C: << getSelectEqInexBucketAttr
+462.81031|FAPI|p9_hcode_image_build.C: << resolveEqInexBucket
+462.81036|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_gptr             
+462.81039|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_time             
+462.81050|FAPI|p9_hcode_image_build.C: did not find quad common ring ex_l3_time          
+462.81059|FAPI|p9_hcode_image_build.C: did not find quad common ring ex_l2_time          
+462.81062|FAPI|p9_hcode_image_build.C: did not find quad common ring ex_l3_refr_fure     
+462.81065|FAPI|p9_hcode_image_build.C: did not find quad common ring ex_l3_refr_gptr     
+462.81068|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_func         
+462.81072|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_gptr         
+462.81077|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_dpll_gptr        
+462.81080|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_dpll_mode        
+462.81188|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_bndy_bucket_l3dcc
+462.81193|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_mode          
+462.81291|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_bndy_bucket_40
+462.81299|FAPI|p9_hcode_image_build.C: did not find quad common ring eq_ana_bndy_bucket_41
+462.81300|FAPI|p9_hcode_image_build.C: << layoutCmnRingsForSgpe
+462.81312|FAPI|p9_hcode_image_build.C: >> layoutSgpeScanOverride 
+462.81333|FAPI|p9_hcode_image_build.C: << layoutSgpeScanOverride
+462.81344|FAPI|p9_hcode_image_build.C: >> layoutInstRingsForSgpe
+462.81417|FAPI|p9_hcode_image_build.C: Skipping copy of cache chiplet2
+462.81419|FAPI|p9_hcode_image_build.C: Skipping copy of cache chiplet3
+462.81420|FAPI|p9_hcode_image_build.C: Skipping copy of cache chiplet4
+462.81421|FAPI|p9_hcode_image_build.C: Skipping copy of cache chiplet5
+462.81422|FAPI|p9_hcode_image_build.C: << layoutInstRingsForSgpe
+462.81424|FAPI|p9_hcode_image_build.C: << layoutRingsForSGPE
+462.90819|FAPI|p9_hcode_image_build.C: >> buildParameterBlock
+462.90820|FAPI_I|p9_hcode_image_build.C: Size of sup-struct 0x00002c00
+462.97177|FAPI_I|p9_pstate_parameter_block.C: > p9_pstate_parameter_block
+463.00364|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER - 8
+463.00516|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_ULTRATURBO                                    = 0x00000000 0
+463.00521|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_TURBO                                         = 0x00000000 0
+463.00525|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_NOMINAL                                       = 0x00000000 0
+463.00530|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_POWERSAVE                                     = 0x00000000 0
+463.00534|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+463.00539|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_TURBO                              = 0x00000000 0
+463.00543|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+463.00547|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+463.00551|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VCS_BIAS                                    = 0x00000000 0
+463.00555|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDN_BIAS                                    = 0x00000000 0
+463.00559|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+463.00563|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_TURBO                              = 0x00000000 0
+463.00568|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+463.03926|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+463.03931|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+463.03935|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_PB_MHZ                                             = 0x0000074a 1866
+463.03939|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_CEILING_MHZ                                   = 0x00000c80 3200
+463.03943|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_FREQUENCY_MHZ                                 = 0x00000868 2152
+463.03948|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_VOLTAGE_MV                                    = 0x0000029b 667
+463.03952|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_FLOOR_MHZ                                     = 0x0000074b 1867
+463.03956|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+463.03960|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+463.03964|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+463.03968|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+463.03973|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+463.03977|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+463.03981|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+463.03985|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+463.03989|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+463.03993|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_IVRM_DISABLE                                     = 0x00000000 0
+463.03997|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOF_DISABLE                                      = 0x00000000 0
+463.04001|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_VDM_DISABLE                                      = 0x00000000 0
+463.04005|FAPI|p9_pstate_parameter_block.C: ATTR_DPLL_VDM_RESPONSE                                       = 0x00000000 0
+463.04009|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_RESCLK_DISABLE                                   = 0x00000000 0
+463.05396|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_PSTATES_MODE                                     = 0x00000000 0
+463.06509|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_WOF_NOT_SUPPORTED                       = 0x00000000 0
+463.06514|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_VDM_NOT_SUPPORTED                       = 0x00000000 0
+463.06518|FAPI|p9_pstate_parameter_block.C: ATTR_TDP_RDP_CURRENT_FACTOR                                  = 0x00000000 0
+463.06522|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_START_NS                        = 0x00000000 0
+463.06526|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_INC_UV_PER_US              = 0x00000000 0
+463.06531|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_DEC_UV_PER_US              = 0x00000000 0
+463.06535|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_STABILIZATION_TIME_NS           = 0x00000000 0
+463.06539|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_STEPSIZE                                   = 0x00000000 0
+463.06543|FAPI|p9_pstate_parameter_block.C: ATTR_NEST_LEAKAGE_PERCENT                                    = 0x0000003c 60
+463.06548|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_BUSNUM                                       = 0x00000000 0
+463.06553|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_RAIL                                         = 0x00000000 0
+463.06558|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_BUSNUM                                       = 0x00000001 1
+463.06562|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_RAIL                                         = 0x00000000 0
+463.06566|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_BUSNUM                                       = 0x00000000 0
+463.06570|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_RAIL                                         = 0x00000001 1
+463.06574|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_BOOT_VOLTAGE                                        = 0x000003bd 957
+463.06579|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_BOOT_VOLTAGE                                        = 0x0000029b 667
+463.06583|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_BOOT_VOLTAGE                                        = 0x000002be 702
+463.06588|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+463.06592|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+463.06743|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+463.06748|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+463.06752|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+463.06756|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+463.06760|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+463.06764|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+463.06768|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+463.06773|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+463.06777|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER                                       = 0x00000008 8
+463.06781|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_OVERV_DISABLE                                = 0x00000000 0
+463.06786|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_UNDERV_DISABLE                               = 0x00000000 0
+463.06790|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_FORCE                                        = 0x00000000 0
+463.06794|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_SAMPLE_125US                                        = 0x00000000 0
+463.06798|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_MAX_DROOP_10THPCT                                   = 0x00000000 0
+463.06802|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_PERF_LOSS_THRESH_10THPCT                     = 0x00000000 0
+463.06807|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_INCR_10THPCT                            = 0x00000000 0
+463.06811|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_DECR_10THPCT                            = 0x00000000 0
+463.06815|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_MAX_10THPCT                                  = 0x00000000 0
+463.08118|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_VMIN_MV                                      = 0x00000000 0
+463.08122|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_VMAX_SETPOINT_MV                              = 0x00000000 0
+463.08126|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_INCR_10THPCT                             = 0x00000000 0
+463.09026|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_DECR_10THPCT                             = 0x00000000 0
+463.09030|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_MAX_10THPCT                                   = 0x00000000 0
+463.09035|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_start_ns             = 0x00001f40 8000 (internal default)
+463.09040|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_inc_uv_per_us   = 0x00002710 10000 (internal default)
+463.09044|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_dec_uv_per_us   = 0x00002710 10000 (internal default)
+463.09049|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_stabilization_time_us           = 0x00000005 5 (internal default)
+463.09053|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_step_size_mv                    = 0x00000032 50 (internal default)
+463.09058|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_sample_125us                        = 0x00000002 2 (internal default)
+463.09063|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_max_droop_pct                       = 0x0000007d 125 (internal default)
+463.09067|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_incr_pct                 = 0x00000005 5 (internal default)
+463.09072|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_decr_pct                 = 0x00000005 5 (internal default)
+463.09076|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_max_pct                       = 0x00000000 0 (internal default)
+463.09081|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_vmax_mv                       = 0x0000047e 1150 (internal default)
+463.09086|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_incr_pct                = 0x00000005 5 (internal default)
+463.09090|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_decr_pct                = 0x00000005 5 (internal default)
+463.09095|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_max_pct                      = 0x00000064 100 (internal default)
+463.09099|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_perf_loss_thresh_pct         = 0x00000005 5 (internal default)
+463.09251|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_PSTATES_ENABLED                                  = 0x00000000 0
+463.09255|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_RESCLK_ENABLED                                   = 0x00000000 0
+463.09259|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_VDM_ENABLED                                      = 0x00000000 0
+463.09263|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_IVRM_ENABLED                                     = 0x00000000 0
+463.09268|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOF_ENABLED                                      = 0x00000000 0
+463.09272|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_UNDERV_ENABLED                               = 0x00000000 0
+463.09422|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_OVERV_ENABLED                                = 0x00000000 0
+463.09426|FAPI|p9_pstate_parameter_block.C: Populating magic number in Pstate Parameter block structure
+463.09725|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>> vpd_init
+463.10883|FAPI|p9_pstate_parameter_block.C: Number of EQ chiplets present => 2
+463.10885|FAPI|p9_pstate_parameter_block.C: Chip Number => 0
+463.14007|FAPI|p9_pstate_parameter_block.C: #V chiplet = 0 bucket id = 2
+463.14009|FAPI|p9_pstate_parameter_block.C: #V data = 0x0A8C  2700  
+463.14969|FAPI|p9_pstate_parameter_block.C: #V data = 0x02D8  728   
+463.14971|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+463.14972|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.14973|FAPI|p9_pstate_parameter_block.C: #V data = 0x001E  30    
+463.14975|FAPI|p9_pstate_parameter_block.C: #V data = 0x074B  1867  
+463.14976|FAPI|p9_pstate_parameter_block.C: #V data = 0x0270  624   
+463.14978|FAPI|p9_pstate_parameter_block.C: #V data = 0x0104  260   
+463.14979|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.14980|FAPI|p9_pstate_parameter_block.C: #V data = 0x0014  20    
+463.14982|FAPI|p9_pstate_parameter_block.C: #V data = 0x0C80  3200  
+463.14983|FAPI|p9_pstate_parameter_block.C: #V data = 0x0330  816   
+463.14985|FAPI|p9_pstate_parameter_block.C: #V data = 0x021C  540   
+463.14986|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.14987|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+463.14989|FAPI|p9_pstate_parameter_block.C: #V data = 0x0ED8  3800  
+463.14990|FAPI|p9_pstate_parameter_block.C: #V data = 0x03B8  952   
+463.14991|FAPI|p9_pstate_parameter_block.C: #V data = 0x02EE  750   
+463.14993|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.14994|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+463.14995|FAPI|p9_pstate_parameter_block.C: #V data = 0x074A  1866  
+463.14997|FAPI|p9_pstate_parameter_block.C: #V data = 0x02BC  700   
+463.14998|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+463.15000|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+463.15001|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+463.15151|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+463.16326|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+463.17131|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+463.17138|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+463.17145|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+463.17151|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+463.17156|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+463.17161|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Turbo      <= UltraTurbo)
+463.17162|FAPI|p9_pstate_parameter_block.C: Chip Number => 1
+463.17170|FAPI|p9_pstate_parameter_block.C: #V chiplet = 1 bucket id = 2
+463.17171|FAPI|p9_pstate_parameter_block.C: #V data = 0x0A8C  2700  
+463.17173|FAPI|p9_pstate_parameter_block.C: #V data = 0x02D8  728   
+463.17174|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+463.17175|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.17176|FAPI|p9_pstate_parameter_block.C: #V data = 0x001E  30    
+463.17178|FAPI|p9_pstate_parameter_block.C: #V data = 0x074B  1867  
+463.17179|FAPI|p9_pstate_parameter_block.C: #V data = 0x0270  624   
+463.17180|FAPI|p9_pstate_parameter_block.C: #V data = 0x0104  260   
+463.17182|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.17183|FAPI|p9_pstate_parameter_block.C: #V data = 0x0014  20    
+463.17184|FAPI|p9_pstate_parameter_block.C: #V data = 0x0C80  3200  
+463.17185|FAPI|p9_pstate_parameter_block.C: #V data = 0x0330  816   
+463.17187|FAPI|p9_pstate_parameter_block.C: #V data = 0x021C  540   
+463.17188|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.17189|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+463.17191|FAPI|p9_pstate_parameter_block.C: #V data = 0x0ED8  3800  
+463.17192|FAPI|p9_pstate_parameter_block.C: #V data = 0x03B8  952   
+463.17194|FAPI|p9_pstate_parameter_block.C: #V data = 0x02EE  750   
+463.17195|FAPI|p9_pstate_parameter_block.C: #V data = 0x03BD  957   
+463.17196|FAPI|p9_pstate_parameter_block.C: #V data = 0x0028  40    
+463.17198|FAPI|p9_pstate_parameter_block.C: #V data = 0x074A  1866  
+463.17199|FAPI|p9_pstate_parameter_block.C: #V data = 0x02BC  700   
+463.17200|FAPI|p9_pstate_parameter_block.C: #V data = 0x019A  410   
+463.17202|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+463.17203|FAPI|p9_pstate_parameter_block.C: #V data = 0x0000  0     
+463.17205|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+463.17211|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+463.17217|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+463.17223|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+463.17230|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued non-biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+463.17234|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+463.17239|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+463.17243|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Turbo      <= UltraTurbo)
+463.18430|FAPI_I|p9_pstate_parameter_block.C: Apply Biasing to #V
+463.18432|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>>>>> apply_biased_values
+463.18433|FAPI_I|p9_pstate_parameter_block.C: Apply Biasing to #V
+463.20039|FAPI|p9_pstate_parameter_block.C: Validate Biasd Voltage and Frequency values
+463.20041|FAPI_I|target.H: ERROR: getChipletNumber: Can not read CHIPLET_ID attribute
+463.20048|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (PowerSave ) f=1867 v=624 i=260 v=957 i=20
+463.20055|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (Nominal   ) f=2700 v=728 i=410 v=957 i=30
+463.20062|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (Turbo     ) f=3200 v=816 i=540 v=957 i=40
+463.20069|FAPI|p9_pstate_parameter_block.C: Checking for Zero valued biased data in each #V operating point (UltraTurbo) f=3800 v=952 i=750 v=957 i=40
+463.20074|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (PowerSave  <= Nominal   )
+463.20706|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Nominal    <= Turbo     )
+463.20710|FAPI|p9_pstate_parameter_block.C: Checking for relationship between #V operating point (Turbo      <= UltraTurbo)
+463.20865|FAPI|p9_pstate_parameter_block.C: <<<<<<<<<<<< apply_biased_values
+463.20902|FAPI|p9_pstate_parameter_block.C: Chiplet Number => 0
+463.23183|FAPI|p9_pm_get_poundw_bucket.C: COPYING from ATTR_POUNDW_BUCKET_DATA
+463.23185|FAPI|p9_pstate_parameter_block.C: #W chiplet = 0 bucket id = 2
+463.23188|FAPI|p9_pstate_parameter_block.C: attribute ATTR_POUND_W_STATIC_DATA_ENABLE is NOT set
+463.23192|FAPI|p9_pstate_parameter_block.C: PowerSave  ivdd_tdp_ac_current  1840 (10mA)   18.3 (A)
+463.23196|FAPI|p9_pstate_parameter_block.C: PowerSave  ivdd_tdp_dc_current   469 (10mA) 4.690000000000000 (A)
+463.23199|FAPI|p9_pstate_parameter_block.C: Nominal    ivdd_tdp_ac_current  3087 (10mA)  30.87 (A)
+463.23202|FAPI|p9_pstate_parameter_block.C: Nominal    ivdd_tdp_dc_current   503 (10mA) 5.30000000000000 (A)
+463.23205|FAPI|p9_pstate_parameter_block.C: Turbo      ivdd_tdp_ac_current  4187 (10mA)  41.86 (A)
+463.23208|FAPI|p9_pstate_parameter_block.C: Turbo      ivdd_tdp_dc_current   532 (10mA)   5.32 (A)
+463.23211|FAPI|p9_pstate_parameter_block.C: UltraTurbo ivdd_tdp_ac_current  6072 (10mA)  60.71 (A)
+463.23215|FAPI|p9_pstate_parameter_block.C: UltraTurbo ivdd_tdp_dc_current   576 (10mA)   5.75 (A)
+463.23253|FAPI|p9_pstate_parameter_block.C: Nominal    Op Point [0] vdm_vid_compare_per_quad[0]   16  => 576 mv
+463.23257|FAPI|p9_pstate_parameter_block.C: PowerSave  Op Point [1] vdm_vid_compare_per_quad[0]   43  => 684 mv
+463.23261|FAPI|p9_pstate_parameter_block.C: Turbo      Op Point [2] vdm_vid_compare_per_quad[0]   64  => 768 mv
+463.23265|FAPI|p9_pstate_parameter_block.C: UltraTurbo Op Point [3] vdm_vid_compare_per_quad[0]   91  => 876 mv
+463.23268|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 10 10, 0
+463.23270|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 2b 2b, 0
+463.23272|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 40 40, 0
+463.23275|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 5b 5b, 0
+463.23280|FAPI|p9_pstate_parameter_block.C: Nominal    Op Point [0] vdm_vid_compare_per_quad[1]   16  => 576 mv
+463.23284|FAPI|p9_pstate_parameter_block.C: PowerSave  Op Point [1] vdm_vid_compare_per_quad[1]   43  => 684 mv
+463.23288|FAPI|p9_pstate_parameter_block.C: Turbo      Op Point [2] vdm_vid_compare_per_quad[1]   64  => 768 mv
+463.23291|FAPI|p9_pstate_parameter_block.C: UltraTurbo Op Point [3] vdm_vid_compare_per_quad[1]   91  => 876 mv
+463.23294|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 10 10, 0
+463.23296|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 2b 2b, 0
+463.23298|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 40 40, 0
+463.23301|FAPI|p9_pstate_parameter_block.C: vdm_vid_compare_per_quad[eqNum] 5b 5b, 0
+463.23304|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_overvolt_thresholds 0x0
+463.23306|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_small_thresholds    0x6
+463.23309|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_large_thresholds    0x5
+463.23312|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0].vdm_extreme_thresholds  0x0
+463.23315|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_overvolt_thresholds 0x0
+463.23317|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_small_thresholds    0x3
+463.23320|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_large_thresholds    0x6
+463.23323|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1].vdm_extreme_thresholds  0x0
+463.23326|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_overvolt_thresholds 0x0
+463.23328|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_small_thresholds    0x3
+463.23331|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_large_thresholds    0x6
+463.23334|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2].vdm_extreme_thresholds  0x0
+463.23337|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_overvolt_thresholds 0x0
+463.23339|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_small_thresholds    0x3
+463.23342|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_large_thresholds    0x6
+463.23345|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3].vdm_extreme_thresholds  0x0
+463.23348|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_DROP   N_S = 2
+463.23350|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_DROP   N_L = 4
+463.23353|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_RETURN L_S = 2
+463.23356|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[0] VDM_FREQ_RETURN S_N = 2
+463.23358|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_DROP   N_S = 2
+463.23361|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_DROP   N_L = 4
+463.23364|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_RETURN L_S = 2
+463.23366|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[1] VDM_FREQ_RETURN S_N = 2
+463.23369|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_DROP   N_S = 2
+463.23372|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_DROP   N_L = 4
+463.23374|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_RETURN L_S = 2
+463.23377|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[2] VDM_FREQ_RETURN S_N = 2
+463.23380|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_DROP   N_S = 2
+463.23382|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_DROP   N_L = 4
+463.23385|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_RETURN L_S = 2
+463.23388|FAPI|p9_pstate_parameter_block.C: iv_poundW_data.poundw[3] VDM_FREQ_RETURN S_N = 2
+463.23390|FAPI|p9_pstate_parameter_block.C: Getting IQ (IDDQ) Data
+463.23397|FAPI|p9_pstate_parameter_block.C: IDDQ
+463.23398|FAPI|p9_pstate_parameter_block.C:   IDDQ Version Number = 1
+463.23402|FAPI|p9_pstate_parameter_block.C:   Sort Info:         Good Quads = 02 Good Cores = 04 Good Caches = 04
+463.26296|FAPI|p9_pstate_parameter_block.C:   Good normal cores: Quad 0 = 2  Quad 1 = 2  Quad 2 = 0  Quad 3 = 0  Quad 4 = 0  Quad 5 = 0 
+463.26303|FAPI|p9_pstate_parameter_block.C:   Good caches:       Quad 0 = 2  Quad 1 = 2  Quad 2 = 0  Quad 3 = 0  Quad 4 = 0  Quad 5 = 0 
+463.26305|FAPI|p9_pstate_parameter_block.C:   RDP TO TDP scalling factor = 8695
+463.26307|FAPI|p9_pstate_parameter_block.C:   WOF IDDQ margin factor     = 0
+463.26309|FAPI|p9_pstate_parameter_block.C:   VDD  Temperature scaling factor = 13000
+463.26311|FAPI|p9_pstate_parameter_block.C:   VDN  Temperature scaling factor = 13000
+463.26314|FAPI|p9_pstate_parameter_block.C:   IDDQ data is converted 5mA units to 1mA units
+463.26317|FAPI|p9_pstate_parameter_block.C: %s   %sV    %sV    %sV    %sV    %sV    %sV  
+463.26321|FAPI|p9_pstate_parameter_block.C: %s   4.474    4.735     5.54    5.315    5.705     6.16 
+463.26326|FAPI|p9_pstate_parameter_block.C: %s   0.645     0.71     0.71    0.775     0.84     0.97 
+463.26331|FAPI|p9_pstate_parameter_block.C: %s   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+463.26337|FAPI|p9_pstate_parameter_block.C: %sQuad 0:    3.44   3.2400000000000002    3.435     3.62     3.89    4.214 
+463.26342|FAPI|p9_pstate_parameter_block.C: %sQuad 1:  3.2400000000000002    3.435     3.62     3.89     4.15    4.474 
+463.26348|FAPI|p9_pstate_parameter_block.C: %sQuad 2:   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+463.26353|FAPI|p9_pstate_parameter_block.C: %sQuad 3:   1.815    1.945     2.75   2.1400000000000001    2.334    2.524 
+463.26359|FAPI|p9_pstate_parameter_block.C: %sQuad 4:   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+463.26364|FAPI|p9_pstate_parameter_block.C: %sQuad 5:   1.815    1.945     2.75   2.1400000000000001    2.334    2.524 
+463.26369|FAPI|p9_pstate_parameter_block.C: %s  4.684999999999999     4.67     4.67     4.67     4.67     4.67 
+463.26373|FAPI|p9_pstate_parameter_block.C: %s   83.5     83.0     83.0     83.0     83.0     83.0  
+463.26377|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26381|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26385|FAPI|p9_pstate_parameter_block.C: %sQuad 0:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26390|FAPI|p9_pstate_parameter_block.C: %sQuad 1:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26394|FAPI|p9_pstate_parameter_block.C: %sQuad 2:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26398|FAPI|p9_pstate_parameter_block.C: %sQuad 3:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26402|FAPI|p9_pstate_parameter_block.C: %sQuad 4:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26407|FAPI|p9_pstate_parameter_block.C: %sQuad 5:   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26411|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+463.26412|FAPI|p9_pstate_parameter_block.C: Load RAW VPD
+463.26413|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 74b 115
+463.26415|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 a8c 66
+463.26416|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 c80 36
+463.26417|FAPI|p9_pstate_parameter_block.C: PSTATE ed8 ed8 0
+463.26419|FAPI|p9_pstate_parameter_block.C: Load VPD
+463.26420|FAPI|p9_pstate_parameter_block.C: <<<<<<<<< vpd_init
+463.26421|FAPI|p9_pstate_parameter_block.C: Getting IVRM Parameters Data
+463.32059|FAPI|p9_pstate_parameter_block.C:    NOTE: This level of code is forcing the iVRM to OFF
+463.32215|FAPI|p9_pstate_parameter_block.C: >>>>>>>>>> safe_mode_init
+463.32217|FAPI|p9_pstate_parameter_block.C: <<<<<<<<<< safe_mode_init
+463.32218|FAPI|p9_pstate_parameter_block.C: >>>>>>>> vdm_init
+463.32219|FAPI|p9_pstate_parameter_block.C: l_biased_pstate 115 
+463.32221|FAPI|p9_pstate_parameter_block.C: l_biased_pstate 66 
+463.32222|FAPI|p9_pstate_parameter_block.C: l_biased_pstate 36 
+463.32223|FAPI|p9_pstate_parameter_block.C: l_biased_pstate 0 
+463.32260|FAPI|p9_pstate_parameter_block.C: Bi:VID=10
+463.32261|FAPI|p9_pstate_parameter_block.C: Bi:VID=2b
+463.32262|FAPI|p9_pstate_parameter_block.C: Bi:VID=40
+463.32263|FAPI|p9_pstate_parameter_block.C: Bi:VID=5b
+463.32266|FAPI|p9_pstate_parameter_block.C: Bi:VID=10
+463.32267|FAPI|p9_pstate_parameter_block.C: Bi:VID=2b
+463.32269|FAPI|p9_pstate_parameter_block.C: Bi:VID=40
+463.32270|FAPI|p9_pstate_parameter_block.C: Bi:VID=5b
+463.32272|FAPI|p9_pstate_parameter_block.C: Bi: OV TSHLD =0
+463.32273|FAPI|p9_pstate_parameter_block.C: Bi: SM TSHLD =4
+463.32274|FAPI|p9_pstate_parameter_block.C: Bi: LG TSHLD =6
+463.32276|FAPI|p9_pstate_parameter_block.C: Bi: EX TSHLD =0
+463.32277|FAPI|p9_pstate_parameter_block.C: Bi: OV TSHLD =0
+463.32278|FAPI|p9_pstate_parameter_block.C: Bi: SM TSHLD =2
+463.32279|FAPI|p9_pstate_parameter_block.C: Bi: LG TSHLD =4
+463.32281|FAPI|p9_pstate_parameter_block.C: Bi: EX TSHLD =0
+463.32282|FAPI|p9_pstate_parameter_block.C: Bi: OV TSHLD =0
+463.32283|FAPI|p9_pstate_parameter_block.C: Bi: SM TSHLD =2
+463.32284|FAPI|p9_pstate_parameter_block.C: Bi: LG TSHLD =4
+463.32286|FAPI|p9_pstate_parameter_block.C: Bi: EX TSHLD =0
+463.32287|FAPI|p9_pstate_parameter_block.C: Bi: OV TSHLD =0
+463.32288|FAPI|p9_pstate_parameter_block.C: Bi: SM TSHLD =2
+463.32289|FAPI|p9_pstate_parameter_block.C: Bi: LG TSHLD =4
+463.32291|FAPI|p9_pstate_parameter_block.C: Bi: EX TSHLD =0
+463.32292|FAPI|p9_pstate_parameter_block.C: Bi: N_S =2
+463.32293|FAPI|p9_pstate_parameter_block.C: Bi: N_L =4
+463.32294|FAPI|p9_pstate_parameter_block.C: Bi: L_S =2
+463.32296|FAPI|p9_pstate_parameter_block.C: Bi: S_L =2
+463.32297|FAPI|p9_pstate_parameter_block.C: Bi: N_S =2
+463.32298|FAPI|p9_pstate_parameter_block.C: Bi: N_L =4
+463.32299|FAPI|p9_pstate_parameter_block.C: Bi: L_S =2
+463.32301|FAPI|p9_pstate_parameter_block.C: Bi: S_L =2
+463.32302|FAPI|p9_pstate_parameter_block.C: Bi: N_S =2
+463.32303|FAPI|p9_pstate_parameter_block.C: Bi: N_L =4
+463.32304|FAPI|p9_pstate_parameter_block.C: Bi: L_S =2
+463.32305|FAPI|p9_pstate_parameter_block.C: Bi: S_L =2
+463.32307|FAPI|p9_pstate_parameter_block.C: Bi: N_S =2
+463.32308|FAPI|p9_pstate_parameter_block.C: Bi: N_L =4
+463.32309|FAPI|p9_pstate_parameter_block.C: Bi: L_S =2
+463.32310|FAPI|p9_pstate_parameter_block.C: Bi: S_L =2
+463.32348|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes POWERSAVE_NOMINAL 0 TH_N 0 TH_P 0 PS_P 115 PS_N 66
+463.32352|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes POWERSAVE_NOMINAL ff59 TH_N 2 TH_P 4 PS_P 115 PS_N 66
+463.32357|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes POWERSAVE_NOMINAL ff59 TH_N 4 TH_P 6 PS_P 115 PS_N 66
+463.32361|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes POWERSAVE_NOMINAL 0 TH_N 0 TH_P 0 PS_P 115 PS_N 66
+463.32365|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes NOMINAL_TURBO     0 TH_N 0 TH_P 0 PS_P 66 PS_N 36
+463.32370|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes NOMINAL_TURBO     0 TH_N 2 TH_P 2 PS_P 66 PS_N 36
+463.32374|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes NOMINAL_TURBO     0 TH_N 4 TH_P 4 PS_P 66 PS_N 36
+463.32379|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes NOMINAL_TURBO     0 TH_N 0 TH_P 0 PS_P 66 PS_N 36
+463.32382|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes TURBO_ULTRA       0 TH_N 0 TH_P 0 PS_P 36 PS_N 0
+463.32386|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes TURBO_ULTRA       0 TH_N 2 TH_P 2 PS_P 36 PS_N 0
+463.32390|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes TURBO_ULTRA       0 TH_N 4 TH_P 4 PS_P 36 PS_N 0
+463.32393|FAPI|p9_pstate_parameter_block.C: PsVDMThreshSlopes TURBO_ULTRA       0 TH_N 0 TH_P 0 PS_P 36 PS_N 0
+463.32397|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes POWERSAVE_NOMINAL 0 N_S 2 N_L 2 L_S 115 S_N 66
+463.32400|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes POWERSAVE_NOMINAL 0 N_S 4 N_L 4 L_S 115 S_N 66
+463.32404|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes POWERSAVE_NOMINAL 0 N_S 2 N_L 2 L_S 115 S_N 66
+463.32408|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes POWERSAVE_NOMINAL 0 N_S 2 N_L 2 L_S 115 S_N 66
+463.32411|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes NOMINAL_TURBO     0 N_S 2 N_L 2 L_S 66 S_N 36
+463.32416|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes NOMINAL_TURBO     0 N_S 4 N_L 4 L_S 66 S_N 36
+463.32419|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes NOMINAL_TURBO     0 N_S 2 N_L 2 L_S 66 S_N 36
+463.32423|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes NOMINAL_TURBO     0 N_S 2 N_L 2 L_S 66 S_N 36
+463.32426|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes TURBO_ULTRA       0 N_S 2 N_L 2 L_S 36 S_N 0
+463.32430|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes TURBO_ULTRA       0 N_S 4 N_L 4 L_S 36 S_N 0
+463.32434|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes TURBO_ULTRA       0 N_S 2 N_L 2 L_S 36 S_N 0
+463.32437|FAPI|p9_pstate_parameter_block.C: PsVDMJumpSlopes TURBO_ULTRA       0 N_S 2 N_L 2 L_S 36 S_N 0
+463.32590|FAPI|p9_pstate_parameter_block.C: <<<<<<<< vdm_init
+463.32592|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 3
+463.32594|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 3
+463.32595|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 15
+463.32597|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 17
+463.32598|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 18
+463.32600|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 16
+463.32601|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 14
+463.32602|FAPI|p9_pstate_parameter_block.C: entered resclk_attr init 13
+463.32606|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 0 l_resclk_freq_index 3 0 3800000 3800000
+463.32611|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 1500 l_resclk_freq_index 3 1500000 3800000 3800000
+463.32615|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 2000 l_resclk_freq_index 21 2000000 3800000 3800000
+463.32619|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 3000 l_resclk_freq_index 23 3000000 3800000 3800000
+463.32623|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 3400 l_resclk_freq_index 24 3400000 3800000 3800000
+463.32627|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 3700 l_resclk_freq_index 22 3700000 3800000 3800000
+463.32631|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 3900 l_resclk_freq_index 20 3900000 3800000 3800000
+463.32635|FAPI|p9_pstate_parameter_block.C: l_resclk_freq_regions 4100 l_resclk_freq_index 19 4100000 3800000 3800000
+463.32637|FAPI|p9_pstate_parameter_block.C: Resonant Clocks are enabled
+463.32638|FAPI|p9_pstate_parameter_block.C: >>>>>>>> gppb_init
+463.32641|FAPI|p9_pstate_parameter_block.C: Pstate Base Frequency 39FBC0 (3800000)
+463.32645|FAPI|p9_pstate_parameter_block.C: Safe Mode Frequency 2152000 (0x20D640) kHz;  Voltage 667 (0x29B) mV
+463.32647|FAPI|p9_pstate_parameter_block.C: Finished compute_PStateV_slope
+463.32649|FAPI|p9_pstate_parameter_block.C: l_globalppb.dpll_pstate0_value E4 (228)
+463.32651|FAPI|p9_pstate_parameter_block.C: good normal cores per sort 4 0x4
+463.32653|FAPI|p9_pstate_parameter_block.C: WOV_VMIN_MV=667
+463.32654|FAPI|p9_pstate_parameter_block.C: SafeVoltage=667
+463.32655|FAPI|p9_pstate_parameter_block.C: <<<<<<<<<< gppb_init
+463.32656|FAPI|p9_pstate_parameter_block.C: >>>>>>>> lppb_init
+463.32692|FAPI|p9_pstate_parameter_block.C: l_localppb.dpll_pstate0_value  E4 (228)
+463.32694|FAPI|p9_pstate_parameter_block.C: l_localppb.dpll_pstate0_value  E4 (228)
+463.32696|FAPI|p9_pstate_parameter_block.C: <<<<<<<< lppb_init
+463.39007|FAPI|plat_wof_access.C: WOF table search: Cores 4 SocketPower 0x5A NestFreq 0x74A SortFreq 0xC80 Mode 0x2
+463.39009|UTIL|UtilLidMgr::getLidPnorSectionInfo Lid 0x81E00440 in PNOR
+463.39011|FAPI|plat_wof_access.C: WOFDATA lid is 2789376 bytes
+464.85508|FAPI|plat_wof_access.C: WOF Image: Magic 0x57544948 Version 1 Entries 18 Offset 0x10
+464.88486|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 0 SectionTableOffset 0xA0 SectionTableSize 129152 Version 1 Mode 0 Cores 16 SocketPower 0x82 NestFreq 0x74B NomFreq 0x898
+464.88495|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 1 SectionTableOffset 0x1F920 SectionTableSize 129152 Version 1 Mode 0 Cores 16 SocketPower 0x82 NestFreq 0x74B NomFreq 0x8FC
+464.88504|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 2 SectionTableOffset 0x3F1A0 SectionTableSize 129152 Version 1 Mode 0 Cores 18 SocketPower 0x82 NestFreq 0x74B NomFreq 0x898
+464.88513|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 3 SectionTableOffset 0x5EA20 SectionTableSize 129152 Version 1 Mode 0 Cores 18 SocketPower 0x82 NestFreq 0x74B NomFreq 0x8CA
+464.88521|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 4 SectionTableOffset 0x7E2A0 SectionTableSize 129152 Version 1 Mode 0 Cores 18 SocketPower 0xBE NestFreq 0x74B NomFreq 0x8BA
+464.88531|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 5 SectionTableOffset 0x9DB20 SectionTableSize 129152 Version 1 Mode 0 Cores 18 SocketPower 0xBE NestFreq 0x74B NomFreq 0xAF0
+464.88539|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 6 SectionTableOffset 0xBD3A0 SectionTableSize 129152 Version 1 Mode 0 Cores 20 SocketPower 0xA0 NestFreq 0x74B NomFreq 0x8CA
+464.88547|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 7 SectionTableOffset 0xDCC20 SectionTableSize 129152 Version 1 Mode 0 Cores 20 SocketPower 0xA0 NestFreq 0x74B NomFreq 0x960
+464.88555|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 8 SectionTableOffset 0xFC4A0 SectionTableSize 129152 Version 1 Mode 0 Cores 22 SocketPower 0xA0 NestFreq 0x74B NomFreq 0x898
+464.88563|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 9 SectionTableOffset 0x11BD20 SectionTableSize 129152 Version 1 Mode 0 Cores 22 SocketPower 0xA0 NestFreq 0x74B NomFreq 0x8CA
+464.88571|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 10 SectionTableOffset 0x13B5A0 SectionTableSize 129152 Version 1 Mode 0 Cores 22 SocketPower 0xBE NestFreq 0x74B NomFreq 0x856
+464.88579|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 11 SectionTableOffset 0x15AE20 SectionTableSize 129152 Version 1 Mode 0 Cores 22 SocketPower 0xBE NestFreq 0x74B NomFreq 0xABE
+464.88587|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 12 SectionTableOffset 0x17A6A0 SectionTableSize 129152 Version 1 Mode 0 Cores 4 SocketPower 0x5A NestFreq 0x74B NomFreq 0xA8C
+464.88595|FAPI|plat_wof_access.C: WOF table fields SectionTableEntry 13 SectionTableOffset 0x199F20 SectionTableSize 129152 Version 1 Mode 0 Cores 4 SocketPower 0x5A NestFreq 0x74B NomFreq 0xC80
+464.88597|FAPI|plat_wof_access.C: Found a WOF table match
+464.88601|FAPI|plat_wof_access.C: core_count: 4, socket power w: 90, sort power freq MHz: 3200, ver: 1, mode: 2
+464.89159|FAPI|p9_pstate_parameter_block.C: WFTH: 57465448
+464.89161|FAPI|p9_pstate_parameter_block.C: WOF: l_vdn_size 0008, l_vdd_size 0015
+464.89222|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89230|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89237|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89245|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89253|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89313|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89321|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89329|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89336|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89344|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89404|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89411|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89419|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89426|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89434|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89494|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89502|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89512|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89520|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89527|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89583|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89591|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89598|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89606|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89613|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89673|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89681|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89688|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89695|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89703|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89763|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89771|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89778|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89786|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89793|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89854|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89862|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89869|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89877|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89884|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.89945|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.89952|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.89960|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.89968|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.89976|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.90036|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.90044|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.90051|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.90059|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.90066|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.90126|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.90134|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.90141|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.90149|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.90156|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.90217|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 2 3767; [ 0][21] 0x 2 3767; [ 0][22] 0x 2 3767; [ 0][23] 0x 2 3767;  
+464.90225|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 2 3767; [ 1][21] 0x 2 3767; [ 1][22] 0x 2 3767; [ 1][23] 0x 2 3767;  
+464.90232|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 2 3767; [ 2][21] 0x 2 3767; [ 2][22] 0x 2 3767; [ 2][23] 0x 2 3767;  
+464.90240|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 2 3767; [ 3][21] 0x 2 3767; [ 3][22] 0x 2 3767; [ 3][23] 0x 2 3767;  
+464.90247|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 2 3767; [ 4][21] 0x 2 3767; [ 4][22] 0x 2 3767; [ 4][23] 0x 2 3767;  
+464.90306|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x 7 3683; [ 0][21] 0x 7 3683; [ 0][22] 0x 7 3683; [ 0][23] 0x 7 3683;  
+464.90314|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 7 3683; [ 1][21] 0x 7 3683; [ 1][22] 0x 7 3683; [ 1][23] 0x 7 3683;  
+464.90322|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 7 3683; [ 2][21] 0x 7 3683; [ 2][22] 0x 7 3683; [ 2][23] 0x 7 3683;  
+464.90329|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 7 3683; [ 3][21] 0x 7 3683; [ 3][22] 0x 7 3683; [ 3][23] 0x 7 3683;  
+464.90337|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 7 3683; [ 4][21] 0x 7 3683; [ 4][22] 0x 7 3683; [ 4][23] 0x 7 3683;  
+464.90396|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x B 3617; [ 0][21] 0x B 3617; [ 0][22] 0x B 3617; [ 0][23] 0x B 3617;  
+464.90404|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x B 3617; [ 1][21] 0x B 3617; [ 1][22] 0x B 3617; [ 1][23] 0x B 3617;  
+464.90412|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x B 3617; [ 2][21] 0x B 3617; [ 2][22] 0x B 3617; [ 2][23] 0x B 3617;  
+464.90419|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x B 3617; [ 3][21] 0x B 3617; [ 3][22] 0x B 3617; [ 3][23] 0x B 3617;  
+464.90427|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x B 3617; [ 4][21] 0x B 3617; [ 4][22] 0x B 3617; [ 4][23] 0x B 3617;  
+464.90487|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x10 3533; [ 0][21] 0x10 3533; [ 0][22] 0x10 3533; [ 0][23] 0x10 3533;  
+464.90494|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x10 3533; [ 1][21] 0x10 3533; [ 1][22] 0x10 3533; [ 1][23] 0x10 3533;  
+464.90502|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x10 3533; [ 2][21] 0x10 3533; [ 2][22] 0x10 3533; [ 2][23] 0x10 3533;  
+464.90510|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x10 3533; [ 3][21] 0x10 3533; [ 3][22] 0x10 3533; [ 3][23] 0x10 3533;  
+464.90517|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x10 3533; [ 4][21] 0x10 3533; [ 4][22] 0x10 3533; [ 4][23] 0x10 3533;  
+464.90578|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x12 3500; [ 0][21] 0x12 3500; [ 0][22] 0x12 3500; [ 0][23] 0x12 3500;  
+464.90585|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x12 3500; [ 1][21] 0x12 3500; [ 1][22] 0x12 3500; [ 1][23] 0x12 3500;  
+464.90593|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x12 3500; [ 2][21] 0x12 3500; [ 2][22] 0x12 3500; [ 2][23] 0x12 3500;  
+464.90600|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x12 3500; [ 3][21] 0x12 3500; [ 3][22] 0x12 3500; [ 3][23] 0x12 3500;  
+464.90608|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x12 3500; [ 4][21] 0x12 3500; [ 4][22] 0x12 3500; [ 4][23] 0x12 3500;  
+464.90668|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x17 3417; [ 0][21] 0x17 3417; [ 0][22] 0x17 3417; [ 0][23] 0x17 3417;  
+464.90675|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x17 3417; [ 1][21] 0x17 3417; [ 1][22] 0x17 3417; [ 1][23] 0x17 3417;  
+464.90683|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x17 3417; [ 2][21] 0x17 3417; [ 2][22] 0x17 3417; [ 2][23] 0x17 3417;  
+464.90690|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x17 3417; [ 3][21] 0x17 3417; [ 3][22] 0x17 3417; [ 3][23] 0x17 3417;  
+464.90698|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x17 3417; [ 4][21] 0x17 3417; [ 4][22] 0x17 3417; [ 4][23] 0x17 3417;  
+464.90757|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x1A 3367; [ 0][21] 0x1A 3367; [ 0][22] 0x1A 3367; [ 0][23] 0x1A 3367;  
+464.90765|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x1A 3367; [ 1][21] 0x1A 3367; [ 1][22] 0x1A 3367; [ 1][23] 0x1A 3367;  
+464.90772|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x1A 3367; [ 2][21] 0x1A 3367; [ 2][22] 0x1A 3367; [ 2][23] 0x1A 3367;  
+464.90780|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x1A 3367; [ 3][21] 0x1A 3367; [ 3][22] 0x1A 3367; [ 3][23] 0x1A 3367;  
+464.90787|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x1A 3367; [ 4][21] 0x1A 3367; [ 4][22] 0x1A 3367; [ 4][23] 0x1A 3367;  
+464.90847|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x1C 3333; [ 0][21] 0x1C 3333; [ 0][22] 0x1C 3333; [ 0][23] 0x1C 3333;  
+464.90855|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x1C 3333; [ 1][21] 0x1C 3333; [ 1][22] 0x1C 3333; [ 1][23] 0x1C 3333;  
+464.90862|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x1C 3333; [ 2][21] 0x1C 3333; [ 2][22] 0x1C 3333; [ 2][23] 0x1C 3333;  
+464.90869|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x1C 3333; [ 3][21] 0x1C 3333; [ 3][22] 0x1C 3333; [ 3][23] 0x1C 3333;  
+464.90877|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x1C 3333; [ 4][21] 0x1C 3333; [ 4][22] 0x1C 3333; [ 4][23] 0x1C 3333;  
+464.90937|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x20 3267; [ 0][21] 0x20 3267; [ 0][22] 0x20 3267; [ 0][23] 0x20 3267;  
+464.90944|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x20 3267; [ 1][21] 0x20 3267; [ 1][22] 0x20 3267; [ 1][23] 0x20 3267;  
+464.90952|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x20 3267; [ 2][21] 0x20 3267; [ 2][22] 0x20 3267; [ 2][23] 0x20 3267;  
+464.90959|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x20 3267; [ 3][21] 0x20 3267; [ 3][22] 0x20 3267; [ 3][23] 0x20 3267;  
+464.90966|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x20 3267; [ 4][21] 0x20 3267; [ 4][22] 0x20 3267; [ 4][23] 0x20 3267;  
+464.91026|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 25[ 0][20] 0x24 3200; [ 0][21] 0x24 3200; [ 0][22] 0x24 3200; [ 0][23] 0x24 3200;  
+464.91034|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x24 3200; [ 1][21] 0x24 3200; [ 1][22] 0x24 3200; [ 1][23] 0x24 3200;  
+464.91042|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x24 3200; [ 2][21] 0x24 3200; [ 2][22] 0x24 3200; [ 2][23] 0x24 3200;  
+464.91049|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x24 3200; [ 3][21] 0x24 3200; [ 3][22] 0x24 3200; [ 3][23] 0x24 3200;  
+464.91057|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x24 3200; [ 4][21] 0x24 3200; [ 4][22] 0x24 3200; [ 4][23] 0x24 3200;  
+464.91117|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91124|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91132|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91139|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91147|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91204|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91212|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91220|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91228|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91235|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91294|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91301|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91308|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91316|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91323|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91382|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91390|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91397|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91405|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91412|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91470|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91478|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91485|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91492|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91499|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91558|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91566|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91573|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91581|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91588|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91647|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91654|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91661|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91668|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91676|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91734|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91742|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91749|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91757|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91764|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91823|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91831|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91839|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91846|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91854|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.91912|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.91920|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.91927|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.91934|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.91942|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.92001|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 0 3800; [ 0][21] 0x 0 3800; [ 0][22] 0x 0 3800; [ 0][23] 0x 0 3800;  
+464.92009|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 0 3800; [ 1][21] 0x 0 3800; [ 1][22] 0x 0 3800; [ 1][23] 0x 0 3800;  
+464.92016|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 0 3800; [ 2][21] 0x 0 3800; [ 2][22] 0x 0 3800; [ 2][23] 0x 0 3800;  
+464.92024|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 0 3800; [ 3][21] 0x 0 3800; [ 3][22] 0x 0 3800; [ 3][23] 0x 0 3800;  
+464.92031|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 0 3800; [ 4][21] 0x 0 3800; [ 4][22] 0x 0 3800; [ 4][23] 0x 0 3800;  
+464.92090|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 2 3767; [ 0][21] 0x 2 3767; [ 0][22] 0x 2 3767; [ 0][23] 0x 2 3767;  
+464.92098|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 2 3767; [ 1][21] 0x 2 3767; [ 1][22] 0x 2 3767; [ 1][23] 0x 2 3767;  
+464.92105|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 2 3767; [ 2][21] 0x 2 3767; [ 2][22] 0x 2 3767; [ 2][23] 0x 2 3767;  
+464.92113|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 2 3767; [ 3][21] 0x 2 3767; [ 3][22] 0x 2 3767; [ 3][23] 0x 2 3767;  
+464.92120|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 2 3767; [ 4][21] 0x 2 3767; [ 4][22] 0x 2 3767; [ 4][23] 0x 2 3767;  
+464.92181|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x 7 3683; [ 0][21] 0x 7 3683; [ 0][22] 0x 7 3683; [ 0][23] 0x 7 3683;  
+464.92189|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x 7 3683; [ 1][21] 0x 7 3683; [ 1][22] 0x 7 3683; [ 1][23] 0x 7 3683;  
+464.92196|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x 7 3683; [ 2][21] 0x 7 3683; [ 2][22] 0x 7 3683; [ 2][23] 0x 7 3683;  
+464.92204|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x 7 3683; [ 3][21] 0x 7 3683; [ 3][22] 0x 7 3683; [ 3][23] 0x 7 3683;  
+464.92212|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x 7 3683; [ 4][21] 0x 7 3683; [ 4][22] 0x 7 3683; [ 4][23] 0x 7 3683;  
+464.92272|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x B 3617; [ 0][21] 0x B 3617; [ 0][22] 0x B 3617; [ 0][23] 0x B 3617;  
+464.92280|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x B 3617; [ 1][21] 0x B 3617; [ 1][22] 0x B 3617; [ 1][23] 0x B 3617;  
+464.92288|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x B 3617; [ 2][21] 0x B 3617; [ 2][22] 0x B 3617; [ 2][23] 0x B 3617;  
+464.92296|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x B 3617; [ 3][21] 0x B 3617; [ 3][22] 0x B 3617; [ 3][23] 0x B 3617;  
+464.92303|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x B 3617; [ 4][21] 0x B 3617; [ 4][22] 0x B 3617; [ 4][23] 0x B 3617;  
+464.92365|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x10 3533; [ 0][21] 0x10 3533; [ 0][22] 0x10 3533; [ 0][23] 0x10 3533;  
+464.92372|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x10 3533; [ 1][21] 0x10 3533; [ 1][22] 0x10 3533; [ 1][23] 0x10 3533;  
+464.92380|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x10 3533; [ 2][21] 0x10 3533; [ 2][22] 0x10 3533; [ 2][23] 0x10 3533;  
+464.92388|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x10 3533; [ 3][21] 0x10 3533; [ 3][22] 0x10 3533; [ 3][23] 0x10 3533;  
+464.92395|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x10 3533; [ 4][21] 0x10 3533; [ 4][22] 0x10 3533; [ 4][23] 0x10 3533;  
+464.92456|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x12 3500; [ 0][21] 0x12 3500; [ 0][22] 0x12 3500; [ 0][23] 0x12 3500;  
+464.92463|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x12 3500; [ 1][21] 0x12 3500; [ 1][22] 0x12 3500; [ 1][23] 0x12 3500;  
+464.92471|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x12 3500; [ 2][21] 0x12 3500; [ 2][22] 0x12 3500; [ 2][23] 0x12 3500;  
+464.92478|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x12 3500; [ 3][21] 0x12 3500; [ 3][22] 0x12 3500; [ 3][23] 0x12 3500;  
+464.92486|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x12 3500; [ 4][21] 0x12 3500; [ 4][22] 0x12 3500; [ 4][23] 0x12 3500;  
+464.92546|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x17 3417; [ 0][21] 0x17 3417; [ 0][22] 0x17 3417; [ 0][23] 0x17 3417;  
+464.92553|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x17 3417; [ 1][21] 0x17 3417; [ 1][22] 0x17 3417; [ 1][23] 0x17 3417;  
+464.92561|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x17 3417; [ 2][21] 0x17 3417; [ 2][22] 0x17 3417; [ 2][23] 0x17 3417;  
+464.92569|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x17 3417; [ 3][21] 0x17 3417; [ 3][22] 0x17 3417; [ 3][23] 0x17 3417;  
+464.92576|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x17 3417; [ 4][21] 0x17 3417; [ 4][22] 0x17 3417; [ 4][23] 0x17 3417;  
+464.92637|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x1A 3367; [ 0][21] 0x1A 3367; [ 0][22] 0x1A 3367; [ 0][23] 0x1A 3367;  
+464.92644|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x1A 3367; [ 1][21] 0x1A 3367; [ 1][22] 0x1A 3367; [ 1][23] 0x1A 3367;  
+464.92652|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x1A 3367; [ 2][21] 0x1A 3367; [ 2][22] 0x1A 3367; [ 2][23] 0x1A 3367;  
+464.92659|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x1A 3367; [ 3][21] 0x1A 3367; [ 3][22] 0x1A 3367; [ 3][23] 0x1A 3367;  
+464.92667|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x1A 3367; [ 4][21] 0x1A 3367; [ 4][22] 0x1A 3367; [ 4][23] 0x1A 3367;  
+464.92727|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x1C 3333; [ 0][21] 0x1C 3333; [ 0][22] 0x1C 3333; [ 0][23] 0x1C 3333;  
+464.92734|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x1C 3333; [ 1][21] 0x1C 3333; [ 1][22] 0x1C 3333; [ 1][23] 0x1C 3333;  
+464.92742|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x1C 3333; [ 2][21] 0x1C 3333; [ 2][22] 0x1C 3333; [ 2][23] 0x1C 3333;  
+464.92749|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x1C 3333; [ 3][21] 0x1C 3333; [ 3][22] 0x1C 3333; [ 3][23] 0x1C 3333;  
+464.92757|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x1C 3333; [ 4][21] 0x1C 3333; [ 4][22] 0x1C 3333; [ 4][23] 0x1C 3333;  
+464.92817|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x20 3267; [ 0][21] 0x20 3267; [ 0][22] 0x20 3267; [ 0][23] 0x20 3267;  
+464.92824|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x20 3267; [ 1][21] 0x20 3267; [ 1][22] 0x20 3267; [ 1][23] 0x20 3267;  
+464.92832|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x20 3267; [ 2][21] 0x20 3267; [ 2][22] 0x20 3267; [ 2][23] 0x20 3267;  
+464.92839|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x20 3267; [ 3][21] 0x20 3267; [ 3][22] 0x20 3267; [ 3][23] 0x20 3267;  
+464.92847|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x20 3267; [ 4][21] 0x20 3267; [ 4][22] 0x20 3267; [ 4][23] 0x20 3267;  
+464.92906|FAPI|p9_pstate_parameter_block.C: VFRT: 5654 Ver/Type 2 VDN%%3d VDD%%3d QID 35[ 0][20] 0x24 3200; [ 0][21] 0x24 3200; [ 0][22] 0x24 3200; [ 0][23] 0x24 3200;  
+464.92914|FAPI|p9_pstate_parameter_block.C:     [ 1][20] 0x24 3200; [ 1][21] 0x24 3200; [ 1][22] 0x24 3200; [ 1][23] 0x24 3200;  
+464.92921|FAPI|p9_pstate_parameter_block.C:     [ 2][20] 0x24 3200; [ 2][21] 0x24 3200; [ 2][22] 0x24 3200; [ 2][23] 0x24 3200;  
+464.92929|FAPI|p9_pstate_parameter_block.C:     [ 3][20] 0x24 3200; [ 3][21] 0x24 3200; [ 3][22] 0x24 3200; [ 3][23] 0x24 3200;  
+464.92936|FAPI|p9_pstate_parameter_block.C:     [ 4][20] 0x24 3200; [ 4][21] 0x24 3200; [ 4][22] 0x24 3200; [ 4][23] 0x24 3200;  
+465.16224|FAPI|p9_pstate_parameter_block.C: >>>>>>>> oppb_init
+465.16226|FAPI|p9_pstate_parameter_block.C: l_pbus_nest_freq 0x74a (1866)
+465.16228|FAPI|p9_pstate_parameter_block.C: l_vpd_idn_100ma 0x19a (410)
+465.16230|FAPI|p9_pstate_parameter_block.C: l_occppb.wof.tdp_rdp_factor 0x0
+465.16232|FAPI|p9_pstate_parameter_block.C: l_occppb.nest_leakage_percent 0x3c
+465.16235|FAPI|p9_pstate_parameter_block.C: l_occppb.lac_tdp_vdd_turbo_10ma 0x105b (4187)
+465.16237|FAPI|p9_pstate_parameter_block.C: l_occppb.lac_tdp_vdd_nominal_10ma 0xc0f (3087)
+465.16242|FAPI|p9_pstate_parameter_block.C:  l_occppb.ceff_tdp_vdn 0x1 (note: the Vdn dimension is not supported; this value is forced)
+465.16244|FAPI|p9_pstate_parameter_block.C: l_occppb.pstate_min 0x62 (98)
+465.16245|FAPI|p9_pstate_parameter_block.C: <<<<<<<< oppb_init
+465.16249|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_PSTATES_ENABLED                                  = 0x00000001 1
+465.16254|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_RESCLK_ENABLED                                   = 0x00000001 1
+465.16258|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_VDM_ENABLED                                      = 0x00000001 1
+465.16262|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_IVRM_ENABLED                                     = 0x00000001 1
+465.16266|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOF_ENABLED                                      = 0x00000001 1
+465.16270|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_UNDERV_ENABLED                               = 0x00000000 0
+465.16274|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_OVERV_ENABLED                                = 0x00000001 1
+465.16314|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16316|FAPI|p9_pstate_parameter_block.C: Global Pstate Parameter Block @ 0x100ef6aa000
+465.16321|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16322|FAPI|p9_pstate_parameter_block.C: Options              : 0
+465.16325|FAPI|p9_pstate_parameter_block.C: Reference Frequency  : 39FBC0 (3800000)
+465.16326|FAPI|p9_pstate_parameter_block.C: Frequency Step Size  : 411A (16666)
+465.16331|FAPI|p9_pstate_parameter_block.C: Operating Points:         Frequency     VDD(mV)    IDD(100mA)     VCS(mV)    ICS(100mA)
+465.16336|FAPI|p9_pstate_parameter_block.C:   PowerSave          :  074B (1867)  0270 ( 624)  0104 ( 260)  03BD ( 957)  0014 (  20) 
+465.16342|FAPI|p9_pstate_parameter_block.C:   Nominal            :  0A8C (2700)  02D8 ( 728)  019A ( 410)  03BD ( 957)  001E (  30) 
+465.16348|FAPI|p9_pstate_parameter_block.C:   Turbo              :  0C80 (3200)  0330 ( 816)  021C ( 540)  03BD ( 957)  0028 (  40) 
+465.16354|FAPI|p9_pstate_parameter_block.C:   UltraTurbo         :  0ED8 (3800)  03B8 ( 952)  02EE ( 750)  03BD ( 957)  0028 (  40) 
+465.16358|FAPI|p9_pstate_parameter_block.C: System Parameters:              VDD         VCS         VDN
+465.16363|FAPI|p9_pstate_parameter_block.C:   Load line (uOhm)               : 00FE ( 254)  0000 (   0)  0000 (   0) 
+465.16368|FAPI|p9_pstate_parameter_block.C:   Distribution Loss (uOhm)       : 0000 (   0)  0040 (  64)  0032 (  50) 
+465.16372|FAPI|p9_pstate_parameter_block.C:   Offset (uV)                    : 0000 (   0)  0000 (   0)  0000 (   0) 
+465.16374|FAPI|p9_pstate_parameter_block.C: Safe Parameters:
+465.16376|FAPI|p9_pstate_parameter_block.C:   Frequency                      : 20D640 (2152000) 
+465.16379|FAPI|p9_pstate_parameter_block.C:   Voltage                        : 029B (667) 
+465.16381|FAPI|p9_pstate_parameter_block.C: Pstate Stepping Parameters:
+465.16383|FAPI|p9_pstate_parameter_block.C:   Delay range exponent           : 0000 (  0) 
+465.16386|FAPI|p9_pstate_parameter_block.C:   Significand                    : 0000 (  0) 
+465.16387|FAPI|p9_pstate_parameter_block.C: External VRM Parameters:
+465.16390|FAPI|p9_pstate_parameter_block.C:   VRM Transition Start           : 1F40 (8000) 
+465.16393|FAPI|p9_pstate_parameter_block.C:   VRM Transition Rate - Rising   : 2710 (10000) 
+465.16396|FAPI|p9_pstate_parameter_block.C:   VRM Transition Rate - Falling  : 2710 (10000) 
+465.16399|FAPI|p9_pstate_parameter_block.C:   VRM Settling Time (us)         : 2710 (10000) 
+465.16401|FAPI|p9_pstate_parameter_block.C:   VRM Transition Step Size (mV)  : 0032 ( 50) 
+465.16404|FAPI|p9_pstate_parameter_block.C:   Nest Frequency                 : 074A (1866) 
+465.16409|FAPI|p9_pstate_parameter_block.C: PstateVSlopes:      POWERSAVE_NOMINAL   NOMINAL_TURBO       TURBO_ULTRA        
+465.16414|FAPI|p9_pstate_parameter_block.C:  Raw              :       21F5              2EEE              3C71        
+465.16419|FAPI|p9_pstate_parameter_block.C:  SysParam         :       2343              3088              3F1C        
+465.16424|FAPI|p9_pstate_parameter_block.C:  Biased           :       21F5              2EEE              3C71        
+465.16429|FAPI|p9_pstate_parameter_block.C:  Biased/SysParam  :       2343              3088              3F1C        
+465.16434|FAPI|p9_pstate_parameter_block.C: VPstateSlopes:      POWERSAVE_NOMINAL   NOMINAL_TURBO       TURBO_ULTRA        
+465.16438|FAPI|p9_pstate_parameter_block.C:  Raw              :       0789              0574              043C        
+465.16443|FAPI|p9_pstate_parameter_block.C:  SysParam         :       0742              0546              040E        
+465.16448|FAPI|p9_pstate_parameter_block.C:  Biased           :       0789              0574              043C        
+465.16452|FAPI|p9_pstate_parameter_block.C:  Biased/SysParam  :       0742              0546              040E        
+465.16454|FAPI|p9_pstate_parameter_block.C: VID Operating Points
+465.16457|FAPI|p9_pstate_parameter_block.C: Thrshod Op Points:        %s%s   %s%s   %s%s   %s%s  
+465.16608|FAPI|p9_pstate_parameter_block.C:  PowerSave        :       %s%s   %s%s   %s%s   %s%s  
+465.16612|FAPI|p9_pstate_parameter_block.C:  Nominal          :       %s%s   %s%s   %s%s   %s%s  
+465.16615|FAPI|p9_pstate_parameter_block.C:  Turbo            :       %s%s   %s%s   %s%s   %s%s  
+465.16619|FAPI|p9_pstate_parameter_block.C:  UltraTurbo       :       %s%s   %s%s   %s%s   %s%s  
+465.16622|FAPI|p9_pstate_parameter_block.C: VID Compare Slopes: %s%s   %s%s   %s%s  
+465.16625|FAPI|p9_pstate_parameter_block.C: VDM Thrshld Slopes: %s%s   %s%s   %s%s  
+465.16628|FAPI|p9_pstate_parameter_block.C:  Overvolt         :       %s%s   %s%s   %s%s  
+465.16632|FAPI|p9_pstate_parameter_block.C:  Small            :       %s%s   %s%s   %s%s  
+465.16635|FAPI|p9_pstate_parameter_block.C:  Large            :       %s%s   %s%s   %s%s  
+465.16639|FAPI|p9_pstate_parameter_block.C:  Extreme          :       %s%s   %s%s   %s%s  
+465.16642|FAPI|p9_pstate_parameter_block.C: VDM Jump Slopes:   %s%s   %s%s   %s%s  
+465.16645|FAPI|p9_pstate_parameter_block.C:  Overvolt         :       %s%s   %s%s   %s%s  
+465.16648|FAPI|p9_pstate_parameter_block.C:  Small            :       %s%s   %s%s   %s%s  
+465.16651|FAPI|p9_pstate_parameter_block.C:  Large            :       %s%s   %s%s   %s%s  
+465.16655|FAPI|p9_pstate_parameter_block.C:  Extreme          :       %s%s   %s%s   %s%s  
+465.16659|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16664|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16666|FAPI|p9_pstate_parameter_block.C: OCC Pstate Parameter Block @ 0x100ef6a9000
+465.16670|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16674|FAPI|p9_pstate_parameter_block.C: Operating Points:  Frequency     VDD(mV)    IDD(100mA)     VCS(mV)    ICS(100mA)
+465.16680|FAPI|p9_pstate_parameter_block.C:                   074B (1867)  0270 ( 624)  0104 ( 260)  03BD ( 957)  0014 ( 20) 
+465.16685|FAPI|p9_pstate_parameter_block.C:                   0A8C (2700)  02D8 ( 728)  019A ( 410)  03BD ( 957)  001E ( 30) 
+465.16690|FAPI|p9_pstate_parameter_block.C:                   0C80 (3200)  0330 ( 816)  021C ( 540)  03BD ( 957)  0028 ( 40) 
+465.16696|FAPI|p9_pstate_parameter_block.C:                   0ED8 (3800)  03B8 ( 952)  02EE ( 750)  03BD ( 957)  0028 ( 40) 
+465.16699|FAPI|p9_pstate_parameter_block.C: System Parameters:              VDD         VCS         VDN
+465.16703|FAPI|p9_pstate_parameter_block.C:    Load line (uOhm)          00FE (254)  0000 (  0)  0000 (  0) 
+465.16706|FAPI|p9_pstate_parameter_block.C:    Distribution Loss (uOhm)  0000 (  0)  0040 ( 64)  0032 ( 50) 
+465.16710|FAPI|p9_pstate_parameter_block.C:    Offset (uV)               0000 (  0)  0000 (  0)  0000 (  0) 
+465.16713|FAPI|p9_pstate_parameter_block.C: Frequency Minumum (kHz):     210FCC (2166732)
+465.16715|FAPI|p9_pstate_parameter_block.C: Frequency Maximum (kHz):     39FBC0 (3800000)
+465.16717|FAPI|p9_pstate_parameter_block.C: Frequency Step (kHz):        411A (16666)
+465.16719|FAPI|p9_pstate_parameter_block.C: Pstate of Minimum Frequency: 62 ( 98)
+465.16722|FAPI|p9_pstate_parameter_block.C: Nest Frequency:              74A (1866)
+465.16724|FAPI|p9_pstate_parameter_block.C: Nest Leakage Percent:        3C ( 60)
+465.16726|FAPI|p9_pstate_parameter_block.C: Ceff TDP Vdn:                01 (  1)
+465.16728|FAPI|p9_pstate_parameter_block.C: Iac TDP VDD Turbo(10ma):     105B (4187)
+465.16730|FAPI|p9_pstate_parameter_block.C: Iac TDP VDD Nominal(10ma):   C0F (3087)
+465.16731|FAPI|p9_pstate_parameter_block.C: WOF Elements
+465.16733|FAPI|p9_pstate_parameter_block.C:    WOF Enabled               1 
+465.16736|FAPI|p9_pstate_parameter_block.C:    TDP RDP Factor            0000 (  0) 
+465.16737|FAPI|p9_pstate_parameter_block.C: IDDQ
+465.16738|FAPI|p9_pstate_parameter_block.C:   IDDQ Version Number = 1
+465.16742|FAPI|p9_pstate_parameter_block.C:   Sort Info:         Good Quads = 02 Good Cores = 04 Good Caches = 04
+465.16748|FAPI|p9_pstate_parameter_block.C:   Good normal cores: Quad 0 = 2  Quad 1 = 2  Quad 2 = 0  Quad 3 = 0  Quad 4 = 0  Quad 5 = 0 
+465.16754|FAPI|p9_pstate_parameter_block.C:   Good caches:       Quad 0 = 2  Quad 1 = 2  Quad 2 = 0  Quad 3 = 0  Quad 4 = 0  Quad 5 = 0 
+465.16756|FAPI|p9_pstate_parameter_block.C:   RDP TO TDP scalling factor = 8695
+465.16758|FAPI|p9_pstate_parameter_block.C:   WOF IDDQ margin factor     = 0
+465.16760|FAPI|p9_pstate_parameter_block.C:   VDD  Temperature scaling factor = 13000
+465.16762|FAPI|p9_pstate_parameter_block.C:   VDN  Temperature scaling factor = 13000
+465.16764|FAPI|p9_pstate_parameter_block.C:   IDDQ data is converted 5mA units to 1mA units
+465.16767|FAPI|p9_pstate_parameter_block.C: %s   %sV    %sV    %sV    %sV    %sV    %sV  
+465.16771|FAPI|p9_pstate_parameter_block.C: %s   4.474    4.735     5.54    5.315    5.705     6.16 
+465.16775|FAPI|p9_pstate_parameter_block.C: %s   0.645     0.71     0.71    0.775     0.84     0.97 
+465.16780|FAPI|p9_pstate_parameter_block.C: %s   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+465.16785|FAPI|p9_pstate_parameter_block.C: %sQuad 0:    3.44   3.2400000000000002    3.435     3.62     3.89    4.214 
+465.16790|FAPI|p9_pstate_parameter_block.C: %sQuad 1:  3.2400000000000002    3.435     3.62     3.89     4.15    4.474 
+465.16796|FAPI|p9_pstate_parameter_block.C: %sQuad 2:   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+465.16800|FAPI|p9_pstate_parameter_block.C: %sQuad 3:   1.815    1.945     2.75   2.1400000000000001    2.334    2.524 
+465.16806|FAPI|p9_pstate_parameter_block.C: %sQuad 4:   1.815    1.945   2.99999999999997   2.1400000000000001    2.334    2.524 
+465.16811|FAPI|p9_pstate_parameter_block.C: %sQuad 5:   1.815    1.945     2.75   2.1400000000000001    2.334    2.524 
+465.16816|FAPI|p9_pstate_parameter_block.C: %s  4.684999999999999     4.67     4.67     4.67     4.67     4.67 
+465.16820|FAPI|p9_pstate_parameter_block.C: %s   83.5     83.0     83.0     83.0     83.0     83.0  
+465.16824|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16827|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16831|FAPI|p9_pstate_parameter_block.C: %sQuad 0:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16835|FAPI|p9_pstate_parameter_block.C: %sQuad 1:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16839|FAPI|p9_pstate_parameter_block.C: %sQuad 2:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16843|FAPI|p9_pstate_parameter_block.C: %sQuad 3:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16847|FAPI|p9_pstate_parameter_block.C: %sQuad 4:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16851|FAPI|p9_pstate_parameter_block.C: %sQuad 5:   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16855|FAPI|p9_pstate_parameter_block.C: %s   83.0     83.0     83.0     83.0     83.0     83.0  
+465.16859|FAPI|p9_pstate_parameter_block.C: ---------------------------------------------------------------------------------------
+465.16861|FAPI_I|p9_pstate_parameter_block.C: < p9_pstate_parameter_block
+465.16864|FAPI|p9_hcode_image_build.C: Magic Word 0x43504d525f322e30 Copy Start Index 0x000075f0
+465.16899|FAPI|p9_hcode_image_build.C: CME PS Offset 0x000003d3 x32= 0x00007a60
+465.16901|FAPI|p9_hcode_image_build.C: Copying OCC P-State Parameter Block
+465.16903|FAPI|p9_hcode_image_build.C: PPMR GEN PSTABLE 16384(KB)
+465.16922|FAPI|p9_hcode_image_build.C: << buildParameterBlock
+465.16924|FAPI|p9_hcode_image_build.C: >> updateCpmrCmeRegion
+465.16958|FAPI|p9_hcode_image_build.C: Custom Len 0x00000016
+465.16962|FAPI|p9_hcode_image_build.C: ========================= CME Header Start ==================================
+465.16963|FAPI|p9_hcode_image_build.C:   HC Offset       :   0x00000000
+465.16965|FAPI|p9_hcode_image_build.C:   HC Size         :   0x000075F0
+465.16966|FAPI|p9_hcode_image_build.C:   PS Offset       :   0x00000000
+465.16968|FAPI|p9_hcode_image_build.C:   PS Size         :   0x00000000
+465.16969|FAPI|p9_hcode_image_build.C:   CR Offset       :   0x000075F0
+465.16970|FAPI|p9_hcode_image_build.C:   CR Ovrd Offset  :   0x00000000
+465.16972|FAPI|p9_hcode_image_build.C:   CR Size         :   0x00000418
+465.16974|FAPI|p9_hcode_image_build.C:   CSR Offset      :   0x000003D1 (Real offset / 32) 
+465.16977|FAPI|p9_hcode_image_build.C:   CSR Length      :   0x00000002 (Real length / 32)
+465.16978|FAPI|p9_hcode_image_build.C:   CME PS Offset   :   0x000003D3
+465.16981|FAPI|p9_hcode_image_build.C:   SCOM Offset     :   0x000003E7 (Real offset / 32)
+465.16982|FAPI|p9_hcode_image_build.C:   SCOM Area Len   :   0x00000200
+465.16984|FAPI|p9_hcode_image_build.C:   CPMR Phy Add    :   0x00000001fda00000
+465.16986|FAPI|p9_hcode_image_build.C:   Timebase (Hz)   :   0x01BCE39A (29156250)
+465.16988|FAPI|p9_hcode_image_build.C:   UnSecure HOMER  :   0x00000001fda00000
+465.16992|FAPI|p9_hcode_image_build.C: ========================= CME Header End ==================================
+465.16995|FAPI|p9_hcode_image_build.C: ==========================CPMR Header===========================================
+465.16998|FAPI|p9_hcode_image_build.C:  CPMR Ver         : 0xF11EAD9C
+465.16999|FAPI|p9_hcode_image_build.C:  CME HC Offset    : 0x000020C0
+465.17000|FAPI|p9_hcode_image_build.C:  CME HC Length    : 0x000075F0
+465.17002|FAPI|p9_hcode_image_build.C:  PS  Offset       : 0x00041800
+465.17003|FAPI|p9_hcode_image_build.C:  PS  Length       : 0x00000000
+465.17005|FAPI|p9_hcode_image_build.C:  CR  Offset       : 0x00048DF0
+465.17006|FAPI|p9_hcode_image_build.C:  CR  Length       : 0x00000418
+465.17007|FAPI|p9_hcode_image_build.C:  CSR Offset       : 0x00002491
+465.17009|FAPI|p9_hcode_image_build.C:  CSR Length       : 0x00000002
+465.17010|FAPI|p9_hcode_image_build.C:  Core SCOM Offset : 0x00040000
+465.17011|FAPI|p9_hcode_image_build.C:  Core SCOM Length : 0x00001800
+465.17012|FAPI|p9_hcode_image_build.C:  Max SCOM Entries : 0x0000000F
+465.17014|FAPI|p9_hcode_image_build.C:  Quad0 P-State    : 0x000024A9
+465.17015|FAPI|p9_hcode_image_build.C:  Quad1 P-State    : 0x000024D5
+465.17017|FAPI|p9_hcode_image_build.C:  Quad2 P-State    : 0x00000000
+465.17018|FAPI|p9_hcode_image_build.C:  Quad3 P-State    : 0x00000000
+465.17019|FAPI|p9_hcode_image_build.C:  Quad4 P-State    : 0x00000000
+465.17021|FAPI|p9_hcode_image_build.C:  Quad5 P-State    : 0x00000000
+465.17024|FAPI|p9_hcode_image_build.C: ==================================CPMR Ends=====================================
+465.17026|FAPI|p9_hcode_image_build.C: << updateCpmrCmeRegion
+465.17176|FAPI|p9_hcode_image_build.C: >> updateQpmrHeader
+465.17179|FAPI|p9_hcode_image_build.C: ==============================QPMR==================================
+465.17181|FAPI|p9_hcode_image_build.C:   Quad SCOM Offset        : 0x00020000
+465.17183|FAPI|p9_hcode_image_build.C:   Quad SCOM Length        : 0x00001800
+465.17185|FAPI|p9_hcode_image_build.C: << updateQpmrHeader
+465.20695|FAPI|p9_hcode_image_build.C: >> updatePgpeHeader
+465.20698|FAPI|p9_hcode_image_build.C: >> populateEpsilonL2ScomReg
+465.20849|FAPI|p9_hcode_image_build.C: << populateEpsilonL2ScomReg
+465.20852|FAPI|p9_hcode_image_build.C: << populateEpsilonL3ScomReg
+465.20854|FAPI|p9_hcode_image_build.C: >> populateNcuRngBarScomReg
+465.21014|FAPI|p9_hcode_image_build.C: >> validateSramImageSize
+465.21020|FAPI_I|p9_hcode_image_build.C: SGPE SRAM Image Size : 0x0000CD8C Size Check : SUCCESS
+465.21023|FAPI_I|p9_hcode_image_build.C: CME SRAM Image Size : 0x00007EE0 Size Check : SUCCESS
+465.21026|FAPI_I|p9_hcode_image_build.C: PGPE SRAM Image Size : 0x0000BFF0 Size Check : SUCCESS
+465.21027|FAPI|p9_hcode_image_build.C: << validateSramImageSize
+465.21030|FAPI|p9_hcode_image_build.C: >> updateImageFlags
+465.21182|FAPI|p9_hcode_image_build.C: CME Flag Value                : 0x00000000
+465.21184|FAPI|p9_hcode_image_build.C: CME QM Flag Value             : 0xf100
+465.21187|FAPI|p9_hcode_image_build.C: SGPE Flag Value               : 0x04000000
+465.21189|FAPI|p9_hcode_image_build.C: SGPE Chtm Config              : 0x0000000000000000
+465.21191|FAPI|p9_hcode_image_build.C: PGPE Flag Value               : 0x0000f032
+465.21192|FAPI|p9_hcode_image_build.C: << updateImageFlags
+465.21194|FAPI|p9_hcode_image_build.C: >> setFabricIds
+465.21196|FAPI|p9_hcode_image_build.C: << setFabricIds
+465.21197|FAPI|p9_hcode_image_build.C: >> updateGpeAttributes
+465.21199|FAPI|p9_hcode_image_build.C: << updateGpeAttributes
+465.21200|FAPI|p9_hcode_image_build.C: >> customizeMagicWord
+465.21202|FAPI|p9_hcode_image_build.C: =========== Header Magic Words Info ===========
+465.21205|FAPI|p9_hcode_image_build.C: QPMR Magic Word 		:		 QPMR_1.0 ( 0x51504d525f312e30 ) 
+465.21208|FAPI|p9_hcode_image_build.C: CPMR Magic Word 		:		 CPMR_2.0 ( 0x43504d525f322e30 ) 
+465.21211|FAPI|p9_hcode_image_build.C: PPMR Magic Word 		:		 PPMR_1.0 ( 0x50504d525f312e30 ) 
+465.21214|FAPI|p9_hcode_image_build.C: SGPE Magic Word 		:		 SGPE_1.0 ( 0x534750455f312e30 ) 
+465.21217|FAPI|p9_hcode_image_build.C: CME Magic Word 		:		 CME__1.0 ( 0x434d455f5f312e30 ) 
+465.21220|FAPI|p9_hcode_image_build.C: PGPE Magic Word 		:		 PGPE_1.0 ( 0x504750455f312e30 ) 
+465.21223|FAPI|p9_hcode_image_build.C: =========== Header Magic Words Info Ends ===========
+465.21224|FAPI|p9_hcode_image_build.C: << customizeMagicWord
+465.21227|FAPI_I|p9_hcode_image_build.C: << p9_hcode_image_build
+465.22802|ISTEPS_TRACE|applyHcodeGenCpuRegs SUCCESS 
+465.23641|FAPI|p9_setup_runtime_wakeup_mode.C: > p9_setup_runtime_wakeup_mode
+465.23684|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0106 0000000000000000
+465.23689|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c1 : 00000000200F0106 1800000000000000
+465.23693|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0106 0004000000000000
+465.23699|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c3 : 00000000200F0106 1804000000000000
+465.23703|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0106 0004000000000000
+465.23708|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c4 : 00000000200F0106 1804000000000000
+465.23713|SCAN|TRACE : GETSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0106 0004000000000000
+465.23717|SCAN|TRACE : PUTSCOM     :  pu.core:k0:n0:s0:p00:c7 : 00000000200F0106 1804000000000000
+465.23719|FAPI|p9_setup_runtime_wakeup_mode.C: < p9_setup_runtime_wakeup_mode
+465.23930|ISTEPS_TRACE|host_build_stop_image exit
+472.33333|SCOM|doMulticastWorkaround on 00050000 for 50040018
+472.33389|SCOM|doMulticastWorkaround on 00050000 for 50040009
+472.33463|ERRL|I>Got an error log Msg - Type: 0x00000039
+472.33464|ERRL|I>Flush message received
+472.33466|INITSVC|<<doIstep: step 15, substep 1
+472.33469|INITSVC|>>doIstep: step 15, substep 2, task proc_set_pba_homer_bar

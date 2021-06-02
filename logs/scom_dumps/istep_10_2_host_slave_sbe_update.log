@@ -1,0 +1,465 @@
+405.71904|ISTEP 10. 2 - host_slave_sbe_update
+405.74693|I2C|>>i2cResetActiveMasters(): i2cProcessType=0x7, i_functional=1, i_engineSelect=0xF0
+405.74696|I2C|>>i2cProcessActiveMasters(): Type=0x7 Operation=1 Bus Speed=0 Functional=1 engineSelect=0xF0
+405.74764|I2C|I>i2cProcessActiveMasters: I2C Master Procs: 1
+405.74766|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=1
+405.74769|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0x00050000 reg:0x0000000000000000
+405.74771|I2C|I>i2cProcessActiveMasters: reset engine: 1, reset_level=1
+405.74923|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=0
+405.74929|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=1
+405.74936|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=2
+405.74941|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=1, port=3
+405.74957|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=2
+405.74958|I2C|I>i2cProcessActiveMasters: reset engine: 2, reset_level=1
+405.74966|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/0 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.74967|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.74974|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/1 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.74975|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.74982|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/2 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.74984|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.74990|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/3 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.74992|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.74998|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/4 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75000|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75007|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/5 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75008|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75015|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/6 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75016|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75023|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/7 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75025|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75031|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/8 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75033|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75039|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/9 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75041|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75048|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/10 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75049|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75056|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/11 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75058|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75064|I2C|I>Not doing i2cForceResetAndUnlock() for target=0x00050000: e/p= 2/12 due to P9 diag mode limitations.  Disable diag mode on e2 = 1, secure mode enabled = 0
+405.75066|I2C|I>i2cForceResetAndUnlock(): muxSelector=0xFF, muxPath=NULL
+405.75070|I2C|I>i2cProcessActiveMasters: Reset/Setup tgt=0x50000 engine=3
+405.75071|I2C|I>i2cProcessActiveMasters: reset engine: 3, reset_level=1
+405.75074|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=3, port=0
+405.75080|I2C|I>i2cForceResetAndUnlock() - Performing op on engine=3, port=1
+405.75091|I2C|<<i2cProcessActiveMasters(): err rc=0x0, plid=0x0
+405.75092|I2C|<<i2cResetActiveMasters(): err rc=0x0, plid=0x0
+405.79492|SBE|>>updateProcessorSbeSeeproms()
+405.80021|SBE|>>getSbeBootSeeprom()
+405.80025|SBE|<<getSbeBootSeeprom(): o_bootSide=0x0 (reg=0x0, tgt=0x50000, master)
+405.80026|SBE|>>getSbeBootSeeprom()
+405.80029|SBE|<<getSbeBootSeeprom(): o_bootSide=0x0 (reg=0x0, tgt=0x50000, master)
+405.81392|SBEIO|psudd: Sending Req = 000000000007D703 0000000000000100 00000000F85CD080 0000000000000000 to 00050000
+405.83313|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+405.83616|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+405.83769|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+405.83923|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+405.84112|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+405.84837|SBE|getSeepromSideVersionViaI2c(): eccStatus=0, sizeof o_info/sI=80, sI_ECC=90, origin golden=0
+406.03375|SBE|I>findSBEInPnor: sha512perEC Found in SBE
+406.12347|SBE|getSbeInfoState() - sbePnorPtr=0x81483000, sbePnorImageSize=0x00031C70 (203888)
+406.16975|SBE|pullTraceBuildInfo: image build date = 20201019, build time = 1659, build tag = f11ead9c425241931
+406.19553|SBE|getSbeInfoState() - hbblPnorPtr=0x10084aea860, hbblMaxSize=0x00005000 (20480)
+406.19555|SBE|getSbeInfoState() - Using System HW Key Hash: 0x40D487FF
+406.27803|SBE|>>appendHbblToSbe(): i_section=0x10084aea860, i_section_size=0x5000, i_image=0xc00abf20, io_image_size=0x36C70
+406.31530|SBE|I>ringOvd():No overrides in RINGOVD section found
+406.31578|HWAS_I|I>hwas.C: EQ Gard Bit:0x3f EC Gard Bit:0xa6ffffff on proc with HUID: 0x50000 
+406.48338|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x01,0x01)
+406.48676|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x1 size=0x10 rc=0x0
+406.52900|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x02,0x01)
+406.52915|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x2 size=0x10 rc=0x0
+406.52920|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x04,0x01)
+406.52935|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x4 size=0x10 rc=0x0
+406.52941|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x05,0x01)
+406.52959|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x5 size=0x10 rc=0x0
+406.52964|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x13,0x01)
+406.52987|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x13 size=0x0 rc=0x0
+406.52993|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x07,0x01)
+406.53008|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x7 size=0x10 rc=0x0
+406.53013|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x08,0x01)
+406.53028|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x8 size=0x10 rc=0x0
+406.53034|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x16,0x02)
+406.53048|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x16 size=0x14 rc=0x0
+406.53858|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x16,0x0,0x02)
+406.53861|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x17,0x02)
+406.53877|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x17 size=0x10 rc=0x0
+406.53883|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x19,0x02)
+406.53899|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x19 size=0x10 rc=0x0
+406.53905|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x1A,0x02)
+406.53921|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x1a size=0x10 rc=0x0
+406.53926|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x1C,0x02)
+406.53942|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x1c size=0x10 rc=0x0
+406.53948|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x1D,0x02)
+406.53964|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x1d size=0x10 rc=0x0
+406.53969|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x22,0x03)
+406.53985|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x22 size=0x10 rc=0x0
+406.53991|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x23,0x03)
+406.54007|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x23 size=0x10 rc=0x0
+406.54012|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x25,0x03)
+406.54028|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x25 size=0x10 rc=0x0
+406.54034|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x26,0x03)
+406.54050|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x26 size=0x10 rc=0x0
+406.54055|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x28,0x03)
+406.54071|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x28 size=0x10 rc=0x0
+406.54077|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x29,0x03)
+406.54093|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x29 size=0x10 rc=0x0
+406.54098|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x2B,0x03)
+406.54115|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x2b size=0x10 rc=0x0
+406.54121|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x2C,0x03)
+406.54137|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x2c size=0x10 rc=0x0
+406.54143|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x32,0x04)
+406.54160|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x32 size=0x10 rc=0x0
+406.54166|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x33,0x04)
+406.54183|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x33 size=0x10 rc=0x0
+406.54188|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x35,0x04)
+406.54205|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x35 size=0x10 rc=0x0
+406.54211|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x36,0x04)
+406.54229|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x36 size=0x10 rc=0x0
+406.54234|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x38,0x04)
+406.54251|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x38 size=0x10 rc=0x0
+406.54257|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x3F,0x05)
+406.54274|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x3f size=0x10 rc=0x0
+406.54470|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x3F,0x0,0x05)
+406.54473|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x40,0x05)
+406.54491|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x40 size=0x10 rc=0x0
+406.54496|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x42,0x05)
+406.54514|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x42 size=0x10 rc=0x0
+406.54521|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x43,0x05)
+406.54539|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x43 size=0x10 rc=0x0
+406.54544|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x45,0x05)
+406.54562|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x45 size=0x10 rc=0x0
+406.54568|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x46,0x05)
+406.54586|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x46 size=0x10 rc=0x0
+406.54592|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x4C,0x06)
+406.54610|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x4c size=0x10 rc=0x0
+406.54616|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x4D,0x06)
+406.54635|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x4d size=0x10 rc=0x0
+406.54640|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x4F,0x06)
+406.54663|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x4f size=0x0 rc=0x0
+406.54668|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x50,0x06)
+406.54691|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x50 size=0x0 rc=0x0
+406.54696|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x52,0x06)
+406.54715|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x52 size=0x10 rc=0x0
+406.54721|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x53,0x06)
+406.54740|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x53 size=0x10 rc=0x0
+406.54745|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x55,0x06)
+406.54764|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x55 size=0x10 rc=0x0
+406.54771|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x56,0x06)
+406.54790|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x56 size=0x10 rc=0x0
+406.54796|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x57,0x06)
+406.54815|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x57 size=0x10 rc=0x0
+406.54821|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x61,0x07)
+406.54841|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x61 size=0x14 rc=0x0
+406.54849|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x61,0x0,0x07)
+406.54852|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x62,0x07)
+406.54871|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x62 size=0x10 rc=0x0
+406.54877|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x64,0x07)
+406.54896|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x64 size=0x10 rc=0x0
+406.54903|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x67,0x07)
+406.54923|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x67 size=0x10 rc=0x0
+406.54929|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x69,0x07)
+406.54950|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x69 size=0x10 rc=0x0
+406.54956|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x102,0x07)
+406.54979|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x102 size=0x0 rc=0x0
+406.54985|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x104,0x07)
+406.55008|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x104 size=0x0 rc=0x0
+406.55013|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x106,0x07)
+406.55036|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x106 size=0x0 rc=0x0
+406.55041|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x108,0x07)
+406.55064|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x108 size=0x0 rc=0x0
+406.55069|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x109,0x07)
+406.55092|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x109 size=0x0 rc=0x0
+406.55098|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x77,0x09)
+406.55118|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x9, ringId=0x77 size=0x14 rc=0x0
+406.55136|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x77,0x0,0x09)
+406.55139|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x78,0x09)
+406.55159|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x9, ringId=0x78 size=0x10 rc=0x0
+406.55164|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x79,0x09)
+406.55184|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x9, ringId=0x79 size=0x10 rc=0x0
+406.55191|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x80,0x0a)
+406.55214|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xa, ringId=0x80 size=0x0 rc=0x0
+406.55219|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x81,0x0a)
+406.55242|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xa, ringId=0x81 size=0x0 rc=0x0
+406.55247|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x82,0x0a)
+406.55270|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xa, ringId=0x82 size=0x0 rc=0x0
+406.55275|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x89,0x0b)
+406.55297|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xb, ringId=0x89 size=0x0 rc=0x0
+406.55303|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x8A,0x0b)
+406.55325|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xb, ringId=0x8a size=0x0 rc=0x0
+406.55330|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x8B,0x0b)
+406.55352|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xb, ringId=0x8b size=0x0 rc=0x0
+406.55358|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x92,0x0c)
+406.55377|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xc, ringId=0x92 size=0x14 rc=0x0
+406.55549|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x92,0x0,0x0C)
+406.55553|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x93,0x0c)
+406.55573|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xc, ringId=0x93 size=0x10 rc=0x0
+406.55578|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x94,0x0c)
+406.55599|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xc, ringId=0x94 size=0x10 rc=0x0
+406.55605|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x9B,0x0d)
+406.55626|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xd, ringId=0x9b size=0x14 rc=0x0
+406.55635|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x9B,0x0,0x0D)
+406.55638|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x9C,0x0d)
+406.55659|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xd, ringId=0x9c size=0x10 rc=0x0
+406.55664|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x9E,0x0d)
+406.55685|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xd, ringId=0x9e size=0x10 rc=0x0
+406.55692|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA1,0x0e)
+406.55713|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xe, ringId=0xa1 size=0x10 rc=0x0
+406.55720|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA2,0x0e)
+406.55740|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xe, ringId=0xa2 size=0x10 rc=0x0
+406.55746|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA4,0x0e)
+406.55766|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xe, ringId=0xa4 size=0x10 rc=0x0
+406.55774|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA7,0x0f)
+406.55794|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xf, ringId=0xa7 size=0x10 rc=0x0
+406.55801|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA8,0x0f)
+406.55823|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xf, ringId=0xa8 size=0x10 rc=0x0
+406.55828|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAA,0x0f)
+406.55849|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xf, ringId=0xaa size=0x10 rc=0x0
+406.55856|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAD,0x10)
+406.55878|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xad size=0x10 rc=0x0
+406.56036|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAE,0x10)
+406.56058|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xae size=0x10 rc=0x0
+406.56063|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB1,0x10)
+406.56086|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb1 size=0x18 rc=0x0
+406.56104|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB1,0x0,0x10)
+406.56107|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB2,0x10)
+406.56128|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb2 size=0x10 rc=0x0
+406.56134|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB5,0x10)
+406.56155|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb5 size=0x1c rc=0x0
+406.56175|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB5,0x0,0x10)
+406.56178|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB6,0x10)
+406.56200|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb6 size=0x10 rc=0x0
+406.56205|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB8,0x10)
+406.56227|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb8 size=0x10 rc=0x0
+406.56234|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xBB,0x10)
+406.56257|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xbb size=0x10 rc=0x0
+406.56264|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xBD,0x10)
+406.56286|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xbd size=0x10 rc=0x0
+406.56293|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE1,0x20)
+406.56315|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x20, ringId=0xe1 size=0x164 rc=0x0
+406.56502|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE1,0x0,0x20)
+406.56505|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE2,0x20)
+406.56527|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x20, ringId=0xe2 size=0x18 rc=0x0
+406.56537|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE2,0x0,0x20)
+406.56540|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x10,0x01)
+406.78421|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x10 size=0x10 rc=0x0
+406.78427|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x11,0x01)
+406.78444|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x11 size=0x10 rc=0x0
+406.78449|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x14,0x01)
+406.78478|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x1, ringId=0x14 size=0x0 rc=0x0
+406.78483|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x1E,0x02)
+406.78499|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x1e size=0x10 rc=0x0
+406.78505|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x1F,0x02)
+406.78521|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x1f size=0x10 rc=0x0
+406.78526|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x20,0x02)
+406.78542|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x2, ringId=0x20 size=0x10 rc=0x0
+406.78547|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x2D,0x03)
+406.78564|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x2d size=0x18 rc=0x0
+406.78570|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x2D,0x0,0x03)
+406.78573|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x2E,0x03)
+406.78589|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x2e size=0x10 rc=0x0
+406.78594|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x2F,0x03)
+406.78612|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x2f size=0x10 rc=0x0
+406.78617|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x30,0x03)
+406.78634|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x3, ringId=0x30 size=0x1c rc=0x0
+406.78641|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x30,0x0,0x03)
+406.78644|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x3A,0x04)
+406.78662|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x3a size=0x10 rc=0x0
+406.78667|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x3B,0x04)
+406.78685|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x4, ringId=0x3b size=0x10 rc=0x0
+406.78691|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x47,0x05)
+406.78708|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x47 size=0x1c rc=0x0
+406.78715|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x47,0x0,0x05)
+406.78718|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x48,0x05)
+406.78736|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x48 size=0x18 rc=0x0
+406.78742|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x48,0x0,0x05)
+406.78746|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x49,0x05)
+406.78764|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x5, ringId=0x49 size=0x14 rc=0x0
+406.78770|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0x49,0x0,0x05)
+406.78773|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x5A,0x06)
+406.78792|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x5a size=0x10 rc=0x0
+406.78797|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x5B,0x06)
+406.78826|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x5b size=0x0 rc=0x0
+406.78831|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x5C,0x06)
+406.78849|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x5c size=0x10 rc=0x0
+406.78855|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x5D,0x06)
+406.78873|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x6, ringId=0x5d size=0x10 rc=0x0
+406.78879|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x71,0x07)
+406.78898|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x71 size=0x10 rc=0x0
+406.78903|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x71,0x08)
+406.78922|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x8, ringId=0x71 size=0x10 rc=0x0
+406.78927|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x73,0x07)
+406.78956|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x73 size=0x0 rc=0x0
+406.78961|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x73,0x08)
+406.78990|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x8, ringId=0x73 size=0x0 rc=0x0
+406.78995|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x10A,0x07)
+406.79024|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x7, ringId=0x10a size=0x0 rc=0x0
+406.79030|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x10A,0x08)
+406.79059|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x8, ringId=0x10a size=0x0 rc=0x0
+406.79064|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x7C,0x09)
+406.79084|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x9, ringId=0x7c size=0x10 rc=0x0
+406.79089|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x85,0x0a)
+406.79118|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xa, ringId=0x85 size=0x0 rc=0x0
+406.79123|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x8E,0x0b)
+406.79152|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xb, ringId=0x8e size=0x0 rc=0x0
+406.79158|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x97,0x0c)
+406.79177|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xc, ringId=0x97 size=0x10 rc=0x0
+406.79183|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0x9F,0x0d)
+406.79202|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xd, ringId=0x9f size=0x10 rc=0x0
+406.79208|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xA5,0x0e)
+406.79227|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xe, ringId=0xa5 size=0x10 rc=0x0
+406.79232|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xAB,0x0f)
+406.79252|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0xf, ringId=0xab size=0x10 rc=0x0
+406.79258|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x10)
+406.79279|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdc size=0x18 rc=0x0
+406.79290|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x10)
+406.79293|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x10)
+406.79313|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb9 size=0x134 rc=0x0
+406.79324|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x10)
+406.79327|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x10)
+406.79348|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdd size=0x10 rc=0x0
+406.79354|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x10)
+406.79377|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xde size=0x10 rc=0x0
+406.79382|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x10)
+406.79407|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdf size=0x30 rc=0x0
+406.79417|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x10)
+406.79420|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x21)
+406.79447|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x21, ringId=0xe4 size=0x1c rc=0x0
+406.79459|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x21)
+406.79462|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x10)
+406.79482|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xb9 size=0x134 rc=0x0
+406.79493|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x10)
+406.79496|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x10)
+406.79518|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdd size=0x10 rc=0x0
+406.79523|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x10)
+406.79547|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xde size=0x10 rc=0x0
+406.79552|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x10)
+406.80370|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x10, ringId=0xdf size=0x34 rc=0x0
+406.80381|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x10)
+406.80384|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x23)
+406.80411|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x23, ringId=0xe4 size=0x1c rc=0x0
+406.80422|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x23)
+406.80425|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDC,0x11)
+406.80446|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdc size=0x18 rc=0x0
+406.80457|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDC,0x0,0x11)
+406.80461|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x11)
+406.80481|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xb9 size=0x134 rc=0x0
+406.80492|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x0,0x11)
+406.80495|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x11)
+406.80517|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdd size=0x10 rc=0x0
+406.80523|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x11)
+406.80546|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xde size=0x10 rc=0x0
+406.80551|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x11)
+406.80576|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdf size=0x5c rc=0x0
+406.80587|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x0,0x11)
+406.80590|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x24)
+406.80616|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x24, ringId=0xe4 size=0x1c rc=0x0
+406.80627|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x24)
+406.80630|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xB9,0x11)
+406.80649|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xb9 size=0x134 rc=0x0
+406.80660|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xB9,0x1,0x11)
+406.80663|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDD,0x11)
+406.80714|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdd size=0x10 rc=0x0
+406.80720|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDE,0x11)
+406.80743|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xde size=0x10 rc=0x0
+406.80749|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xDF,0x11)
+406.80774|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x11, ringId=0xdf size=0x50 rc=0x0
+406.80784|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xDF,0x1,0x11)
+406.80787|FAPI|p9_xip_customize.C: _fetch_and_insert_vpd_ring: (ringId,chipletId) = (0xE4,0x27)
+406.80813|FAPI_I|p9_mvpd_ring_funcs.C: mvpdRingFuncFind: exit chipletId=0x27, ringId=0xe4 size=0x1c rc=0x0
+406.80823|FAPI|p9_xip_customize.C: Successfully added VPD ring: (ringId,evenOdd,chipletId)=(0xE4,0x0,0x27)
+406.80825|FAPI_I|p9_xip_customize.C: bootCoreMask value: 0x00590000
+406.82055|SBE|>>getHwKeyHashFromSbeImage: i_target=0x50000, i_seeprom=2, i_image_ptr=0xc0000000: reading from memory
+406.82058|SBE|<<getHwKeyHashFromSbeImage: err rc=0x0, plid=0x0, o_hash=0x40D487FF
+406.82211|SBE|I>locateHbblIdStringBfr() : start search pBfr=0xC0000000, BfrLen=0x31C70, pSearchStart=0xC0031BF0
+406.82213|SBE|I>locateHbblIdStringBfr() : string found pString=0xC0031358
+406.82258|SBE|I>locateHbblIdStringBfr() : Eye Catcher + string Bfr = 
+~[0x0000] 4842424c 20494420 53545249 4e47203d    *HBBL ID STRING =*
+~[0x0010] 686f7374 626f6f74 2d613264 64626633    *hostboot-a2ddbf3*
+~[0x0020] 2f686269 626c2e62 696e0000 00000000    */hbibl.bin......*
+~[0x0030] 00000000 00000000 00000000 00000000    *................*
+~[0x0040] 00000000 00000000 00000000 00000000    *................*
+~[0x0050] 00000000 00000000 00000000 00000000    *................*
+~[0x0060] 00000000 00000000 00000000 00000000    *................*
+~[0x0070] 00000000 00000000 00000000 00000000    *................*
+~[0x0080] 00000000 00000000 00000000 00000000    *................*
+406.82916|SBE|getSbeInfoState() - procCustomizeSbeImg(): maxSize=0x38D20, actSize=0x366C0, crc=0x12F6CF92
+406.83073|SBE|I>SBE Update tgt=0x50000: Seeprom0 flagged as clean: pnor=0, crc=0 (custom=0x12F6CF92/s0=0x12F6CF92), isSimics=0
+406.83078|SBE|I>SBE Update tgt=0x50000: Seeprom1 dirty: pnor=1, crc=1 (custom=0x12F6CF92/s1=0x771C9E25), isSimics=0
+406.83082|SBE|PNOR Version
+~[0x0000] cd5fc5ee 00b06a07 cc6b6dbf 70a24eda    *._....j..km.p.N.*
+406.83087|SBE|Seeprom0: Image Version
+~[0x0000] cd5fc5ee 00b06a07 cc6b6dbf 70a24eda    *._....j..km.p.N.*
+406.83091|SBE|Seeprom1: Image Version
+~[0x0000] 4192fa33 29ef5176 9e56ec44 71f3ba7f    *A..3).Qv.V.Dq...*
+406.83132|SBE|MVPD SB
+~[0x0000] 0212f6cf 92cd5fc5 ee00b06a 07cc6b6d    *......_....j..km*
+~[0x0010] bf70a24e da82a76a b9771c9e 254192fa    *.p.N...j.w..%A..*
+~[0x0020] 3329ef51 769e56ec 4471f3ba 7f8c4b5d    *3).Qv.V.Dq....K]*
+~[0x0030] 5901343e 3b000006 7b663131 65616439    *Y.4>;...{f11ead9*
+~[0x0040] 63343235 32343139 33310020 0001343b    *c425241931. ..4;*
+~[0x0050] 1c000000 ea663632 39356339 63373532    *.....f6295c9c752*
+~[0x0060] 36666565 65380020 00000000 00000000    *6feee8. ........*
+~[0x0070] 00000000 00000000 00000000 00000000    *................*
+~[0x0080] 00                                     *.               *
+406.83138|SBE|I>SBE Update tgt=0x50000: side 0=clean, side 1=dirty. Boot side 0. Update side 1 (backup). Continue IPL. (sit=0x04, act=0x00000015)
+406.83162|SBE|getTargetUpdateActions() - New SBE Version Info
+~[0x0000] 00000001 12f6cf92 cd5fc5ee 00b06a07    *........._....j.*
+~[0x0010] cc6b6dbf 70a24eda 82a76ab9 491c3fbe    *.km.p.N...j.I.?.*
+~[0x0020] f6801029 c8e4ea55 e16bbbd1 b33dfe52    *...)...U.k...=.R*
+~[0x0030] 2f529853 42d7604f d6b886a1 a4bdd554    */R.SB.`O.......T*
+~[0x0040] 459a1bc8 9684b7a1 0000074a 00000000    *E..........J....*
+406.83164|sbe|System Performing SBE Update for PROC 0, side 1
+406.91807|SBE|I>updateSeepromSide(): Write New SBE Image for Target 0x50000 to Seeprom 3
+429.78644|PNOR|>>PnorIpmiDD::_writeFlash(i_addr=0x00134E00)> 
+430.08046|VPD|I>sendMboxWriteMsg: Send msg to FSP to write VPD type 000000C2, record 0, offset 0x5342
+430.08048|VPD|I>No SP Base Services, skipping VPD write
+430.08056|VPD|msg=
+~[0x0000] 000000c2 00000000 00004350 30305342    *..........CP00SB*
+~[0x0010] 00000000 00000081 00000000 00583908    *.............X9.*
+430.08096|VPD|extra=
+~[0x0000] 0212f6cf 92cd5fc5 ee00b06a 07cc6b6d    *......_....j..km*
+~[0x0010] bf70a24e da82a76a b912f6cf 92cd5fc5    *.p.N...j......_.*
+~[0x0020] ee00b06a 07cc6b6d bf70a24e da82a76a    *...j..km.p.N...j*
+~[0x0030] b901343e 3b000006 7b663131 65616439    *..4>;...{f11ead9*
+~[0x0040] 63343235 32343139 33310020 0001343e    *c425241931. ..4>*
+~[0x0050] 3b000006 7b663131 65616439 63343235    *;...{f11ead9c425*
+~[0x0060] 32343139 33310020 00000000 00000000    *241931. ........*
+~[0x0070] 00000000 00000000 00000000 00000000    *................*
+~[0x0080] 00                                     *.               *
+430.08100|SBE|I>performUpdateActions(): Successful SBE Update of HUID=0x00050000 SEEPROM 3
+430.08105|ERRL|E>Error created : PLID=90000008, RC=2212, Mod=0C, Userdata=0000003D12F6CF92 12F6CF9212F6CF92, Sev=INFORMATIONAL
+430.08110|ERRL|commitErrLog() called by 2200 for eid=90000008, Reasoncode=2212
+430.08112|ERRL|>>ErrlManager::sendErrlogToMessageQueue
+430.08113|ERRL|I>Send an error log to message queue to commit. eid=90000008
+430.08115|ERRL|<<ErrlManager::sendErrlogToMessageQueue
+430.08116|ERRL|I>Got an error log Msg - Type: 0x00000030
+430.08117|ERRL|WRN>> No callouts in elog 90000008
+430.08119|ERRL|Adding default callout EPUB_PRC_HB_CODE 
+430.08120|ERRL|>>addProcedureCallout(0x55, 0x1)
+430.08122|ERRL|<<addVersionInfo()
+430.18499|IPMI|wd: resetWatchDogTimer
+430.18500|IPMI|rp: queuing sync 18:22
+430.18502|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+430.18511|IPMI|dd: I>write ok 18:22 seq ba len 0
+430.19991|IPMI|dd: I>read b2h ok 1c:22 seq ba len 0 cc 0
+430.20058|SBE|<<updateProcessorSbeSeeproms()
+430.21122|ERRL|>>saveErrLogToPnor eid=90000008
+430.21124|ERRL|I>saveErrLogToPnor: INFORMATIONAL/RECOVERED log, skipping
+430.21125|ERRL|<<saveErrLogToPnor returning true
+430.21130|ERRL|>>sendErrLogToBmc errlogId 0x90000008, i_sendSels 1
+430.21131|ERRL|I>sendErrLogToBmc: 90000008 is INFORMATIONAL/RECOVERED; skipping
+430.21132|ERRL|<<sendErrLogToBmc
+430.30970|SBE|>>getSbeBootSeeprom()
+430.30976|SBE|<<getSbeBootSeeprom(): o_bootSide=0x0 (reg=0x0, tgt=0x50000, master)
+430.35106|SBEIO|psudd: Sending Req = 000000000008D703 0000000000000100 00000000F8689080 0000000000000000 to 00050000
+430.36712|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+430.37019|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+430.37173|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+430.37401|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+430.37565|SBE|getSeepromSideVersionViaI2c(): eccStatus=0, sizeof o_info/sI=80, sI_ECC=90, origin golden=0
+430.37575|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+430.42812|SCOM|doMulticastWorkaround on 00050000 for 50040018
+430.42865|SCOM|doMulticastWorkaround on 00050000 for 50040009
+430.43074|ERRL|I>Got an error log Msg - Type: 0x00000039
+430.43075|ERRL|I>Flush message received
+430.43669|INITSVC|<<doIstep: step 10, substep 2
+430.43820|INITSVC|>>doIstep: step 10, substep 4, task proc_cen_ref_clk_enable

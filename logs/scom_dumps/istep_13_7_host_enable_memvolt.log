@@ -1,0 +1,10 @@
+436.46433|ISTEP 13. 7 - host_enable_memvolt
+436.47250|ISTEPS_TRACE|>>call_host_enable_memvolt
+436.48228|HB_VOLT|call_host_enable_vddr no-op because mbox not available or system does not support dynamic voltages
+436.48229|ISTEPS_TRACE|<<call_host_enable_memvolt
+436.48637|SCOM|doMulticastWorkaround on 00050000 for 50040018
+436.48687|SCOM|doMulticastWorkaround on 00050000 for 50040009
+436.48750|ERRL|I>Got an error log Msg - Type: 0x00000039
+436.48751|ERRL|I>Flush message received
+436.48753|INITSVC|<<doIstep: step 13, substep 7
+436.48755|INITSVC|>>doIstep: step 13, substep 8, task mss_scominit

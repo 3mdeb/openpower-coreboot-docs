@@ -1,0 +1,15 @@
+404.42409|ISTEP  9. 8 - host_fbc_eff_config_aggregate
+404.45094|IPMI|wd: resetWatchDogTimer
+404.45095|IPMI|rp: queuing sync 18:22
+404.45096|IPMI|rp: W>Got message (0x18:0x22): l_is_pnor: 0
+404.45101|IPMI|dd: I>write ok 18:22 seq 43 len 0
+404.47769|IPMI|dd: I>read b2h ok 1c:22 seq 43 len 0 cc 0
+404.47776|ISTEPS_TRACE|call_host_fbc_eff_config_aggregate entry
+404.49453|FAPI|p9_fbc_smp_utils.C: (PROC): Start
+404.49455|ISTEPS_TRACE|call_host_fbc_eff_config_aggregate exit
+404.50367|SCOM|doMulticastWorkaround on 00050000 for 50040018
+404.50417|SCOM|doMulticastWorkaround on 00050000 for 50040009
+404.50480|ERRL|I>Got an error log Msg - Type: 0x00000039
+404.50481|ERRL|I>Flush message received
+404.50483|INITSVC|<<doIstep: step 9, substep 8
+404.50485|INITSVC|>>doIstep: step 10, substep 1, task proc_build_smp

@@ -1,0 +1,22 @@
+436.08292|ISTEP 13. 3 - mem_pll_initf
+436.08896|ISTEPS_TRACE|call_mem_pll_initf entry
+436.08967|ISTEPS_TRACE|Running p9_mem_pll_initf HWP on target HUID 00050000
+436.09953|FAPI|p9_mem_pll_initf.C: Entering ...
+436.12760|SCANDD|>>sbeScanPerformOp(targ=00250000,id=110,mode=00000004)
+436.12766|SBEIO|psudd: Sending Req = 000000000009D301 00000000006E0004 0000000000000000 0000000000000000 to 00050000
+436.13105|INTR|IntrRp::msgHandler() - LSI Interrupt Detected
+436.13108|INTR|IntrRp::msgHandler() lsiIntStatus 0x0004000000000000
+436.13111|INTR|IntrRp::msgHandler() External Interrupt found for pir: 0x0,interrupt type: 13
+436.13133|SBEIO|psudd: SbePsu::msgHandler got MSG_INTR message
+436.13152|INTR|IntrRp::completeInterruptProcessing() Removing pending interrupt for pir: 0x0,interrupt type: 13
+436.13842|SCANDD|<<exiting :: sbeScanPerformOp()
+436.13845|SCAN|TRACE : PUTRING w RingId_t    :  pu.mcbist:k0:n0:s0:p00:c0 : 000000000000006E
+436.13846|FAPI|p9_mem_pll_initf.C: Exiting ...
+436.13849|ISTEPS_TRACE|SUCCESS running p9_mem_pll_initf HWP on target HUID 00050000
+436.13850|ISTEPS_TRACE|call_mem_pll_initf exit
+436.15111|SCOM|doMulticastWorkaround on 00050000 for 50040018
+436.15164|SCOM|doMulticastWorkaround on 00050000 for 50040009
+436.15226|ERRL|I>Got an error log Msg - Type: 0x00000039
+436.15227|ERRL|I>Flush message received
+436.15229|INITSVC|<<doIstep: step 13, substep 3
+436.15231|INITSVC|>>doIstep: step 13, substep 4, task mem_pll_setup

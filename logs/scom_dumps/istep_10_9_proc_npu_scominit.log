@@ -1,0 +1,11 @@
+431.01649|ISTEP 10. 9 - proc_npu_scominit
+431.02150|ISTEPS_TRACE|>>call_proc_npu_scominit entry
+431.02151|ISTEPS_TRACE|>>fapiHWPCallWrapper (p9_npu_scominit) entry
+431.02220|ISTEPS_TRACE|Running p9_npu_scominit HWP on target HUID 00050000
+431.04674|ISTEPS_TRACE|SUCCESS: p9_npu_scominit HWP returned success with target HUID 0x00050000
+431.04675|ISTEPS_TRACE|<<fapiHWPCallWrapper (p9_npu_scominit) exit
+431.04676|ISTEPS_TRACE|<<call_proc_npu_scominit exit
+431.05076|ERRL|I>Got an error log Msg - Type: 0x00000039
+431.05077|ERRL|I>Flush message received
+431.05079|INITSVC|<<doIstep: step 10, substep 9
+431.05082|INITSVC|>>doIstep: step 10, substep 10, task proc_pcie_scominit

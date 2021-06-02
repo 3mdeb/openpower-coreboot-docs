@@ -1,0 +1,11 @@
+400.62583|ISTEP  9. 4 - fabric_io_run_training
+400.63091|ISTEPS_TRACE|>>call_fabric_io_run_training entry
+400.63168|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(14 type) returned 1 entries
+400.63169|TARG|Get other endpoint target for target HUID 000E0001
+400.63170|TARG|Other endpoint target HUID 000E0004
+400.63248|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(40 type) returned 0 entries
+400.63250|ISTEPS_TRACE|<<call_fabric_io_run_training exit
+400.64705|ERRL|I>Got an error log Msg - Type: 0x00000039
+400.64707|ERRL|I>Flush message received
+400.64709|INITSVC|<<doIstep: step 9, substep 4
+400.64711|INITSVC|>>doIstep: step 9, substep 5, task fabric_post_trainadv

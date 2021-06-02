@@ -1,0 +1,24 @@
+430.43823|ISTEP 10. 4 - proc_cen_ref_clk_enable
+430.47446|ISTEPS_TRACE|call_proc_cen_ref_clock_enable enter
+430.47447|ISTEPS_TRACE|>>validateSecuritySettings
+430.47448|SECURE|>> traceSecuritySettings(): i_doConsoleTrace=0
+430.47450|SECURE|>> getAllSecurityRegisters: isTargetingLoaded=1 calledByRP=0
+430.47527|SECURE|I> getSecuritySwitch() err_rc:0x0000 huid:0x00050000 reg:0x0000000000000000
+430.47530|SECURE|<< getAllSecurityRegisters(): err rc=0x0, plid=0x0, o_regs.size()=2
+430.47535|SECURE|I> procTgt=0x50000: ProcSecurity::SwitchRegister(0x10005): 0x0000000000000000: SabBit=0, SULBit=0, SDBBit=0, CMFSIBit=0
+430.47539|SECURE|I> procTgt=0x50000: ProcCbsControl::StatusRegister(0x50001): 0x84C0000200000000: SabBit=0, SmdBit=1
+430.47540|SECURE|<< traceSecuritySettings(): err rc=0x0, plid=0x0
+430.47912|FAPI|p9_update_security_ctrl.C: p9_update_security_ctrl : Entering ...
+430.47914|FAPI|p9_update_security_ctrl.C: TPM Deconfig Attribute value : 0x1
+430.53502|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000000010005 0000000000000000
+430.53506|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 0000000000010005 0808000000000000
+430.53508|FAPI|p9_update_security_ctrl.C: p9_update_security_ctrl : Exiting ...
+430.54834|ISTEPS_TRACE|p9_update_security_ctrl successful for proc: 0x50000 tpm: 0x0
+430.54835|ISTEPS_TRACE|<<validateSecuritySettings
+430.54907|ISTEPS_TRACE|Fencing attached (present) membuf chips downstream from proc chip with HUID of 0x00050000
+430.54941|ISTEPS_TRACE|START: p9_cen_ref_clk_enable started on target HUID 00050000
+430.55431|ISTEPS_TRACE|SUCCESS : proc_cen_ref_clk_enablecompleted ok
+430.56080|ERRL|I>Got an error log Msg - Type: 0x00000039
+430.56081|ERRL|I>Flush message received
+430.56083|INITSVC|<<doIstep: step 10, substep 4
+430.56086|INITSVC|>>doIstep: step 10, substep 5, task proc_enable_osclite

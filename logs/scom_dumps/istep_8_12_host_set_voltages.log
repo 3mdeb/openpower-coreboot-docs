@@ -1,0 +1,296 @@
+399.17627|ISTEP  8.12 - host_set_voltages
+399.18056|ISTEPS_TRACE|>>call_host_set_voltages enter
+399.18126|ISTEPS_TRACE|Running p9_setup_evid HWP on processor target 00050000
+399.18716|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER - 8
+399.18837|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_ULTRATURBO                                    = 0x00000000 0
+399.18841|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_TURBO                                         = 0x00000000 0
+399.18845|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_NOMINAL                                       = 0x00000000 0
+399.18850|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_BIAS_POWERSAVE                                     = 0x00000000 0
+399.18854|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+399.18858|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_TURBO                              = 0x00000000 0
+399.18862|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+399.18866|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+399.18870|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VCS_BIAS                                    = 0x00000000 0
+399.18874|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_EXT_VDN_BIAS                                    = 0x00000000 0
+399.18878|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_ULTRATURBO                         = 0x00000000 0
+399.18883|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_TURBO                              = 0x00000000 0
+399.18887|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_NOMINAL                            = 0x00000000 0
+399.18891|FAPI|p9_pstate_parameter_block.C: ATTR_VOLTAGE_INT_VDD_BIAS_POWERSAVE                          = 0x00000000 0
+399.18895|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+399.18900|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_PB_MHZ                                             = 0x0000074a 1866
+399.18904|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_CEILING_MHZ                                   = 0x00000c80 3200
+399.18908|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_FREQUENCY_MHZ                                 = 0x00000868 2152
+399.19030|FAPI|p9_pstate_parameter_block.C: ATTR_SAFE_MODE_VOLTAGE_MV                                    = 0x0000029b 667
+399.19035|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_CORE_FLOOR_MHZ                                     = 0x0000074b 1867
+399.19039|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+399.19043|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+399.19047|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+399.19052|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+399.19056|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+399.19060|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+399.19064|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+399.19068|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+399.19073|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+399.19077|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_IVRM_DISABLE                                     = 0x00000000 0
+399.19081|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOF_DISABLE                                      = 0x00000000 0
+399.19085|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_VDM_DISABLE                                      = 0x00000000 0
+399.19089|FAPI|p9_pstate_parameter_block.C: ATTR_DPLL_VDM_RESPONSE                                       = 0x00000000 0
+399.19093|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_RESCLK_DISABLE                                   = 0x00000000 0
+399.19097|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_PSTATES_MODE                                     = 0x00000000 0
+399.19220|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_WOF_NOT_SUPPORTED                       = 0x00000000 0
+399.19224|FAPI|p9_pstate_parameter_block.C: ATTR_CHIP_EC_FEATURE_VDM_NOT_SUPPORTED                       = 0x00000000 0
+399.19228|FAPI|p9_pstate_parameter_block.C: ATTR_TDP_RDP_CURRENT_FACTOR                                  = 0x00000000 0
+399.19232|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_START_NS                        = 0x00000000 0
+399.19351|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_INC_UV_PER_US              = 0x00000000 0
+399.19356|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_RATE_DEC_UV_PER_US              = 0x00000000 0
+399.19360|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_TRANSITION_STABILIZATION_TIME_NS           = 0x00000000 0
+399.19364|FAPI|p9_pstate_parameter_block.C: ATTR_EXTERNAL_VRM_STEPSIZE                                   = 0x00000000 0
+399.19368|FAPI|p9_pstate_parameter_block.C: ATTR_NEST_LEAKAGE_PERCENT                                    = 0x0000003c 60
+399.19373|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_BUSNUM                                       = 0x00000000 0
+399.19377|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_AVSBUS_RAIL                                         = 0x00000000 0
+399.19381|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_BUSNUM                                       = 0x00000001 1
+399.19386|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_AVSBUS_RAIL                                         = 0x00000000 0
+399.19390|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_BUSNUM                                       = 0x00000000 0
+399.19395|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_AVSBUS_RAIL                                         = 0x00000001 1
+399.19399|FAPI|p9_pstate_parameter_block.C: ATTR_VCS_BOOT_VOLTAGE                                        = 0x000003bd 957
+399.19519|FAPI|p9_pstate_parameter_block.C: ATTR_VDD_BOOT_VOLTAGE                                        = 0x0000029b 667
+399.19523|FAPI|p9_pstate_parameter_block.C: ATTR_VDN_BOOT_VOLTAGE                                        = 0x000002be 702
+399.19528|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDD_UOHM                                = 0x000000fe 254
+399.19532|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDD_UOHM                                = 0x00000000 0
+399.19536|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDD_UV                                 = 0x00000000 0
+399.19540|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VDN_UOHM                                = 0x00000000 0
+399.19544|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VDN_UOHM                                = 0x00000032 50
+399.19548|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VDN_UV                                 = 0x00000000 0
+399.19552|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_LOADLINE_VCS_UOHM                                = 0x00000000 0
+399.19670|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_R_DISTLOSS_VCS_UOHM                                = 0x00000040 64
+399.19674|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_VRM_VOFFSET_VCS_UV                                 = 0x00000000 0
+399.19679|FAPI|p9_pstate_parameter_block.C: ATTR_FREQ_DPLL_REFCLOCK_KHZ                                  = 0x000208d5 133333
+399.19683|FAPI|p9_pstate_parameter_block.C: ATTR_PROC_DPLL_DIVIDER                                       = 0x00000008 8
+399.19687|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_OVERV_DISABLE                                = 0x00000000 0
+399.19691|FAPI|p9_pstate_parameter_block.C: ATTR_SYSTEM_WOV_UNDERV_DISABLE                               = 0x00000000 0
+399.19695|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_FORCE                                        = 0x00000000 0
+399.19699|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_SAMPLE_125US                                        = 0x00000000 0
+399.19705|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_MAX_DROOP_10THPCT                                   = 0x00000000 0
+399.19709|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_PERF_LOSS_THRESH_10THPCT                     = 0x00000000 0
+399.19713|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_INCR_10THPCT                            = 0x00000000 0
+399.19717|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_STEP_DECR_10THPCT                            = 0x00000000 0
+399.19721|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_MAX_10THPCT                                  = 0x00000000 0
+399.19725|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_UNDERV_VMIN_MV                                      = 0x00000000 0
+399.19729|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_VMAX_SETPOINT_MV                              = 0x00000000 0
+399.19733|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_INCR_10THPCT                             = 0x00000000 0
+399.19737|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_STEP_DECR_10THPCT                             = 0x00000000 0
+399.19742|FAPI|p9_pstate_parameter_block.C: ATTR_WOV_OVERV_MAX_10THPCT                                   = 0x00000000 0
+399.19746|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_start_ns             = 0x00001f40 8000 (internal default)
+399.19751|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_inc_uv_per_us   = 0x00002710 10000 (internal default)
+399.19756|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_transition_rate_dec_uv_per_us   = 0x00002710 10000 (internal default)
+399.19760|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_stabilization_time_us           = 0x00000005 5 (internal default)
+399.19765|FAPI|p9_pstate_parameter_block.C: Setting attr_ext_vrm_step_size_mv                    = 0x00000032 50 (internal default)
+399.19770|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_sample_125us                        = 0x00000002 2 (internal default)
+399.19774|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_max_droop_pct                       = 0x0000007d 125 (internal default)
+399.19779|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_incr_pct                 = 0x00000005 5 (internal default)
+399.19903|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_step_decr_pct                 = 0x00000005 5 (internal default)
+399.19907|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_max_pct                       = 0x00000000 0 (internal default)
+399.19912|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_overv_vmax_mv                       = 0x0000047e 1150 (internal default)
+399.19916|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_incr_pct                = 0x00000005 5 (internal default)
+399.19921|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_step_decr_pct                = 0x00000005 5 (internal default)
+399.19925|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_max_pct                      = 0x00000064 100 (internal default)
+399.19929|FAPI|p9_pstate_parameter_block.C: Setting attr_wov_underv_perf_loss_thresh_pct         = 0x00000005 5 (internal default)
+399.19934|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_PSTATES_ENABLED                                  = 0x00000000 0
+399.19938|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_RESCLK_ENABLED                                   = 0x00000000 0
+399.19942|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_VDM_ENABLED                                      = 0x00000000 0
+399.19946|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_IVRM_ENABLED                                     = 0x00000000 0
+399.19950|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOF_ENABLED                                      = 0x00000000 0
+399.19954|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_UNDERV_ENABLED                               = 0x00000000 0
+399.19958|FAPI|p9_pstate_parameter_block.C: fapi2::ATTR_WOV_OVERV_ENABLED                                = 0x00000000 0
+399.20074|FAPI|p9_pstate_parameter_block.C: VDD boot voltage = 667 mV (0x29b)
+399.20076|FAPI|p9_pstate_parameter_block.C: VCS boot voltage = 957 mV (0x3bd)
+399.20078|FAPI|p9_pstate_parameter_block.C: VDN boot voltage = 702 mV (0x2be)
+399.20118|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c0 : 00000000100F0151 0000060000000000
+399.20121|FAPI|p9_setup_evid.C: For EQ number 0, l_fmult 0x0000063F l_safe_mode_dpll_value 0x00000081 (129)
+399.20123|FAPI|p9_setup_evid.C: DPLL setting: Lowering the dpll frequency
+399.20127|SCAN|TRACE : PUTSCOM     :  pu.eq:k0:n0:s0:p00:c0 : 00000000100F0151 0810081008100000
+399.20131|FAPI|p9_setup_evid.C: l_vdm_vid_value 0x26 (38), i_safe_mode_values.safe_mode_mv 0x29b (667)
+399.20135|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c0 : 00000000100F01B6 0000000000000000
+399.20139|SCAN|TRACE : PUTSCOM     :  pu.eq:k0:n0:s0:p00:c0 : 00000000100F01B6 2600000000000000
+399.20144|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F0151 0000060000000000
+399.20148|FAPI|p9_setup_evid.C: For EQ number 1, l_fmult 0x0000063F l_safe_mode_dpll_value 0x00000081 (129)
+399.20150|FAPI|p9_setup_evid.C: DPLL setting: Lowering the dpll frequency
+399.20154|SCAN|TRACE : PUTSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F0151 0810081008100000
+399.20157|FAPI|p9_setup_evid.C: l_vdm_vid_value 0x26 (38), i_safe_mode_values.safe_mode_mv 0x29b (667)
+399.20162|SCAN|TRACE : GETSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F01B6 0000000000000000
+399.20166|SCAN|TRACE : PUTSCOM     :  pu.eq:k0:n0:s0:p00:c1 : 00000000100F01B6 2600000000000000
+399.20323|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C710 820FC00000000000
+399.20327|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C711 0008000000000000
+399.20328|FAPI|p9_avsbus_lib.C: Nest frequency value is 1866
+399.20330|FAPI|p9_avsbus_lib.C: AVSBus frequency value is 10
+399.20331|FAPI|p9_avsbus_lib.C: Divider value is 22
+399.20334|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C712 9058400000000000
+399.20337|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C713 0000000000000000
+399.20338|FAPI|p9_setup_evid.C: Setting voltage for VDD to 667 mV
+399.20341|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20343|FAPI|p9_avsbus_lib.C: Sending idle frame of all 1s
+399.20345|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 FFFFFFFFFFFFFFFF
+399.20349|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20352|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20355|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 7007FFFA00000000
+399.20358|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20362|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14044EFE00000000
+399.20363|FAPI|p9_avsbus_lib.C: Voltage value read is 1102 mV
+399.20366|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14044EFE00000000
+399.20368|FAPI|p9_setup_evid.C: Decreasing voltage - delta = 435
+399.20369|FAPI|p9_setup_evid.C: Target voltage = 1052; Present voltage = 1102
+399.20371|FAPI|p9_setup_evid.C: Moving voltage to 1052; retry count = 0
+399.20374|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20377|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 400020E200000000
+399.20380|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20383|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20385|FAPI|p9_setup_evid.C: New delta = 385
+399.20386|FAPI|p9_setup_evid.C: Target voltage = 1002; Present voltage = 1052
+399.20388|FAPI|p9_setup_evid.C: Moving voltage to 1002; retry count = 0
+399.20391|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20394|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40001F5300000000
+399.20397|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20401|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20402|FAPI|p9_setup_evid.C: New delta = 335
+399.20403|FAPI|p9_setup_evid.C: Target voltage = 952; Present voltage = 1002
+399.20405|FAPI|p9_setup_evid.C: Moving voltage to 952; retry count = 0
+399.20408|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20411|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40001DC000000000
+399.20414|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20417|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20418|FAPI|p9_setup_evid.C: New delta = 285
+399.20420|FAPI|p9_setup_evid.C: Target voltage = 902; Present voltage = 952
+399.20421|FAPI|p9_setup_evid.C: Moving voltage to 902; retry count = 0
+399.20424|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20427|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40001C3700000000
+399.20431|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20434|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20435|FAPI|p9_setup_evid.C: New delta = 235
+399.20437|FAPI|p9_setup_evid.C: Target voltage = 852; Present voltage = 902
+399.20438|FAPI|p9_setup_evid.C: Moving voltage to 852; retry count = 0
+399.20441|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20444|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40001AA700000000
+399.20447|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20450|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20452|FAPI|p9_setup_evid.C: New delta = 185
+399.20453|FAPI|p9_setup_evid.C: Target voltage = 802; Present voltage = 852
+399.20455|FAPI|p9_setup_evid.C: Moving voltage to 802; retry count = 0
+399.20458|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20461|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 4000191100000000
+399.20464|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20467|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20469|FAPI|p9_setup_evid.C: New delta = 135
+399.20470|FAPI|p9_setup_evid.C: Target voltage = 752; Present voltage = 802
+399.20472|FAPI|p9_setup_evid.C: Moving voltage to 752; retry count = 0
+399.20475|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20478|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 4000178700000000
+399.20481|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20484|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20486|FAPI|p9_setup_evid.C: New delta = 85
+399.20487|FAPI|p9_setup_evid.C: Target voltage = 702; Present voltage = 752
+399.20489|FAPI|p9_setup_evid.C: Moving voltage to 702; retry count = 0
+399.20492|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20495|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 400015F700000000
+399.20498|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20501|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20502|FAPI|p9_setup_evid.C: New delta = 35
+399.20504|FAPI|p9_setup_evid.C: Target voltage = 667; Present voltage = 702
+399.20505|FAPI|p9_setup_evid.C: Moving voltage to 667; retry count = 0
+399.20508|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20511|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 400014D900000000
+399.20514|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20519|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20520|FAPI|p9_setup_evid.C: New delta = 0
+399.20675|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C730 820FC00000000000
+399.20678|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C731 0008000000000000
+399.20680|FAPI|p9_avsbus_lib.C: Nest frequency value is 1866
+399.20681|FAPI|p9_avsbus_lib.C: AVSBus frequency value is 10
+399.20682|FAPI|p9_avsbus_lib.C: Divider value is 22
+399.20685|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C732 9058400000000000
+399.20688|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C733 0000000000000000
+399.20689|FAPI|p9_setup_evid.C: Setting voltage for VDN to 702 mV
+399.20692|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20693|FAPI|p9_avsbus_lib.C: Sending idle frame of all 1s
+399.20696|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 FFFFFFFFFFFFFFFF
+399.20699|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20703|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20706|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 7007FFFA00000000
+399.20709|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20712|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 1403E8FF00000000
+399.20713|FAPI|p9_avsbus_lib.C: Voltage value read is 1000 mV
+399.20716|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 1403E8FF00000000
+399.20718|FAPI|p9_setup_evid.C: Decreasing voltage - delta = 298
+399.20720|FAPI|p9_setup_evid.C: Target voltage = 950; Present voltage = 1000
+399.20721|FAPI|p9_setup_evid.C: Moving voltage to 950; retry count = 0
+399.20724|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20727|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 40001DB400000000
+399.20730|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20734|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20735|FAPI|p9_setup_evid.C: New delta = 248
+399.20737|FAPI|p9_setup_evid.C: Target voltage = 900; Present voltage = 950
+399.20738|FAPI|p9_setup_evid.C: Moving voltage to 900; retry count = 0
+399.20741|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20744|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 40001C2100000000
+399.20747|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20751|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20752|FAPI|p9_setup_evid.C: New delta = 198
+399.20754|FAPI|p9_setup_evid.C: Target voltage = 850; Present voltage = 900
+399.20755|FAPI|p9_setup_evid.C: Moving voltage to 850; retry count = 0
+399.20758|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20761|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 40001A9600000000
+399.20764|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20767|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20769|FAPI|p9_setup_evid.C: New delta = 148
+399.20770|FAPI|p9_setup_evid.C: Target voltage = 800; Present voltage = 850
+399.20772|FAPI|p9_setup_evid.C: Moving voltage to 800; retry count = 0
+399.20775|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20778|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 4000190700000000
+399.20781|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20784|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20786|FAPI|p9_setup_evid.C: New delta = 98
+399.20787|FAPI|p9_setup_evid.C: Target voltage = 750; Present voltage = 800
+399.20789|FAPI|p9_setup_evid.C: Moving voltage to 750; retry count = 0
+399.20911|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20914|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 4000177200000000
+399.20917|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20920|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20922|FAPI|p9_setup_evid.C: New delta = 48
+399.20923|FAPI|p9_setup_evid.C: Target voltage = 702; Present voltage = 750
+399.20925|FAPI|p9_setup_evid.C: Moving voltage to 702; retry count = 0
+399.20928|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C737 4000000000000000
+399.20931|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C738 400015F700000000
+399.20934|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C736 0000000000000000
+399.20937|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C739 14FFFFFE00000000
+399.20939|FAPI|p9_setup_evid.C: New delta = 0
+399.20940|FAPI|p9_setup_evid.C: Setting voltage for VCS to 957 mV
+399.20943|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20944|FAPI|p9_avsbus_lib.C: Sending idle frame of all 1s
+399.20948|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 FFFFFFFFFFFFFFFF
+399.20951|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20954|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20957|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 700FFFFD00000000
+399.20960|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20963|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 140407FB00000000
+399.20965|FAPI|p9_avsbus_lib.C: Voltage value read is 1031 mV
+399.20968|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 140407FB00000000
+399.20969|FAPI|p9_setup_evid.C: Decreasing voltage - delta = 74
+399.20971|FAPI|p9_setup_evid.C: Target voltage = 981; Present voltage = 1031
+399.20972|FAPI|p9_setup_evid.C: Moving voltage to 981; retry count = 0
+399.20975|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20979|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40081EA800000000
+399.20982|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.20985|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.20986|FAPI|p9_setup_evid.C: New delta = 24
+399.20988|FAPI|p9_setup_evid.C: Target voltage = 957; Present voltage = 981
+399.20989|FAPI|p9_setup_evid.C: Moving voltage to 957; retry count = 0
+399.20992|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C717 4000000000000000
+399.20996|SCAN|TRACE : PUTSCOM     :  pu:k0:n0:s0:p00 : 000000000006C718 40081DEB00000000
+399.20999|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C716 0000000000000000
+399.21002|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 000000000006C719 14FFFFFE00000000
+399.21003|FAPI|p9_setup_evid.C: New delta = 0
+399.21004|ISTEPS_TRACE|Done with p9_setup_evid
+399.21006|ISTEPS_TRACE|<<call_host_set_voltages exit
+400.29713|ERRL|I>Got an error log Msg - Type: 0x00000039
+400.29715|ERRL|I>Flush message received
+400.29717|INITSVC|<<doIstep: step 8, substep 12
+400.29719|INITSVC|>>doIstep: step 9, substep 1, task fabric_erepair

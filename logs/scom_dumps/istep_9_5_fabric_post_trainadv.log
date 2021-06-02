@@ -1,0 +1,12 @@
+400.64714|ISTEP  9. 5 - fabric_post_trainadv
+400.65836|ISTEPS_TRACE|>>call_fabric_post_trainadv entry
+400.65912|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(14 type) returned 1 entries
+400.65914|TARG|Get other endpoint target for target HUID 000E0001
+400.65915|TARG|Other endpoint target HUID 000E0004
+400.65918|ISTEPS_TRACE|Connection bus list is empty. HWP call p9_io_xbus_post_trainadv will not be called.
+400.65995|TARG|PbusLinkSvc::collectPbusConnections - getAllChiplets(40 type) returned 0 entries
+400.65997|ISTEPS_TRACE|<<call_fabric_post_trainadv exit
+400.66850|ERRL|I>Got an error log Msg - Type: 0x00000039
+400.66852|ERRL|I>Flush message received
+400.66854|INITSVC|<<doIstep: step 9, substep 5
+400.66856|INITSVC|>>doIstep: step 9, substep 6, task proc_smp_link_layer

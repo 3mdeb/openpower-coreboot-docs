@@ -1,0 +1,16 @@
+398.83418|ISTEP  8. 4 - proc_check_slave_sbe_seeprom_complete
+398.83869|ISTEPS_TRACE|call_proc_check_slave_sbe_seeprom_complete entry
+398.83937|ISTEPS_TRACE|proc_check_slave_sbe_seeprom_complete: 1 procs in the system.
+398.83939|ISTEPS_TRACE|Master SBE found, HUID 00050000, skipping to look for Slave SBE's.
+398.83941|ISTEPS_TRACE|Running p9_getecid HWP on processor target 00050000
+398.84177|FAPI|p9_getecid.C: Entering ...
+398.88157|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000000018000 18E41840A1005180
+398.89484|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000000018001 A1044200000068DA
+398.89487|SCAN|TRACE : GETSCOM     :  pu:k0:n0:s0:p00 : 0000000000018002 0000000000002ED2
+398.89792|FAPI|p9_getecid.C: Exiting ...
+398.89793|ISTEPS_TRACE|SUCCESS : proc_getecid completed ok
+398.89795|ISTEPS_TRACE|call_proc_check_slave_sbe_seeprom_complete exit
+398.91490|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.91491|ERRL|I>Flush message received
+398.91493|INITSVC|<<doIstep: step 8, substep 4
+398.91496|INITSVC|>>doIstep: step 8, substep 5, task host_attnlisten_proc

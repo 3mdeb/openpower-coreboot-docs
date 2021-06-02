@@ -1,0 +1,7 @@
+398.82616|ISTEP  8. 3 - host_cbs_start
+398.83184|ISTEPS_TRACE|call_host_cbs_start entry
+398.83254|ISTEPS_TRACE|call_host_cbs_start exit
+398.83408|ERRL|I>Got an error log Msg - Type: 0x00000039
+398.83410|ERRL|I>Flush message received
+398.83412|INITSVC|<<doIstep: step 8, substep 3
+398.83415|INITSVC|>>doIstep: step 8, substep 4, task proc_check_slave_sbe_seeprom_complete

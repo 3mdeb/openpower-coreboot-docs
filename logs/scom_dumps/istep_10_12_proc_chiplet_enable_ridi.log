@@ -1,0 +1,36 @@
+433.30254|ISTEP 10.12 - proc_chiplet_enable_ridi
+433.31496|ISTEPS_TRACE|>>call_proc_chiplet_enable_ridi entry
+433.31499|ISTEPS_TRACE|>>fapiHWPCallWrapper (p9_chiplet_enable_ridi) entry
+433.31571|ISTEPS_TRACE|Running p9_chiplet_enable_ridi HWP on target HUID 00050000
+433.33012|FAPI|p9_chiplet_enable_ridi.C: Call p9_chiplet_enable_ridi_net_ctrl_action_function
+433.33013|FAPI|p9_chiplet_enable_ridi.C: Check for chiplet enable
+433.33019|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0040 80263F0100000000
+433.33021|FAPI|p9_chiplet_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+433.33025|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c7 : 00000000000F0042 00001C0000000000
+433.33028|FAPI|p9_chiplet_enable_ridi.C: Call p9_chiplet_enable_ridi_net_ctrl_action_function
+433.33030|FAPI|p9_chiplet_enable_ridi.C: Check for chiplet enable
+433.33035|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0040 80263F0100000000
+433.33036|FAPI|p9_chiplet_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+433.33041|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c8 : 00000000000F0042 00001C0000000000
+433.33044|FAPI|p9_chiplet_enable_ridi.C: Call p9_chiplet_enable_ridi_net_ctrl_action_function
+433.33045|FAPI|p9_chiplet_enable_ridi.C: Check for chiplet enable
+433.33050|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c13 : 00000000000F0040 B006030100000000
+433.33052|FAPI|p9_chiplet_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+433.33056|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c13 : 00000000000F0042 00001C0000000000
+433.33062|FAPI|p9_chiplet_enable_ridi.C: Call p9_chiplet_enable_ridi_net_ctrl_action_function
+433.33064|FAPI|p9_chiplet_enable_ridi.C: Check for chiplet enable
+433.33069|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c14 : 00000000000F0040 B006030100000000
+433.33070|FAPI|p9_chiplet_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+433.33075|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c14 : 00000000000F0042 00001C0000000000
+433.33078|FAPI|p9_chiplet_enable_ridi.C: Call p9_chiplet_enable_ridi_net_ctrl_action_function
+433.33079|FAPI|p9_chiplet_enable_ridi.C: Check for chiplet enable
+433.33084|SCAN|TRACE : GETSCOM     :  pu.perv:k0:n0:s0:p00:c15 : 00000000000F0040 B006030100000000
+433.33086|FAPI|p9_chiplet_enable_ridi.C: Enable Recievers, Drivers DI1 & DI2
+433.33090|SCAN|TRACE : PUTSCOM     :  pu.perv:k0:n0:s0:p00:c15 : 00000000000F0042 00001C0000000000
+433.33094|ISTEPS_TRACE|SUCCESS: p9_chiplet_enable_ridi HWP returned success with target HUID 0x00050000
+433.33095|ISTEPS_TRACE|<<fapiHWPCallWrapper (p9_chiplet_enable_ridi) exit
+433.33097|ISTEPS_TRACE|<<call_proc_chiplet_enable_ridi exit
+433.39771|ERRL|I>Got an error log Msg - Type: 0x00000039
+433.39772|ERRL|I>Flush message received
+433.39774|INITSVC|<<doIstep: step 10, substep 12
+433.39776|INITSVC|>>doIstep: step 10, substep 13, task host_rng_bist
