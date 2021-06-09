@@ -212,7 +212,7 @@ tail -c +$((0x1001)) skiboot.bin | unxz > skiboot.lid
 
    3. Start docker container
    ```
-   docker run --rm -it -v $PWD:/home/skiboot/skiboot -w /home/skiboot/skiboot docker.pkg.github.com/3mdeb/coreboot/coreboot-sdk /bin/bash
+   docker run --rm -it -v $PWD:/home/skiboot/skiboot -w /home/skiboot/skiboot 3mdeb/coreboot-sdk:c0c8be290dd9 /bin/bash
    ```
 
    4. Build the skiboot image
