@@ -81,9 +81,9 @@ In order to build coreboot image, follow the steps below:
    # or HTTPS alternatively
    git clone https://github.com/3mdeb/coreboot.git -b talos_2_support_ramstage
    ```
-   `talos_2_support_ramstage` - ramstage devlopment branch - merge requests should go here
-   `squashed_talos_2_support` - upstream branch, can be regularly pushed with force
-   `talos_2_support` - legacy branch for bootblock and romstage release - as of today nothing should be pushed here
+   `talos_2_support_ramstage` - ramstage devlopment branch - merge requests should go here.\
+   `squashed_talos_2_support` - upstream branch, can be regularly pushed with force.\
+   `talos_2_support` - legacy branch for bootblock and romstage release - as of today nothing should be pushed here.
 
 2. Get the submodules:
 
