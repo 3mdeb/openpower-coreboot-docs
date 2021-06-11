@@ -5,16 +5,15 @@ errlHndl_t TodSvc::todInit()
 
 void todInitHwp()
 {
-    TARGETING::Target* l_failingTodProc = NULL;
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiFailingProcTarget(l_failingTodProc);
-
-    p9_tod_init(TOD::getMDMT(TOD_PRIMARY)->getTopologyNode(), &l_fapiFailingProcTarget);
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiFailingProcTarget(NULL);
+    p9_tod_init(iv_todConfig[TOD_PRIMARY].iv_mdmt->getTopologyNode(), &l_fapiFailingProcTarget);
 }
 
-TodProc* getMDMT(const p9_tod_setup_tod_sel i_config) const
+tod_topology_node* getTopologyNode()
 {
-    return iv_todConfig[i_config].iv_mdmt;
+    return iv_tod_node_data;
 }
+
 
 void p9_tod_init(
     const tod_topology_node* i_tod_node,
@@ -57,7 +56,7 @@ void init_tod_node(
     }
 
     uint32_t l_tod_init_pending_count = 0;
-    while (l_tod_init_pending_count < P9_TOD_UTIL_TIMEOUT_COUNT)
+    while(l_tod_init_pending_count < P9_TOD_UTIL_TIMEOUT_COUNT)
     {
         fapi2::delay(P9_TOD_UTILS_HW_NS_DELAY, P9_TOD_UTILS_SIM_CYCLE_DELAY);
         uint64_t l_tod_fsm_reg;

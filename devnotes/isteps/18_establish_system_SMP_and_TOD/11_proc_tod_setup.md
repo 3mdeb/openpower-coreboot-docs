@@ -1,63 +1,22 @@
 void TodSvc::todSetup()
 {
-    errlHndl_t l_errHdl = NULL;
-    bool l_isTodRunning = false;
     TodTopologyManager l_primary();
-    l_primary.iv_topologyType = TOD_PRIMARY;
-    TOD::destroy(TOD_PRIMARY);
-    TOD::destroy(TOD_SECONDARY);
-    //Build the list of garded TOD targets
     TOD::buildGardedTargetsList();
-    //Build a set of datastructures to setup creation of the TOD topology
-    //We're going to setup TOD for this IPL
-    //1) Build a set of datastructures to setup creation of the TOD
-    //topologies.
     TOD::buildTodDrawers(TOD_PRIMARY);
-    l_primary.iv_topologyType = TOD_PRIMARY
-    //2) Ask the topology manager to setup the primary topology
     l_primary.create();
-    l_primary.dumpTopology();
-    //3) Call hardware procedures to configure the TOD hardware logic for
-    //the primary topology and to fill up the TOD regs.
     todSetupHwp(TOD_PRIMARY);
     todSaveRegsHwp(TOD_PRIMARY);
-    //Primary successfully configured
-    TOD::setConfigStatus(TOD_PRIMARY,true);
-    //Build datastructures for secondary topology
-    TOD::buildTodDrawers(TOD_SECONDARY);
-    //4) Ask the topology manager to setup the secondary topology
-    TodTopologyManager l_secondary();
-    l_secondary.iv_topologyType = TOD_SECONDARY;
-    l_secondary.create();
-    l_secondary.dumpTopology();
-    //5) Call hardware procedures to configure the TOD hardware logic for
-    //the secondary topology and to fill up the TOD regs.
-    todSetupHwp(TOD_SECONDARY);
-    //Secondary successfully configured
-    TOD::setConfigStatus(TOD_SECONDARY,true);
-    //Need to call this again if the secondary topology got set up,
-    //that would have updated more regs.
+    iv_todConfig[TOD_PRIMARY].iv_isConfigured = true;
     todSaveRegsHwp(TOD_PRIMARY);
-    //Done with TOD setup
-
-    l_primary.dumpTodRegs();
-    //If we are here then atleast Primary or both configurations were
-    //successfully setup. If both were successfuly setup then we can use
-    //writeTodProcData for either of them else we should call
-    //writeTodProcData for only primary.
-    //Ultimately it should be good enough to call the method for Primary
     TOD::writeTodProcData(TOD_PRIMARY);
-    TOD::clearGardedTargetsList();
 }
 
-void clearGardedTargetsList()
+const TodProcContainer& getProcs() const
 {
-    iv_gardedTargets.clear();
-    iv_gardListInitialized = false;
+    return iv_todProcList;
 }
 
-errlHndl_t TodControls :: writeTodProcData(
-        const p9_tod_setup_tod_sel i_config)
+void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
 {
     //As per the requirement specified by PHYP/HDAT, TOD needs to fill
     //data for every chip that can be installed on the system.
@@ -67,28 +26,21 @@ errlHndl_t TodControls :: writeTodProcData(
     //that does not exist on the system. All such entires will have default
     //non-significant values
 
-    TodChipData blank;
-    uint32_t l_maxProcCount = TOD::TodSvcUtil::getMaxProcsOnSystem();
-    Target* l_target = NULL;
-    iv_todChipDataVector.assign(l_maxProcCount,blank);
-
-    TARGETING::ATTR_ORDINAL_ID_type l_ordId = 0x0;
+    TARGETING::ATTR_ORDINAL_ID_type l_ordId = 0;
     //Ordinal Id of the processors that form the topology
 
     //Fill the TodChipData structures with the actual value in the
     //ordinal order
     for(TodDrawerContainer::iterator l_itr =
-            iv_todConfig[i_config].iv_todDrawerList.begin();
-            l_itr != iv_todConfig[i_config].iv_todDrawerList.end();
-            ++l_itr)
+        iv_todConfig[i_config].iv_todDrawerList.begin();
+        l_itr != iv_todConfig[i_config].iv_todDrawerList.end();
+        ++l_itr)
     {
-        const TodProcContainer&  l_procs =
-            (*l_itr)->getProcs();
+        const TodProcContainer& l_procs = (*l_itr)->getProcs();
 
-        for(TodProcContainer::const_iterator
-                l_procItr = l_procs.begin();
-                l_procItr != l_procs.end();
-                ++l_procItr)
+        for(TodProcContainer::const_iterator l_procItr = l_procs.begin();
+            l_procItr != l_procs.end();
+            ++l_procItr)
         {
             l_ordId = (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_ORDINAL_ID>();
             //Clear the default flag for this chip, defaults to
@@ -98,42 +50,35 @@ errlHndl_t TodControls :: writeTodProcData(
             //Fill the todChipData structure at position l_ordId
             //inside iv_todChipDataVector with TOD register data
             //values
-            (*l_procItr )->setTodChipData(iv_todChipDataVector[l_ordId]);
+            (*l_procItr)->setTodChipData(iv_todChipDataVector[l_ordId]);
             //Set flags to indicate if the proc chip is an MDMT
             //See if the current proc chip is MDMT of the primary
             //topology
-            if(getConfigStatus(TOD_PRIMARY) && getMDMT(TOD_PRIMARY))
+            if(getConfigStatus(TOD_PRIMARY)
+            && iv_todConfig[TOD_PRIMARY].iv_mdmt
+            && iv_todConfig[TOD_PRIMARY].iv_mdmt->getTarget()->getAttr<TARGETING::ATTR_HUID>()
+                == (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
             {
-                if (getMDMT(TOD_PRIMARY)->getTarget()->getAttr<TARGETING::ATTR_HUID>()
-                     == (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
-                {
-                    iv_todChipDataVector[l_ordId].header.flags |= TOD_PRI_MDMT;
-                }
+                iv_todChipDataVector[l_ordId].header.flags |= TOD_PRI_MDMT;
             }
             //See if the current proc chip is MDMT of the secondary
             //network
             //Note: The chip can be theoretically both primary and
             //secondary MDMDT
-            if (getConfigStatus(TOD_SECONDARY) && getMDMT(TOD_SECONDARY))
+            if(getConfigStatus(TOD_SECONDARY)
+            && iv_todConfig[TOD_SECONDARY].iv_mdmt
+            && iv_todConfig[TOD_SECONDARY].iv_mdmt->getTarget()->getAttr<TARGETING::ATTR_HUID>()
+                == (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
             {
-                if (getMDMT(TOD_SECONDARY)->getTarget()->getAttr<TARGETING::ATTR_HUID>()
-                    == (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
-                {
-                    iv_todChipDataVector[l_ordId].header.flags |= TOD_SEC_MDMT;
-                }
+                iv_todChipDataVector[l_ordId].header.flags |= TOD_SEC_MDMT;
             }
 
             ATTR_TOD_CPU_DATA_type l_tod_array;
             memcpy(l_tod_array, &iv_todChipDataVector[l_ordId],sizeof(TodChipData));
-            l_target = const_cast<Target *>((*l_procItr)->getTarget());
+            Target* l_target = const_cast<Target *>((*l_procItr)->getTarget());
             l_target->setAttr<ATTR_TOD_CPU_DATA>(l_tod_array);
         }
     }
-}
-
-void setConfigStatus(const p9_tod_setup_tod_sel i_config, const bool i_isConfigured )
-{
-    iv_todConfig[i_config].iv_isConfigured = i_isConfigured;
 }
 
 errlHndl_t todSetupHwp(const p9_tod_setup_tod_sel i_topologyType)
@@ -142,7 +87,7 @@ errlHndl_t todSetupHwp(const p9_tod_setup_tod_sel i_topologyType)
     errlHndl_t l_errHdl = NULL;
 
     //Get the MDMT
-    TodProc* l_pMDMT = TOD::getMDMT(i_topologyType);
+    TodProc* l_pMDMT = iv_todConfig[i_topologyType].iv_mdmt;
     p9_tod_setup_osc_sel l_selectedOsc = TOD_OSC_0;
 
     //Invoke the HWP by passing the topology tree (rooted at MDMT)
@@ -188,92 +133,8 @@ fapi_try_exit:
     return fapi2::current_err;
 }
 
-void TodTopologyManager::dumpTodRegs() const
+void TodControls ::pickMdmt(const p9_tod_setup_tod_sel i_config)
 {
-
-    static const char* topologynames[2] = {0};
-    topologynames[TOD_PRIMARY] = TOD_PRIMARY_TOPOLOGY;
-    topologynames[TOD_SECONDARY] = TOD_SECONDARY_TOPOLOGY;
-
-    fapi2::variable_buffer l_regData(64);
-    //Get the TOD drawers
-    TodDrawerContainer l_todDrwList;
-    TOD::getDrawers(iv_topologyType, l_todDrwList);
-    TodDrawerContainer::const_iterator l_drwItr = l_todDrwList.begin();
-    while(l_todDrwList.end() != l_drwItr)
-    {
-        //Get the procs on this drawer
-        TodProcContainer l_procList = (*l_drwItr)->getProcs();
-        TodProcContainer::const_iterator l_procItr =
-                                                        l_procList.begin();
-        while(l_procList.end() != l_procItr)
-        {
-            p9_tod_setup_conf_regs l_todRegs;
-            (*l_procItr)->getTodRegs(l_todRegs);
-            l_regData.set(l_todRegs.tod_m_path_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_pri_port_0_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_pri_port_1_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_sec_port_0_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_sec_port_1_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_s_path_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_i_path_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_pss_mss_ctrl_reg(), 0);
-            l_regData.set(l_todRegs.tod_chip_ctrl_reg(), 0);
-            ++l_procItr;
-        }
-        ++l_drwItr;
-    }
-}
-
-void TodTopologyManager::dumpTopology() const
-{
-
-    static const char* busnames[BUS_MAX+1] = {0};
-    busnames[NONE] = NO_BUS;
-    busnames[XBUS0] = X_BUS_0;
-    busnames[XBUS1] = X_BUS_1;
-    busnames[XBUS2] = X_BUS_2;
-
-    static const char* topologynames[2] = {0};
-    topologynames[TOD_PRIMARY] = TOD_PRIMARY_TOPOLOGY;
-    topologynames[TOD_SECONDARY] = TOD_SECONDARY_TOPOLOGY;
-
-    //Get the TOD drawers
-    TodDrawerContainer l_todDrwList;
-    TOD::getDrawers(iv_topologyType, l_todDrwList);
-    TodDrawerContainer::const_iterator l_drwItr = l_todDrwList.begin();
-    while(l_todDrwList.end() != l_drwItr)
-    {
-        //Get the procs on this drawer
-        TodProcContainer l_procList = (*l_drwItr)->getProcs();
-
-        TodProcContainer::const_iterator l_procItr = l_procList.begin();
-        //FIX_ME_BEFORE_PRODUCTION_TASK32
-        //bool l_ecmdTargetFound = false;
-        while(l_procList.end() != l_procItr)
-        {
-
-
-            TodProcContainer l_childList;
-            (*l_procItr)->getChildren(l_childList);
-            TodProcContainer::const_iterator l_childItr = l_childList.begin();
-            while(l_childList.end() != l_childItr)
-            {
-                ++l_childItr;
-            }
-            ++l_procItr;
-        }
-        ++l_drwItr;
-    }
-}
-
-errlHndl_t TodControls ::pickMdmt(const p9_tod_setup_tod_sel i_config)
-{
-
-   TOD_ENTER("Input config is 0x%.2X", i_config);
-
-   errlHndl_t l_errHdl = NULL;
-
    //MDMT is the master processor that drives TOD signals to all the remaining
    //processors on the system, as such wherever possible algorithm will try to
    //ensure that primary and secondary topology provides redundancy of MDMT.
@@ -287,18 +148,8 @@ errlHndl_t TodControls ::pickMdmt(const p9_tod_setup_tod_sel i_config)
 
     if(l_otherConfigMdmt)
     {
-        TOD_INF("MDMT(0x%.8X) is configured for the "
-                "opposite config(0x%.2X)",
-                GETHUID(l_otherConfigMdmt->getTarget()),
-                l_oppConfig);
         if(NULL == pickMdmt(l_otherConfigMdmt, i_config))
         {
-            TOD_INF("For config 0x%.2X, the only option for the MDMT "
-                    "is the MDMT(0x%.8X) chosen for "
-                    "the opposite config 0x%.2X",
-                    i_config,
-                    GETHUID(l_otherConfigMdmt->getTarget()),
-                    l_oppConfig);
 
             //Get the TodProc pointer to l_otherConfigMdmt from this
             //config's data structures.
@@ -357,16 +208,11 @@ errlHndl_t TodControls ::pickMdmt(const p9_tod_setup_tod_sel i_config)
             setMdmt(i_config, l_newMdmt, l_pTodDrw);
         }
     }
-    return l_errHdl;
 }
 
 void TodDrawer::getPotentialMdmts(
         TodProcContainer& o_procList) const
 {
-    TOD_ENTER("TodDrawer::getPotentialMdmts");
-    bool l_isGARDed = false;
-    errlHndl_t l_errHdl = NULL;
-
     const TARGETING::Target* l_procTarget = NULL;
 
     for(const auto & l_procItr : iv_todProcList)
@@ -375,42 +221,23 @@ void TodDrawer::getPotentialMdmts(
         l_procTarget = l_procItr->getTarget();
 
         //Check if the target is not black listed
-        if ( !(TOD::isProcBlackListed(l_procTarget)) )
+        if (!TOD::isProcBlackListed(l_procTarget))
         {
             //Check if the target is not garded
-            l_errHdl = TOD::checkGardStatusOfTarget(l_procTarget,
-                        l_isGARDed);
+            TARGETING::ATTR_HWAS_STATE_type l_state = l_procTarget->getAttr<TARGETING::ATTR_HWAS_STATE>();
 
-
-            TARGETING::ATTR_HWAS_STATE_type l_state =
-                l_procTarget->getAttr<TARGETING::ATTR_HWAS_STATE>();
-
-            if(!l_isGARDed
+            if(!(
+                iv_gardListInitialized
+                && iv_gardedTargets.end() != std::find(
+                    iv_gardedTargets.begin(),
+                    iv_gardedTargets.end(),
+                    GETHUID(l_procTarget)))
             || l_state.deconfiguredByEid == HWAS::DeconfigGard::CONFIGURED_BY_RESOURCE_RECOVERY)
             {
                 o_procList.push_back(l_procItr);
             }
         }
-        l_isGARDed = false;
     }
-}
-
-void TodControls::checkGardStatusOfTarget(
-        TARGETING::ConstTargetHandle_t i_target,
-        bool&  o_isTargetGarded )
-{
-    o_isTargetGarded =
-        iv_gardListInitialized
-        && iv_gardedTargets.end() != std::find(
-            iv_gardedTargets.begin(),
-            iv_gardedTargets.end(),
-            (GETHUID(i_target)))
-}
-
-void getDrawers(const p9_tod_setup_tod_sel i_config,
-                    TodDrawerContainer& o_drawerList) const
-{
-    o_drawerList = iv_todConfig[i_config].iv_todDrawerList;
 }
 
 void TodTopologyManager::create()
@@ -423,11 +250,11 @@ void TodTopologyManager::create()
     //(the TOD drawers other than the master TOD drawer)
     //4)Wire the procs in the slave TOD drawers.
     //1) Pick the MDMT.
-    TOD::pickMdmt(iv_topologyType);
+    TOD::pickMdmt(TOD_PRIMARY);
 
     //Get the TOD drawers
     TodDrawerContainer l_todDrwList;
-    TOD::getDrawers(iv_topologyType, l_todDrwList);
+    l_todDrwList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList;
     //Find the TOD system master drawer (the one in which the MDMT lies)
     TodDrawer* l_pMasterDrawer = NULL;
     for(TodDrawerContainer::const_iterator l_itr = l_todDrwList.begin();
@@ -474,7 +301,7 @@ void TodTopologyManager::create()
     }
 }
 
-errlHndl_t TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
+void TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
 {
 
     //The algorithm to wire the slave TOD drawers to the mater TOD
@@ -487,7 +314,7 @@ errlHndl_t TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
     */
 
     //Get the MDMT
-    TodProc* l_pMDMT = TOD::getMDMT(iv_topologyType);
+    TodProc* l_pMDMT = iv_todConfig[TOD_PRIMARY].iv_mdmt;
 
     //Get the procs in this TOD drawer
     TodProcContainer l_procs = i_pTodDrawer->getProcs();
@@ -510,7 +337,23 @@ errlHndl_t TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
     }
 }
 
-errlHndl_t TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
+errlHndl_t TodDrawer::findMasterProc(TodProc*& o_drawerMaster) const
+{
+    o_drawerMaster = NULL;
+    for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
+        l_procIter != iv_todProcList.end();
+        ++l_procIter)
+    {
+        if(iv_masterType == TodProc::TOD_MASTER
+        || iv_masterType == TodProc::DRAWER_MASTER)
+        {
+            o_drawerMaster = *l_procIter;
+            return;
+        }
+    }
+}
+
+void TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
 {
     //The algorithm to wire procs in a TOD drawer goes as follows :
     /*
@@ -528,17 +371,17 @@ errlHndl_t TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
     TodProcContainer l_targetsList = i_pTodDrawer->getProcs();
 
     //Push the drawer master onto the sources list
-    TodProc* l_pDrawerMaster = NULL;
-    l_errHdl = i_pTodDrawer->findMasterProc(l_pDrawerMaster);
+    TodProc* l_pDrawerMaster;
+    i_pTodDrawer->findMasterProc(l_pDrawerMaster);
     TodProcContainer l_sourcesList;
     l_sourcesList.push_back(l_pDrawerMaster);
 
     //Start connecting targets to sources
-    TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
-    TodProcContainer::iterator l_targetItr;
-    while(NULL == l_errHdl && l_sourcesList.end() != l_sourceItr)
+    for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
+        l_sourcesList.end() != l_sourceItr;
+        ++l_sourceItr;)
     {
-        for(l_targetItr = l_targetsList.begin();
+        for(TodProcContainer::iterator l_targetItr = l_targetsList.begin();
             l_targetItr != l_targetsList.end();)
         {
             bool l_connected = false;
@@ -557,14 +400,11 @@ errlHndl_t TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
                 ++l_targetItr;
             }
         }
-        ++l_sourceItr;
     }
 }
 
 void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
 {
-    errlHndl_t l_errHdl = NULL;
-
     TARGETING::TargetHandleList l_funcNodeTargetList;
 
     //Get the system pointer
@@ -614,9 +454,7 @@ void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
                 l_todDrawerIter != l_todDrawerList.end();
                 ++l_todDrawerIter)
             {
-                if((*l_todDrawerIter)->getId() ==
-                        l_funcNodeTargetList[l_nodeIndex]->
-                        getAttr<TARGETING::ATTR_ORDINAL_ID>())
+                if((*l_todDrawerIter)->getId() == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
                 {
                     //Add the proc to this TOD drawer, such that
                     //TodProc has the target pointer and the pointer to
@@ -658,35 +496,15 @@ void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
     }
 }
 
-void TodControls ::destroy(const p9_tod_setup_tod_sel i_config)
-{
-    for(TodDrawerContainer::iterator l_itr = iv_todConfig[i_config].iv_todDrawerList.begin();
-        l_itr != iv_todConfig[i_config].iv_todDrawerList.end();
-        ++l_itr)
-    {
-        if(*l_itr)
-        {
-            delete (*l_itr);
-        }
-    }
-    iv_todConfig[i_config].iv_todDrawerList.clear();
-    iv_todConfig[i_config].iv_mdmt = NULL;
-    iv_todConfig[i_config].iv_isConfigured = false;
-    iv_todChipDataVector.clear();
-    iv_BlackListedProcs.clear();
-    iv_gardedTargets.clear();
-}
-
 void TodControls::buildGardedTargetsList()
 {
-    errlHndl_t l_errHdl = NULL;
+    iv_gardedTargets.clear();
     iv_gardListInitialized = false;
-    clearGardedTargetsList();
 
-    TARGETING::Target* l_pSystemTarget = NULL;
-    TARGETING::targetService().getTopLevelTarget(l_pSystemTarget);
+    TARGETING::Target* SystemTarget = NULL;
+    TARGETING::targetService().getTopLevelTarget(SystemTarget);
     GardedUnitList_t l_gardedUnitList;
-    gardGetGardedUnits(l_pSystemTarget,l_gardedUnitList);
+    gardGetGardedUnits(SystemTarget, l_gardedUnitList);
 
     for(const auto & l_iter : l_gardedUnitList)
     {
@@ -696,23 +514,198 @@ void TodControls::buildGardedTargetsList()
     iv_gardListInitialized = true;
 }
 
+bool PNOR::isInhibitedSection(const uint32_t i_section)
+{
+#ifdef CONFIG_SECUREBOOT
+    bool retVal = false;
+
+    if ((i_section == ATTR_PERM ||
+         i_section == ATTR_TMP  ||
+         i_section == RINGOVD )
+         && SECUREBOOT::enabled() )
+    {
+        // Default to these sections not being allowed in secure mode
+        retVal = true;
+
+
+#ifndef __HOSTBOOT_RUNTIME
+        // This is the scenario where a section might be inhibited so check
+        // global struct from bootloader for this setting
+        retVal = !g_BlToHbDataManager.getAllowAttrOverrides();
+#else
+        // This is the scenario where a section might be inhibited so check
+        // attribute to determine if these sections are allowed
+        if (Util::isTargetingLoaded())
+        {
+            TARGETING::TargetService& tS = TARGETING::targetService();
+            TARGETING::Target* sys = nullptr;
+            (void) tS.getTopLevelTarget(sys);
+            retVal = !sys->getAttr<TARGETING::ATTR_ALLOW_ATTR_OVERRIDES_IN_SECURE_MODE>();
+       }
+#endif
+    }
+    return retVal;
+#else
+    return false;
+#endif
+}
+
+void PnorRP::getSectionInfo(PNOR::SectionId i_section = PNOR::GUARD_DATA, PNOR::SectionInfo_t& o_info )
+{
+    // inhibit any attempt to getSectionInfo on any attribute override
+    // sections if secureboot is enabled
+    bool l_inhibited = isInhibitedSection(PNOR::GUARD_DATA);
+
+    // copy my data into the external format
+    o_info.id = iv_TOC[PNOR::GUARD_DATA].id;
+    o_info.name = "GUARD";
+
+#ifdef CONFIG_SECUREBOOT
+    o_info.secure = iv_TOC[PNOR::GUARD_DATA].secure;
+    o_info.size = iv_TOC[PNOR::GUARD_DATA].size;
+    o_info.secureProtectedPayloadSize = 0; // for non secure sections
+                                            // the protected payload size
+                                            // defaults to zero
+    // If a secure section and has a secure header handle secure
+    // sections in SPnorRP's address space
+    if (o_info.secure)
+    {
+        uint8_t* l_vaddr = reinterpret_cast<uint8_t*>(iv_TOC[PNOR::GUARD_DATA].virtAddr);
+        // By adding VMM_VADDR_SPNOR_DELTA twice we can translate a pnor
+        // address into a secure pnor address, since pnor, temp, and spnor
+        // spaces are equidistant.
+        // See comments in SPnorRP::verifySections() method in spnorrp.C
+        // and the definition of VMM_VADDR_SPNOR_DELTA in vmmconst.h
+        // for specifics.
+        o_info.vaddr = reinterpret_cast<uint64_t>(l_vaddr) + VMM_VADDR_SPNOR_DELTA + VMM_VADDR_SPNOR_DELTA;
+
+        // Get size of the secured payload for the secure section
+        // Note: the payloadSize we get back is untrusted because
+        // we are parsing the header in pnor (non secure space).
+        size_t payloadTextSize = 0;
+        // Do an existence check on the container to see if it's non-empty
+        // and has valid beginning bytes. For optional Secure PNOR sections.
+
+        SECUREBOOT::ContainerHeader l_conHdr;
+        l_errhdl = l_conHdr.setHeader(l_vaddr);
+        if (l_errhdl)
+        {
+            break;
+        }
+        payloadTextSize = l_conHdr.payloadTextSize();
+
+        // skip secure header for secure sections at this point in time
+        o_info.vaddr += PAGESIZE;
+        // now that we've skipped the header we also need to adjust the
+        // size of the section to reflect that.
+        // Note: For unsecured sections, the header skip and size decrement
+        // was done previously in pnor_common.C
+        o_info.size -= PAGESIZE;
+
+        // Need to change size to accommodate for hash table
+        if (l_conHdr.sb_flags()->sw_hash)
+        {
+            o_info.vaddr += payloadTextSize;
+            // Hash page table needs to use containerSize as the base
+            // and subtract off header and hash table size
+            o_info.size = l_conHdr.totalContainerSize() - PAGE_SIZE - payloadTextSize;
+            o_info.hasHashTable = true;
+        }
+
+        // cache the value in SectionInfo struct so that we can
+        // parse the container header less often
+        o_info.secureProtectedPayloadSize = payloadTextSize;
+    }
+    else
+#endif
+    {
+        o_info.size = iv_TOC[PNOR::GUARD_DATA].size;
+        o_info.vaddr = iv_TOC[PNOR::GUARD_DATA].virtAddr;
+    }
+
+    o_info.flashAddr     = iv_TOC[PNOR::GUARD_DATA].flashAddr;
+    o_info.eccProtected  = iv_TOC[PNOR::GUARD_DATA].integrity & FFS_INTEG_ECC_PROTECT ? true : false;
+    o_info.sha512Version = iv_TOC[PNOR::GUARD_DATA].version & FFS_VERS_SHA512         ? true : false;
+    o_info.sha512perEC   = iv_TOC[PNOR::GUARD_DATA].version & FFS_VERS_SHA512_PER_EC  ? true : false;
+    o_info.readOnly      = iv_TOC[PNOR::GUARD_DATA].misc & FFS_MISC_READ_ONLY         ? true : false;
+    o_info.reprovision   = iv_TOC[PNOR::GUARD_DATA].misc & FFS_MISC_REPROVISION       ? true : false;
+    o_info.Volatile      = iv_TOC[PNOR::GUARD_DATA].misc & FFS_MISC_VOLATILE          ? true : false;
+    o_info.clearOnEccErr = iv_TOC[PNOR::GUARD_DATA].misc & FFS_MISC_CLR_ECC_ERR       ? true : false;
+}
+
+void _GardRecordIdSetup( void *&io_platDeconfigGard)
+{
+    // Get the PNOR Guard information
+    PNOR::SectionInfo_t l_section;
+    PNOR::getSectionInfo(PNOR::GUARD_DATA, l_section);
+    // Check if guard section exists, as certain configs ignore the above
+    // error (e.g. golden side has no GARD section)
+    if (l_section.size == 0)
+    {
+        break;
+    }
+
+    // allocate our memory and set things up
+    io_platDeconfigGard = malloc(sizeof(HBDeconfigGard));
+    HBDeconfigGard *l_hbDeconfigGard = (HBDeconfigGard *)io_platDeconfigGard;
+
+    l_hbDeconfigGard->iv_pGardRecords = reinterpret_cast<DeconfigGard::GardRecord *> (l_section.vaddr);
+    l_hbDeconfigGard->iv_maxGardRecords = l_section.size / sizeof(DeconfigGard::GardRecord);
+    l_hbDeconfigGard->iv_nextGardRecordId = 0;
+
+    DeconfigGard::GardRecord *l_pGardRecords = (DeconfigGard::GardRecord *)l_hbDeconfigGard->iv_pGardRecords;
+    for (uint32_t i = 0; i < l_hbDeconfigGard->iv_maxGardRecords; i++)
+    {
+        // if this gard record is already filled out
+        if (l_pGardRecords[i].iv_recordId != EMPTY_GARD_RECORDID
+        && l_pGardRecords[i].iv_recordId > l_hbDeconfigGard->iv_nextGardRecordId)
+        {
+            l_hbDeconfigGard->iv_nextGardRecordId = l_pGardRecords[i].iv_recordId;
+        }
+    }
+
+    // next record will start after the highest Id we found
+    l_hbDeconfigGard->iv_nextGardRecordId++;
+}
+
+void DeconfigGard::platGetGardRecords(
+    const Target * const SystemTarget,
+    GardRecords_t &o_records)
+{
+    o_records.clear();
+
+    _GardRecordIdSetup(iv_platDeconfigGard);
+    if (iv_platDeconfigGard)
+    {
+        HBDeconfigGard *l_hbDeconfigGard = (HBDeconfigGard *)iv_platDeconfigGard;
+        DeconfigGard::GardRecord * l_pGardRecords = (DeconfigGard::GardRecord *)l_hbDeconfigGard->iv_pGardRecords;
+        for (uint32_t i = 0; i < l_hbDeconfigGard->iv_maxGardRecords; i++)
+        {
+            if(l_pGardRecords[i].iv_recordId != EMPTY_GARD_RECORDID
+            && l_pGardRecords[i].iv_targetId == 0)
+            {
+                o_records.push_back(l_pGardRecords[i]);
+                break;
+            }
+        }
+    }
+}
+
 void TodControls::gardGetGardedUnits(
-    const TARGETING::Target* const i_pTarget,
+    const TARGETING::Target* const SystemTarget,
     GardedUnitList_t &o_gardedUnitList)
 {
     o_gardedUnitList.clear();
     HWAS::DeconfigGard::GardRecords_t l_gardRecords;
-    HWAS::theDeconfigGard().getGardRecords(i_pTarget, l_gardRecords);
+    platGetGardRecords(SystemTarget, l_gardRecords);
 
     for(const auto & l_iter : l_gardRecords)
     {
         TARGETING::Target * l_pTarget = NULL;
 
-        // getTargetFromPhysicalPath will either succeed or assert
-        getTargetFromPhysicalPath(l_iter.iv_targetId, l_pTarget);
+        l_pTarget = TARGETING::targetService().toTarget(i_path);
 
-        GardedUnit_t l_gardedUnit;
-        memset(&l_gardedUnit, 0, sizeof(GardedUnit_t));
+        GardedUnit_t l_gardedUnit = 0;
         l_gardedUnit.iv_huid = l_pTarget->getAttr<TARGETING::ATTR_HUID>();
         TARGETING::Target *l_pNodeTarget = NULL;
         if(l_pTarget->getAttr<TARGETING::ATTR_CLASS>() == TARGETING::CLASS_ENC
