@@ -1,4 +1,4 @@
-errlHndl_t TodSvc::todInit()
+void TodSvc::todInit()
 {
     todInitHwp();
 }
@@ -6,14 +6,8 @@ errlHndl_t TodSvc::todInit()
 void todInitHwp()
 {
     fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiFailingProcTarget(NULL);
-    p9_tod_init(iv_todConfig[TOD_PRIMARY].iv_mdmt->getTopologyNode(), &l_fapiFailingProcTarget);
+    p9_tod_init(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data, &l_fapiFailingProcTarget);
 }
-
-tod_topology_node* getTopologyNode()
-{
-    return iv_tod_node_data;
-}
-
 
 void p9_tod_init(
     const tod_topology_node* i_tod_node,
