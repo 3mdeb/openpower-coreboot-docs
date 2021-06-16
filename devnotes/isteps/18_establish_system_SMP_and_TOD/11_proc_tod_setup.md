@@ -1,12 +1,288 @@
 void TodSvc::todSetup()
 {
-    TodTopologyManager l_primary();
+    TodTopologyManager l_primary(); // NOOP
     TOD::buildGardedTargetsList();
     TOD::buildTodDrawers(TOD_PRIMARY);
     l_primary.create();
-    todSetupHwp(TOD_PRIMARY);
-    p9_tod_save_config(TOD::getMDMT(TOD_PRIMARY)->getTopologyNode());
+    p9_tod_setup(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
+    p9_tod_save_config(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
     TOD::writeTodProcData(TOD_PRIMARY);
+}
+
+struct tod_topology_node
+{
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>* i_target;
+    bool i_tod_master;
+    bool i_drawer_master;
+    p9_tod_setup_bus i_bus_rx;
+    p9_tod_setup_bus i_bus_tx;
+    std::list<tod_topology_node*> i_children;
+    p9_tod_setup_conf_regs o_todRegs;
+    uint32_t o_int_path_delay;
+};
+
+static void TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
+{
+    TodProcContainer l_targetsList = i_pTodDrawer->iv_todProcList;
+    TodProc* l_pDrawerMaster = NULL;
+    i_pTodDrawer->findMasterProc(l_pDrawerMaster);
+    TodProcContainer l_sourcesList;
+    l_sourcesList.push_back(l_pDrawerMaster);
+
+    for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
+        l_sourcesList.end() != l_sourceItr;
+        ++l_sourceItr;)
+    {
+        for(TodProcContainer::iterator l_targetItr = l_targetsList.begin();
+            l_targetItr != l_targetsList.end();)
+        {
+            bool l_connected = false;
+            (*l_sourceItr)->connect(*l_targetItr, TARGETING::TYPE_XBUS, l_connected);
+            if(l_connected)
+            {
+                l_sourcesList.push_back(*l_targetItr);
+                (*l_sourceItr)->addChild(*l_targetItr);
+                l_targetItr = l_targetsList.erase(l_targetItr);
+            }
+            else
+            {
+                ++l_targetItr;
+            }
+        }
+    }
+}
+
+static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
+{
+    l_pDrawerMaster = NULL;
+    for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
+        l_procIter != iv_todProcList.end();
+        ++l_procIter)
+    {
+        if((*l_procIter)->iv_masterType == TodProc::TOD_MASTER)
+        || ((*l_procIter)->iv_masterType == TodProc::DRAWER_MASTER)
+        {
+            l_pDrawerMaster = *l_procIter;
+            return;
+        }
+    }
+}
+
+static void TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
+{
+    for(TodProcContainer::iterator proc = i_pTodDrawer->iv_todProcList.begin();
+        proc != i_pTodDrawer->iv_todProcList.end();
+        ++proc)
+    {
+        bool l_connected;
+        iv_todConfig[TOD_PRIMARY].iv_mdmt->connect(*proc, TARGETING::TYPE_ABUS, l_connected);
+        if(l_connected)
+        {
+            iv_todConfig[TOD_PRIMARY].iv_mdmt->addChild(*proc);
+            (*proc)->iv_masterType = TodProc::DRAWER_MASTER;
+            (*proc)->iv_tod_node_data->i_drawer_master = true;
+            (*proc)->iv_tod_node_data->i_tod_master = true;
+            return;
+        }
+    }
+}
+
+static void TodProc::connect(
+    TodProc* i_destination,
+    const TARGETING::TYPE i_busChipUnitType,
+    bool& o_isConnected)
+{
+    o_isConnected = false;
+
+    if(iv_procTarget->getAttr<TARGETING::ATTR_HUID>() == i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>())
+    {
+        o_isConnected = true;
+        break;
+    }
+
+    TARGETING::TargetHandleList* l_pBusList;
+
+    //Check whether we've to connect over X or A bus
+    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
+    {
+        l_pBusList = &iv_xbusTargetList;
+    }
+    else if(TARGETING::TYPE_ABUS == i_busChipUnitType)
+    {
+        l_pBusList = &iv_abusTargetList;
+    }
+
+    TARGETING::PredicateCTM l_procFilter(TARGETING::CLASS_CHIP,TARGETING::TYPE_PROC);
+    TARGETING::PredicateIsFunctional l_funcFilter;
+    TARGETING::PredicateAttrVal<TARGETING::ATTR_HUID>l_huidFilter(i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>());
+    TARGETING::PredicatePostfixExpr l_resFilter;
+    l_resFilter.push(&l_procFilter).push(&l_funcFilter).And().push(&l_huidFilter).And();
+
+    TARGETING::TargetHandleList l_procList;
+    TARGETING::TargetHandleList l_busList;
+
+    for(TARGETING::TargetHandleList::iterator l_busIter = (*l_pBusList).begin(); l_busIter != (*l_pBusList).end() ;++l_busIter)
+    {
+        l_procList.clear();
+        l_busList.clear();
+        TARGETING::getPeerTargets(l_busList, *l_busIter, NULL);
+        TARGETING::getPeerTargets(l_procList, *l_busIter, &l_resFilter);
+        getBusPort(i_busChipUnitType, (*l_busIter)->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_tx);
+        getBusPort(i_busChipUnitType, l_busList[0]->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_rx);
+        o_isConnected = true;
+    }
+}
+
+static void TodProc::getBusPort(
+    const TARGETING::TYPE i_busChipUnitType,
+    const uint32_t i_busPort,
+    p9_tod_setup_bus& o_busPort) const
+{
+    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
+    {
+        switch(i_busPort)
+        {
+            case 0:
+                o_busPort = XBUS0;
+                break;
+            case 1:
+                o_busPort = XBUS1;
+                break;
+            case 2:
+                o_busPort = XBUS2;
+                break;
+            case 7:
+                o_busPort = XBUS7;
+                break;
+        }
+    }
+}
+
+static void getPeerTargets(
+          TARGETING::TargetHandleList& o_peerTargetList,
+    const Target*                      i_pSrcTarget,
+    const PredicateBase*               i_pResultFilter)
+{
+    Target* l_pPeerTarget = NULL;
+
+    // Clear the list
+    o_peerTargetList.clear();
+    // List to maintain all child targets which are found by get associated
+    // from the Src target with i_pPeerFilter predicate
+    TARGETING::TargetHandleList l_pSrcTarget_list;
+
+    // Create input master predicate here by taking in the i_pPeerFilter
+    TARGETING::PredicatePostfixExpr l_superPredicate;
+    TARGETING::PredicateAttrVal<TARGETING::ATTR_PEER_TARGET> l_notNullPeerExist(NULL, true);
+    l_superPredicate.push(&l_notNullPeerExist);
+
+    // Check if the i_srcTarget is the leaf node
+    if(i_pSrcTarget->tryGetAttr<TARGETING::ATTR_PEER_TARGET>(l_pPeerTarget))
+    {
+        if(l_superPredicate(i_pSrcTarget))
+        {
+            // Exactly one Peer Target to Cross
+            // Put this to input target list
+            l_pSrcTarget_list.push_back(const_cast<TARGETING::Target*>(i_pSrcTarget));
+        }
+    }
+    // Not a leaf node, find out all leaf node with valid PEER Target
+    else
+    {
+        TARGETING::targetService().getAssociated(
+            l_pSrcTarget_list,
+            i_pSrcTarget,
+            TARGETING::TargetService::CHILD,
+            &l_superPredicate);
+    }
+
+    // Now we have a list of input targets on which we have to find the peer
+    // Check if we have a result predicate filter to apply
+    if(i_pResultFilter == NULL)
+    {
+        // Simply get the Peer Target for all Src target in the list and
+        // return
+        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
+            pTargetIt != l_pSrcTarget_list.end();
+            ++pTargetIt)
+        {
+            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
+            o_peerTargetList.push_back(l_pPeerTgt);
+        }
+    }
+    // Result predicate filter is not NULL, we need to apply this predicate
+    // on each of the PEER Target found on the input target list
+    else
+    {
+        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
+            pTargetIt != l_pSrcTarget_list.end();
+            ++pTargetIt)
+        {
+            TARGETING::TargetHandleList l_peerTarget_list;
+            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
+
+            // Check whether this target matches the filter criteria
+            // or we have to look for ALL Parents matching the criteria.
+            if((*i_pResultFilter)l_pPeerTgt)
+            {
+                o_peerTargetList.push_back(l_pPeerTgt);
+            }
+            else
+            {
+                TARGETING::targetService().getAssociated(
+                    l_peerTarget_list,
+                    l_pPeerTgt,
+                    TARGETING::TargetService::PARENT,
+                    i_pResultFilter);
+                if(!l_peerTarget_list.empty())
+                {
+                    o_peerTargetList.push_back(l_peerTarget_list.front());
+                }
+            }
+        }
+    }
+    if (o_peerTargetList.size() > 1)
+    {
+        std::sort(o_peerTargetList.begin(),o_peerTargetList.end(), compareTargetHuid);
+    }
+}
+
+static void TodTopologyManager::create()
+{
+    TOD::pickMdmt();
+    TodDrawerContainer l_todDrwList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList;
+    TodDrawer* l_pMasterDrawer = NULL;
+    for(TodDrawerContainer::const_iterator drawer = l_todDrwList.begin();
+        drawer != l_todDrwList.end();
+        ++drawer)
+    {
+        if((*drawer)->iv_isTodMaster)
+        {
+            l_pMasterDrawer = *drawer;
+            break;
+        }
+    }
+    wireProcs(l_pMasterDrawer);
+    for(TodDrawerContainer::iterator drawer = l_todDrwList.begin();
+        drawer != l_todDrwList.end();
+        ++drawer)
+    {
+        if((*drawer)->iv_isTodMaster)
+        {
+            continue;
+        }
+        wireTodDrawer(*drawer);
+        wireProcs(*drawer);
+    }
+}
+
+void TodProc::addChild(TodProc* i_child)
+{
+    if(iv_procTarget->getAttr<TARGETING::ATTR_HUID>() != i_child->getTarget()->getAttr<TARGETING::ATTR_HUID>())
+    {
+        iv_childrenList.push_back(i_child);
+        iv_tod_node_data->i_children.push_back(i_child->getTopologyNode());
+    }
 }
 
 static void p9_tod_save_config(tod_topology_node* i_tod_node)
@@ -66,18 +342,6 @@ static void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
     }
 }
 
-static void todSetupHwp(const p9_tod_setup_tod_sel i_topologyType)
-{
-    //Get the MDMT
-    TodProc* l_pMDMT = iv_todConfig[i_topologyType].iv_mdmt;
-    p9_tod_setup(l_pMDMT->getTopologyNode());
-}
-
-tod_topology_node* getTopologyNode()
-{
-    return iv_tod_node_data;
-}
-
 static void p9_tod_setup(tod_topology_node* i_tod_node)
 {
     fapi2::ATTR_IS_MPIPL_Type l_is_mpipl;
@@ -85,10 +349,6 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
 
     if (l_is_mpipl)
     {
-        // Put the TOD in reset state, and clear the register
-        // PERV_TOD_PSS_MSS_CTRL_REG, we do it before the primary
-        // topology is configured and not repeat it to prevent overwriting
-        // the configuration.
         mpipl_clear_tod_node(i_tod_node);
     }
     calculate_node_delays(i_tod_node);
@@ -491,11 +751,130 @@ static void set_topology_delays(
     }
 }
 
+TodProc* TodControls ::pickMdmt(
+    const TodProc* i_otherConfigMdmt,
+    const p9_tod_setup_tod_sel& i_config,
+    const bool i_setMdmt)
+{
+    TodProc* l_newMdmt = NULL;
+    TodProc *l_pTodProc = NULL;
+    TodDrawer* l_pMasterDrw = NULL;
+    TodDrawerContainer l_todDrawerList =
+        iv_todConfig[i_config].iv_todDrawerList;
+    TodProcContainer l_procList;
+    uint32_t l_maxCoreCount;
+
+    //1.MDMT will be chosen from a node other than the node on which
+    //this MDMT exists, in case of multinode systems
+    //Iterate the list of TOD drawers
+    for (TodDrawerContainer::iterator l_todDrawerIter = l_todDrawerList.begin();
+        l_todDrawerIter != l_todDrawerList.end();
+        ++l_todDrawerIter)
+    {
+        if(i_otherConfigMdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
+            != (*l_todDrawerIter)->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>())
+        {
+            l_pTodProc = NULL;
+            l_procList.clear();
+            //Get the list of procs on this TOD drawer that have oscillator
+            //input. Each of them is a potential MDMT, choose the one with
+            //max no. of cores
+            uint32_t l_coreCount;
+            (*l_todDrawerIter)->getPotentialMdmts(l_procList);
+            (*l_todDrawerIter)->getProcWithMaxCores(NULL,
+                                    l_pTodProc,
+                                    l_coreCount,
+                                    &l_procList);
+            if(l_coreCount > l_maxCoreCount)
+            {
+                l_newMdmt = l_pTodProc;
+                l_maxCoreCount = l_coreCount;
+                l_pMasterDrw = *l_todDrawerIter;
+            }
+        }
+    }
+    if(l_newMdmt && i_setMdmt)
+    {
+        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+        l_pMasterDrw = NULL;
+        break;
+    }
+
+    //2.Try to find MDMT on a TOD drawer that is on the same physical
+    //node as the possible opposite MDMT but on different TOD drawer
+    l_maxCoreCount = 0;
+    for(const auto & l_todDrawerIter : l_todDrawerList)
+    {
+        if((i_otherConfigMdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
+                == l_todDrawerIter->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>())
+            && (i_otherConfigMdmt->getParentDrawer()->iv_todDrawerId
+                != l_todDrawerIter->iv_todDrawerId))
+        {
+            l_pTodProc = NULL;
+            l_coreCount = 0;
+            l_procList.clear();
+            //Get the list of procs on this TOD drawer that have oscillator
+            //input. Each of them is a potential MDMT, choose the one with
+            //max no. of cores
+            l_todDrawerIter->getPotentialMdmts(l_procList);
+            l_todDrawerIter->getProcWithMaxCores(NULL, l_pTodProc, l_coreCount, &l_procList);
+            if(l_coreCount > l_maxCoreCount)
+            {
+                l_newMdmt = l_pTodProc;
+                l_maxCoreCount = l_coreCount;
+                l_pMasterDrw = l_todDrawerIter;
+            }
+        }
+    }
+    if(l_newMdmt && i_setMdmt)
+    {
+        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+        l_pMasterDrw = NULL;
+        break;
+    }
+
+    //3.Try to find MDMT on the same TOD drawer as the TOD Drawer of
+    //opposite MDMT
+    l_maxCoreCount = 0;
+    for (const auto l_todDrawerIter : l_todDrawerList)
+    {
+        l_pTodProc = NULL;
+        l_coreCount = 0;
+        l_procList.clear();
+        if(i_otherConfigMdmt->getParentDrawer()->iv_todDrawerId == l_todDrawerIter->iv_todDrawerId)
+        {
+            //This  is the TOD drawer on which opposite MDMT exists,
+            //try to avoid processor chip of opposite MDMT while
+            //getting the proc with max cores
+            //Get the list of procs on this TOD drawer that have oscillator
+            //input. Each of them is a potential MDMT, choose the one with
+            //max no. of cores
+            l_todDrawerIter->getPotentialMdmts(l_procList);
+            l_todDrawerIter->getProcWithMaxCores(
+                i_otherConfigMdmt,
+                l_pTodProc,
+                l_coreCount,
+                &l_procList);
+            l_newMdmt = l_pTodProc;
+            l_pMasterDrw = l_todDrawerIter;
+            break;
+        }
+    }
+    if(l_newMdmt && i_setMdmt)
+    {
+        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+        l_pMasterDrw = NULL;
+        break;
+    }
+
+    return l_newMdmt;
+}
+
 static void TodControls ::pickMdmt()
 {
     if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
     {
-        if(NULL == pickMdmt())
+        if(NULL == pickMdmt(iv_todConfig[l_oppConfig].iv_mdmt, TOD_PRIMARY))
         {
             //Get the TodProc pointer to l_otherConfigMdmt from this
             //config's data structures.
@@ -509,31 +888,30 @@ static void TodControls ::pickMdmt()
                 {
                     if(proc->getTarget() == iv_todConfig[TOD_PRIMARY].iv_mdmt->getTarget())
                     {
-                        //Found l_otherConfigMdmt pointer
                         setMdmt(TOD_PRIMARY, proc, drawer);
                         break;
                     }
                 }
                 if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
                 {
-                    break;
+                    return;
                 }
             }
         }
     }
     else
     {
-        TodProc* l_newMdmt = NULL;
-        TodDrawer* l_pTodDrw = NULL;
+        TodProc* l_newMdmt;
+        TodDrawer* l_pTodDrw;
 
         //No MDMT configured yet. Our criteria to pick one is to
         //look at TOD drawers and pick the one with max no of cores
 
         for (const auto & l_drwItr: l_todDrawerList)
         {
-            TodProc* l_pTodProc = NULL;
-            uint32_t l_coreCount = 0;
-            uint32_t l_maxCoreCount = 0;
+            TodProc* l_pTodProc;
+            uint32_t l_coreCount;
+            uint32_t l_maxCoreCount;
             //Get the list of procs on this TOD drawer that have oscillator
             //input. Each of them is a potential MDMT, choose the one with
             //max no. of cores
@@ -557,14 +935,9 @@ static void TodControls ::pickMdmt()
 static void TodControls ::setMdmt(TodProc* i_mdmt, TodDrawer* i_masterDrawer)
 {
     iv_todConfig[TOD_PRIMARY].iv_mdmt = i_mdmt;
-    i_mdmt->setMasterType();
+    i_mdmt->iv_tod_node_data->i_drawer_master = true;
+    i_mdmt->iv_tod_node_data->i_tod_master = true;
     i_masterDrawer->iv_isTodMaster = true;
-}
-
-void TodProc::setMasterType()
-{
-    iv_tod_node_data->i_drawer_master = true;
-    iv_tod_node_data->i_tod_master = true;
 }
 
 static void TodDrawer::getProcWithMaxCores(
@@ -618,243 +991,6 @@ static void TodDrawer::getPotentialMdmts(TodProcContainer& o_procList) const
         {
             o_procList.push_back(l_procItr);
         }
-    }
-}
-
-static void TodTopologyManager::create()
-{
-    TOD::pickMdmt();
-    TodDrawerContainer l_todDrwList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList;
-    TodDrawer* l_pMasterDrawer = NULL;
-    for(TodDrawerContainer::const_iterator drawer = l_todDrwList.begin();
-        drawer != l_todDrwList.end();
-        ++drawer)
-    {
-        if((*drawer)->isMaster())
-        {
-            l_pMasterDrawer = *drawer;
-            break;
-        }
-    }
-    wireProcs(l_pMasterDrawer);
-    for(TodDrawerContainer::iterator drawer = l_todDrwList.begin();
-        drawer != l_todDrwList.end();
-        ++drawer)
-    {
-        if((*drawer)->isMaster())
-        {
-            continue;
-        }
-        wireTodDrawer(*drawer);
-        wireProcs(*drawer);
-    }
-}
-
-static void TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
-{
-    TodProc* l_pMDMT = iv_todConfig[TOD_PRIMARY].iv_mdmt;
-    TodProcContainer l_procs = i_pTodDrawer->iv_todProcList;
-
-    for(TodProcContainer::iterator proc = l_procs.begin();
-        proc != l_procs.end();
-        ++proc)
-    {
-        bool l_connected;
-        l_pMDMT->connect(*proc, TARGETING::TYPE_ABUS, l_connected);
-        if(l_connected)
-        {
-            l_pMDMT->addChild(*proc);
-            (*proc)->setMasterType();
-            break;
-        }
-    }
-}
-
-static void TodDrawer::findMasterProc(TodProc*& o_drawerMaster) const
-{
-    o_drawerMaster = NULL;
-    for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
-        l_procIter != iv_todProcList.end();
-        ++l_procIter)
-    {
-        o_drawerMaster = *l_procIter;
-        return;
-    }
-}
-
-static void TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
-{
-    TodProcContainer l_targetsList = i_pTodDrawer->iv_todProcList;
-    TodProc* l_pDrawerMaster;
-    i_pTodDrawer->findMasterProc(l_pDrawerMaster);
-    TodProcContainer l_sourcesList;
-    l_sourcesList.push_back(l_pDrawerMaster);
-
-    for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
-        l_sourcesList.end() != l_sourceItr;
-        ++l_sourceItr;)
-    {
-        for(TodProcContainer::iterator l_targetItr = l_targetsList.begin();
-            l_targetItr != l_targetsList.end();)
-        {
-            bool l_connected = false;
-            (*l_sourceItr)->connect(*l_targetItr, TARGETING::TYPE_XBUS, l_connected);
-            if(l_connected)
-            {
-                l_sourcesList.push_back(*l_targetItr);
-                (*l_sourceItr)->addChild(*l_targetItr);
-                l_targetItr = l_targetsList.erase(l_targetItr);
-            }
-            else
-            {
-                ++l_targetItr;
-            }
-        }
-    }
-}
-
-static void TodProc::connect(
-    TodProc* i_destination,
-    const TARGETING::TYPE i_busChipUnitType,
-    bool& o_isConnected)
-{
-    o_isConnected = false;
-
-    if(iv_procTarget->getAttr<TARGETING::ATTR_HUID>() == i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>())
-    {
-        o_isConnected = true;
-        break;
-    }
-
-    TARGETING::TargetHandleList* l_pBusList;
-
-    //Check whether we've to connect over X or A bus
-    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
-    {
-        l_pBusList = &iv_xbusTargetList;
-    }
-    else if(TARGETING::TYPE_ABUS == i_busChipUnitType)
-    {
-        l_pBusList = &iv_abusTargetList;
-    }
-
-    TARGETING::PredicateCTM l_procFilter(TARGETING::CLASS_CHIP,TARGETING::TYPE_PROC);
-    TARGETING::PredicateIsFunctional l_funcFilter;
-    TARGETING::PredicateAttrVal<TARGETING::ATTR_HUID>l_huidFilter(i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>());
-    TARGETING::PredicatePostfixExpr l_resFilter;
-    l_resFilter.push(&l_procFilter).push(&l_funcFilter).And().push(&l_huidFilter).And();
-
-    TARGETING::TargetHandleList l_procList;
-    TARGETING::TargetHandleList l_busList;
-
-    for(TARGETING::TargetHandleList::iterator l_busIter = (*l_pBusList).begin(); l_busIter != (*l_pBusList).end() ;++l_busIter)
-    {
-        l_procList.clear();
-        l_busList.clear();
-        TARGETING::getPeerTargets(l_busList, *l_busIter, NULL);
-        TARGETING::getPeerTargets(l_procList, *l_busIter, &l_resFilter);
-
-        if(l_procList.size())
-        {
-            getBusPort(
-                i_busChipUnitType,
-                (*l_busIter)->getAttr<TARGETING::ATTR_CHIP_UNIT>(),
-                i_destination->iv_tod_node_data->i_bus_tx);
-            getBusPort(
-                i_busChipUnitType,
-                l_busList[0]->getAttr<TARGETING::ATTR_CHIP_UNIT>(),
-                i_destination->iv_tod_node_data->i_bus_rx);
-            o_isConnected = true;
-        }
-    }
-}
-
-static void getPeerTargets(
-          TARGETING::TargetHandleList& o_peerTargetList,
-    const Target*                      i_pSrcTarget,
-    const PredicateBase*               i_pResultFilter)
-{
-    Target* l_pPeerTarget = NULL;
-
-    // Clear the list
-    o_peerTargetList.clear();
-    // List to maintain all child targets which are found by get associated
-    // from the Src target with i_pPeerFilter predicate
-    TARGETING::TargetHandleList l_pSrcTarget_list;
-
-    // Create input master predicate here by taking in the i_pPeerFilter
-    TARGETING::PredicatePostfixExpr l_superPredicate;
-    TARGETING::PredicateAttrVal<TARGETING::ATTR_PEER_TARGET> l_notNullPeerExist(NULL, true);
-    l_superPredicate.push(&l_notNullPeerExist);
-
-    // Check if the i_srcTarget is the leaf node
-    if(i_pSrcTarget->tryGetAttr<TARGETING::ATTR_PEER_TARGET>(l_pPeerTarget))
-    {
-        if(l_superPredicate(i_pSrcTarget))
-        {
-            // Exactly one Peer Target to Cross
-            // Put this to input target list
-            l_pSrcTarget_list.push_back(const_cast<TARGETING::Target*>(i_pSrcTarget));
-        }
-    }
-    // Not a leaf node, find out all leaf node with valid PEER Target
-    else
-    {
-        TARGETING::targetService().getAssociated(
-            l_pSrcTarget_list,
-            i_pSrcTarget,
-            TARGETING::TargetService::CHILD,
-            &l_superPredicate);
-    }
-
-    // Now we have a list of input targets on which we have to find the peer
-    // Check if we have a result predicate filter to apply
-    if(i_pResultFilter == NULL)
-    {
-        // Simply get the Peer Target for all Src target in the list and
-        // return
-        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
-            pTargetIt != l_pSrcTarget_list.end();
-            ++pTargetIt)
-        {
-            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
-            o_peerTargetList.push_back(l_pPeerTgt);
-        }
-    }
-    // Result predicate filter is not NULL, we need to apply this predicate
-    // on each of the PEER Target found on the input target list
-    else
-    {
-        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
-            pTargetIt != l_pSrcTarget_list.end();
-            ++pTargetIt)
-        {
-            TARGETING::TargetHandleList l_peerTarget_list;
-            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
-
-            // Check whether this target matches the filter criteria
-            // or we have to look for ALL Parents matching the criteria.
-            if((*i_pResultFilter)l_pPeerTgt)
-            {
-                o_peerTargetList.push_back(l_pPeerTgt);
-            }
-            else
-            {
-                TARGETING::targetService().getAssociated(
-                    l_peerTarget_list,
-                    l_pPeerTgt,
-                    TARGETING::TargetService::PARENT,
-                    i_pResultFilter);
-                if(!l_peerTarget_list.empty())
-                {
-                    o_peerTargetList.push_back(l_peerTarget_list.front());
-                }
-            }
-        }
-    }
-    if (o_peerTargetList.size() > 1)
-    {
-        std::sort(o_peerTargetList.begin(),o_peerTargetList.end(), compareTargetHuid);
     }
 }
 
@@ -959,31 +1095,6 @@ static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
     }
 }
 
-static void TodProc::getBusPort(
-    const TARGETING::TYPE i_busChipUnitType,
-    const uint32_t i_busPort,
-    p9_tod_setup_bus& o_busPort) const
-{
-    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
-    {
-        switch(i_busPort)
-        {
-            case 0:
-                o_busPort = XBUS0;
-                break;
-            case 1:
-                o_busPort = XBUS1;
-                break;
-            case 2:
-                o_busPort = XBUS2;
-                break;
-            case 7:
-                o_busPort = XBUS7;
-                break;
-        }
-    }
-}
-
 static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
 {
     TARGETING::TargetHandleList l_funcNodeTargetList;
@@ -996,7 +1107,6 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
     l_funcPred.functional(true);
     TARGETING::PredicatePostfixExpr l_funcProcPostfixExpr;
     l_funcProcPostfixExpr.push(&l_procCTM).push(&l_funcPred).And();
-    TodDrawerContainer& l_todDrawerList = iv_todConfig[i_config].iv_todDrawerList;
     TodDrawerContainer::iterator l_todDrawerIter;
 
     for(uint32_t l_nodeIndex = 0;
@@ -1017,15 +1127,14 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
         {
             bool b_foundDrawer = false;
 
-            for(l_todDrawerIter = l_todDrawerList.begin();
-                l_todDrawerIter != l_todDrawerList.end();
+            for(l_todDrawerIter = iv_todConfig[i_config].iv_todDrawerList.begin();
+                l_todDrawerIter != iv_todConfig[i_config].iv_todDrawerList.end();
                 ++l_todDrawerIter)
             {
-                if((*l_todDrawerIter)->getId() == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
+                if((*l_todDrawerIter)->iv_todDrawerId == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
                 {
                     TodProc *l_procPtr = new TodProc(l_funcProcTargetList[l_procIndex], (*l_todDrawerIter));
-                    (*l_todDrawerIter)->addProc(l_procPtr);
-                    l_procPtr = NULL;
+                    (*l_todDrawerIter)->iv_todProcList.push_back(l_procPtr);
                     b_foundDrawer = true;
                     break;
                 }
@@ -1037,10 +1146,8 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
                     l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>(),
                     l_funcNodeTargetList[l_nodeIndex]);
                 TodProc *l_pTodProc = new TodProc(l_funcProcTargetList[l_procIndex], l_pTodDrawer);
-                l_pTodDrawer->addProc(l_pTodProc);
-                l_todDrawerList.push_back(l_pTodDrawer);
-                l_pTodDrawer = NULL;
-                l_pTodProc = NULL;
+                l_pTodDrawer->iv_todProcList.push_back(l_pTodProc);
+                iv_todConfig[i_config].iv_todDrawerList.push_back(l_pTodDrawer);
             }
         }
     }

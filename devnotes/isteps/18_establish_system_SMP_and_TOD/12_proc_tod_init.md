@@ -1,22 +1,7 @@
 void TodSvc::todInit()
 {
-    todInitHwp();
-}
-
-void todInitHwp()
-{
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiFailingProcTarget(NULL);
-    p9_tod_init(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data, &l_fapiFailingProcTarget);
-}
-
-void p9_tod_init(
-    const tod_topology_node* i_tod_node,
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>* o_failingTodProc)
-{
-    // Clear the error register so we don't get any "fake" errors
-    p9_tod_clear_error_reg(i_tod_node);
-    // Start configuring each node; (init_tod_node will recurse on each child)
-    init_tod_node(i_tod_node, o_failingTodProc);
+    p9_tod_clear_error_reg(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
+    init_tod_node(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
 }
 
 void p9_tod_clear_error_reg(const tod_topology_node* i_tod_node)
@@ -31,9 +16,7 @@ void p9_tod_clear_error_reg(const tod_topology_node* i_tod_node)
     }
 }
 
-void init_tod_node(
-    const tod_topology_node* i_tod_node,
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>* o_failingTodProc)
+void init_tod_node(const tod_topology_node* i_tod_node)
 {
     // Sequence details are in TOD Workbook section 1.6.3
     // Is the current TOD being processed the master drawer master TOD?
@@ -72,11 +55,12 @@ void init_tod_node(
 
     fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_ERROR_REG, l_tod_err_reg);
 
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiFailingProcTarget(NULL);
     // going to assert, populate pointer prior to exit
     if (l_tod_err_reg.getBit<PERV_TOD_ERROR_REG_M_PATH_0_STEP_CHECK>()
       || l_tod_err_reg.getBit<PERV_TOD_ERROR_REG_M_PATH_1_STEP_CHECK>())
     {
-        *o_failingTodProc = *(i_tod_node->i_target);
+        *l_fapiFailingProcTarget = *(i_tod_node->i_target);
     }
 
     fapi2::putScom(
@@ -94,6 +78,6 @@ void init_tod_node(
          l_child != (i_tod_node->i_children).end();
          ++l_child)
     {
-        init_tod_node(*l_child, o_failingTodProc);
+        init_tod_node(*l_child, l_fapiFailingProcTarget);
     }
 }
