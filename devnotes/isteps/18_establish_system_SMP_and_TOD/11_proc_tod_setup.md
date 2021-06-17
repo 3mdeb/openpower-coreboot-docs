@@ -1,7 +1,7 @@
 void TodSvc::todSetup()
 {
     TodTopologyManager l_primary(); // NOOP
-    TOD::buildGardedTargetsList();
+    iv_procTarget = TARGETING::getAllChips(l_targetList, TARGETING::TYPE_PROC, false)[0];
     TOD::buildTodDrawers(TOD_PRIMARY);
     l_primary.create();
     p9_tod_setup(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
@@ -127,9 +127,192 @@ static void TodProc::connect(
         l_busList.clear();
         TARGETING::getPeerTargets(l_busList, *l_busIter, NULL);
         TARGETING::getPeerTargets(l_procList, *l_busIter, &l_resFilter);
-        getBusPort(i_busChipUnitType, (*l_busIter)->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_tx);
-        getBusPort(i_busChipUnitType, l_busList[0]->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_rx);
-        o_isConnected = true;
+        if(l_procList.size())
+        {
+            getBusPort(i_busChipUnitType, (*l_busIter)->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_tx);
+            getBusPort(i_busChipUnitType, l_busList[0]->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_rx);
+            iv_tod_node_data->i_bus_tx = i_parentBusOut;
+            iv_tod_node_data->i_bus_rx = i_thisBusIn;
+            o_isConnected = true;
+        }
+    }
+}
+
+void TodProc::init()
+{
+    if(iv_tod_node_data)
+    {
+        if(iv_tod_node_data->i_target)
+        {
+            delete iv_tod_node_data->i_target;
+        }
+        delete iv_tod_node_data;
+    }
+    iv_tod_node_data = new tod_topology_node();
+    iv_tod_node_data->i_target = new fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>(const_cast<TARGETING::Target*>(iv_procTarget));
+    iv_tod_node_data->i_tod_master = false;
+    iv_tod_node_data->i_drawer_master = false;
+    iv_tod_node_data->i_bus_rx = NONE;
+    iv_tod_node_data->i_bus_tx = NONE;
+
+    TodTopologyNodeContainer::iterator l_childItr;
+
+    for(l_childItr = iv_tod_node_data->i_children.begin();
+        l_childItr != iv_tod_node_data->i_children.end();
+        ++l_childItr)
+    {
+        delete (*l_childItr);
+    }
+    iv_tod_node_data->i_children.clear();
+
+    iv_xbusTargetList.clear();
+    iv_abusTargetList.clear();
+
+    TARGETING::PredicateCTM l_xbusCTM(TARGETING::CLASS_UNIT,TARGETING::TYPE_XBUS);
+    TARGETING::PredicateCTM l_abusCTM(TARGETING::CLASS_UNIT,TARGETING::TYPE_ABUS);
+
+    TARGETING::TargetHandleList l_xbusTargetList;
+    TARGETING::TargetHandleList l_abusTargetList;
+
+    TARGETING::PredicateIsFunctional l_func;
+    TARGETING::PredicatePostfixExpr l_funcAndXbusFilter;
+    TARGETING::PredicatePostfixExpr l_funcAndAbusFilter;
+    l_funcAndXbusFilter.push(&l_xbusCTM).push(&l_func).And();
+    l_funcAndAbusFilter.push(&l_abusCTM).push(&l_func).And();
+
+    TARGETING::targetService().getAssociated(
+        l_xbusTargetList,
+        iv_procTarget,
+        TARGETING::TargetService::CHILD,
+        &l_funcAndXbusFilter);
+
+    for(uint32_t l_index = 0 ; l_index < l_xbusTargetList.size(); ++l_index)
+    {
+        iv_xbusTargetList.push_back(l_xbusTargetList[l_index]);
+    }
+
+    TARGETING::targetService().getAssociated(
+        l_abusTargetList,
+        iv_procTarget,
+        TARGETING::TargetService::CHILD,
+        &l_funcAndAbusFilter);
+    //Push the A bus targets found to the iv_abusTargetList
+    for(uint32_t l_index = 0 ; l_index < l_abusTargetList.size(); ++l_index)
+    {
+        iv_abusTargetList.push_back(l_abusTargetList[l_index]);
+    }
+}
+
+void TargetService::getAssociated(
+          TargetHandleList&    o_list,
+    const Target* const        i_pTarget,
+    const ASSOCIATION_TYPE     i_type,
+    const PredicateBase* const i_pPredicate) const
+{
+    o_list.clear();
+
+    _getAssociationsViaDfs(o_list,i_pTarget,i_type,i_pPredicate);
+
+    if (o_list.size() > 1)
+    {
+        std::sort(o_list.begin(),o_list.end(),compareTargetHuid);
+    }
+}
+
+void TargetService::_getAssociationsViaDfs(
+          TargetHandleList&    o_list,
+    const Target* const        i_pSourceTarget,
+    const ASSOCIATION_TYPE     i_type,
+    const PredicateBase* const i_pPredicate) const
+{
+    AbstractPointer<Target>* pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
+        i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
+
+    while(*pDestinationTargetItr)
+    {
+        if(!(*pDestinationTargetItr).TranslationEncoded.nodeId)
+        {
+            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
+                pDestinationTargetItr,
+                i_pSourceTarget);
+        }
+        else
+        {
+            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
+                pDestinationTargetItr,
+                (*pDestinationTargetItr).TranslationEncoded.nodeId - 1);
+        }
+
+        if(!i_pPredicate || (*i_pPredicate)(pDestinationTargetItr))
+        {
+            o_list.push_back(pDestinationTargetItr);
+        }
+
+        _getAssociationsViaDfs(
+            o_list,
+            pDestinationTargetItr,
+            i_type,
+            i_pPredicate);
+
+        ++pDestinationTargetItr;
+    }
+}
+
+void* AttrRP::translateAddr(
+    void* i_pAddress,
+    const Target* i_pTarget)
+{
+    void* o_pTransAddr = i_pAddress;
+    if(i_pTarget != NULL)
+    {
+        NODE_ID l_nodeId;
+        getNodeId(i_pTarget, l_nodeId);
+        void* o_pTransAddr = i_pAddress & MASK_OFF_UPPER_BYTE;
+        for (size_t i = 0; i < iv_nodeContainer[l_nodeId].sectionCount; ++i)
+        {
+            if ((iv_nodeContainer[l_nodeId].pSections[i].vmmAddress
+                + iv_nodeContainer[l_nodeId].pSections[i].size)
+                >= o_pTransAddr)
+            {
+                o_pTransAddr =
+                        iv_nodeContainer[l_nodeId].pSections[i].pnorAddress
+                        + o_pTransAddr
+                        - iv_nodeContainer[l_nodeId].pSections[i].vmmAddress;
+                break;
+            }
+        }
+    }
+    return o_pTransAddr;
+}
+
+static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
+{
+    bool l_found = false;
+
+    o_nodeId = INVALID_NODE_ID;
+
+    static std::map<const Target*,NODE_ID> s_targToNodeMap;
+    auto l_nodeItr = s_targToNodeMap.find(i_pTarget);
+    if(l_nodeItr != s_targToNodeMap.end())
+    {
+        o_nodeId = l_nodeItr->second;
+        return;
+    }
+
+    for(uint8_t i=0; i < INVALID_NODE_ID; ++i)
+    {
+        for(uint32_t j=0; j<iv_nodeContainer[i].sectionCount; ++j)
+        {
+            if(iv_nodeContainer[i].pSections[j].type == SECTION_TYPE_PNOR_RO
+            && i_pTarget >= iv_nodeContainer[i].pTargetMap
+            && i_pTarget < iv_nodeContainer[i].pTargetMap + iv_nodeContainer[i].pSections[j].size)
+            {
+                l_found = true;
+                o_nodeId = i;
+                s_targToNodeMap[i_pTarget] = i;
+                return;
+            }
+        }
     }
 }
 
@@ -296,12 +479,6 @@ static void p9_tod_save_config(tod_topology_node* i_tod_node)
     fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_I_PATH_CTRL_REG, i_tod_node->o_todRegs.tod_i_path_ctrl_reg);
     fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, i_tod_node->o_todRegs.tod_pss_mss_ctrl_reg);
     fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_CHIP_CTRL_REG, i_tod_node->o_todRegs.tod_chip_ctrl_reg);
-    for(auto l_child = (i_tod_node->i_children).begin();
-        l_child != (i_tod_node->i_children).end();
-        ++l_child)
-    {
-        p9_tod_save_config(*l_child);
-    }
 }
 
 static void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
@@ -342,232 +519,6 @@ static void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
     }
 }
 
-static void p9_tod_setup(tod_topology_node* i_tod_node)
-{
-    fapi2::ATTR_IS_MPIPL_Type l_is_mpipl;
-    FAPI_ATTR_GET(fapi2::ATTR_IS_MPIPL, fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>(), l_is_mpipl);
-
-    if (l_is_mpipl)
-    {
-        mpipl_clear_tod_node(i_tod_node);
-    }
-    calculate_node_delays(i_tod_node);
-    clear_tod_node(i_tod_node);
-    configure_tod_node(i_tod_node);
-}
-
-static void configure_tod_node(tod_topology_node* i_tod_node)
-{
-    configure_pss_mss_ctrl_reg(i_tod_node);
-    if (!(i_tod_node->i_tod_master && i_tod_node->i_drawer_master))
-    {
-        configure_s_path_ctrl_reg(i_tod_node);
-    }
-    configure_port_ctrl_regs(i_tod_node);
-    configure_m_path_ctrl_reg(i_tod_node);
-    configure_i_path_ctrl_reg(i_tod_node);
-    scom_and_or_for_chiplet(
-        *(i_tod_node->i_target),
-        PERV_TOD_CHIP_CTRL_REG,
-        ~PPC_BITMASK(1, 3) & ~PPC_BIT(4) & ~PPC_BITMASK(7, 9) & ~PPC_BIT(30),
-        PPC_BITMASK(10, 15));
-
-    // TOD is configured for this node; if it has children, start their
-    // configuration
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        configure_tod_node(*l_child);
-    }
-}
-
-static void configure_m_path_ctrl_reg(tod_topology_node* i_tod_node)
-{
-    uint64_t l_m_path_ctrl_reg;
-    uint64_t l_root_ctrl8_reg;
-
-    fapi2::getScom(*(i_tod_node->i_target), PERV_ROOT_CTRL8_SCOM, l_root_ctrl8_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
-    if(l_root_ctrl8_reg & PPC_BIT(21))
-    {
-        l_m_path_ctrl_reg |= PPC_BIT(4);
-    }
-    else
-    {
-        l_m_path_ctrl_reg &= ~PPC_BIT(4);
-    }
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
-    {
-        l_m_path_ctrl_reg &=
-            ~PPC_BIT(0)
-            & ~PPC_BIT(2)
-            & ~PPC_BIT(13)
-            & ~PPC_BITMASK(5, 7)
-            & ~PPC_BITMASK(9, 11)
-            & ~PPC_BITMASK(24, 25)
-            | PPC_BIT(1)
-            | PPC_BIT(8)
-            | PPC_BITMASK(14, 15);
-    }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
-}
-
-static void configure_port_ctrl_regs(tod_topology_node* i_tod_node)
-{
-    uint64_t l_port_ctrl_reg;
-    uint64_t l_port_ctrl_check_reg;
-    uint32_t l_port_rx_select_val;
-    uint32_t l_path_sel;
-
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
-
-    switch (i_tod_node->i_bus_rx)
-    {
-        case (XBUS0):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X0_SEL;
-            break;
-        case (XBUS1):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X1_SEL;
-            break;
-        case (XBUS2):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X2_SEL;
-            break;
-        case (OBUS0):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X3_SEL;
-            break;
-        case (OBUS1):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X4_SEL;
-            break;
-        case (OBUS2):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X5_SEL;
-            break;
-        case (OBUS3):
-            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X6_SEL;
-            break;
-    }
-
-    l_port_ctrl_reg.insertFromRight<0, 3>(l_port_rx_select_val);
-    l_port_ctrl_check_reg.insertFromRight<0, 3>(l_port_rx_select_val);
-
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
-    {
-        l_path_sel = TOD_PORT_CTRL_REG_M_PATH_0;
-    }
-    else
-    {
-        l_path_sel = TOD_PORT_CTRL_REG_S_PATH_0;
-    }
-
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        switch ((*l_child)->i_bus_tx)
-        {
-            case (XBUS0):
-                l_port_ctrl_reg.insertFromRight<4, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<20>();
-                l_port_ctrl_check_reg.insertFromRight<4, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<20>();
-                break;
-            case (XBUS1):
-                l_port_ctrl_reg.insertFromRight<6, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<21>();
-                l_port_ctrl_check_reg.insertFromRight<6, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<21>();
-                break;
-            case (XBUS2):
-                l_port_ctrl_reg.insertFromRight<8, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<22>();
-                l_port_ctrl_check_reg.insertFromRight<8, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<22>();
-                break;
-            case (OBUS0):
-                l_port_ctrl_reg.insertFromRight<10, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<23>();
-                l_port_ctrl_check_reg.insertFromRight<10, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<23>();
-                break;
-            case (OBUS1):
-                l_port_ctrl_reg.insertFromRight<12, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<24>();
-                l_port_ctrl_check_reg.insertFromRight<12, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<24>();
-                break;
-            case (OBUS2):
-                l_port_ctrl_reg.insertFromRight<14, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<25>();
-                l_port_ctrl_check_reg.insertFromRight<14, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<25>();
-                break;
-            case (OBUS3):
-                l_port_ctrl_reg.insertFromRight<16, 2>(l_path_sel);
-                l_port_ctrl_reg.setBit<26>();
-                l_port_ctrl_check_reg.insertFromRight<16, 2>(l_path_sel);
-                l_port_ctrl_check_reg.setBit<26>();
-                break;
-        }
-    }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
-}
-
-static void configure_s_path_ctrl_reg(tod_topology_node* i_tod_node)
-{
-    scom_and_or_for_chiplet(
-        *(i_tod_node->i_target),
-        PERV_TOD_S_PATH_CTRL_REG,
-        ~PPC_BIT(0)
-      & ~PPC_BITMASK(6, 7)
-      & ~PPC_BITMASK(8, 11)
-      & ~PPC_BITMASK(13, 15)
-      & ~PPC_BITMASK(28, 31)
-      & ~PPC_BITMASK(32, 39)
-      & ~PPC_BITMASK(26, 27),
-        PPC_BITMASK(8, 9)
-      | PPC_BITMASK(14, 15)
-      | PPC_BITMASK(28, 29)
-      | PPC_BIT(37) | PPC_BIT(39))
-}
-
-static void configure_pss_mss_ctrl_reg(tod_topology_node* i_tod_node)
-{
-    uint64_t l_pss_mss_ctrl_reg;
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
-
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
-    {
-        l_pss_mss_ctrl_reg.setBit<1>();
-        l_pss_mss_ctrl_reg.clearBit<0>();
-    }
-    else
-    {
-        l_pss_mss_ctrl_reg.clearBit<1>();
-    }
-
-    if (i_tod_node->i_drawer_master)
-    {
-        l_pss_mss_ctrl_reg.setBit<2>();
-    }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
-}
-
-static void clear_tod_node(tod_topology_node* i_tod_node)
-{
-    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, 0);
-    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, 0);
-    scom_or_for_chiplet(*(i_tod_node->i_target), PERV_TOD_S_PATH_CTRL_REG, PPC_BITMASK(26, 31));
-
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        clear_tod_node(*l_child);
-    }
-}
-
 static void mpipl_clear_tod_node(tod_topology_node* i_tod_node)
 {
     fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, 0x0ULL)
@@ -576,51 +527,6 @@ static void mpipl_clear_tod_node(tod_topology_node* i_tod_node)
     fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_LOAD_TOD_REG, PPC_BIT(63));
     fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, M_PATH_CTRL_REG_CLEAR_VALUE);
     fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_S_PATH_CTRL_REG, S_PATH_CTRL_REG_CLEAR_VALUE);
-
-
-    for(auto l_child = (i_tod_node->i_children).begin();
-        l_child != (i_tod_node->i_children).end();
-        ++l_child)
-    {
-        mpipl_clear_tod_node(*l_child);
-    }
-}
-
-static void calculate_node_delays(tod_topology_node* i_tod_node)
-{
-    uint32_t l_longest_delay = 0;
-
-    // Find the most-delayed path in the topology; this is the MDMT's delay
-    calculate_longest_topolopy_delay(i_tod_node, l_longest_delay);
-    set_topology_delays(i_tod_node, l_longest_delay);
-
-    // Finally, the MDMT delay must include additional TOD-grid-cycles to
-    // account for staging latches in slaves
-    i_tod_node->o_int_path_delay += MDMT_TOD_GRID_CYCLE_STAGING_DELAY;
-}
-
-static void calculate_longest_topolopy_delay(
-    tod_topology_node* i_tod_node,
-    uint32_t& o_longest_delay)
-{
-    uint32_t l_node_delay = 0;
-    uint32_t l_current_longest_delay = 0;
-
-    calculate_node_link_delay(i_tod_node, l_node_delay);
-    o_longest_delay = l_node_delay;
-
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        tod_topology_node* l_tod_node = *l_child;
-        calculate_longest_topolopy_delay(l_tod_node, l_node_delay);
-        if (l_node_delay > l_current_longest_delay)
-        {
-            l_current_longest_delay = l_node_delay;
-        }
-    }
-    o_longest_delay += l_current_longest_delay;
 }
 
 static void calculate_node_link_delay(
@@ -721,34 +627,14 @@ static void calculate_node_link_delay(
 
 static void configure_i_path_ctrl_reg(tod_topology_node* i_tod_node)
 {
-    uint64_t l_port_ctrl_reg;
 
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    l_port_ctrl_reg.insertFromRight<32, 8>(i_tod_node->o_int_path_delay);
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-
-    scom_and_or_for_chiplet(
-        *(i_tod_node->i_target),
-        PERV_TOD_I_PATH_CTRL_REG,
-        ~PPC_BITMASK(0, 1) & ~PPC_BITMASK(6, 7) & ~PPC_BIT(13),
-        PPC_BITMASK(8, 11) | PPC_BITMASK(14, 15));
 }
 
 static void set_topology_delays(
     tod_topology_node* i_tod_node,
     const uint32_t i_longest_delay)
 {
-    // Retrieve saved node_delay from calculate_node_link_delay instead of
-    // making a second call
-    i_tod_node->o_int_path_delay = i_longest_delay - i_tod_node->o_int_path_delay;
 
-    // Recurse on downstream nodes
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        set_topology_delays(*l_child, i_tod_node->o_int_path_delay);
-    }
 }
 
 TodProc* TodControls ::pickMdmt(
@@ -994,107 +880,6 @@ static void TodDrawer::getPotentialMdmts(TodProcContainer& o_procList) const
     }
 }
 
-void TargetService::getAssociated(
-          TargetHandleList&    o_list,
-    const Target* const        i_pTarget,
-    const ASSOCIATION_TYPE     i_type,
-    const PredicateBase* const i_pPredicate) const
-{
-    o_list.clear();
-
-    _getAssociationsViaDfs(o_list,i_pTarget,i_type,i_pPredicate);
-
-    if (o_list.size() > 1)
-    {
-        std::sort(o_list.begin(),o_list.end(),compareTargetHuid);
-    }
-}
-
-void TargetService::_getAssociationsViaDfs(
-          TargetHandleList&    o_list,
-    const Target* const        i_pSourceTarget,
-    const ASSOCIATION_TYPE     i_type,
-    const PredicateBase* const i_pPredicate) const
-{
-    AbstractPointer<Target>* pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-        i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
-
-    while(*pDestinationTargetItr)
-    {
-        if(!(*pDestinationTargetItr).TranslationEncoded.nodeId)
-        {
-            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-                pDestinationTargetItr,
-                i_pSourceTarget);
-        }
-        else
-        {
-            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-                pDestinationTargetItr,
-                (*pDestinationTargetItr).TranslationEncoded.nodeId - 1);
-        }
-
-        if(!i_pPredicate || (*i_pPredicate)(pDestinationTargetItr))
-        {
-            o_list.push_back(pDestinationTargetItr);
-        }
-
-        _getAssociationsViaDfs(
-            o_list,
-            pDestinationTargetItr,
-            i_type,
-            i_recursionLevel,
-            i_pPredicate);
-
-        ++pDestinationTargetItr;
-    }
-}
-
-void* AttrRP::translateAddr(
-    void* i_pAddress,
-    const Target* i_pTarget)
-{
-    void* o_pTransAddr = i_pAddress;
-    if(i_pTarget != NULL)
-    {
-        NODE_ID l_nodeId;
-        getNodeId(i_pTarget, l_nodeId);
-        o_pTransAddr = translateAddr(i_pAddress, l_nodeId);
-    }
-    return o_pTransAddr;
-}
-
-static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
-{
-    bool l_found = false;
-
-    o_nodeId = INVALID_NODE_ID;
-
-    static std::map<const Target*,NODE_ID> s_targToNodeMap;
-    auto l_nodeItr = s_targToNodeMap.find(i_pTarget);
-    if(l_nodeItr != s_targToNodeMap.end())
-    {
-        o_nodeId = l_nodeItr->second;
-        return;
-    }
-
-    for(uint8_t i=0; i < INVALID_NODE_ID; ++i)
-    {
-        for(uint32_t j=0; j<iv_nodeContainer[i].sectionCount; ++j)
-        {
-            if(iv_nodeContainer[i].pSections[j].type == SECTION_TYPE_PNOR_RO
-            && i_pTarget >= iv_nodeContainer[i].pTargetMap
-            && i_pTarget < iv_nodeContainer[i].pTargetMap + iv_nodeContainer[i].pSections[j].size)
-            {
-                l_found = true;
-                o_nodeId = i;
-                s_targToNodeMap[i_pTarget] = i;
-                return;
-            }
-        }
-    }
-}
-
 static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
 {
     TARGETING::TargetHandleList l_funcNodeTargetList;
@@ -1244,4 +1029,215 @@ static void TodControls::getParent(
         l_parent_found = true;
         break;
     }
+}
+
+static void p9_tod_setup(tod_topology_node* i_tod_node)
+{
+    fapi2::ATTR_IS_MPIPL_Type l_is_mpipl;
+    FAPI_ATTR_GET(fapi2::ATTR_IS_MPIPL, fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>(), l_is_mpipl);
+
+    if (l_is_mpipl)
+    {
+        mpipl_clear_tod_node(i_tod_node);
+    }
+    uint32_t l_longest_delay = 0;
+    uint32_t l_node_delay = 0;
+    uint32_t l_current_longest_delay = 0;
+
+    calculate_node_link_delay(i_tod_node, l_node_delay);
+    l_longest_delay = l_node_delay;
+
+    for (auto l_child = (i_tod_node->i_children).begin();
+         l_child != (i_tod_node->i_children).end();
+         ++l_child)
+    {
+        tod_topology_node* l_tod_node = *l_child;
+        calculate_longest_topolopy_delay(l_tod_node, l_node_delay);
+        if (l_node_delay > l_current_longest_delay)
+        {
+            l_current_longest_delay = l_node_delay;
+        }
+    }
+    l_longest_delay += l_current_longest_delay;
+    i_tod_node->o_int_path_delay = l_longest_delay - i_tod_node->o_int_path_delay;
+    i_tod_node->o_int_path_delay += MDMT_TOD_GRID_CYCLE_STAGING_DELAY;
+    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, 0);
+    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, 0);
+    scom_or_for_chiplet(*(i_tod_node->i_target), PERV_TOD_S_PATH_CTRL_REG, PPC_BITMASK(26, 31));
+    uint64_t l_pss_mss_ctrl_reg;
+    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
+
+    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    {
+        l_pss_mss_ctrl_reg.setBit<1>();
+        l_pss_mss_ctrl_reg.clearBit<0>();
+    }
+    else
+    {
+        l_pss_mss_ctrl_reg.clearBit<1>();
+    }
+
+    if (i_tod_node->i_drawer_master)
+    {
+        l_pss_mss_ctrl_reg.setBit<2>();
+    }
+    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
+
+    if (!(i_tod_node->i_tod_master && i_tod_node->i_drawer_master))
+    {
+        scom_and_or_for_chiplet(
+            *(i_tod_node->i_target),
+            PERV_TOD_S_PATH_CTRL_REG,
+            ~PPC_BIT(0)
+          & ~PPC_BITMASK(6, 7)
+          & ~PPC_BITMASK(8, 11)
+          & ~PPC_BITMASK(13, 15)
+          & ~PPC_BITMASK(28, 31)
+          & ~PPC_BITMASK(32, 39)
+          & ~PPC_BITMASK(26, 27),
+            PPC_BITMASK(8, 9)
+          | PPC_BITMASK(14, 15)
+          | PPC_BITMASK(28, 29)
+          | PPC_BIT(37) | PPC_BIT(39));
+    }
+    uint64_t l_port_ctrl_reg;
+    uint64_t l_port_ctrl_check_reg;
+    uint32_t l_port_rx_select_val;
+    uint32_t l_path_sel;
+
+    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
+
+    switch (i_tod_node->i_bus_rx)
+    {
+        case (XBUS0):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X0_SEL;
+            break;
+        case (XBUS1):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X1_SEL;
+            break;
+        case (XBUS2):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X2_SEL;
+            break;
+        case (OBUS0):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X3_SEL;
+            break;
+        case (OBUS1):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X4_SEL;
+            break;
+        case (OBUS2):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X5_SEL;
+            break;
+        case (OBUS3):
+            l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X6_SEL;
+            break;
+    }
+
+    l_port_ctrl_reg.insertFromRight<0, 3>(l_port_rx_select_val);
+    l_port_ctrl_check_reg.insertFromRight<0, 3>(l_port_rx_select_val);
+
+    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    {
+        l_path_sel = TOD_PORT_CTRL_REG_M_PATH_0;
+    }
+    else
+    {
+        l_path_sel = TOD_PORT_CTRL_REG_S_PATH_0;
+    }
+
+    for (auto l_child = (i_tod_node->i_children).begin();
+         l_child != (i_tod_node->i_children).end();
+         ++l_child)
+    {
+        switch ((*l_child)->i_bus_tx)
+        {
+            case (XBUS0):
+                l_port_ctrl_reg.insertFromRight<4, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<20>();
+                l_port_ctrl_check_reg.insertFromRight<4, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<20>();
+                break;
+            case (XBUS1):
+                l_port_ctrl_reg.insertFromRight<6, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<21>();
+                l_port_ctrl_check_reg.insertFromRight<6, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<21>();
+                break;
+            case (XBUS2):
+                l_port_ctrl_reg.insertFromRight<8, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<22>();
+                l_port_ctrl_check_reg.insertFromRight<8, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<22>();
+                break;
+            case (OBUS0):
+                l_port_ctrl_reg.insertFromRight<10, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<23>();
+                l_port_ctrl_check_reg.insertFromRight<10, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<23>();
+                break;
+            case (OBUS1):
+                l_port_ctrl_reg.insertFromRight<12, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<24>();
+                l_port_ctrl_check_reg.insertFromRight<12, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<24>();
+                break;
+            case (OBUS2):
+                l_port_ctrl_reg.insertFromRight<14, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<25>();
+                l_port_ctrl_check_reg.insertFromRight<14, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<25>();
+                break;
+            case (OBUS3):
+                l_port_ctrl_reg.insertFromRight<16, 2>(l_path_sel);
+                l_port_ctrl_reg.setBit<26>();
+                l_port_ctrl_check_reg.insertFromRight<16, 2>(l_path_sel);
+                l_port_ctrl_check_reg.setBit<26>();
+                break;
+        }
+    }
+    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
+    uint64_t l_m_path_ctrl_reg;
+    uint64_t l_root_ctrl8_reg;
+
+    fapi2::getScom(*(i_tod_node->i_target), PERV_ROOT_CTRL8_SCOM, l_root_ctrl8_reg);
+    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
+    if(l_root_ctrl8_reg & PPC_BIT(21))
+    {
+        l_m_path_ctrl_reg |= PPC_BIT(4);
+    }
+    else
+    {
+        l_m_path_ctrl_reg &= ~PPC_BIT(4);
+    }
+    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    {
+        l_m_path_ctrl_reg &=
+            ~PPC_BIT(0)
+            & ~PPC_BIT(2)
+            & ~PPC_BIT(13)
+            & ~PPC_BITMASK(5, 7)
+            & ~PPC_BITMASK(9, 11)
+            & ~PPC_BITMASK(24, 25)
+            | PPC_BIT(1)
+            | PPC_BIT(8)
+            | PPC_BITMASK(14, 15);
+    }
+    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
+    uint64_t l_port_ctrl_reg;
+
+    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    l_port_ctrl_reg.insertFromRight<32, 8>(i_tod_node->o_int_path_delay);
+    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+
+    scom_and_or_for_chiplet(
+        *(i_tod_node->i_target),
+        PERV_TOD_I_PATH_CTRL_REG,
+        ~PPC_BITMASK(0, 1) & ~PPC_BITMASK(6, 7) & ~PPC_BIT(13),
+        PPC_BITMASK(8, 11) | PPC_BITMASK(14, 15));
+    scom_and_or_for_chiplet(
+        *(i_tod_node->i_target),
+        PERV_TOD_CHIP_CTRL_REG,
+        ~PPC_BITMASK(1, 3) & ~PPC_BIT(4) & ~PPC_BITMASK(7, 9) & ~PPC_BIT(30),
+        PPC_BITMASK(10, 15));
 }

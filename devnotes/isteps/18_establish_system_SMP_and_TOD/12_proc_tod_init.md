@@ -7,13 +7,6 @@ void TodSvc::todInit()
 void p9_tod_clear_error_reg(const tod_topology_node* i_tod_node)
 {
     fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_ERROR_REG, 0xFFFFFFFFFFFFFFFF);
-    // Clear the TOD error register on all children
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        p9_tod_clear_error_reg(*l_child);
-    }
 }
 
 void init_tod_node(const tod_topology_node* i_tod_node)
@@ -72,12 +65,4 @@ void init_tod_node(const tod_topology_node* i_tod_node)
       | PPC_BIT(PERV_TOD_ERROR_MASK_REG_RX_TTYPE_3)
       | PPC_BIT(PERV_TOD_ERROR_MASK_REG_RX_TTYPE_4)
       | PPC_BIT(PERV_TOD_ERROR_MASK_REG_RX_TTYPE_5));
-
-    // recursively configure downstream nodes
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        init_tod_node(*l_child, l_fapiFailingProcTarget);
-    }
 }
