@@ -2,11 +2,11 @@ void TodSvc::todSetup()
 {
     TodTopologyManager l_primary(); // NOOP
     iv_procTarget = TARGETING::getAllChips(l_targetList, TARGETING::TYPE_PROC, false)[0];
-    TOD::buildTodDrawers(TOD_PRIMARY);
+    TOD::buildTodDrawers();
     l_primary.create();
-    p9_tod_setup(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
-    p9_tod_save_config(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
-    TOD::writeTodProcData(TOD_PRIMARY);
+    p9_tod_setup();
+    p9_tod_save_config();
+    TOD::writeTodProcData();
 }
 
 struct tod_topology_node
@@ -21,37 +21,6 @@ struct tod_topology_node
     uint32_t o_int_path_delay;
 };
 
-static void TodTopologyManager::wireProcs(const TodDrawer* i_pTodDrawer)
-{
-    TodProcContainer l_targetsList = i_pTodDrawer->iv_todProcList;
-    TodProc* l_pDrawerMaster = NULL;
-    i_pTodDrawer->findMasterProc(l_pDrawerMaster);
-    TodProcContainer l_sourcesList;
-    l_sourcesList.push_back(l_pDrawerMaster);
-
-    for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
-        l_sourcesList.end() != l_sourceItr;
-        ++l_sourceItr;)
-    {
-        for(TodProcContainer::iterator l_targetItr = l_targetsList.begin();
-            l_targetItr != l_targetsList.end();)
-        {
-            bool l_connected = false;
-            (*l_sourceItr)->connect(*l_targetItr, TARGETING::TYPE_XBUS, l_connected);
-            if(l_connected)
-            {
-                l_sourcesList.push_back(*l_targetItr);
-                (*l_sourceItr)->addChild(*l_targetItr);
-                l_targetItr = l_targetsList.erase(l_targetItr);
-            }
-            else
-            {
-                ++l_targetItr;
-            }
-        }
-    }
-}
-
 static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
 {
     l_pDrawerMaster = NULL;
@@ -59,8 +28,8 @@ static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
         l_procIter != iv_todProcList.end();
         ++l_procIter)
     {
-        if((*l_procIter)->iv_masterType == TodProc::TOD_MASTER)
-        || ((*l_procIter)->iv_masterType == TodProc::DRAWER_MASTER)
+        if((*l_procIter)->iv_masterType == TodProc::TOD_MASTER
+        || (*l_procIter)->iv_masterType == TodProc::DRAWER_MASTER)
         {
             l_pDrawerMaster = *l_procIter;
             return;
@@ -68,86 +37,8 @@ static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
     }
 }
 
-static void TodTopologyManager::wireTodDrawer(TodDrawer* i_pTodDrawer)
-{
-    for(TodProcContainer::iterator proc = i_pTodDrawer->iv_todProcList.begin();
-        proc != i_pTodDrawer->iv_todProcList.end();
-        ++proc)
-    {
-        bool l_connected;
-        iv_todConfig[TOD_PRIMARY].iv_mdmt->connect(*proc, TARGETING::TYPE_ABUS, l_connected);
-        if(l_connected)
-        {
-            iv_todConfig[TOD_PRIMARY].iv_mdmt->addChild(*proc);
-            (*proc)->iv_masterType = TodProc::DRAWER_MASTER;
-            (*proc)->iv_tod_node_data->i_drawer_master = true;
-            (*proc)->iv_tod_node_data->i_tod_master = true;
-            return;
-        }
-    }
-}
-
-static void TodProc::connect(
-    TodProc* i_destination,
-    const TARGETING::TYPE i_busChipUnitType,
-    bool& o_isConnected)
-{
-    o_isConnected = false;
-
-    if(iv_procTarget->getAttr<TARGETING::ATTR_HUID>() == i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>())
-    {
-        o_isConnected = true;
-        break;
-    }
-
-    TARGETING::TargetHandleList* l_pBusList;
-
-    //Check whether we've to connect over X or A bus
-    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
-    {
-        l_pBusList = &iv_xbusTargetList;
-    }
-    else if(TARGETING::TYPE_ABUS == i_busChipUnitType)
-    {
-        l_pBusList = &iv_abusTargetList;
-    }
-
-    TARGETING::PredicateCTM l_procFilter(TARGETING::CLASS_CHIP,TARGETING::TYPE_PROC);
-    TARGETING::PredicateIsFunctional l_funcFilter;
-    TARGETING::PredicateAttrVal<TARGETING::ATTR_HUID>l_huidFilter(i_destination->getTarget()->getAttr<TARGETING::ATTR_HUID>());
-    TARGETING::PredicatePostfixExpr l_resFilter;
-    l_resFilter.push(&l_procFilter).push(&l_funcFilter).And().push(&l_huidFilter).And();
-
-    TARGETING::TargetHandleList l_procList;
-    TARGETING::TargetHandleList l_busList;
-
-    for(TARGETING::TargetHandleList::iterator l_busIter = (*l_pBusList).begin(); l_busIter != (*l_pBusList).end() ;++l_busIter)
-    {
-        l_procList.clear();
-        l_busList.clear();
-        TARGETING::getPeerTargets(l_busList, *l_busIter, NULL);
-        TARGETING::getPeerTargets(l_procList, *l_busIter, &l_resFilter);
-        if(l_procList.size())
-        {
-            getBusPort(i_busChipUnitType, (*l_busIter)->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_tx);
-            getBusPort(i_busChipUnitType, l_busList[0]->getAttr<TARGETING::ATTR_CHIP_UNIT>(), i_destination->iv_tod_node_data->i_bus_rx);
-            iv_tod_node_data->i_bus_tx = i_parentBusOut;
-            iv_tod_node_data->i_bus_rx = i_thisBusIn;
-            o_isConnected = true;
-        }
-    }
-}
-
 void TodProc::init()
 {
-    if(iv_tod_node_data)
-    {
-        if(iv_tod_node_data->i_target)
-        {
-            delete iv_tod_node_data->i_target;
-        }
-        delete iv_tod_node_data;
-    }
     iv_tod_node_data = new tod_topology_node();
     iv_tod_node_data->i_target = new fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>(const_cast<TARGETING::Target*>(iv_procTarget));
     iv_tod_node_data->i_tod_master = false;
@@ -155,28 +46,17 @@ void TodProc::init()
     iv_tod_node_data->i_bus_rx = NONE;
     iv_tod_node_data->i_bus_tx = NONE;
 
-    TodTopologyNodeContainer::iterator l_childItr;
-
-    for(l_childItr = iv_tod_node_data->i_children.begin();
-        l_childItr != iv_tod_node_data->i_children.end();
-        ++l_childItr)
-    {
-        delete (*l_childItr);
-    }
-    iv_tod_node_data->i_children.clear();
-
     iv_xbusTargetList.clear();
     iv_abusTargetList.clear();
 
     TARGETING::PredicateCTM l_xbusCTM(TARGETING::CLASS_UNIT,TARGETING::TYPE_XBUS);
     TARGETING::PredicateCTM l_abusCTM(TARGETING::CLASS_UNIT,TARGETING::TYPE_ABUS);
 
-    TARGETING::TargetHandleList l_xbusTargetList;
-    TARGETING::TargetHandleList l_abusTargetList;
-
-    TARGETING::PredicateIsFunctional l_func;
     TARGETING::PredicatePostfixExpr l_funcAndXbusFilter;
     TARGETING::PredicatePostfixExpr l_funcAndAbusFilter;
+    TARGETING::PredicateIsFunctional l_func;
+    TARGETING::TargetHandleList l_xbusTargetList;
+    TARGETING::TargetHandleList l_abusTargetList;
     l_funcAndXbusFilter.push(&l_xbusCTM).push(&l_func).And();
     l_funcAndAbusFilter.push(&l_abusCTM).push(&l_func).And();
 
@@ -211,11 +91,11 @@ void TargetService::getAssociated(
 {
     o_list.clear();
 
-    _getAssociationsViaDfs(o_list,i_pTarget,i_type,i_pPredicate);
+    _getAssociationsViaDfs(o_list, i_pTarget, i_type, i_pPredicate);
 
     if (o_list.size() > 1)
     {
-        std::sort(o_list.begin(),o_list.end(),compareTargetHuid);
+        std::sort(o_list.begin(), o_list.end(), compareTargetHuid);
     }
 }
 
@@ -225,8 +105,8 @@ void TargetService::_getAssociationsViaDfs(
     const ASSOCIATION_TYPE     i_type,
     const PredicateBase* const i_pPredicate) const
 {
-    AbstractPointer<Target>* pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-        i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
+    AbstractPointer<Target>* pDestinationTargetItr =
+        TARGETING::theAttrRP::instance().translateAddr(i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
 
     while(*pDestinationTargetItr)
     {
@@ -287,8 +167,6 @@ void* AttrRP::translateAddr(
 
 static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
 {
-    bool l_found = false;
-
     o_nodeId = INVALID_NODE_ID;
 
     static std::map<const Target*,NODE_ID> s_targToNodeMap;
@@ -299,15 +177,14 @@ static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
         return;
     }
 
-    for(uint8_t i=0; i < INVALID_NODE_ID; ++i)
+    for(uint8_t i = 0; i < INVALID_NODE_ID; ++i) // INVALID_NODE_ID = iv_nodeContainer.size()
     {
-        for(uint32_t j=0; j<iv_nodeContainer[i].sectionCount; ++j)
+        for(uint32_t j = 0; j < iv_nodeContainer[i].sectionCount; ++j)
         {
             if(iv_nodeContainer[i].pSections[j].type == SECTION_TYPE_PNOR_RO
             && i_pTarget >= iv_nodeContainer[i].pTargetMap
             && i_pTarget < iv_nodeContainer[i].pTargetMap + iv_nodeContainer[i].pSections[j].size)
             {
-                l_found = true;
                 o_nodeId = i;
                 s_targToNodeMap[i_pTarget] = i;
                 return;
@@ -316,176 +193,51 @@ static void AttrRP::getNodeId(const Target* i_pTarget, NODE_ID& o_nodeId) const
     }
 }
 
-static void TodProc::getBusPort(
-    const TARGETING::TYPE i_busChipUnitType,
-    const uint32_t i_busPort,
-    p9_tod_setup_bus& o_busPort) const
-{
-    if(TARGETING::TYPE_XBUS == i_busChipUnitType)
-    {
-        switch(i_busPort)
-        {
-            case 0:
-                o_busPort = XBUS0;
-                break;
-            case 1:
-                o_busPort = XBUS1;
-                break;
-            case 2:
-                o_busPort = XBUS2;
-                break;
-            case 7:
-                o_busPort = XBUS7;
-                break;
-        }
-    }
-}
-
-static void getPeerTargets(
-          TARGETING::TargetHandleList& o_peerTargetList,
-    const Target*                      i_pSrcTarget,
-    const PredicateBase*               i_pResultFilter)
-{
-    Target* l_pPeerTarget = NULL;
-
-    // Clear the list
-    o_peerTargetList.clear();
-    // List to maintain all child targets which are found by get associated
-    // from the Src target with i_pPeerFilter predicate
-    TARGETING::TargetHandleList l_pSrcTarget_list;
-
-    // Create input master predicate here by taking in the i_pPeerFilter
-    TARGETING::PredicatePostfixExpr l_superPredicate;
-    TARGETING::PredicateAttrVal<TARGETING::ATTR_PEER_TARGET> l_notNullPeerExist(NULL, true);
-    l_superPredicate.push(&l_notNullPeerExist);
-
-    // Check if the i_srcTarget is the leaf node
-    if(i_pSrcTarget->tryGetAttr<TARGETING::ATTR_PEER_TARGET>(l_pPeerTarget))
-    {
-        if(l_superPredicate(i_pSrcTarget))
-        {
-            // Exactly one Peer Target to Cross
-            // Put this to input target list
-            l_pSrcTarget_list.push_back(const_cast<TARGETING::Target*>(i_pSrcTarget));
-        }
-    }
-    // Not a leaf node, find out all leaf node with valid PEER Target
-    else
-    {
-        TARGETING::targetService().getAssociated(
-            l_pSrcTarget_list,
-            i_pSrcTarget,
-            TARGETING::TargetService::CHILD,
-            &l_superPredicate);
-    }
-
-    // Now we have a list of input targets on which we have to find the peer
-    // Check if we have a result predicate filter to apply
-    if(i_pResultFilter == NULL)
-    {
-        // Simply get the Peer Target for all Src target in the list and
-        // return
-        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
-            pTargetIt != l_pSrcTarget_list.end();
-            ++pTargetIt)
-        {
-            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
-            o_peerTargetList.push_back(l_pPeerTgt);
-        }
-    }
-    // Result predicate filter is not NULL, we need to apply this predicate
-    // on each of the PEER Target found on the input target list
-    else
-    {
-        for(TARGETING::TargetHandleList::const_iterator pTargetIt = l_pSrcTarget_list.begin();
-            pTargetIt != l_pSrcTarget_list.end();
-            ++pTargetIt)
-        {
-            TARGETING::TargetHandleList l_peerTarget_list;
-            TARGETING::Target* l_pPeerTgt = (*pTargetIt)->getAttr<TARGETING::ATTR_PEER_TARGET>();
-
-            // Check whether this target matches the filter criteria
-            // or we have to look for ALL Parents matching the criteria.
-            if((*i_pResultFilter)l_pPeerTgt)
-            {
-                o_peerTargetList.push_back(l_pPeerTgt);
-            }
-            else
-            {
-                TARGETING::targetService().getAssociated(
-                    l_peerTarget_list,
-                    l_pPeerTgt,
-                    TARGETING::TargetService::PARENT,
-                    i_pResultFilter);
-                if(!l_peerTarget_list.empty())
-                {
-                    o_peerTargetList.push_back(l_peerTarget_list.front());
-                }
-            }
-        }
-    }
-    if (o_peerTargetList.size() > 1)
-    {
-        std::sort(o_peerTargetList.begin(),o_peerTargetList.end(), compareTargetHuid);
-    }
-}
-
 static void TodTopologyManager::create()
 {
     TOD::pickMdmt();
-    TodDrawerContainer l_todDrwList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList;
-    TodDrawer* l_pMasterDrawer = NULL;
-    for(TodDrawerContainer::const_iterator drawer = l_todDrwList.begin();
-        drawer != l_todDrwList.end();
-        ++drawer)
+    TodProcContainer l_targetsList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList[0]->iv_todProcList;
+    TodProc* l_pDrawerMaster = NULL;
+    iv_todConfig[TOD_PRIMARY].iv_todDrawerList[0]->findMasterProc(l_pDrawerMaster);
+    TodProcContainer l_sourcesList;
+    l_sourcesList.push_back(l_pDrawerMaster);
+
+    for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin();
+        l_sourcesList.end() != l_sourceItr;
+        ++l_sourceItr;)
     {
-        if((*drawer)->iv_isTodMaster)
+        for(TodProcContainer::iterator l_targetItr = l_targetsList.begin();
+            l_targetItr != l_targetsList.end();)
         {
-            l_pMasterDrawer = *drawer;
-            break;
+            l_sourcesList.push_back(*l_targetItr);
+            if((*l_sourceItr)->iv_procTarget->getAttr<TARGETING::ATTR_HUID>() != (*l_sourceItr)->*l_targetItr->getTarget()->getAttr<TARGETING::ATTR_HUID>())
+            {
+                (*l_sourceItr)->iv_childrenList.push_back(*l_targetItr);
+                (*l_sourceItr)->iv_tod_node_data->i_children.push_back(*l_targetItr->getTopologyNode());
+            }
+            l_targetItr = l_targetsList.erase(l_targetItr);
         }
     }
-    wireProcs(l_pMasterDrawer);
-    for(TodDrawerContainer::iterator drawer = l_todDrwList.begin();
-        drawer != l_todDrwList.end();
-        ++drawer)
-    {
-        if((*drawer)->iv_isTodMaster)
-        {
-            continue;
-        }
-        wireTodDrawer(*drawer);
-        wireProcs(*drawer);
-    }
 }
 
-void TodProc::addChild(TodProc* i_child)
+static void p9_tod_save_config()
 {
-    if(iv_procTarget->getAttr<TARGETING::ATTR_HUID>() != i_child->getTarget()->getAttr<TARGETING::ATTR_HUID>())
-    {
-        iv_childrenList.push_back(i_child);
-        iv_tod_node_data->i_children.push_back(i_child->getTopologyNode());
-    }
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_M_PATH_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_m_path_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_pri_port_0_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_1_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_pri_port_1_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_sec_port_0_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_SEC_PORT_1_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_sec_port_1_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_S_PATH_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_s_path_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_I_PATH_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_i_path_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PSS_MSS_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_pss_mss_ctrl_reg);
+    fapi2::getScom(*(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_CHIP_CTRL_REG, TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_todRegs.tod_chip_ctrl_reg);
 }
 
-static void p9_tod_save_config(tod_topology_node* i_tod_node)
-{
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, i_tod_node->o_todRegs.tod_m_path_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, i_tod_node->o_todRegs.tod_pri_port_0_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_1_CTRL_REG, i_tod_node->o_todRegs.tod_pri_port_1_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, i_tod_node->o_todRegs.tod_sec_port_0_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_1_CTRL_REG, i_tod_node->o_todRegs.tod_sec_port_1_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_S_PATH_CTRL_REG, i_tod_node->o_todRegs.tod_s_path_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_I_PATH_CTRL_REG, i_tod_node->o_todRegs.tod_i_path_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, i_tod_node->o_todRegs.tod_pss_mss_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_CHIP_CTRL_REG, i_tod_node->o_todRegs.tod_chip_ctrl_reg);
-}
-
-static void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
+static void TodControls :: writeTodProcData()
 {
     TARGETING::ATTR_ORDINAL_ID_type l_ordId;
-    for(TodDrawerContainer::iterator l_itr = iv_todConfig[i_config].iv_todDrawerList.begin();
-        l_itr != iv_todConfig[i_config].iv_todDrawerList.end();
+    for(TodDrawerContainer::iterator l_itr = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
+        l_itr != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end();
         ++l_itr)
     {
         const TodProcContainer& l_procs = (*l_itr)->iv_todProcList;
@@ -505,16 +257,14 @@ static void TodControls :: writeTodProcData(const p9_tod_setup_tod_sel i_config)
             //Set flags to indicate if the proc chip is an MDMT
             //See if the current proc chip is MDMT of the primary
             //topology
-            if(getConfigStatus(TOD_PRIMARY)
+            if(iv_todConfig[TOD_PRIMARY].iv_isConfigured
             && iv_todConfig[TOD_PRIMARY].iv_mdmt
             && iv_todConfig[TOD_PRIMARY].iv_mdmt->getTarget()->getAttr<TARGETING::ATTR_HUID>()
                == (*l_procItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
             {
                 iv_todChipDataVector[l_ordId].header.flags |= TOD_PRI_MDMT;
             }
-            ATTR_TOD_CPU_DATA_type l_tod_array;
-            memcpy(l_tod_array, &iv_todChipDataVector[l_ordId],sizeof(TodChipData));
-            (*l_procItr)->getTarget()->setAttr<ATTR_TOD_CPU_DATA>(l_tod_array);
+            (*l_procItr)->getTarget()->setAttr<ATTR_TOD_CPU_DATA>(iv_todChipDataVector[l_ordId]);
         }
     }
 }
@@ -546,7 +296,7 @@ static void calculate_node_link_delay(
     if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
     {
         o_node_delay = 0;
-        i_tod_node->o_int_path_delay = o_node_delay;
+        i_tod_node->o_int_path_delay = 0;
         return;
     }
 
@@ -625,28 +375,14 @@ static void calculate_node_link_delay(
     i_tod_node->o_int_path_delay = o_node_delay;
 }
 
-static void configure_i_path_ctrl_reg(tod_topology_node* i_tod_node)
-{
-
-}
-
-static void set_topology_delays(
-    tod_topology_node* i_tod_node,
-    const uint32_t i_longest_delay)
-{
-
-}
-
 TodProc* TodControls ::pickMdmt(
     const TodProc* i_otherConfigMdmt,
-    const p9_tod_setup_tod_sel& i_config,
-    const bool i_setMdmt)
+    const p9_tod_setup_tod_sel& i_config)
 {
     TodProc* l_newMdmt = NULL;
     TodProc *l_pTodProc = NULL;
     TodDrawer* l_pMasterDrw = NULL;
-    TodDrawerContainer l_todDrawerList =
-        iv_todConfig[i_config].iv_todDrawerList;
+    TodDrawerContainer l_todDrawerList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList;
     TodProcContainer l_procList;
     uint32_t l_maxCoreCount;
 
@@ -657,7 +393,7 @@ TodProc* TodControls ::pickMdmt(
         l_todDrawerIter != l_todDrawerList.end();
         ++l_todDrawerIter)
     {
-        if(i_otherConfigMdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
+        if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
             != (*l_todDrawerIter)->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>())
         {
             l_pTodProc = NULL;
@@ -667,10 +403,11 @@ TodProc* TodControls ::pickMdmt(
             //max no. of cores
             uint32_t l_coreCount;
             (*l_todDrawerIter)->getPotentialMdmts(l_procList);
-            (*l_todDrawerIter)->getProcWithMaxCores(NULL,
-                                    l_pTodProc,
-                                    l_coreCount,
-                                    &l_procList);
+            (*l_todDrawerIter)->getProcWithMaxCores(
+                NULL,
+                l_pTodProc,
+                l_coreCount,
+                &l_procList);
             if(l_coreCount > l_maxCoreCount)
             {
                 l_newMdmt = l_pTodProc;
@@ -679,11 +416,14 @@ TodProc* TodControls ::pickMdmt(
             }
         }
     }
-    if(l_newMdmt && i_setMdmt)
+    if(l_newMdmt)
     {
-        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+         iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
+        l_newMdmt->iv_tod_node_data->i_drawer_master = true;
+        l_newMdmt->iv_tod_node_data->i_tod_master = true;
+        l_pTodDrw->iv_isTodMaster = true;
         l_pMasterDrw = NULL;
-        break;
+        return l_newMdmt;
     }
 
     //2.Try to find MDMT on a TOD drawer that is on the same physical
@@ -691,10 +431,10 @@ TodProc* TodControls ::pickMdmt(
     l_maxCoreCount = 0;
     for(const auto & l_todDrawerIter : l_todDrawerList)
     {
-        if((i_otherConfigMdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
-                == l_todDrawerIter->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>())
-            && (i_otherConfigMdmt->getParentDrawer()->iv_todDrawerId
-                != l_todDrawerIter->iv_todDrawerId))
+        if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
+                == l_todDrawerIter->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
+            && iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->iv_todDrawerId
+                != l_todDrawerIter->iv_todDrawerId)
         {
             l_pTodProc = NULL;
             l_coreCount = 0;
@@ -712,11 +452,14 @@ TodProc* TodControls ::pickMdmt(
             }
         }
     }
-    if(l_newMdmt && i_setMdmt)
+    if(l_newMdmt)
     {
-        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+        iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
+        l_newMdmt->iv_tod_node_data->i_drawer_master = true;
+        l_newMdmt->iv_tod_node_data->i_tod_master = true;
+        l_pTodDrw->iv_isTodMaster = true;
         l_pMasterDrw = NULL;
-        break;
+        return l_newMdmt;
     }
 
     //3.Try to find MDMT on the same TOD drawer as the TOD Drawer of
@@ -727,7 +470,7 @@ TodProc* TodControls ::pickMdmt(
         l_pTodProc = NULL;
         l_coreCount = 0;
         l_procList.clear();
-        if(i_otherConfigMdmt->getParentDrawer()->iv_todDrawerId == l_todDrawerIter->iv_todDrawerId)
+        if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->iv_todDrawerId == l_todDrawerIter->iv_todDrawerId)
         {
             //This  is the TOD drawer on which opposite MDMT exists,
             //try to avoid processor chip of opposite MDMT while
@@ -737,7 +480,7 @@ TodProc* TodControls ::pickMdmt(
             //max no. of cores
             l_todDrawerIter->getPotentialMdmts(l_procList);
             l_todDrawerIter->getProcWithMaxCores(
-                i_otherConfigMdmt,
+                iv_todConfig[l_oppConfig].iv_mdmt,
                 l_pTodProc,
                 l_coreCount,
                 &l_procList);
@@ -746,13 +489,14 @@ TodProc* TodControls ::pickMdmt(
             break;
         }
     }
-    if(l_newMdmt && i_setMdmt)
+    if(l_newMdmt)
     {
-        setMdmt(i_config, l_newMdmt, l_pMasterDrw);
+        iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
+        l_newMdmt->iv_tod_node_data->i_drawer_master = true;
+        l_newMdmt->iv_tod_node_data->i_tod_master = true;
+        l_pTodDrw->iv_isTodMaster = true;
         l_pMasterDrw = NULL;
-        break;
     }
-
     return l_newMdmt;
 }
 
@@ -760,7 +504,7 @@ static void TodControls ::pickMdmt()
 {
     if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
     {
-        if(NULL == pickMdmt(iv_todConfig[l_oppConfig].iv_mdmt, TOD_PRIMARY))
+        if(NULL == pickMdmt(iv_todConfig[l_oppConfig].iv_mdmt, iv_todConfig[l_oppConfig].iv_mdmt))
         {
             //Get the TodProc pointer to l_otherConfigMdmt from this
             //config's data structures.
@@ -780,7 +524,7 @@ static void TodControls ::pickMdmt()
                 }
                 if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
                 {
-                    return;
+                    break;
                 }
             }
         }
@@ -813,17 +557,12 @@ static void TodControls ::pickMdmt()
 
         if(l_newMdmt)
         {
-            setMdmt(l_newMdmt, l_pTodDrw);
+            iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
+            l_newMdmt->iv_tod_node_data->i_drawer_master = true;
+            l_newMdmt->iv_tod_node_data->i_tod_master = true;
+            l_pTodDrw->iv_isTodMaster = true;
         }
     }
-}
-
-static void TodControls ::setMdmt(TodProc* i_mdmt, TodDrawer* i_masterDrawer)
-{
-    iv_todConfig[TOD_PRIMARY].iv_mdmt = i_mdmt;
-    i_mdmt->iv_tod_node_data->i_drawer_master = true;
-    i_mdmt->iv_tod_node_data->i_tod_master = true;
-    i_masterDrawer->iv_isTodMaster = true;
 }
 
 static void TodDrawer::getProcWithMaxCores(
@@ -831,7 +570,7 @@ static void TodDrawer::getProcWithMaxCores(
     uint32_t& o_coreCount,
     TodProcContainer* i_pProcList) const
 {
-    o_pTodProc =  NULL;
+    o_pTodProc = NULL;
     o_coreCount = 0;
 
     TARGETING::PredicateCTM l_coreCTM(TARGETING::CLASS_UNIT,TARGETING::TYPE_CORE);
@@ -854,7 +593,7 @@ static void TodDrawer::getProcWithMaxCores(
             TARGETING::TargetService::CHILD,
             &l_funcCorePostfixExpr);
 
-        if(l_funcCoreTargetList.size() > o_coreCount)
+        if(l_funcCoreTargetList.size() > 0)
         {
             o_pTodProc = *l_procIter;
             o_coreCount = l_funcCoreTargetList.size();
@@ -912,8 +651,8 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
         {
             bool b_foundDrawer = false;
 
-            for(l_todDrawerIter = iv_todConfig[i_config].iv_todDrawerList.begin();
-                l_todDrawerIter != iv_todConfig[i_config].iv_todDrawerList.end();
+            for(l_todDrawerIter = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
+                l_todDrawerIter != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end();
                 ++l_todDrawerIter)
             {
                 if((*l_todDrawerIter)->iv_todDrawerId == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
@@ -932,7 +671,7 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
                     l_funcNodeTargetList[l_nodeIndex]);
                 TodProc *l_pTodProc = new TodProc(l_funcProcTargetList[l_procIndex], l_pTodDrawer);
                 l_pTodDrawer->iv_todProcList.push_back(l_pTodProc);
-                iv_todConfig[i_config].iv_todDrawerList.push_back(l_pTodDrawer);
+                iv_todConfig[TOD_PRIMARY].iv_todDrawerList.push_back(l_pTodDrawer);
             }
         }
     }
@@ -1031,43 +770,25 @@ static void TodControls::getParent(
     }
 }
 
-static void p9_tod_setup(tod_topology_node* i_tod_node)
+static void p9_tod_setup()
 {
-    fapi2::ATTR_IS_MPIPL_Type l_is_mpipl;
-    FAPI_ATTR_GET(fapi2::ATTR_IS_MPIPL, fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>(), l_is_mpipl);
-
-    if (l_is_mpipl)
+    if (fapi2::ATTR_IS_MPIPL) // Attribute of the TARGET_TYPE_SYSTEM
     {
-        mpipl_clear_tod_node(i_tod_node);
+        mpipl_clear_tod_node(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
     }
-    uint32_t l_longest_delay = 0;
     uint32_t l_node_delay = 0;
     uint32_t l_current_longest_delay = 0;
 
-    calculate_node_link_delay(i_tod_node, l_node_delay);
-    l_longest_delay = l_node_delay;
-
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
-         ++l_child)
-    {
-        tod_topology_node* l_tod_node = *l_child;
-        calculate_longest_topolopy_delay(l_tod_node, l_node_delay);
-        if (l_node_delay > l_current_longest_delay)
-        {
-            l_current_longest_delay = l_node_delay;
-        }
-    }
-    l_longest_delay += l_current_longest_delay;
-    i_tod_node->o_int_path_delay = l_longest_delay - i_tod_node->o_int_path_delay;
-    i_tod_node->o_int_path_delay += MDMT_TOD_GRID_CYCLE_STAGING_DELAY;
-    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, 0);
-    write_scom_for_chiplet(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, 0);
-    scom_or_for_chiplet(*(i_tod_node->i_target), PERV_TOD_S_PATH_CTRL_REG, PPC_BITMASK(26, 31));
+    calculate_node_link_delay(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data, l_node_delay);
+    iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_int_path_delay = l_node_delay - iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_int_path_delay;
+    iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_int_path_delay += MDMT_TOD_GRID_CYCLE_STAGING_DELAY;
+    write_scom_for_chiplet(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, 0);
+    write_scom_for_chiplet(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, 0);
+    scom_or_for_chiplet(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_S_PATH_CTRL_REG, PPC_BITMASK(26, 31));
     uint64_t l_pss_mss_ctrl_reg;
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
+    fapi2::getScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
 
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    if (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
     {
         l_pss_mss_ctrl_reg.setBit<1>();
         l_pss_mss_ctrl_reg.clearBit<0>();
@@ -1077,16 +798,16 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
         l_pss_mss_ctrl_reg.clearBit<1>();
     }
 
-    if (i_tod_node->i_drawer_master)
+    if (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
     {
         l_pss_mss_ctrl_reg.setBit<2>();
     }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
+    fapi2::putScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
 
-    if (!(i_tod_node->i_tod_master && i_tod_node->i_drawer_master))
+    if (!(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master))
     {
         scom_and_or_for_chiplet(
-            *(i_tod_node->i_target),
+            *(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target),
             PERV_TOD_S_PATH_CTRL_REG,
             ~PPC_BIT(0)
           & ~PPC_BITMASK(6, 7)
@@ -1105,10 +826,10 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
     uint32_t l_port_rx_select_val;
     uint32_t l_path_sel;
 
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
+    fapi2::getScom(*(i_tiv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_dataod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    fapi2::getScom(*(i_tiv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_dataod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
 
-    switch (i_tod_node->i_bus_rx)
+    switch (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_bus_rx)
     {
         case (XBUS0):
             l_port_rx_select_val = TOD_PORT_CTRL_REG_RX_X0_SEL;
@@ -1136,7 +857,7 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
     l_port_ctrl_reg.insertFromRight<0, 3>(l_port_rx_select_val);
     l_port_ctrl_check_reg.insertFromRight<0, 3>(l_port_rx_select_val);
 
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    if (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
     {
         l_path_sel = TOD_PORT_CTRL_REG_M_PATH_0;
     }
@@ -1145,8 +866,8 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
         l_path_sel = TOD_PORT_CTRL_REG_S_PATH_0;
     }
 
-    for (auto l_child = (i_tod_node->i_children).begin();
-         l_child != (i_tod_node->i_children).end();
+    for (auto l_child = (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_children).begin();
+         l_child != (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_children).end();
          ++l_child)
     {
         switch ((*l_child)->i_bus_tx)
@@ -1193,15 +914,15 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
                 l_port_ctrl_check_reg.insertFromRight<16, 2>(l_path_sel);
                 l_port_ctrl_check_reg.setBit<26>();
                 break;
-        }
+        }i_tod_node
     }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
+    fapi2::putScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    fapi2::putScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_SEC_PORT_0_CTRL_REG, l_port_ctrl_check_reg);
+
     uint64_t l_m_path_ctrl_reg;
     uint64_t l_root_ctrl8_reg;
-
-    fapi2::getScom(*(i_tod_node->i_target), PERV_ROOT_CTRL8_SCOM, l_root_ctrl8_reg);
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
+    fapi2::getScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_ROOT_CTRL8_SCOM, l_root_ctrl8_reg);
+    fapi2::getScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
     if(l_root_ctrl8_reg & PPC_BIT(21))
     {
         l_m_path_ctrl_reg |= PPC_BIT(4);
@@ -1210,12 +931,9 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
     {
         l_m_path_ctrl_reg &= ~PPC_BIT(4);
     }
-    if (i_tod_node->i_tod_master && i_tod_node->i_drawer_master)
+    if (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
     {
-        l_m_path_ctrl_reg &=
-            ~PPC_BIT(0)
-            & ~PPC_BIT(2)
-            & ~PPC_BIT(13)
+        l_m_path_ctrl_reg &=i_tod_node
             & ~PPC_BITMASK(5, 7)
             & ~PPC_BITMASK(9, 11)
             & ~PPC_BITMASK(24, 25)
@@ -1223,20 +941,20 @@ static void p9_tod_setup(tod_topology_node* i_tod_node)
             | PPC_BIT(8)
             | PPC_BITMASK(14, 15);
     }
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
+    fapi2::putScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_M_PATH_CTRL_REG, l_m_path_ctrl_reg);
     uint64_t l_port_ctrl_reg;
 
-    fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
-    l_port_ctrl_reg.insertFromRight<32, 8>(i_tod_node->o_int_path_delay);
-    fapi2::putScom(*(i_tod_node->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    fapi2::getScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
+    l_port_ctrl_reg.insertFromRight<32, 8>(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->o_int_path_delay);
+    fapi2::putScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PRI_PORT_0_CTRL_REG, l_port_ctrl_reg);
 
     scom_and_or_for_chiplet(
-        *(i_tod_node->i_target),
+        *(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target),
         PERV_TOD_I_PATH_CTRL_REG,
         ~PPC_BITMASK(0, 1) & ~PPC_BITMASK(6, 7) & ~PPC_BIT(13),
         PPC_BITMASK(8, 11) | PPC_BITMASK(14, 15));
     scom_and_or_for_chiplet(
-        *(i_tod_node->i_target),
+        *(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target),
         PERV_TOD_CHIP_CTRL_REG,
         ~PPC_BITMASK(1, 3) & ~PPC_BIT(4) & ~PPC_BITMASK(7, 9) & ~PPC_BIT(30),
         PPC_BITMASK(10, 15));
