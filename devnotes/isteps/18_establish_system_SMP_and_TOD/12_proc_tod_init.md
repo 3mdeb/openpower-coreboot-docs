@@ -28,8 +28,8 @@ void init_tod_node(const tod_topology_node* i_tod_node)
     uint32_t l_tod_init_pending_count = 0;
     while(l_tod_init_pending_count < P9_TOD_UTIL_TIMEOUT_COUNT)
     {
-        fapi2::delay(P9_TOD_UTILS_HW_NS_DELAY, P9_TOD_UTILS_SIM_CYCLE_DELAY);
         uint64_t l_tod_fsm_reg;
+        fapi2::delay(P9_TOD_UTILS_HW_NS_DELAY, P9_TOD_UTILS_SIM_CYCLE_DELAY);
         fapi2::getScom(*(i_tod_node->i_target), PERV_TOD_FSM_REG, l_tod_fsm_reg);
 
         if (l_tod_fsm_reg & PPC_BIT(PERV_TOD_FSM_REG_IS_RUNNING))
