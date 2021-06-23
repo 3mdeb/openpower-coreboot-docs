@@ -36,57 +36,6 @@ static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
     }
 }
 
-void TodProc::init()
-{
-    iv_tod_node_data = new tod_topology_node();
-    iv_tod_node_data->i_target = new fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>(const_cast<TARGETING::Target*>(iv_proc0));
-    iv_tod_node_data->i_tod_master = false;
-    iv_tod_node_data->i_drawer_master = false;
-}
-
-void TargetService::getAssociated(
-          TargetHandleList&    o_list,
-    const Target* const        i_pSourceTarget,
-    const ASSOCIATION_TYPE     i_type,
-    const PredicateBase* const i_pPredicate) const
-{
-    o_list.clear();
-    AbstractPointer<Target>* pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
-
-    while(*pDestinationTargetItr)
-    {
-        if((*pDestinationTargetItr).TranslationEncoded.nodeId)
-        {
-            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-                pDestinationTargetItr,
-                (*pDestinationTargetItr).TranslationEncoded.nodeId - 1);
-        }
-        else
-        {
-            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(
-                pDestinationTargetItr,
-                i_pSourceTarget);
-        }
-
-        if(!i_pPredicate || (*i_pPredicate)(pDestinationTargetItr))
-        {
-            o_list.push_back(pDestinationTargetItr);
-        }
-
-        getAssociated(
-            o_list,
-            pDestinationTargetItr,
-            i_type,
-            i_pPredicate);
-        ++pDestinationTargetItr;
-    }
-
-    if (o_list.size() > 1)
-    {
-        std::sort(o_list.begin(), o_list.end(), compareTargetHuid);
-    }
-}
-
 static void TodTopologyManager::create()
 {
     TOD::pickMdmt();
@@ -237,8 +186,6 @@ static void TodControls ::pickMdmt()
     }
     else
     {
-        TodProc* l_newMdmt;
-        TodDrawer* l_pTodDrw;
         for (const auto & l_drwItr: l_todDrawerList)
         {
             TodProc* l_pTodProc;
@@ -247,15 +194,14 @@ static void TodControls ::pickMdmt()
             if(l_coreCount > 0)
             {
                 l_pTodDrw = l_drwItr;
-                l_newMdmt = l_pTodProc;
             }
         }
 
-        if(l_newMdmt)
+        if(l_pTodProc)
         {
-            iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
-            l_newMdmt->iv_tod_node_data->i_drawer_master = true;
-            l_newMdmt->iv_tod_node_data->i_tod_master = true;
+            iv_todConfig[TOD_PRIMARY].iv_mdmt = l_pTodProc;
+            l_pTodProc->iv_tod_node_data->i_drawer_master = true;
+            l_pTodProc->iv_tod_node_data->i_tod_master = true;
             l_pTodDrw->iv_isTodMaster = true;
         }
     }
@@ -268,11 +214,10 @@ static void TodDrawer::getProcWithMaxCores(
     o_pTodProc = NULL;
     o_coreCount = 0;
 
-    TARGETING::PredicateCTM l_coreCTM(TARGETING::CLASS_UNIT, TARGETING::TYPE_CORE);
-
     TARGETING::PredicateHwas l_funcPred;
     l_funcPred.functional(true);
     TARGETING::PredicatePostfixExpr l_funcCorePostfixExpr;
+    TARGETING::PredicateCTM l_coreCTM(TARGETING::CLASS_UNIT, TARGETING::TYPE_CORE);
     l_funcCorePostfixExpr.push(&l_coreCTM).push(&l_funcPred).And();
 
     for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
@@ -295,7 +240,7 @@ static void TodDrawer::getProcWithMaxCores(
     }
 }
 
-static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
+static void TodControls::buildTodDrawers()
 {
     TARGETING::TargetHandleList l_funcNodeTargetList;
     TARGETING::Target* l_pSysTarget;
@@ -324,8 +269,6 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
             l_procIndex < l_funcProcTargetList.size();
             ++l_procIndex)
         {
-            bool b_foundDrawer = false;
-
             for(TodDrawerContainer::iterator l_todDrawerIter = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
                 l_todDrawerIter != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end();
                 ++l_todDrawerIter)
@@ -333,19 +276,131 @@ static void TodControls::buildTodDrawers(const p9_tod_setup_tod_sel i_config)
                 if((*l_todDrawerIter)->iv_todDrawerId == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
                 {
                     (*l_todDrawerIter)->iv_todProcList.push_back(new TodProc(l_funcProcTargetList[l_procIndex], (*l_todDrawerIter)));
-                    b_foundDrawer = true;
+                    return;
+                }
+            }
+            TodDrawer *l_pTodDrawer = new TodDrawer(
+                l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>(),
+                l_funcNodeTargetList[l_nodeIndex]);
+            l_pTodDrawer->iv_todProcList.push_back(new TodProc(l_funcProcTargetList[l_procIndex], l_pTodDrawer));
+            iv_todConfig[TOD_PRIMARY].iv_todDrawerList.push_back(l_pTodDrawer);
+        }
+    }
+}
+
+void TargetService::getAssociated(
+          TargetHandleList&    o_list,
+    const Target* const        i_pSourceTarget,
+    const ASSOCIATION_TYPE     i_type,
+    const PredicateBase* const i_pPredicate) const
+{
+    o_list.clear();
+    AbstractPointer<Target>* pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(i_pSourceTarget->iv_ppAssociations[i_type], i_pSourceTarget);
+
+    while(*pDestinationTargetItr)
+    {
+        if((*pDestinationTargetItr).TranslationEncoded.nodeId)
+        {
+            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(pDestinationTargetItr, (*pDestinationTargetItr).TranslationEncoded.nodeId - 1);
+        }
+        else
+        {
+            pDestinationTargetItr = TARGETING::theAttrRP::instance().translateAddr(pDestinationTargetItr, i_pSourceTarget);
+        }
+
+        if(!i_pPredicate || (*i_pPredicate)(pDestinationTargetItr))
+        {
+            o_list.push_back(pDestinationTargetItr);
+        }
+
+        getAssociated(o_list, pDestinationTargetItr, i_type, i_pPredicate);
+        ++pDestinationTargetItr;
+    }
+
+    if (o_list.size() > 1)
+    {
+        std::sort(o_list.begin(), o_list.end(), compareTargetHuid);
+    }
+}
+
+void* AttrRP::translateAddr(
+    void* i_pAddress,
+    const Target* i_pTarget)
+{
+    void* o_pTransAddr = i_pAddress;
+    const TARGETING::NODE_ID l_nodeId = INVALID_NODE_ID;
+    if(i_pTarget != NULL)
+    {
+        for(uint8_t i = 0; i < iv_nodeContainer.size(); ++i)
+        {
+            for(uint32_t j = 0; j < iv_nodeContainer[i].sectionCount; ++j)
+            {
+                if(iv_nodeContainer[i].pSections[j].type == SECTION_TYPE_PNOR_RO
+                && i_pTarget >= iv_nodeContainer[i].pTargetMap
+                && i_pTarget < iv_nodeContainer[i].pTargetMap + iv_nodeContainer[i].pSections[j].size)
+                {
+                    l_nodeId = i
                     break;
                 }
             }
-
-            if (!b_foundDrawer)
+            if(l_nodeId != INVALID_NODE_ID)
             {
-                TodDrawer *l_pTodDrawer = new TodDrawer(
-                    l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>(),
-                    l_funcNodeTargetList[l_nodeIndex]);
-                l_pTodDrawer->iv_todProcList.push_back(new TodProc(l_funcProcTargetList[l_procIndex], l_pTodDrawer));
-                iv_todConfig[TOD_PRIMARY].iv_todDrawerList.push_back(l_pTodDrawer);
+                break;
             }
+        }
+        if(l_nodeId == INVALID_NODE_ID)
+        {
+            // ERROR
+            return o_pTransAddr;
+        }
+        void* o_pTransAddr = i_pAddress & MASK_OFF_UPPER_BYTE;
+        for (size_t i = 0; i < iv_nodeContainer[l_nodeId].sectionCount; ++i)
+        {
+            if(iv_nodeContainer[l_nodeId].pSections[i].vmmAddress
+             + iv_nodeContainer[l_nodeId].pSections[i].size
+            >= o_pTransAddr)
+            {
+                o_pTransAddr =
+                    iv_nodeContainer[l_nodeId].pSections[i].pnorAddress
+                  - iv_nodeContainer[l_nodeId].pSections[i].vmmAddress
+                  + o_pTransAddr;
+                break;
+            }
+        }
+    }
+    return o_pTransAddr;
+}
+
+static void getFuncNodeTargetsOnSystem(
+    TARGETING::ConstTargetHandle_t i_nodeOrSysTarget,
+    TARGETING::TargetHandleList& o_nodeList,
+    const bool i_skipFuncCheck)
+{
+    o_nodeList.clear();
+
+    TARGETING::ATTR_CLASS_type l_class = (i_nodeOrSysTarget == NULL ? (TARGETING::CLASS_NA) : ((i_nodeOrSysTarget)->getAttr<TARGETING::ATTR_CLASS>()));
+    TARGETING::ATTR_TYPE_type l_type = (i_nodeOrSysTarget == NULL ? (TARGETING::TYPE_NA) : ((i_nodeOrSysTarget)->getAttr<TARGETING::ATTR_TYPE>()));
+
+    TARGETING::PredicateCTM l_isNode(TARGETING::CLASS_ENC, TARGETING::TYPE_NODE);
+    TARGETING::PredicateCTM l_isSys(TARGETING::CLASS_SYS, TARGETING::TYPE_SYS);
+
+    if(TARGETING::TYPE_SYS == l_type)
+    {
+        TARGETING::PredicateIsFunctional l_isFunctional;
+        TARGETING::PredicatePostfixExpr l_funcNodeFilter;
+        l_funcNodeFilter.push(&l_isNode).push(&l_isFunctional).And();
+
+        TARGETING::targetService().getAssociated(
+            o_nodeList,
+            i_nodeOrSysTarget,
+            TARGETING::TargetService::CHILD,
+            i_skipFuncCheck ? static_cast<TARGETING::PredicateBase*>(&l_isNode) : static_cast<TARGETING::PredicateBase*>(&l_funcNodeFilter));
+    }
+    else
+    {
+        if(i_skipFuncCheck || isFunctional(i_nodeOrSysTarget))
+        {
+            o_nodeList.push_back(const_cast<TARGETING::TargetHandle_t>(i_nodeOrSysTarget));
         }
     }
 }
@@ -363,7 +418,7 @@ static void TodControls::getParent(
         l_list,
         i_pTarget,
         TARGETING::TargetService::PARENT,
-        TARGETING::TargetService::IMMEDIATE);
+        NULL);
     if(l_list.size() == 1
     && (i_class == TARGETING::CLASS_NA
     || i_class == l_list[0]->getAttr<TARGETING::ATTR_CLASS>()))
@@ -537,7 +592,10 @@ static void initTargeting(errlHndl_t& io_pError)
     if (io_pError == NULL)
     {
         TargetService& l_targetService = targetService();
-        (void)l_targetService.init();
+        l_targetService.iv_tod_node_data = new tod_topology_node();
+        l_targetService.iv_tod_node_data->i_target = new fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>(const_cast<TARGETING::Target*>(iv_proc0));
+        l_targetService.iv_tod_node_data->i_tod_master = false;
+        l_targetService.iv_tod_node_data->i_drawer_master = false;
         if(l_isMpipl)
         {
             l_targetService.modifyReadOnlyPagePermissions(true);
@@ -583,22 +641,16 @@ static void initTargeting(errlHndl_t& io_pError)
 #ifdef CONFIG_DRTM
         const INITSERVICE::SPLESS::MboxScratch7_t scratch7 = {.data32 = l_scratch[SCRATCH_7] };
         const INITSERVICE::SPLESS::MboxScratch8_t scratch8 = {.data32 = l_scratch[SCRATCH_8] };
-
-        errlHndl_t pError = SECUREBOOT::DRTM::discoverDrtmState(scratch7,scratch8);
+        SECUREBOOT::DRTM::discoverDrtmState(scratch7,scratch8);
 #endif
-        bool l_allow_attr_overrides = g_BlToHbDataManager.getAllowAttrOverrides();
-        if (l_allow_attr_overrides)
+        if (g_BlToHbDataManager.iv_data.allowAttrOverrides)
         {
-            l_pTopLevel->setAttr<TARGETING::ATTR_ALLOW_ATTR_OVERRIDES_IN_SECURE_MODE>(l_allow_attr_overrides);
+            l_pTopLevel->setAttr<TARGETING::ATTR_ALLOW_ATTR_OVERRIDES_IN_SECURE_MODE>(1);
         }
         else
         {
-            l_pTopLevel->setAttr<TARGETING::ATTR_ALLOW_ATTR_OVERRIDES_IN_SECURE_MODE>(0x0);
+            l_pTopLevel->setAttr<TARGETING::ATTR_ALLOW_ATTR_OVERRIDES_IN_SECURE_MODE>(0);
         }
-
-#ifndef CONFIG_VPO_COMPILE
-        ERRORLOG::ErrlManager::errlResourceReady(ERRORLOG::TARG);
-#endif
         Util::setIsTargetingLoaded();
 #ifdef CONFIG_BMC_IPMI
         l_pTopLevel->setAttr<TARGETING::ATTR_IPMI_MAX_BUFFER_SIZE>(IPMI::max_buffer());
@@ -606,7 +658,7 @@ static void initTargeting(errlHndl_t& io_pError)
     }
 }
 
-errlHndl_t TargetService::modifyReadOnlyPagePermissions(bool i_allowWrites)
+static void TargetService::modifyReadOnlyPagePermissions(bool i_allowWrites)
 {
     TARGETING::AttrRP *l_pAttrRP = &TARG_GET_SINGLETON(TARGETING::theAttrRP);
     if(i_allowWrites)
@@ -619,7 +671,7 @@ errlHndl_t TargetService::modifyReadOnlyPagePermissions(bool i_allowWrites)
     }
 }
 
-errlHndl_t AttrRP::editPagePermissions(uint8_t i_type, uint32_t i_permission)
+static void AttrRP::editPagePermissions(uint8_t i_type, uint32_t i_permission)
 {
     uint32_t l_perm = i_permission;
     for (size_t i = 0; i < iv_sectionCount; ++i)
@@ -646,61 +698,12 @@ errlHndl_t AttrRP::editPagePermissions(uint8_t i_type, uint32_t i_permission)
                     break;
             }
         }
-        if( i_type == ALL_SECTION_TYPES || i_type == iv_sections[i].type)
+        if(i_type == ALL_SECTION_TYPES || i_type == iv_sections[i].type)
         {
             mm_set_permission(reinterpret_cast<void*>(iv_sections[i].vmmAddress), iv_sections[i].size, l_perm);
         }
     }
 }
-
-void* AttrRP::translateAddr(
-    void* i_pAddress,
-    const Target* i_pTarget)
-{
-    void* o_pTransAddr = i_pAddress;
-    if(i_pTarget != NULL)
-    {
-        NODE_ID l_nodeId = iv_nodeContainer.size();
-        static std::map<const Target*,NODE_ID> s_targToNodeMap;
-        auto l_nodeItr = s_targToNodeMap.find(i_pTarget);
-        if(l_nodeItr != s_targToNodeMap.end())
-        {
-            l_nodeId = l_nodeItr->second;
-            return;
-        }
-
-        for(uint8_t i = 0; i < iv_nodeContainer.size(); ++i)
-        {
-            for(uint32_t j = 0; j < iv_nodeContainer[i].sectionCount; ++j)
-            {
-                if(iv_nodeContainer[i].pSections[j].type == SECTION_TYPE_PNOR_RO
-                && i_pTarget >= iv_nodeContainer[i].pTargetMap
-                && i_pTarget < iv_nodeContainer[i].pTargetMap + iv_nodeContainer[i].pSections[j].size)
-                {
-                    l_nodeId = i;
-                    s_targToNodeMap[i_pTarget] = i;
-                    return;
-                }
-            }
-        }
-        void* o_pTransAddr = i_pAddress & MASK_OFF_UPPER_BYTE;
-        for (size_t i = 0; i < iv_nodeContainer[l_nodeId].sectionCount; ++i)
-        {
-            if(iv_nodeContainer[l_nodeId].pSections[i].vmmAddress
-             + iv_nodeContainer[l_nodeId].pSections[i].size
-            >= o_pTransAddr)
-            {
-                o_pTransAddr =
-                    iv_nodeContainer[l_nodeId].pSections[i].pnorAddress
-                  - iv_nodeContainer[l_nodeId].pSections[i].vmmAddress
-                  + o_pTransAddr;
-                break;
-            }
-        }
-    }
-    return o_pTransAddr;
-}
-
 
 void AttrRP::startup(bool i_isMpipl)
 {
@@ -717,6 +720,172 @@ void AttrRP::startup(bool i_isMpipl)
     }
 }
 
+void AttrRP::startup(errlHndl_t& io_taskRetErrl, bool isMpipl)
+{
+    uint32_t l_instance = NODE0;
+    NODE_ID l_maxNodeId = NODE0;
+    bool l_rsvd_mem_exists = false;
+
+    do
+    {
+        NodeInfo l_nodeCont;
+
+        uint64_t attr_size = 0;
+        TargetingHeader* l_header = hb_get_rt_rsvd_mem(l_instance, attr_size);
+
+        if (NULL == l_header || 0 == attr_size)
+        {
+            iv_nodeContainer.push_back(l_nodeCont);
+            if(!l_rsvd_mem_exists && (l_maxNodeId < 7))
+            {
+                l_maxNodeId = NODE1;
+            }
+        }
+        else
+        {
+            l_rsvd_mem_exists = true;
+            nodeInfoInit(l_nodeCont, l_header);
+            iv_nodeContainer.push_back(l_nodeCont);
+            checkHbExistingImage(l_header, l_instance, l_maxNodeId);
+        }
+
+        ++l_instance;
+    } while(l_instance <= l_maxNodeId);
+}
+
+ static void AttrRP::checkHbExistingImage(
+     TargetingHeader* i_header,
+     uint8_t i_instance,
+     NODE_ID &io_maxNodeId)
+{
+    bool l_validNode = false;
+    const AbstractPointer<uint32_t>* l_pNumTargetsPtr = i_header + i_header->headerSize;
+    uint32_t* l_pNumTargets = TARG_TO_PLAT_PTR(*l_pNumTargetsPtr);
+    if(TARG_ADDR_TRANSLATION_REQUIRED)
+    {
+        l_pNumTargets = this->translateAddr(l_pNumTargets, i_instance);
+    }
+    Target (*l_pTargets)[] = reinterpret_cast<Target(*)[]> (l_pNumTargets + 1);
+    for(uint32_t l_targetNum = 1;
+        l_targetNum <= *l_pNumTargets;
+        ++l_targetNum)
+    {
+        Target* l_pTarget = &(*(l_pTargets))[l_targetNum-1];
+
+        if(l_pTarget->getAttr<ATTR_CLASS>() == CLASS_SYS
+        && l_pTarget->getAttr<ATTR_TYPE>() == TYPE_SYS)
+        {
+            auto l_hb_images = l_pTarget->getAttr<ATTR_HB_EXISTING_IMAGE>();
+            EntityPath l_physPath = l_pTarget->getAttr<ATTR_PHYS_PATH>();
+            decltype(l_hb_images) l_mask = 0x1 << ((sizeof(l_hb_images) * 8) - 1);
+
+            NODE_ID l_node = NODE0;
+            if(l_hb_images)
+            {
+                while(l_mask && l_node < 8)
+                {
+                    if(l_mask & l_hb_images)
+                    {
+                        if(l_node == i_instance)
+                        {
+                            l_validNode = true;
+                        }
+
+                        if(l_node > io_maxNodeId)
+                        {
+                            io_maxNodeId = l_node;
+                        }
+                    }
+                    l_mask >>= 1;
+                    ++l_node;
+                }
+            }
+            else
+            {
+                l_validNode = true;
+                io_maxNodeId = i_instance;
+            }
+            break;
+        }
+    }
+}
+
+uint64_t hb_get_rt_rsvd_mem(
+    uint32_t i_instance,
+    uint64_t & o_size)
+{
+    o_size = 0;
+    if(g_hostInterfaces != NULL
+    && g_hostInterfaces->get_reserved_mem)
+    {
+        uint64_t hb_data_addr = rt_get_hb_data(i_instance);
+        if (0 != hb_data_addr)
+        {
+            return Util::hb_find_rsvd_mem_label(hb_data_addr, o_size);
+        }
+    }
+    return 0;
+}
+
+uint64_t hb_find_rsvd_mem_label(
+    hbrtTableOfContents_t * i_hb_data_toc_addr,
+    uint64_t & o_size)
+{
+    uint64_t l_label_data_addr = 0;
+    o_size = 0;
+
+    for (uint16_t i = 0; i < i_hb_data_toc_addr->total_entries; i++)
+    {
+        if (i_hb_data_toc_addr->entry[i].label == i_label)
+        {
+            l_label_data_addr = i_hb_data_toc_addr + i_hb_data_toc_addr->entry[i].offset;
+            o_size = i_hb_data_toc_addr->entry[i].size;
+            break;
+        }
+    }
+    return l_label_data_addr;
+}
+
+static uint64_t rt_get_hb_data(uint32_t i_instance)
+{
+    uint64_t l_vAddr = 0;
+    uint64_t l_physical_addr = getHRMOR() + 0x6A00000;
+    l_vAddr = mm_block_map(l_physical_addr, sizeof(Util::hbrtTableOfContents_t));
+    mm_block_unmap(l_vAddr);
+    return mm_block_map(l_physical_addr, l_vAddr->total_size);
+}
+
+void* mm_block_map(void* i_paddr, uint64_t i_size)
+{
+    return _syscall4(DEV_MAP, i_paddr, (void*)i_size, (void*)1, (void*)0);
+}
+
+int mm_block_unmap(void* i_vaddr)
+{
+    return _syscall1(DEV_UNMAP, i_vaddr);
+}
+
+static void AttrRP::nodeInfoInit(
+    NodeInfo& io_nodeCont,
+    TargetingHeader* i_header)
+{
+    io_nodeCont.pTargetMap = i_header;
+    io_nodeCont.sectionCount = i_header->numSections;
+    io_nodeCont.pSections = new AttrRP_Section[io_nodeCont.sectionCount]();
+    TargetingSection* l_section = i_header + sizeof(TargetingHeader) + i_header->offsetToSections;
+    uint64_t l_offset = 0;
+
+    for (size_t i = 0; i < io_nodeCont.sectionCount; ++i, ++l_section)
+    {
+        io_nodeCont.pSections[i].type = l_section->sectionType;
+        io_nodeCont.pSections[i].size = l_section->sectionSize;
+        io_nodeCont.pSections[i].vmmAddress = TARG_TO_PLAT_PTR(i_header->vmmBaseAddress) + i_header->vmmSectionOffset * i;
+        io_nodeCont.pSections[i].pnorAddress = i_header + l_offset;
+        l_offset += ALIGN_PAGE(io_nodeCont.pSections[i].size);
+    }
+    io_nodeCont.isValid = true;
+}
+
 void AttrRP::populateAttrsForMpipl()
 {
     for (size_t i = 0; i < iv_sectionCount; ++i)
@@ -726,10 +895,7 @@ void AttrRP::populateAttrsForMpipl()
         || iv_sections[i].type == SECTION_TYPE_PNOR_RW)
         && iv_isMpipl)
         {
-            memcpy(
-                iv_sections[i].vmmAddress,
-                iv_sections[i].realMemAddress,
-                (iv_sections[i].size));
+            memcpy(iv_sections[i].vmmAddress, iv_sections[i].realMemAddress, iv_sections[i].size);
         }
 
     }
