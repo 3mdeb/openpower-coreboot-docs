@@ -4,12 +4,12 @@ This isn't the whole isteps, earlier parts were implemented without previous
 analysis.
 
 ```
-ppeImgRc = getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /* build/rebuild */)
+getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /* build/rebuild */)
 
 	p9_xip_customize(proc, hw, hw, hw_size, ###pRingBuffer###, ###ringBufSize###, CME/SGPE, IPL, ###pBuf1###, ###buf1Size###, ###pBuf2###, ###buf2Size###, ###pBuf3###, ###buf3Size###, ENABLE_ALL_CORE(0xFFFF))
 		- ringBufSize = 307200
 		- bufXSize = 60000 * 3
-		- why ENABLE_ALL_CORE isn't 0xFFFFFF? (24 cores)
+		- ENABLE_ALL_CORE is used only for SBE, otherwise bootCoreMask = 0xFFFFFF (24 cores)
 
 		tor_get_block_of_rings(ringSection = hw->rings->offset(DD), dd, CME/SGPE, UNDEFINED_RING_VARIANT, pRingBuf, &ringBufSize)
 			tor_access_ring(ringSection, UNDEFINED_RING_ID, dd, CME/SGPE, UNDEFINED_RING_VARIANT, &instanceID, GET_PPE_LEVEL_RINGS, pRingBuf, &ringBufSize, &ringName)
@@ -18,6 +18,7 @@ ppeImgRc = getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /
 				- memcpy(pRingBuf, ppeBlock[CME/SGPE].offset, ppeBlock[CME/SGPE].size)
 
 		fetch_and_insert_vpd_rings(proc, pRingBuf, ringBufSize, maxRingSectionSize = ringBufSize, hw, CME/SGPE, buf1, buf1s, buf2, buf2s, buf3, buf3s, bootCoreMask)
+			// no-op if MVPD is empty?
 			resolve_gptr_overlays(proc, hw, &overlaySection, dd, bGptrMvpdSupport)
 				- if dd < 20 || hw->overlays->dd_support == 0: return overlaySection = NULL
 				- overlaySection = hw + hw->overlays...->offset, bGptrMvpdSupport = true
@@ -27,7 +28,7 @@ ppeImgRc = getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /
 				- CME: only EC (+ GPTR_EC if bGptrMvpdSupport)
 				- SGPE: only EX + EQ (+ GPTR_E{X,Q} if bGptrMvpdSupport)
 				for (iRing: l_ringIdList[iRing].vpdRingClass): for (chiplet_id: l_ringIdList[iRing].instanceIdMin..l_ringIdList[iRing].instanceIdMax):
-					_fetch_and_insert_vpd_rings (proc, pRingBuf, ringBufSize,, maxRingSectionSize, overlaySection, dd, CME/SGPE, buf1, buf1s, buf2, buf2s, buf3, buf3s,
+					_fetch_and_insert_vpd_rings (proc, pRingBuf, ringBufSize, maxRingSectionSize, overlaySection, dd, CME/SGPE, buf1, buf1s, buf2, buf2s, buf3, buf3s,
 												 chiplet_id, evenOdd = 0, l_ringIdList[iRing], RING_SCAN, bImgOutOfSpace = false, bootCoreMask)
 						- clear bu1, buf2, buf3
 						getMvpdRing(proc, MVPD_RECORD_CP00, l_mvpdKeyword, chiplet_id, evenOdd, l_ringIdList[iRing].ringId, buf1, buf1s, buf2, buf2s)
@@ -124,18 +125,91 @@ ppeImgRc = getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /
 
 							TBD !!!!!!!!!
 
-			// 2. Add all instance rings - significantly different for CME and SGPE
-			TBD !!!!
-
-
+			// 2. Add all instance rings - significantly different for CME and SGPE, this is for CME
+			l_ringIdList = PDR
+			l_ringEC = l_ringIdList[iRing] for which vpdRingClass == VPD_RING_CLASS_EC_INS
+				- return if none
+			for each quad:
+				// hostboot has additional layer for ex in quad, but it isn't used for anything
+				for ec in 4*quad..4*quad+3:
+					chipletId = l_ringEC.instanceIdMin + ec
+					// if (bootCoreMask & PPC_BIT(8+chipletId)) -> bootCoreMask is all set, so always true
+					_fetch_and_insert_vpd_rings (proc, pRingBuf, ringBufSize, maxRingSectionSize, overlaySection, dd, CME, buf1, buf1s, buf2, buf2s, buf3, buf3s,
+					                             chipletId, evenOdd = 0 /* suspicious, but it is 0 for all */, l_RingEC, RING_SCAN, bImgOutOfSpace = false, bootCoreMask)
+						- same as before, only l_RingEC is different
 
 FAPI_ATTR_GET(fapi2::ATTR_RISK_LEVEL, FAPI_SYSTEM, l_riskLevel);
 	- RISK_LEVEL = 0 ( <= DD2.2), 4 (DD2.3)
 
 // create a layout of rings in HOMER for consumption of CME
-layoutRingsForCME( pChipHomer, l_chipFuncModel, l_ringData,
-							 (RingDebugMode_t)l_ringDebug, l_riskLevel,
-							 i_imgType, i_pRingOverride);
+layoutRingsForCME(homer, __proc__, ringData /* buffers */, l_ringDebug, RISK_LEVEL, imgType, PNOR->RINGOVD);
+	// RINGOVD is empty, null is passed and some logic doesn't execute
+	CpmrHdr = &homer->cpmr.header
+	CmeHdr = &homer->cpmr.cme_sram_region[CME_INT_VECTOR_SIZE]
+	ringLen = CmeHdr->hcode_offset + CmeHdr->hcode_len
+	assert(CpmrHdr->magic == CPMR_VDM_PER_QUAD) // >= maybe? older have different layout, skipped for now
+	layoutCmnRingsForCme(homer, __proc__, ringData, l_ringDebug, ringVariant = RISK_LEVEL, imgType, cmeRings /* list of rings in yet another format... */, &ringLength)
+		start = &homer->cpmr.cme_sram_region[ringLength]
+		payload = start + CORE_COMMON_RING_INDEX_SIZE         // sizeof(CoreCmnRingsList_t) = 16 B
+		ringIds = [ec_func, ec_gptr, ec_time, ec_mode]
+		for id in ringIds:		// MAX_HOMER_CORE_CMN_RINGS = 4
+			if id == ec_gptr || ec_time:
+				ringVariant = RV_BASE		// else RISK_LEVEL
+			tor_get_single_ring(pRingBuf, dd, id, PT_CME, ringVariant, CORE0_CHIPLET_ID = 0x20, buf1, buf1s, l_debugMode)
+				- described earlier, but watch out for differences like ringid_get_noof_chiplets()
+			- ring not found is not an error, continue in that case
+			ALIGN_UP(ringSize, 8)
+			ALIGN_UP(pRingPayload, 8)		// wrt pRingStart, so (pRingPayload - pRingStart) % 8 == 0
+			----------------
+
+            uint16_t* pScanRingIndex = (uint16_t*) pRingStart;
+            uint32_t ringStartToHdrOffset = ( TOR_VER_ONE == tor_version() ) ? RING_START_TO_RS4_OFFSET : 0;
+            memcpy( pRingPayload, i_ringData.iv_pWorkBuf1, ringSize );
+            *(pScanRingIndex + ringIndex) = SWIZZLE_2_BYTE((pRingPayload - pRingStart) + ringStartToHdrOffset);
+
+
+            io_cmeRings.setRingOffset( pRingPayload, io_cmeRings.getCommonRingId( ringIndex ));
+            io_cmeRings.setRingSize( io_cmeRings.getCommonRingId( ringIndex ), ringSize );
+            io_cmeRings.extractRing( i_ringData.iv_pWorkBuf1, ringSize, io_cmeRings.getCommonRingId( ringIndex ) );
+
+            pRingPayload = pRingPayload + ringSize;
+
+            //cleaning up what we wrote in temp buffer last time.
+            memset( i_ringData.iv_pWorkBuf1, 0x00, ringSize );
+        }
+
+        ringSize = (pRingPayload - pRingStart);
+
+        if( ringSize > CORE_COMMON_RING_INDEX_SIZE )
+        {
+            io_cmnRingSize += (pRingPayload - pRingStart);
+            ALIGN_DWORD(tempSize, io_cmnRingSize)
+        }
+        ----------------
+			TBD !!!!!!
+
+	----------------
+	pCmeHdr->g_cme_common_ring_length = ringLength - (CmeHdr->hcode_offset + CmeHdr->hcode_len)
+
+	if( !pCmeHdr->g_cme_common_ring_length )
+	{
+		//No common ring , so force offset to be 0
+		pCmeHdr->g_cme_common_ring_offset = 0;
+	}
+
+	tempLength = ringLength;
+	tempLength = (( tempLength + CME_BLOCK_READ_LEN - 1 ) >> CME_BLK_SIZE_SHIFT ); //multiple of 32B
+	ringLength = tempLength << CME_BLK_SIZE_SHIFT; //start position of instance rings
+
+	layoutInstRingsForCme(homer, __proc__, l_ringData, l_ringDebug, ringVariant = RV_BASE, imgType, cmeRings, &ringLength)
+		TBD !!!!!!
+
+	if( ringLength )
+	{
+		CmeHdr->max_spec_ring_len = ALIGN_UP(ringLength, 32) / 32
+		pCmeHdr->core_spec_ring_offset    =   tempLength;
+	}
+	----------------
 
 l_ringData.iv_ringBufSize = i_sizeBuf1;
 
