@@ -1,0 +1,965 @@
+n=0x5, rc=0xcd
+
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 bootblock starting (log level: 7)...
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+FMAP: Found "FLASH" version 1.1 at 0x20000.
+FMAP: base = 0x0 size = 0x200000 #areas = 4
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+CBFS: mcache @0x00031000 built for 8 files, used 0x1a8 of 0x2000 bytes
+CBFS: Found 'fallback/romstage' @0x80 size 0xc558 in mcache @0x0003102c
+BS: bootblock times (exec / console): total (unknown) / 2 ms
+
+
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 romstage starting (log level: 7)...
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+MEMD partition has ECC
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address 51
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address 53
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address D5
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address D7
+SPD @ 0x50
+SPD: module type is DDR4
+SPD: module part number is M393A2K40CB2-CTD    
+SPD: banks 16, ranks 1, rows 17, columns 10, density 8192 Mb
+SPD: device width 4 bits, bus width 64 bits
+SPD: module size is 16384 MB (per channel)
+SPD @ 0x52
+SPD: module type is DDR4
+SPD: module part number is 9ASF1G72PZ-2G6J1    
+SPD: banks 16, ranks 1, rows 16, columns 10, density 8192 Mb
+SPD: device width 8 bits, bus width 64 bits
+SPD: module size is 8192 MB (per channel)
+SPD @ 0xD4
+SPD: module type is DDR4
+SPD: module part number is M393A4K40CB2-CTD    
+SPD: banks 16, ranks 2, rows 17, columns 10, density 8192 Mb
+SPD: device width 4 bits, bus width 64 bits
+SPD: module size is 32768 MB (per channel)
+SPD @ 0xD6
+SPD: module type is DDR4
+SPD: module part number is HMA82GR7CJR8N-VK    
+SPD: banks 16, ranks 2, rows 16, columns 10, density 8192 Mb
+SPD: device width 8 bits, bus width 64 bits
+SPD: module size is 16384 MB (per channel)
+starting istep 13.2
+ending istep 13.2
+starting istep 13.3
+putRing took 3 ms
+putRing took 3 ms
+ending istep 13.3
+starting istep 13.4
+ending istep 13.4
+starting istep 13.6
+ending istep 13.6
+starting istep 13.8
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+ending istep 13.8
+starting istep 13.9
+ending istep 13.9
+starting istep 13.10
+CCS took 2 us (3 us timeout), 1 instruction(s)
+CCS took 2 us (2 us timeout), 14 instruction(s)
+RCD dump for I2C address 0x58:
+0x0000fab0: c7 18 42 00 01 00 00 00 02 51 55 03 cb e4 40 0d  ..B......QU...@.
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (2 us timeout), 14 instruction(s)
+RCD dump for I2C address 0x5a:
+0x0000fab0: c7 18 42 00 00 00 00 00 02 01 00 03 cb e4 40 0d  ..B...........@.
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (3 us timeout), 1 instruction(s)
+CCS took 2 us (2 us timeout), 28 instruction(s)
+RCD dump for I2C address 0xdc:
+0x0000fab0: 86 32 42 00 00 00 00 00 02 61 55 00 cb e4 c0 0d  .2B......aU.....
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (2 us timeout), 28 instruction(s)
+RCD dump for I2C address 0xde:
+0x0000fab0: 86 32 42 00 00 00 00 00 02 11 00 00 cb e4 c0 0d  .2B.............
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+ending istep 13.10
+starting istep 13.11
+CCS took 2 us (7 us timeout), 2 instruction(s)
+Write Leveling starting
+CCS took 12 us (84 us timeout), 5 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 5 us (38 us timeout), 5 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 9 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 7 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7951 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 5 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 2 us (7 us timeout), 2 instruction(s)
+Write Leveling starting
+CCS took 12 us (84 us timeout), 5 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 5 us (38 us timeout), 5 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 9 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 7 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 34 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7355 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 5 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 3 us (12 us timeout), 4 instruction(s)
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7647 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 6681 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 3 us (12 us timeout), 4 instruction(s)
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 36 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 8769 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 10 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 8184 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+ending istep 13.11
+starting istep 13.13
+ending istep 13.13
+starting istep 14.1
+MCBIST0 took 1833313 us
+MCBIST1 took 3665278 us
+ending istep 14.1
+starting istep 14.5
+ending istep 14.5
+starting istep 18.11
+starting istep 18.12
+0xF000F = 223d104900008040
+CBMEM:
+IMD: root @ 0xffeff000 254 entries.
+IMD: root @ 0xffefec00 62 entries.
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+CBFS: Found 'fallback/ramstage' @0xc640 size 0x743c in mcache @0x00031080
+BS: romstage times (exec / console): total (unknown) / 36 ms
+
+
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 ramstage starting (log level: 7)...
+Enumerating buses...
+Root Device scanning...
+CPU_CLUSTER: 0 enabled
+scan_bus: bus Root Device finished in 0 msecs
+done
+BS: BS_DEV_ENUMERATE run times (exec / console): 0 / 1 ms
+Allocating resources...
+Reading resources...
+CPU_CLUSTER: 0 missing read_resources
+Done reading resources.
+CPU_CLUSTER: 0 missing set_resources
+Done setting resources.
+Done allocating resources.
+BS: BS_DEV_RESOURCES run times (exec / console): 0 / 1 ms
+Enabling resources...
+done.
+Initializing devices...
+Devices initialized
+Finalize devices...
+Devices finalized
+Writing coreboot table at 0xffedc000
+ 0. 0000000000000000-00000000efffffff: RAM
+ 1. 00000000f0000000-00000000f8007fff: RESERVED
+ 2. 00000000f8008000-00000000f800ffff: RAMSTAGE
+ 3. 00000000f8010000-00000000f82fffff: RESERVED
+ 4. 00000000f8300000-00000000f8416fff: RAMSTAGE
+ 5. 00000000f8417000-00000000ffedbfff: RESERVED
+ 6. 00000000ffedc000-00000000ffefffff: CONFIGURATION TABLES
+ 7. 00000000fff00000-00000000ffffffff: RESERVED
+ 8. 0000000100000000-00000011ffffffff: RAM
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+Wrote coreboot table at: 0xffedc000, 0x200 bytes, checksum 68ec
+coreboot table: 536 bytes.
+IMD ROOT    0. 0xffeff000 0x00001000
+IMD SMALL   1. 0xffefe000 0x00001000
+CONSOLE     2. 0xffede000 0x00020000
+COREBOOT    3. 0xffedc000 0x00002000
+IMD small region:
+  IMD ROOT    0. 0xffefec00 0x00000400
+  RO MCACHE   1. 0xffefea40 0x000001a8
+  FMAP        2. 0xffefe960 0x000000e0
+BS: BS_WRITE_TABLES run times (exec / console): 0 / 4 ms
+CBFS: Found 'fallback/payload' @0x13f80 size 0x1ad93d in mcache @0xffefeb7c
+FIT: Examine payload fallback/payload
+FIT: Loading FIT from 0xf9000000
+FIT: Image fdt-1 has 91743 bytes.
+FIT: Image kernel has 1666040 bytes.
+FIT: Compat preference (lowest to highest priority) : raptor-cs,talos-ii
+FIT: config conf-1 (default), kernel kernel, fdt fdt-1, compat ibm,powernv ibm,p9-openbmc rcs,talos
+FIT: No match, choosing default conf-1.
+FIT: Updating devicetree memory entries
+ 0. 0000000000000000-0000000000196fff: PAYLOAD
+ 1. 0000000000197000-00000000efffffff: RAM
+ 2. 00000000f0000000-00000000f004dfff: PAYLOAD
+ 3. 00000000f004e000-00000000f8007fff: RESERVED
+ 4. 00000000f8008000-00000000f800ffff: RAMSTAGE
+ 5. 00000000f8010000-00000000f82fffff: RESERVED
+ 6. 00000000f8300000-00000000f8416fff: RAMSTAGE
+ 7. 00000000f8417000-00000000ffedbfff: RESERVED
+ 8. 00000000ffedc000-00000000ffefffff: CONFIGURATION TABLES
+ 9. 00000000fff00000-00000000ffffffff: RESERVED
+10. 0000000100000000-00000011ffffffff: RAM
+FIT: Flattening FDT to 0xf0000000
+FIT: Relocating uncompressed kernel to 0x00000000
+BS: BS_PAYLOAD_LOAD run times (exec / console): 860 / 4 ms
+Jumping to boot code at 0x0000001[   10.122428084,5] OPAL 98581863-dirty-bde1b87-debug starting...
+[   10.122434214,7] initial console log level: memory 8, driver 7
+[   10.122437735,8] OPAL is Powered By Linked-List Technology.
+[   10.122441022,6] CPU: P9 generation processor (max 4 threads/core)
+[   10.122444441,7] CPU: Boot CPU PIR is 0x0004 PVR is 0x004e1202
+[   10.122450589,7] OPAL table: 0x30128b30 .. 0x30129110, branch table: 0x30002000
+[   10.122458286,7] Assigning physical memory map table for nimbus
+[   10.139144720,7] FDT: Parsing fdt @0xf0000000
+[   10.142376938,7] CPUFT: creating cpufeatures for cpu:32 isa:3000
+[   10.142387881,7] CPUFT:   'big-endian'
+[   10.142395991,7] CPUFT:   'little-endian'
+[   10.142404454,7] CPUFT:   'hypervisor'
+[   10.142411781,7] CPUFT:   'interrupt-facilities'
+[   10.142421411,7] CPUFT:   'smt'
+[   10.142430563,7] CPUFT:   'program-priority-register'
+[   10.142439297,7] CPUFT:   'virtual-page-class-key-protection'
+[   10.142451781,7] CPUFT:   'strong-access-ordering'
+[   10.142462650,7] CPUFT:   'no-execute'
+[   10.142471416,7] CPUFT:   'cache-inhibited-large-page'
+[   10.142481541,7] CPUFT:   'debug-facilities'
+[   10.142490624,7] CPUFT:   'come-from-address-register'
+[   10.142502152,7] CPUFT:   'branch-tracing'
+[   10.142511889,7] CPUFT:   'floating-point'
+[   10.142523741,7] CPUFT:   'vector'
+[   10.142537389,7] CPUFT:   'vector-scalar'
+[   10.142551020,7] CPUFT:   'vector-crypto'
+[   10.142562367,7] CPUFT:   'quadword-load-store'
+[   10.142572129,7] CPUFT:   'decimal-integer'
+[   10.142579984,7] CPUFT:   'decimal-floating-point'
+[   10.142590763,7] CPUFT:   'data-stream-control-register'
+[   10.142605386,7] CPUFT:   'branch-history-rolling-buffer'
+[   10.142617300,7] CPUFT:   'event-based-branch'
+[   10.142631519,7] CPUFT:   'target-address-register'
+[   10.142648687,7] CPUFT:   'control-register'
+[   10.142658682,7] CPUFT:   'processor-utilization-of-resources-register'
+[   10.142676590,7] CPUFT:   'mmu-radix'
+[   10.142687775,7] CPUFT:   'mmu-hash-v3'
+[   10.142699254,7] CPUFT:   'wait-v3'
+[   10.142710558,7] CPUFT:   'idle-stop'
+[   10.142721499,7] CPUFT:   'hypervisor-virtualization-interrupt'
+[   10.142735910,7] CPUFT:   'machine-check-power9'
+[   10.142749048,7] CPUFT:   'performance-monitor-power9'
+[   10.142764029,7] CPUFT:   'system-call-vectored'
+[   10.142780333,7] CPUFT:   'processor-control-facility-v3'
+[   10.142796483,7] CPUFT:   'pc-relative-addressing'
+[   10.142808816,7] CPUFT:   'timer-facilities'
+[   10.142822300,7] CPUFT:   'timer-facilities-v3'
+[   10.142837786,7] CPUFT:   'random-number-generator'
+[   10.142852898,7] CPUFT:   'fixed-point-v3'
+[   10.142862083,7] CPUFT:   'decimal-integer-v3'
+[   10.142872650,7] CPUFT:   'floating-point-v3'
+[   10.142883993,7] CPUFT:   'decimal-floating-point-v3'
+[   10.142895536,7] CPUFT:   'vector-v3'
+[   10.142911098,7] CPUFT:   'vector-scalar-v3'
+[   10.142928279,7] CPUFT:   'vector-binary128'
+[   10.142945688,7] CPUFT:   'vector-binary16'
+[   10.142962106,7] CPUFT:   'event-based-branch-v3'
+[   10.142973882,7] CPUFT:   'atomic-memory-operations'
+[   10.142982112,7] CPUFT:   'copy-paste'
+[   10.142990251,7] CPUFT:   'tm-suspend-hypervisor-assist'
+[   10.143009784,7] CPUFT:   'tm-suspend-xer-so-bug'
+[   10.143032668,7] CPUFT: feature branch-tracing has 1 dependencies (debug-facilities)
+[   10.143040275,7] CPUFT:  branch-tracing found dep (debug-facilities)
+[   10.143048480,7] CPUFT: feature come-from-address-register has 1 dependencies (debug-facilities)
+[   10.143057678,7] CPUFT:  come-from-address-register found dep (debug-facilities)
+[   10.143068419,7] CPUFT: feature decimal-floating-point has 1 dependencies (floating-point)
+[   10.143077583,7] CPUFT:  decimal-floating-point found dep (floating-point)
+[   10.143088029,7] CPUFT: feature decimal-floating-point-v3 has 2 dependencies (floating-point-v3 decimal-floating-point)
+[   10.143102070,7] CPUFT:  decimal-floating-point-v3 found dep (floating-point-v3)
+[   10.143110524,7] CPUFT:  decimal-floating-point-v3 found dep (decimal-floating-point)
+[   10.143122201,7] CPUFT: feature decimal-integer-v3 has 2 dependencies (fixed-point-v3 decimal-integer)
+[   10.143132853,7] CPUFT:  decimal-integer-v3 found dep (fixed-point-v3)
+[   10.143140362,7] CPUFT:  decimal-integer-v3 found dep (decimal-integer)
+[   10.143150154,7] CPUFT: feature event-based-branch-v3 has 1 dependencies (event-based-branch)
+[   10.143159336,7] CPUFT:  event-based-branch-v3 found dep (event-based-branch)
+[   10.143169717,7] CPUFT: feature floating-point-v3 has 1 dependencies (floating-point)
+[   10.143178253,7] CPUFT:  floating-point-v3 found dep (floating-point)
+[   10.143192667,7] CPUFT: feature timer-facilities-v3 has 1 dependencies (timer-facilities)
+[   10.143204252,7] CPUFT:  timer-facilities-v3 found dep (timer-facilities)
+[   10.143213298,7] CPUFT: feature vector has 1 dependencies (floating-point)
+[   10.143220769,7] CPUFT:  vector found dep (floating-point)
+[   10.143228743,7] CPUFT: feature vector-binary128 has 1 dependencies (vector-scalar-v3)
+[   10.143240909,7] CPUFT:  vector-binary128 found dep (vector-scalar-v3)
+[   10.143250008,7] CPUFT: feature vector-binary16 has 1 dependencies (vector-v3)
+[   10.143261567,7] CPUFT:  vector-binary16 found dep (vector-v3)
+[   10.143268668,7] CPUFT: feature vector-crypto has 1 dependencies (vector)
+[   10.143278992,7] CPUFT:  vector-crypto found dep (vector)
+[   10.143285729,7] CPUFT: feature vector-scalar has 1 dependencies (vector)
+[   10.143296013,7] CPUFT:  vector-scalar found dep (vector)
+[   10.143304425,7] CPUFT: feature vector-scalar-v3 has 2 dependencies (vector-v3 vector-scalar)
+[   10.143317712,7] CPUFT:  vector-scalar-v3 found dep (vector-v3)
+[   10.143328537,7] CPUFT:  vector-scalar-v3 found dep (vector-scalar)
+[   10.143337277,7] CPUFT: feature vector-v3 has 1 dependencies (vector)
+[   10.143347199,7] CPUFT:  vector-v3 found dep (vector)
+[   10.143441608,6] CHIP: Initialised chip 0 from xscom@603fc00000000
+[   10.143555503,6] P9 DD2.30 detected
+[   10.143558339,5] CHIP: Chip ID 0000 type: P9N DD2.30
+[   10.143562177,7] XSCOM: Base address: 0x603fc00000000
+[   10.143595660,7] XSTOP: XSCOM addr = 0x5012000, FIR bit = 31
+[   10.143600857,6] MFSI 0:0: Initialized
+[   10.143603797,6] MFSI 0:2: Initialized
+[   10.143606614,6] MFSI 0:1: Initialized
+[   10.143883483,6] LPC: LPC[000]: Initialized
+[   10.143886393,7] LPC: access via MMIO @0x6030000000000
+[   10.143940903,7] LPC: Default bus on chip 0x0
+[   10.143949568,7] CPU: New max PIR set to 0x7
+[   10.144125092,6] MEM: parsing reserved memory from node /ibm,hostboot/reserved-memory
+[   10.144181363,7] HOMER: Init chip 0
+[   10.144185392,7]   PBA BAR0 : 0x0000000000000000
+[   10.144188665,7]   PBA MASK0: 0x0000000000000000
+[   10.144193182,7]   PBA BAR2 : 0x0000000000000000
+[   10.144196320,7]   PBA MASK2: 0x0000000000000000
+[   13.033269992,7] HBRT: Chip 0 HOMER base 0000000032c00000 : 00400000
+[   13.033276135,7] HBRT: OCC common base 0000000032000000 : 00800000
+[   13.033280947,7] CPU: decrementer bits 56
+[   13.033299152,6] CPU: CPU from DT PIR=0x0004 Server#=0x4 State=3
+[   13.033315326,8] CPU:   secondary thread 1 found
+[   13.033318798,8] CPU:   secondary thread 2 found
+[   13.033322066,8] CPU:   secondary thread 3 found
+[   13.033325290,6] CPU:  4 secondary threads
+[   13.033566521,6] PLAT: AST SIO unavailable!
+[   13.033631185,7] UART: Using LPC IRQ 4
+[   13.044749807,5] PLAT: Detected Talos platform
+[   13.044833319,5] PLAT: Detected BMC platform ast2500:openbmc
+[   13.045233945,7] XIVE[ IC 00  ] Initializing rev 2 block ID 0...
+[   13.045380060,7] XIVE[ IC 00  ] Handling interrupts [00000000..000fffff]
+[   13.045543734,7] XIVE[ IC 00  ] IC: 0x6030203100000 [0x000000080000/16]
+[   13.045658574,7] XIVE[ IC 00  ] TM: 0x6030203180000 [0x000000040000/16]
+[   13.045792134,7] XIVE[ IC 00  ] PC: 0x6018000000000 [0x001000000000]
+[   13.045923990,7] XIVE[ IC 00  ] VC: 0x6010000000000 [0x008000000000]
+[   13.046002553,7] XIVE[ IC 00  ] PC_GLOBAL_CONFIG=0000000080800000
+[   13.046132752,7] XIVE[ IC 00  ] PC_TCTXT_CFG=e3c0c40200000000
+[   13.046224665,7] XIVE[ IC 00  ] store EOI is disabled
+[   13.046297915,7]  CQ_CFG_PB_GEN = 1000002400000000
+[   13.046401833,7]  CQ_MSGSND     = ffffff0000000000
+[   13.046888082,7] XIVE[ IC 00  ] SBE at 0x33140000 size 0x800000
+[   13.048731121,7] XIVE[ IC 00  ] IVT at 0x33800000 size 0x800000
+[   13.048865790,7] XIVE[ IC 00  ] EQi at 0x34010000 size 0x10000
+[   13.048991616,7] XIVE[ IC 00  ] VPi at 0x34030000 size 0x10000
+[   13.049103424,7] XIVE[ IC 00  ] Allocating pages 0 to 0 of VPs (for 128 VPs)
+[   13.049254426,7] XIVE[ IC 00  ] VP0 at 0x34050000 size 0x10000
+[   13.049404156,7] IRQ: Registering 0000..fffff ops @0x300fa6c0 (data 0x0) [secondary]
+[   13.049564841,7] IRQ: Registering 1000000..10fffff ops @0x300fa6c0 (data 0x0)
+[   13.049702024,6] XIVE: 1 chips considered for VP allocations
+[   13.099893839,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x84
+[   13.101820370,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x85
+[   13.103744805,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x86
+[   13.105635324,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x87
+[   13.106042450,7] PSI[0x000]: ESB MMIO at @0x60302031c0000
+[   13.106150363,7] PSI[0x000]: Interrupts sources registered for P9 DD2.x
+[   13.106284274,7] IRQ: Registering ffff0..ffffd ops @0x300fa6c0 (data 0x30491810)
+[   13.106717117,6] PSI[0x000]: Found PSI bridge [active=0]
+[   13.106845671,6] CPU: Setting up secondary CPU state
+[   13.106933324,6] CPU: Calling in all processors...
+[   13.107176576,6] CHIPTOD: Calculated MCBS is 0x32 (Cfreq=2700000000 Tfreq=32000000)
+[   13.107315755,7] CHIPTOD: Base TFMR=0x3212000000000000
+[   13.107405089,7] CHIPTOD: Master sync on CPU PIR 0x0004...
+[   13.108048129,7] CHIPTOD: PIR 0x0004 TB=1932b2eab
+[   13.108169173,7] CHIPTOD: TOD Topology in Use: Primary
+[   13.108259613,7] CHIPTOD:   Primary configuration:
+[   13.108322650,7] CHIPTOD:   Chip id: 0, Role: MDMT, Status: Active Master
+[   13.108495430,7] CHIPTOD:   Secondary configuration:
+[   13.108606561,7] CHIPTOD:   Chip id: -1, Role: MDMT, Status: Active Master
+[   13.108889325,7] SBE: Master chip id : 0
+[   13.109008530,6] SBE: Timer facility on chip 0
+[   13.109234110,6] I2C: Chip 00000000 Eng. 1 Clock 116 Mhz
+[   13.109348715,6] I2C: Interrupts functional
+[   13.109440652,6]  P0: <p8_00000000_e1p0> 1000 kHz
+[   13.109558643,6]  P2: <p8_00000000_e1p2> 1000 kHz
+[   13.109728013,6] I2C: Chip 00000000 Eng. 2 Clock 116 Mhz
+[   13.109875340,6]  P0: <p8_00000000_e2p0> 400 kHz
+[   13.109993643,6] I2C: Chip 00000000 Eng. 3 Clock 116 Mhz
+[   13.110140915,6]  P0: <p8_00000000_e3p0> 400 kHz
+[   13.110256908,6]  P1: <p8_00000000_e3p1> 400 kHz
+[   13.110671847,6] BT: Interface initialized, IO 0x00e4
+[   13.110805926,7] LPC: Routing irq 10, policy: 0 (r=1)
+[   13.110810900,7] LPC: SerIRQ 10 using route 0 targetted at OPAL
+[   13.111098082,7] BT: Using LPC IRQ 10
+[   13.111219980,5] CPU 0004 lowest stack mark 10888 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c22f70 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c23020 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c230c0 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c23160 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c23200 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c232b0 R: 000000003001a174   .lock_recursive_caller+0x54
+ S: 0000000031c23350 R: 00000000300131fc   .console_write+0x48
+ S: 0000000031c23400 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c235f0 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c23680 R: 00000000300908ec   .p9_sbe_msg_complete+0x44
+ S: 0000000031c23720 R: 0000000030091130   .__p9_sbe_interrupt+0x1a8
+ S: 0000000031c23820 R: 00000000300913f4   .p9_sbe_timeout_poll_one+0x9c
+ S: 0000000031c238c0 R: 00000000300915dc   .p9_sbe_timeout_poll+0x68
+ S: 0000000031c23950 R: 000000003001f500   .opal_run_pollers+0x1b0
+ S: 0000000031c239f0 R: 00000000300211d0   .time_wait+0x110
+ S: 0000000031c23a90 R: 0000000030036494   .ipmi_queue_msg_sync+0x120
+ S: 0000000031c23b30 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c23bd0 R: 00000000300c8ed8   .hiomap_ack+0xa0
+ S: 0000000031c23c70 R: 00000000300c9a80   .ipmi_hiomap_init+0xf4
+ S: 0000000031c23d10 R: 00000000300b6b40   .pnor_init+0x4c
+ S: 0000000031c23db0 R: 00000000300b6fa0   .astbmc_init+0x2c
+ S: 0000000031c23e30 R: 0000000030015a5c   .main_cpu_entry+0x460
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   13.215401320,7] BT: Got a input buffer len (63) cap which differs from the default
+[   13.215605612,7] BT: Got a output buffer len (63) cap which differs from the default
+[   13.215783949,7] BT: BMC BT capabilities received:
+[   13.215916674,7] BT: buffer sizes: 64 input 64 output
+[   13.216027462,7] BT: number of requests: 1
+[   13.216131248,7] BT: msg timeout: 10 max retries: 1
+[   13.216309665,5] CPU 0004 lowest stack mark 10344 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c22d50 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c22e00 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c22ea0 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c22f40 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c22fe0 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c23090 R: 0000000030043da0   .__lpc_read+0x58
+ S: 0000000031c23150 R: 0000000030045bbc   .uart_read+0x88
+ S: 0000000031c231e0 R: 0000000030045c10   .uart_check_tx_room+0x28
+ S: 0000000031c23260 R: 0000000030045cc0   .uart_wait_tx_room+0x58
+ S: 0000000031c232f0 R: 0000000030046760   .uart_con_write+0x84
+ S: 0000000031c233a0 R: 0000000030012da8   .__flush_console+0x11c
+ S: 0000000031c23470 R: 0000000030013218   .console_write+0x64
+ S: 0000000031c23520 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c23710 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c237a0 R: 000000003006920c   .get_bt_caps_complete+0x8c
+ S: 0000000031c23850 R: 0000000030036324   .ipmi_cmd_done+0x104
+ S: 0000000031c238f0 R: 0000000030069bd0   .bt_poll+0x390
+ S: 0000000031c239d0 R: 0000000030037fd8   .check_timers+0x1d0
+ S: 0000000031c23a90 R: 0000000030036488   .ipmi_queue_msg_sync+0x114
+ S: 0000000031c23b30 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c23bd0 R: 00000000300c8ed8   .hiomap_ack+0xa0
+ S: 0000000031c23c70 R: 00000000300c9a80   .ipmi_hiomap_init+0xf4
+ S: 0000000031c23d10 R: 00000000300b6b40   .pnor_init+0x4c
+ S: 0000000031c23db0 R: 00000000300b6fa0   .astbmc_init+0x2c
+ S: 0000000031c23e30 R: 0000000030015a5c   .main_cpu_entry+0x460
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   13.326076546,7] HIOMAP: Acked events: 0x3
+[   13.423502315,7] IPMI Get Message Flags: 02
+[   14.116532775,7] IPMI Get Message Flags: 02
+[   14.224243185,5] HIOMAP: Negotiated hiomap protocol v2
+[   14.224378807,5] HIOMAP: Block size is 64KiB
+[   14.224484106,5] HIOMAP: BMC suggested flash timeout of 8s
+[   14.224598919,5] HIOMAP: Flash size is 64MiB
+[   14.224704123,5] HIOMAP: Erase granule size is 64KiB
+[   14.322123991,7] IPMI read event 35 complete: 16 bytes. cc: 00
+[   14.322314837,7] IPMI: SEL received (16 bytes, netfn 58, cmd 15)
+[   14.322411752,7] HIOMAP: Received events: 0x80
+[   14.322519850,5] CPU 0004 lowest stack mark 9544 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c22a30 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c22ae0 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c22b80 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c22c20 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c22cc0 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c22d70 R: 0000000030043da0   .__lpc_read+0x58
+ S: 0000000031c22e30 R: 0000000030045bbc   .uart_read+0x88
+ S: 0000000031c22ec0 R: 0000000030045c10   .uart_check_tx_room+0x28
+ S: 0000000031c22f40 R: 0000000030045cc0   .uart_wait_tx_room+0x58
+ S: 0000000031c22fd0 R: 0000000030046760   .uart_con_write+0x84
+ S: 0000000031c23080 R: 0000000030012da8   .__flush_console+0x11c
+ S: 0000000031c23150 R: 0000000030013218   .console_write+0x64
+ S: 0000000031c23200 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c233f0 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c23480 R: 00000000300c839c   .hiomap_event+0x40
+ S: 0000000031c23520 R: 00000000300b2368   .ipmi_parse_sel+0x170
+ S: 0000000031c235c0 R: 0000000030035c50   .ipmi_read_event_complete+0x50
+ S: 0000000031c23650 R: 0000000030036324   .ipmi_cmd_done+0x104
+ S: 0000000031c236f0 R: 0000000030069bd0   .bt_poll+0x390
+ S: 0000000031c237d0 R: 0000000030037fd8   .check_timers+0x1d0
+ S: 0000000031c23890 R: 0000000030036488   .ipmi_queue_msg_sync+0x114
+ S: 0000000031c23930 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c239d0 R: 00000000300c8a20   .hiomap_get_flash_info+0x94
+ S: 0000000031c23a70 R: 00000000300c935c   .ipmi_hiomap_get_flash_info+0x4c
+ S: 0000000031c23b20 R: 00000000300c5a74   .blocklevel_get_info+0xb4
+ S: 0000000031c23bd0 R: 0000000030039db0   .flash_register+0x38
+ S: 0000000031c23d10 R: 00000000300b6ba4   .pnor_init+0xb0
+ S: 0000000031c23db0 R: 00000000300b6fa0   .astbmc_init+0x2c
+ S: 0000000031c23e30 R: 0000000030015a5c   .main_cpu_entry+0x460
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   14.434540980,6] FLASH: registering flash device (unnamed) (size 0x4000000, blocksize 0x10000)
+[   15.020086369,7] IPMI read event 35 complete: 16 bytes. cc: 00
+[   15.020227505,7] IPMI: SEL received (16 bytes, netfn 58, cmd 15)
+[   15.020370374,7] HIOMAP: Received events: 0x80
+[   15.020475430,5] CPU 0004 lowest stack mark 9240 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c22900 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c229b0 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c22a50 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c22af0 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c22b90 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c22c40 R: 0000000030043da0   .__lpc_read+0x58
+ S: 0000000031c22d00 R: 0000000030045bbc   .uart_read+0x88
+ S: 0000000031c22d90 R: 0000000030045c10   .uart_check_tx_room+0x28
+ S: 0000000031c22e10 R: 0000000030045cc0   .uart_wait_tx_room+0x58
+ S: 0000000031c22ea0 R: 0000000030046760   .uart_con_write+0x84
+ S: 0000000031c22f50 R: 0000000030012da8   .__flush_console+0x11c
+ S: 0000000031c23020 R: 0000000030013218   .console_write+0x64
+ S: 0000000031c230d0 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c232c0 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c23350 R: 00000000300c839c   .hiomap_event+0x40
+ S: 0000000031c233f0 R: 00000000300b2368   .ipmi_parse_sel+0x170
+ S: 0000000031c23490 R: 0000000030035c50   .ipmi_read_event_complete+0x50
+ S: 0000000031c23520 R: 0000000030036324   .ipmi_cmd_done+0x104
+ S: 0000000031c235c0 R: 0000000030069bd0   .bt_poll+0x390
+ S: 0000000031c236a0 R: 0000000030037fd8   .check_timers+0x1d0
+ S: 0000000031c23760 R: 0000000030036488   .ipmi_queue_msg_sync+0x114
+ S: 0000000031c23800 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c238a0 R: 00000000300c8a20   .hiomap_get_flash_info+0x94
+ S: 0000000031c23940 R: 00000000300c935c   .ipmi_hiomap_get_flash_info+0x4c
+ S: 0000000031c239f0 R: 00000000300c5a74   .blocklevel_get_info+0xb4
+ S: 0000000031c23aa0 R: 00000000300c37e4   .ffs_init+0x8c
+ S: 0000000031c23bd0 R: 0000000030039ec0   .flash_register+0x148
+ S: 0000000031c23d10 R: 00000000300b6ba4   .pnor_init+0xb0
+ S: 0000000031c23db0 R: 00000000300b6fa0   .astbmc_init+0x2c
+ S: 0000000031c23e30 R: 0000000030015a5c   .main_cpu_entry+0x460
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   15.225440689,7] IPMI Get Message Flags: 02
+[   15.225569540,5] CPU 0004 lowest stack mark 9224 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c228f0 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c229a0 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c22a40 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c22ae0 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c22b80 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c22c30 R: 0000000030043da0   .__lpc_read+0x58
+ S: 0000000031c22cf0 R: 0000000030045bbc   .uart_read+0x88
+ S: 0000000031c22d80 R: 0000000030045c10   .uart_check_tx_room+0x28
+ S: 0000000031c22e00 R: 0000000030045cc0   .uart_wait_tx_room+0x58
+ S: 0000000031c22e90 R: 0000000030046760   .uart_con_write+0x84
+ S: 0000000031c22f40 R: 0000000030012da8   .__flush_console+0x11c
+ S: 0000000031c23010 R: 0000000030013218   .console_write+0x64
+ S: 0000000031c230c0 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c232b0 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c23340 R: 00000000300360b4   .ipmi_get_message_flags_complete+0x4c
+ S: 0000000031c233e0 R: 0000000030036324   .ipmi_cmd_done+0x104
+ S: 0000000031c23480 R: 0000000030069bd0   .bt_poll+0x390
+ S: 0000000031c23560 R: 0000000030037fd8   .check_timers+0x1d0
+ S: 0000000031c23620 R: 0000000030036488   .ipmi_queue_msg_sync+0x114
+ S: 0000000031c236c0 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c23760 R: 00000000300c8d2c   .hiomap_window_move+0x158
+ S: 0000000031c23830 R: 00000000300c9810   .ipmi_hiomap_read+0xd4
+ S: 0000000031c23930 R: 00000000300c521c   .blocklevel_raw_read+0xe4
+ S: 0000000031c239e0 R: 00000000300c5348   .blocklevel_read+0x104
+ S: 0000000031c23aa0 R: 00000000300c3854   .ffs_init+0xfc
+ S: 0000000031c23bd0 R: 0000000030039ec0   .flash_register+0x148
+ S: 0000000031c23d10 R: 00000000300b6ba4   .pnor_init+0xb0
+ S: 0000000031c23db0 R: 00000000300b6fa0   .astbmc_init+0x2c
+ S: 0000000031c23e30 R: 0000000030015a5c   .main_cpu_entry+0x460
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   15.337811733,7] HIOMAP: Opened read window from 0x0 for 1048576 bytes at 0xc000000
+[   15.437981451,7] IPMI read event 35 complete: 16 bytes. cc: 00
+[   15.438122541,7] IPMI: SEL received (16 bytes, netfn 58, cmd 255)
+[   15.438289584,4] IPMI: unknown OEM SEL command ff received
+[   16.141491595,7] FLASH: No ROOTFS partition
+[   16.246599890,7] FLASH: No CAPP partition
+[   17.049637229,5] FLASH: Found system flash: (unnamed) id:0
+[   17.049781364,6] FLASH: registered system flash device (unnamed)
+[   17.049947444,6] FLASH: probing for NVRAM
+[   17.255266915,6] IPMI: Requesting IPMI_BMC_GET_DEVICE_ID
+[   17.255383101,6] IPMI: setting power state: sys 80, dev 7f
+[   17.255530465,6] IPMI: setting fw progress sensor 02 to 14
+[   17.255672536,6] NVRAM: Size is 576 KB
+[   17.426207115,6] NVRAM: Layout appears sane
+[   17.426325856,7] NVRAM: 'log-level-driver' not found
+[   17.426441125,7] NVRAM: 'log-level-memory' not found
+[   17.426537913,7] STB: Found ibm,secureboot-v2
+[   17.426648937,7] NVRAM: 'force-secure-mode' not found
+[   17.426785641,6] STB: secure mode off
+[   17.426877366,3] STB: CVC not found in /ibm,hostboot/reserved-memory
+[   17.427056100,7] NVRAM: 'force-trusted-mode' not found
+[   17.427193085,6] STB: trusted mode off
+[   17.427270989,6] FLASH: Loading VERSION section
+[   17.427453124,7] FLASH: Queueing preload of 4/0
+[   18.025746757,7] FLASH: VERSION partition doesn't have ECC
+[   18.230818541,7] HIOMAP: Opened read window from 0x3900000 for 1048576 bytes at 0xc100000
+[   18.232248864,7] FLASH: VERSION partition is signed
+[   18.232462931,3] STB: VERSION NOT VERIFIED, CVC-verify service not supported
+[   18.232659095,7] Processing jobs synchronously
+[   18.232782590,7] FLASH: Queueing preload of 3/4e0200
+[   18.330264412,7] IPMI: Got error response. cmd=0x6, netfn=0x7, rc=0xff
+[   19.023408055,7] IPMI: Got error response. cmd=0x2e, netfn=0x7, rc=0xcc
+[   19.023583958,7] ASTBMC: error sending msg. cc = cc
+[   19.131321521,7] HIOMAP: Opened read window from 0x0 for 1048576 bytes at 0xc000000
+[   19.134020308,7] FLASH: IMA_CATALOG partition has ECC
+[   19.339097891,7] HIOMAP: Opened read window from 0x3900000 for 1048576 bytes at 0xc100000
+[   19.340720451,7] FLASH: IMA_CATALOG partition is signed
+[   19.364928008,7] FLASH: flash subpartition eyecatcher IMCC
+[   19.365070180,3] STB: IMA_CATALOG NOT VERIFIED, CVC-verify service not supported
+[   19.365363222,5] CPU 0004 lowest stack mark 8792 bytes left pc=300d2e90 token=0
+CPU 0004 Backtrace:
+ S: 0000000031c22740 R: 0000000030013e94   .__mcount_stack_check+0x98
+ S: 0000000031c227f0 R: 00000000300d2e90   .list_check_node+0x1c
+ S: 0000000031c22890 R: 00000000300d2fa0   .list_check+0x38
+ S: 0000000031c22930 R: 0000000030019dbc   .try_lock_caller+0x98
+ S: 0000000031c229d0 R: 0000000030019e8c   .lock_caller+0x7c
+ S: 0000000031c22a80 R: 0000000030043da0   .__lpc_read+0x58
+ S: 0000000031c22b40 R: 0000000030045bbc   .uart_read+0x88
+ S: 0000000031c22bd0 R: 0000000030045c10   .uart_check_tx_room+0x28
+ S: 0000000031c22c50 R: 0000000030045cc0   .uart_wait_tx_room+0x58
+ S: 0000000031c22ce0 R: 0000000030046760   .uart_con_write+0x84
+ S: 0000000031c22d90 R: 0000000030012da8   .__flush_console+0x11c
+ S: 0000000031c22e60 R: 0000000030013218   .console_write+0x64
+ S: 0000000031c22f10 R: 0000000030035a10   .vprlog+0xc8
+ S: 0000000031c23100 R: 0000000030035a98   ._prlog+0x50
+ S: 0000000031c23190 R: 00000000300b6cfc   .astbmc_ipmi_error+0x3c
+ S: 0000000031c23220 R: 0000000030036324   .ipmi_cmd_done+0x104
+ S: 0000000031c232c0 R: 0000000030069bd0   .bt_poll+0x390
+ S: 0000000031c233a0 R: 0000000030037fd8   .check_timers+0x1d0
+ S: 0000000031c23460 R: 0000000030036488   .ipmi_queue_msg_sync+0x114
+ S: 0000000031c23500 R: 00000000300c8730   .hiomap_queue_msg_sync+0xa4
+ S: 0000000031c235a0 R: 00000000300c8d2c   .hiomap_window_move+0x158
+ S: 0000000031c23670 R: 00000000300c9810   .ipmi_hiomap_read+0xd4
+ S: 0000000031c23770 R: 00000000300c521c   .blocklevel_raw_read+0xe4
+ S: 0000000031c23820 R: 00000000300c5348   .blocklevel_read+0x104
+ S: 0000000031c238e0 R: 00000000300c3854   .ffs_init+0xfc
+ S: 0000000031c23a10 R: 00000000300395ac   .flash_load_resources+0x28c
+ S: 0000000031c23ba0 R: 000000003001bb48   .__cpu_queue_job+0x138
+ S: 0000000031c23c50 R: 000000003003a764   .flash_start_preload_resource+0x138
+ S: 0000000031c23d00 R: 0000000030032f60   .start_preload_resource+0x70
+ S: 0000000031c23da0 R: 00000000300512f4   .imc_catalog_preload+0xd0
+ S: 0000000031c23e30 R: 0000000030015b18   .main_cpu_entry+0x51c
+ S: 0000000031c23f00 R: 0000000030002738   boot_entry+0x1c8
+ --- OPAL boot ---
+[   19.377904771,6] OPAL: Using OPAL UART console
+[   19.378016664,7] NVRAM: 'uart-con-policy' not found
+[   19.378191141,7] LPC: Routing irq 4, policy: 0 (r=1)
+[   19.378195971,7] LPC: SerIRQ 4 using route 1 targetted at OPAL
+[   19.378447611,7] SLW: Init chip 0x0
+[   19.378550505,4] SLW: core 1 EC_PPM_SPECIAL_WKUP_OTR read  0x8000000000000000
+[   19.378725194,6] SLW: Configuring self-restore for HRMOR
+[   19.378862696,3] SLW: Failed to set HRMOR for CPU 4,RC=0x1
+[   19.379011580,6] IPMI: dropping non severe PEL event
+[   19.379124214,3] Disabling deep stop states
+[   19.379229588,7] CPU idle state device tree init
+[   19.379366934,6] SLW: Configuring self-restore for HRMOR
+[   19.379480581,3] SLW: Failed to set HRMOR for CPU 4,RC=0x1
+[   19.379628857,6] IPMI: dropping non severe PEL event
+[   19.379765052,3] Disabling deep stop states
+[   19.379824624,6] SLW: Configuring self-restore for NCU_SPEC_BAR
+[   19.379943972,6] SLW: Configuring self-restore for P9X_EX_NCU_DARN_BAR
+[   19.380135032,7] NVRAM: 'opal-stop-state-disable-mask' not found
+[   19.380279774,7] NVRAM stop disable mask: 0
+[   19.380384262,6] SLW: Enabling: stop0_lite
+[   19.380489086,6] SLW: Enabling: stop0
+[   19.380590336,6] SLW: Enabling: stop1
+[   19.380621419,6] SLW: Enabling: stop2
+[   19.380722354,6] SLW: Enabling: stop4
+[   19.380800152,6] SLW: Enabling: stop5
+[   19.380857522,3] OCC: Chip: 0 PState table is not valid
+[   19.380994620,3] OCC: Initialization on all chips did not complete(timed out)
+[   19.381201098,7] NVRAM: 'pcie-max-link-speed' not found
+[   19.381663743,6] CAPI: Preloading ucode 203d1
+[   19.381772330,7] FLASH: Queueing preload of 2/203d1
+[   20.238843399,7] HIOMAP: Opened read window from 0x0 for 1048576 bytes at 0xc000000
+[   20.241590601,7] FLASH: No CAPP partition
+[   20.241755702,7] FLASH: Queueing preload of 0/0
+[   20.449375417,7] FLASH: BOOTKERNEL partition doesn't have ECC
+[   21.142519960,7] HIOMAP: Opened read window from 0x2200000 for 1048576 bytes at 0xc200000
+[   21.143949617,7] FLASH: BOOTKERNEL partition is signed
+[   21.349065325,7] HIOMAP: Opened read window from 0x2200000 for 1048576 bytes at 0xc200000
+[   22.057769892,7] HIOMAP: Opened read window from 0x2300000 for 1048576 bytes at 0xc300000
+[   22.472527281,7] HIOMAP: Opened read window from 0x2400000 for 1048576 bytes at 0xc400000
+[   23.375047721,7] HIOMAP: Opened read window from 0x2500000 for 1048576 bytes at 0xc500000
+[   24.278993180,7] HIOMAP: Opened read window from 0x2600000 for 1048576 bytes at 0xc600000
+[   25.076103369,6] IPMI: SEL: New event logged [ID : 2d0]
+[   25.183805564,7] HIOMAP: Opened read window from 0x2700000 for 1048576 bytes at 0xc700000
+[   26.086352073,7] HIOMAP: Opened read window from 0x2800000 for 1048576 bytes at 0xc800000
+[   26.500971397,7] HIOMAP: Opened read window from 0x2900000 for 1048576 bytes at 0xc900000
+[   27.403504743,7] HIOMAP: Opened read window from 0x2a00000 for 1048576 bytes at 0xca00000
+[   28.306056054,7] HIOMAP: Opened read window from 0x2b00000 for 1048576 bytes at 0xcb00000
+[   29.208786522,7] HIOMAP: Opened read window from 0x2c00000 for 1048576 bytes at 0xcc00000
+[   30.111294957,7] HIOMAP: Opened read window from 0x2d00000 for 1048576 bytes at 0xcd00000
+[   31.013923846,7] HIOMAP: Opened read window from 0x2e00000 for 1048576 bytes at 0xce00000
+[   31.428603270,7] HIOMAP: Opened read window from 0x2f00000 for 1048576 bytes at 0xcf00000
+[   32.331184657,7] HIOMAP: Opened read window from 0x3000000 for 1048576 bytes at 0xd000000
+[   33.233863060,7] HIOMAP: Opened read window from 0x3100000 for 1048576 bytes at 0xd100000
+[   34.136492177,7] HIOMAP: Opened read window from 0x3200000 for 1048576 bytes at 0xd200000
+[   35.039072027,7] HIOMAP: Opened read window from 0x3300000 for 1048576 bytes at 0xd300000
+[   35.453801191,7] HIOMAP: Opened read window from 0x3400000 for 1048576 bytes at 0xd400000
+[   36.356424114,7] HIOMAP: Opened read window from 0x3500000 for 1048576 bytes at 0xd500000
+[   37.259118871,7] HIOMAP: Opened read window from 0x3600000 for 1048576 bytes at 0xd600000
+[   38.051620408,3] STB: BOOTKERNEL NOT VERIFIED, CVC-verify service not supported
+[   38.051894397,7] FLASH: Queueing preload of 1/0
+[   38.262095011,7] HIOMAP: Opened read window from 0x0 for 1048576 bytes at 0xc000000
+[   38.264839750,7] FLASH: No ROOTFS partition
+[   38.269303072,6] VAS: Initialized chip 0
+[   38.269752870,6] NX RNG[0] pace:2048
+[   38.269809353,6] NX0: Crypto at 0x2010000
+[   38.269939569,6] NX0: POWER9 nx-crypto not yet supported
+[   38.270078805,6] NX0: 842 at 0x2010000
+[   38.270181391,7] Found ibm,power9-nx
+[   38.270265636,7] NX0: UMAC VAS MMIO BAR, 0x0006019100000000, xcfg 0x20110d4
+[   38.270440099,7] NX0: DMA VAS MMIO BAR, 0x0006019100000000, xcfg 0x201105e
+[   38.270591305,7] NX0: UMAC SEND WC BAR, 0x0000000034800000, xcfg 0x20110d2
+[   38.270766291,7] NX0: Setting UMAC Status Control 0x7100000000000000
+[   38.270868645,7] NX0:   DMA 0x000001807f800080
+[   38.270923698,7] NX0: Setting UMAC FIFO bar 0x0000000035008280
+[   38.271044309,7] NX0: Setting UMAC notify match 0x0fff000003000011
+[   38.271174499,7] NX0: Setting UMAC FIFO bar 0x0000000035018280
+[   38.271272949,7] NX0: Setting UMAC notify match 0x0fff000003000021
+[   38.271365409,7] NX0:   Engine Enable 0x8000000000000003
+[   38.271503029,6] NX0: 842 Coprocessor Enabled
+[   38.271563308,6] NX0: gzip at 0x2010000
+[   38.271644599,7] NX0:   DMA 0x00ffc1807f800080
+[   38.271707105,7] NX0:   Engine Enable 0x8000000000000007
+[   38.271860085,7] NX0: Setting UMAC FIFO bar 0x0000000035028280
+[   38.272003405,7] NX0: Setting UMAC notify match 0x0fff000002000011
+[   38.272156066,7] NX0: Setting UMAC FIFO bar 0x0000000035038280
+[   38.272323228,7] NX0: Setting UMAC notify match 0x0fff000002000021
+[   38.272459735,6] NX0: gzip Coprocessor Enabled
+[   38.295192489,3] IMC: IMC Devices not added
+[   38.296719973,7] NVRAM: 'pci-eeh-verbose' not found
+[   38.296855317,6] PHB4: Verbose EEH enabled
+[   38.296962503,7] NVRAM: 'pci-tracing' not found
+[   38.297073685,7] NVRAM: 'pci-eeh-mmio' not found
+[   38.297185508,7] NVRAM: 'pci-retry-all' not found
+[   38.297321943,7] NVRAM: 'phb-rx-err-max' not found
+[   38.297408626,7] PHB4: Maximum RX errors during training: 8
+[   38.297713494,6] PHB: Chip 0 Found PHB4 PBCQ0 Stack 0 at /xscom@603fc00000000/pbcq@4010c00/stack@0
+[   38.297933227,7] PHB[0:0] X[PE]=0x04010c00/0x04010c40 X[PCI]=0x0d010800/0x0d010840 X[ETU]=0x0d010900
+[   38.298159245,3] XSCOM: write error gcid=0x0 pcb_addr=0x4010c52 stat=0x4
+[   38.298182453,6] IPMI: dropping non severe PEL event
+[   38.298189174,3] XSCOM: Write failed, ret =  -26
+[   38.298593897,3] PHB[0:0] Unable to set PHB BAR. Error=-26
+[   38.298743769,6] PHB: Chip 0 Found PHB4 PBCQ1 Stack 0 at /xscom@603fc00000000/pbcq@4011000/stack@0
+[   38.298963252,7] PHB[0:1] X[PE]=0x04011000/0x04011040 X[PCI]=0x0e010800/0x0e010840 X[ETU]=0x0e010900
+[   38.299211699,3] XSCOM: write error gcid=0x0 pcb_addr=0x4011052 stat=0x4
+[   38.299230642,6] IPMI: dropping non severe PEL event
+[   38.299237089,3] XSCOM: Write failed, ret =  -26
+[   38.299617650,3] PHB[0:1] Unable to set PHB BAR. Error=-26
+[   38.299738853,6] PHB: Chip 0 Found PHB4 PBCQ1 Stack 1 at /xscom@603fc00000000/pbcq@4011000/stack@1
+[   38.299982408,7] PHB[0:2] X[PE]=0x04011000/0x04011080 X[PCI]=0x0e010800/0x0e010880 X[ETU]=0x0e010940
+[   38.300206416,3] XSCOM: write error gcid=0x0 pcb_addr=0x4011092 stat=0x4
+[   38.300225626,6] IPMI: dropping non severe PEL event
+[   38.300232050,3] XSCOM: Write failed, ret =  -26
+[   38.300430348,3] PHB[0:2] Unable to set PHB BAR. Error=-26
+[   38.300581130,6] PHB: Chip 0 Found PHB4 PBCQ2 Stack 0 at /xscom@603fc00000000/pbcq@4011400/stack@0
+[   38.300799798,7] PHB[0:3] X[PE]=0x04011400/0x04011440 X[PCI]=0x0f010800/0x0f010840 X[ETU]=0x0f010900
+[   38.301070502,3] XSCOM: write error gcid=0x0 pcb_addr=0x4011452 stat=0x4
+[   38.301089444,6] IPMI: dropping non severe PEL event
+[   38.301095714,3] XSCOM: Write failed, ret =  -26
+[   38.301498917,3] PHB[0:3] Unable to set PHB BAR. Error=-26
+[   38.301642472,6] PHB: Chip 0 Found PHB4 PBCQ2 Stack 1 at /xscom@603fc00000000/pbcq@4011400/stack@1
+[   38.301861586,7] PHB[0:4] X[PE]=0x04011400/0x04011480 X[PCI]=0x0f010800/0x0f010880 X[ETU]=0x0f010940
+[   38.302132279,3] XSCOM: write error gcid=0x0 pcb_addr=0x4011492 stat=0x4
+[   38.302151130,6] IPMI: dropping non severe PEL event
+[   38.302157342,3] XSCOM: Write failed, ret =  -26
+[   38.302537352,3] PHB[0:4] Unable to set PHB BAR. Error=-26
+[   38.302681145,6] PHB: Chip 0 Found PHB4 PBCQ2 Stack 2 at /xscom@603fc00000000/pbcq@4011400/stack@2
+[   38.302923766,7] PHB[0:5] X[PE]=0x04011400/0x040114c0 X[PCI]=0x0f010800/0x0f0108c0 X[ETU]=0x0f010980
+[   38.303123933,3] XSCOM: write error gcid=0x0 pcb_addr=0x40114d2 stat=0x4
+[   38.303142840,6] IPMI: dropping non severe PEL event
+[   38.303149162,3] XSCOM: Write failed, ret =  -26
+[   38.303552257,3] PHB[0:5] Unable to set PHB BAR. Error=-26
+[   38.304190691,7] NVRAM: 'nv_zcal_override' not found
+[   38.304302240,6] NPU: Platform does not support NPU
+[   38.304461224,5] PCI: Resetting PHBs and training links...
+[   38.304614781,5] PCI: Probing slots...
+[   38.304727691,7] PCI: Checking slot table against detected devices
+[   38.304872412,3] PCI: PHB  (0) not found
+[   38.304975396,3] PCI: PHB  (1) not found
+[   38.305077876,3] PCI: PHB  (2) not found
+[   38.305156481,3] PCI: PHB  (3) not found
+[   38.305258945,3] PCI: PHB  (4) not found
+[   38.305338485,3] PCI: PHB  (5) not found
+[   38.305440940,3] PCI: PHB  (80000) not found
+[   38.305546052,3] PCI: PHB  (80001) not found
+[   38.305628151,3] PCI: PHB  (80003) not found
+[   38.305756657,5] PCI Summary:
+[   38.305858136,4] WARNING! Skiboot version does not match VERSION partition!
+[   38.306100906,6] IPMI: setting fw progress sensor 02 to 07
+[   38.345923942,7] irq ffff0 name: psi:fsp [level]
+[   38.346041360,7] irq ffff1 name: psi:occ [level]
+[   38.346181661,7] irq ffff2 name: psi:fsi [level]
+[   38.346274177,7] irq ffff3 name: psi:lpchc [level]
+[   38.346392881,7] irq ffff4 name: psi:local_err [level]
+[   38.346537883,7] irq ffff5 name: psi:global_err [level]
+[   38.346731226,7] irq ffff6 name: psi:external [level]
+[   38.346851452,7] irq ffff7 name: psi:lpc_serirq_mux0 [level]
+[   38.347002321,7] irq ffff8 name: psi:lpc_serirq_mux1 [level]
+[   38.347059346,7] irq ffff9 name: psi:lpc_serirq_mux2 [level]
+[   38.347209095,7] irq ffffa name: psi:lpc_serirq_mux3 [level]
+[   38.347358648,7] irq ffffb name: psi:i2c [level]
+[   38.347474891,7] irq ffffc name: psi:dio [level]
+[   38.347591118,7] irq ffffd name: psi:psu [level]
+[   38.347781095,6] Releasing unused memory:
+[   38.347888042,6]     ibm,firmware-heap: 3115976/12582912 used
+[   38.348034075,6]     ibm,firmware-allocs-memory: 54525952/3191603200 used
+[   38.348234373,6] Reserved regions:
+[   38.348311562,6]   0x0011fd0c0000..0011fd0cffff : ibm,secure-crypt-algo-code@11fd0c0000
+[   38.348543794,6]   0x0011fd0d0000..0011fd0dffff : ibm,sbe-ffdc@11fd0d0000
+[   38.348740716,6]   0x0011fd0e0000..0011fd0effff : ibm,sbe-comm@11fd0e0000
+[   38.348912802,6]   0x0011ff800000..0011ffffffff : ibm,occ-common-area@11ff800000
+[   38.349115976,6]   0x0011fd800000..0011fdbfffff : ibm,homer-image@11fd800000
+[   38.349312848,6]   0x0011fd550000..0011fd6fffff : ibm,hbrt-data@11fd550000
+[   38.349461664,6]   0x0011fd0f0000..0011fd54ffff : ibm,hbrt-code-image@11fd0f0000
+[   38.349661891,6]   0x0000f0000000..0000ffffffff : ibm,hb-rsv-mem@f0000000
+[   38.349856297,6]   0x0011fd700000..0011fd7fffff : ibm,arch-reg-data@11fd700000
+[   38.350054372,6]   0x0011fcd10000..0011fcfbffff : ibm,WOFDATA@11fcd10000
+[   38.350247715,6]   0x0011fcc00000..0011fcc0ffff : ibm,VERSION@11fcc00000
+[   38.350440662,6]   0x0011fcbd0000..0011fcbfffff : ibm,RINGOVD@11fcbd0000
+[   38.350634269,6]   0x0011fcfc0000..0011fd0bffff : ibm,OCC@11fcfc0000
+[   38.350800651,6]   0x0011fcc10000..0011fcd0ffff : ibm,HCODE@11fcc10000
+[   38.350992965,6]   0x000031c00000..000031c3ffff : ibm,firmware-stacks
+[   38.351158939,6]   0x000031000000..000031bfffff : ibm,firmware-data
+[   38.351323654,6]   0x000030400000..000030ffffff : ibm,firmware-heap
+[   38.351487106,6]   0x000030000000..0000303fffff : ibm,firmware-code
+[   38.351651430,6]   0x000031c40000..00003503ffff : ibm,firmware-allocs-memory
+[   38.353317864,5] IPMI: Resetting boot count on successful boot
+[   38.353460034,5] INIT: Waiting for kernel...
+[   38.353572325,7] INIT: Kernel loaded, size: 21351816 bytes (0 = unknown preload)
+[   38.353772443,5] INIT: 64-bit LE kernel discovered
+[   38.353881304,7] INIT: 64-bit kernel entry at 0x20011000, size 0x145bd88
+[   38.354063898,6] IPMI: setting fw progress sensor 02 to 13
+[   38.354401719,3] OCC: Chip 0 sensor data invalid
+[   38.354700774,7] NVRAM: 'bootargs' not found
+[   38.409374301,6] Free space in HEAP memory regions:
+[   38.409750325,6] Region ibm,firmware-heap free: 90ac60
+[   38.409846631,6] Region ibm,firmware-allocs-memory free: 15bd450
+[   38.410015995,6] Total free: 32276656
+[   38.410093779,7] INIT: stdout-path: /ibm,opal/consoles/serial@0
+[   38.410283024,5] INIT: Starting kernel at 0x20011000, fdt at 0x306f8bd8 108226 bytes
+
+zImage starting: loaded at 0x0000000020011000 (sp: 0x000000002145bed8)
+Allocating 0x23f4098 bytes for kernel...
+Decompressing (0x0000000000000000 <- 0x0000000020020000:0x0000000021459984)...
+Done! Decompressed 0x220c5d8 bytes
+
+Linux/PowerPC load: 
+Finalizing device tree... flat tree at 0x2145d0c0
+[   40.200806488,7] OPAL: CPU re-init with flags: 0xe
+[   40.200941670,6] OPAL: Switch to little-endian OS
+[   40.201053319,7] CPU: [00000004] HID0 change 0x0080000000000000 -> 0x0880000000000000
+[   40.245068744,7] XIVE reset, version: 1...
+[   40.279301612,7] XIVE[ IC 00  ] Resetting one xive...
+[   40.279468519,7] XIVE[ IC 00  ] freeing alloc map 0x30451440/0x30451440
+[   40.279647245,7] XIVE[ IC 00  ] Resetting EQs...
+[   40.319762489,7] XIVE[ IC 00  ] Cleaning up 512 VP ind entries...
+[   40.319957108,7] XIVE[ IC 00  ]  0000 ... skip (firmware)
+[   40.320101118,7] XIVE[ IC 00  ] Cleaning up 512 EQ ind entries...
+[   40.320246629,7] XIVE[ IC 00  ]  0000 ... skip (firmware)
+[   40.382788549,7] Spent 268 msecs in OPAL call 128!
+[    0.001580] smp: failed starting cpu 1 (rc -19)
+[    0.002060] smp: failed starting cpu 2 (rc -19)
+[    0.002481] smp: failed starting cpu 3 (rc -19)
+[    0.007364] nvram_scan_partitions: Error parsing nvram partitions
+[    0.007668] nvram: Failed to find or create lnx,oops-log partition, err -28
+[    0.008022] nvram: Failed to initialize oops partition!

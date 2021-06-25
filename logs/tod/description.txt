@@ -1,0 +1,6 @@
+bringup_no_tod.log
+  contains boot logs without configured TOD and enabled cpu_bringup
+tod_bringup.log
+  contains boot logs wit configured TOD and enabled cpu_bringup
+tod_no_bringup.log
+  contains boot logs wit configured TOD and disabled cpu_bringup
