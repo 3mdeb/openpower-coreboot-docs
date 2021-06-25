@@ -1,5 +1,3 @@
-n=0x5, rc=0xcd
-
 coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 bootblock starting (log level: 7)...
 FFS header at 0x80060300ffff7000
 PNOR base at 0x80060300fc000000
