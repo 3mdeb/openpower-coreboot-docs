@@ -149,75 +149,123 @@ layoutRingsForCME(homer, __proc__, ringData /* buffers */, l_ringDebug, RISK_LEV
 	ringLen = CmeHdr->hcode_offset + CmeHdr->hcode_len
 	assert(CpmrHdr->magic == CPMR_VDM_PER_QUAD) // >= maybe? older have different layout, skipped for now
 	layoutCmnRingsForCme(homer, __proc__, ringData, l_ringDebug, ringVariant = RISK_LEVEL, imgType, cmeRings /* list of rings in yet another format... */, &ringLength)
+		- again, hostboot uses pointer juggling for something simple...
+		struct cmnRingList { u16 ring[8]; u8 payload[]; } *tmp;		// In order: ec_func, ec_gprt, ec_time, ec_mode, ec_abst, 3x reserved
+		- size of what would be the above struct is defined as 2K
+		tmp = &homer->cpmr.cme_sram_region[ringLength]
 		start = &homer->cpmr.cme_sram_region[ringLength]
-		payload = start + CORE_COMMON_RING_INDEX_SIZE         // sizeof(CoreCmnRingsList_t) = 16 B
+		payload = tmp->payload
 		ringIds = [ec_func, ec_gptr, ec_time, ec_mode]
 		for id in ringIds:		// MAX_HOMER_CORE_CMN_RINGS = 4
 			if id == ec_gptr || ec_time:
 				ringVariant = RV_BASE		// else RISK_LEVEL
-			tor_get_single_ring(pRingBuf, dd, id, PT_CME, ringVariant, CORE0_CHIPLET_ID = 0x20, buf1, buf1s, l_debugMode)
+			ringSize = buf1s
+			tor_get_single_ring(pRingBuf, dd, id, PT_CME, ringVariant, CORE0_CHIPLET_ID = 0x20, buf1, &ringSize, l_debugMode)
 				- described earlier, but watch out for differences like ringid_get_noof_chiplets()
+				- ringSize size of data copied to buf1 on return
 			- ring not found is not an error, continue in that case
+
 			ALIGN_UP(ringSize, 8)
-			ALIGN_UP(pRingPayload, 8)		// wrt pRingStart, so (pRingPayload - pRingStart) % 8 == 0
-			----------------
+			ALIGN_UP(payload, 8)
+				- hostboot calculates this wrt start, so (payload - start) % 8 == 0
+				- can we assume that start is always aligned?
 
-            uint16_t* pScanRingIndex = (uint16_t*) pRingStart;
-            uint32_t ringStartToHdrOffset = ( TOR_VER_ONE == tor_version() ) ? RING_START_TO_RS4_OFFSET : 0;
-            memcpy( pRingPayload, i_ringData.iv_pWorkBuf1, ringSize );
-            *(pScanRingIndex + ringIndex) = SWIZZLE_2_BYTE((pRingPayload - pRingStart) + ringStartToHdrOffset);
+			memcpy(payload, buf1, ringSize)
+			tmp->ring[id] = payload - start;
 
+			- hostboot fills additional data in cmeRings (offset and size of each ring), AFAICT this is only for debug
 
-            io_cmeRings.setRingOffset( pRingPayload, io_cmeRings.getCommonRingId( ringIndex ));
-            io_cmeRings.setRingSize( io_cmeRings.getCommonRingId( ringIndex ), ringSize );
-            io_cmeRings.extractRing( i_ringData.iv_pWorkBuf1, ringSize, io_cmeRings.getCommonRingId( ringIndex ) );
+			payload += ringSize;
+			memset(buf1, 0, ringSize)
 
-            pRingPayload = pRingPayload + ringSize;
+		if (payload - start > sizeof(struct cmnRingList))
+			ringLength += (payload - start);
+			ALIGN_UP(ringLength, 8)
 
-            //cleaning up what we wrote in temp buffer last time.
-            memset( i_ringData.iv_pWorkBuf1, 0x00, ringSize );
-        }
+	CmeHdr->common_ring_len = ringLength - (CmeHdr->hcode_offset + CmeHdr->hcode_len)
 
-        ringSize = (pRingPayload - pRingStart);
-
-        if( ringSize > CORE_COMMON_RING_INDEX_SIZE )
-        {
-            io_cmnRingSize += (pRingPayload - pRingStart);
-            ALIGN_DWORD(tempSize, io_cmnRingSize)
-        }
-        ----------------
-			TBD !!!!!!
-
-	----------------
-	pCmeHdr->g_cme_common_ring_length = ringLength - (CmeHdr->hcode_offset + CmeHdr->hcode_len)
-
-	if( !pCmeHdr->g_cme_common_ring_length )
-	{
+	if(!pCmeHdr->common_ring_length)
 		//No common ring , so force offset to be 0
-		pCmeHdr->g_cme_common_ring_offset = 0;
-	}
+		pCmeHdr->common_ring_offset = 0
 
-	tempLength = ringLength;
-	tempLength = (( tempLength + CME_BLOCK_READ_LEN - 1 ) >> CME_BLK_SIZE_SHIFT ); //multiple of 32B
-	ringLength = tempLength << CME_BLK_SIZE_SHIFT; //start position of instance rings
+	ALIGN_UP(ringLength, 32)
+	tempLength = ringLength / 32
 
 	layoutInstRingsForCme(homer, __proc__, l_ringData, l_ringDebug, ringVariant = RV_BASE, imgType, cmeRings, &ringLength)
-		TBD !!!!!!
+		// This is done in two passes. First one reads rings to finds out the maximal
+		// size used by any of functional EXs, and the second one reads rings again,
+		// this time saving them in their final destination. The resulting rings are
+		// uniformly laid out in memory. Unfortunately, RS4 header doesn't hold size
+		// of uncompressed rings.
+		//
+		// Possible improvements:
+		// - don't actually save decompressed data in the first pass, we just want the size
+		// - first EX (of all, not only functional) can be read directly to target on first pass, its offset is known
+		// - divide all available space into 12 equally sized chunks (12 EXs per CPU) and skip first pass altogether
+		// - use CORE_SPECIFIC_RING_SIZE_PER_CORE (1K) as the size
 
-	if( ringLength )
-	{
+		maxLen = 0
+		struct specRingList { u16 ring[4]; u8 payload[]; } *tmp;		// In order: ec_repr0, ec_repr1, 2x reserved
+
+		// 1st pass
+		for each ex:		// 12 total
+			if ex is not functional: continue
+			tmpLen = 0
+			for each core:
+				if core is not functional: continue
+				tmp2 = buf1s
+				tor_get_single_ring(pRingBuf, dd, ec_repr = (0xE4? 0x80?), PT_CME, RV_BASE, CORE0_CHIPLET_ID + ((2 * ex) + core), buf1, &tmp2)
+				- continue if not found
+
+				ALIGN_UP(tmp2, 8)
+				tmpLen += tmp2
+
+			maxLen = max(tmpLen, maxLen)
+
+		if maxLen > 0:
+			// Maybe can be 0 if no instance rings are present? Why there is no early return in that case?
+			maxLen += sizeof(specRingList)	// 8B
+			ALIGN_UP(maxLen, 32)
+
+		// 2nd pass
+		for each ex:		// 12 total
+			if ex is not functional: continue
+
+			start = homer->cpmr.cme_sram_region[ringLength + ex * (maxLen + ALIGN_UP(sizeof(LocalPstateParmBlock), 32))]
+				- LocalPstateParmBlock is big (> 600B), not packed so there is additional padding
+				- seems risky for cross-architecture communication...
+				- is it included in CORE_SPECIFIC_RING_SIZE_PER_CORE? probably yes
+			tmp = start
+			payload = tmp->payload
+
+			for each core:
+				if core is not functional: continue
+				tmp2 = buf1s
+				tor_get_single_ring(pRingBuf, dd, ec_repr = (0xE4? 0x80?), PT_CME, RV_BASE, CORE0_CHIPLET_ID + ((2 * ex) + core), buf1, &tmp2)
+				- continue if not found
+
+				ALIGN_UP(payload, 8)
+					- hostboot calculates this wrt start, so (payload - start) % 8 == 0
+					- can we assume that start is always aligned?
+
+				memcpy(payload, buf1, tmp2)
+
+				tmp->ring[core] = payload - start
+
+				payload += tmp2
+				memset(buf1, 0, ringSize)
+
+		ringLength = maxLen
+
+	if (ringLength)
 		CmeHdr->max_spec_ring_len = ALIGN_UP(ringLength, 32) / 32
-		pCmeHdr->core_spec_ring_offset    =   tempLength;
-	}
-	----------------
+		// I hope all alignments are in order so far...
+		CmeHdr->core_spec_ring_offset = CmeHdr->g_cme_common_ring_offset + CmeHdr->g_cme_common_ring_len
 
 l_ringData.iv_ringBufSize = i_sizeBuf1;
 
-ppeImgRc = getPpeScanRings( i_pImageIn,
-							PLAT_SGPE,
-							i_procTgt,
-							l_ringData,
-							i_imgType );
+getPpeScanRings(hw, PLAT_SGPE, proc, ringData /* buffers */, imgType /* build/rebuild */)
+	- same as before, but for SGPE
 
 // create a layout of rings in HOMER for consumption of SGPE
 layoutRingsForSGPE( pChipHomer, i_pRingOverride, l_chipFuncModel,
