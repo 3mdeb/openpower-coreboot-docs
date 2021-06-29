@@ -86,7 +86,7 @@ Number of entries: 0x21
 | RINGOVD                     | 0x19 | 0x039C9000:0x039E8FFF  | 0x20000      | d    | -     | same as size | None                                  |
 | WOFDATA                     | 0x1A | 0x039E9000:0x03CE8FFF  | 0x300000     | d    | -     | same as size | None                                  |
 | HB_VOLATILE                 | 0x1B | 0x03CE9000:0x03CEDFFF  | 0x5000       | d    | -     | same as size | None                                  |
-| [MEMD](#MEMD)               | 0x1C | 0x03cee000:0x03CFBFFF  | 0xE000       | d    | -     | same as size | VPD for RAM IIRC                      |
+| [MEMD](#MEMD)               | 0x1C | 0x03cee000:0x03CFBFFF  | 0xE000       | d    | -     | same as size | Memory configuration data             |
 | SBKT                        | 0x1D | 0x03d02000:0x03D05FFF  | 0x4000       | d    | -     | same as size | None                                  |
 | [HDAT](#HDAT)               | 0x1E | 0x03d06000:0x03D0DFFF  | 0x8000       | d    | -     | same as size | None                                  |
 | UVISOR                      | 0x1F | 0x03d10000:0x03E0FFFF  | 0x100000     | d    | -     | same as size | None                                  |
@@ -175,7 +175,7 @@ This partition is used by hostboot during update operation.
 This partition holds a list of events supported by OCC microcode.
 
 ## MEMD
-Holds memory config data.
+Holds memory configuration data.
 
 ## HDAT
 Holds inforamtions from hostboot similar to device-tree,
