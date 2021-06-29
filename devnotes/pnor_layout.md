@@ -57,39 +57,44 @@ Number of entries: 0x21
 
 | Name                        | ID   | Offset:End             | Size (bytes) | Type | Flags | Actual size  | coreboot usage                        |
 | --------------------------- | ---- | ---------------------- | ------------:| ---- | ----- | ------------:| ------------------------------------- |
-| [part](#part)               | 0x01 | 0x00000000:0x00001FFF  | 0x2000       | p    | p     | same as size | partition table                       |
-| [HBEL](#HBEL)               | 0x02 | 0x00008000:0x0002BFFF  | 0x24000      | d    | -     | same as size |                                       |
-| [GUARD](#GUARD)             | 0x03 | 0x0002C000:0x00030FFF  | 0x5000       | d    | -     | same as size |                                       |
-| [NVRAM](#NVRAM)             | 0x04 | 0x00031000:0x000C0FFF  | 0x90000      | d    | -     | same as size |                                       |
-| [SECBOOT](#SECBOOT)         | 0x05 | 0x000C1000:0x000E4FFF  | 0x24000      | d    | -     | same as size |                                       |
-| DJVPD                       | 0x06 | 0x000E5000:0x0012CFFF  | 0x48000      | d    | -     | same as size |                                       |
-| MVPD                        | 0x07 | 0x0012D000:0x001BCFFF  | 0x90000      | d    | -     | same as size |                                       |
-| CVPD                        | 0x08 | 0x001BD000:0x00204FFF  | 0x48000      | d    | -     | same as size |                                       |
+| [part](#part)               | 0x01 | 0x00000000:0x00001FFF  | 0x2000       | p    | p     | same as size | Partition table                       |
+| [HBEL](#HBEL)               | 0x02 | 0x00008000:0x0002BFFF  | 0x24000      | d    | -     | same as size | None                                  |
+| [GUARD](#GUARD)             | 0x03 | 0x0002C000:0x00030FFF  | 0x5000       | d    | -     | same as size | None                                  |
+| [NVRAM](#NVRAM)             | 0x04 | 0x00031000:0x000C0FFF  | 0x90000      | d    | -     | same as size | Required                              |
+| [SECBOOT](#SECBOOT)         | 0x05 | 0x000C1000:0x000E4FFF  | 0x24000      | d    | -     | same as size | None                                  |
+| DJVPD                       | 0x06 | 0x000E5000:0x0012CFFF  | 0x48000      | d    | -     | same as size | None                                  |
+| MVPD                        | 0x07 | 0x0012D000:0x001BCFFF  | 0x90000      | d    | -     | same as size | None                                  |
+| CVPD                        | 0x08 | 0x001BD000:0x00204FFF  | 0x48000      | d    | -     | same as size | None                                  |
 | [HBB](#HBB)                 | 0x09 | 0x00205000:0x00304FFF  | 0x100000     | d    | -     | same as size | bootblock                             |
-| [HBD](#HBD)                 | 0x0A | 0x00305000:0x00424FFF  | 0x120000     | d    | -     | same as size |                                       |
+| [HBD](#HBD)                 | 0x0A | 0x00305000:0x00424FFF  | 0x120000     | d    | -     | same as size | None                                  |
 | [HBI](#HBI)                 | 0x0B | 0x00425000:0x019C4FFF  | 0x15A0000    | d    | -     | same as size | romstage, ramstage, payload (skiboot) |
-| [SBE](#SBE)                 | 0x0C | 0x019C5000:0x01A80FFF  | 0xBC000      | d    | -     | same as size |                                       |
-| [HCODE](#HCODE)             | 0x0D | 0x01A81000:0x01BA0FFF  | 0x120000     | d    | -     | same as size |                                       |
-| HBRT                        | 0x0E | 0x01BA1000:0x021A0FFF  | 0x600000     | d    | -     | same as size |                                       |
-| [PAYLOAD](#PAYLOAD)         | 0x0F | 0x021A1000:0x022A0FFF  | 0x100000     | d    | -     | same as size |                                       |
+| [SBE](#SBE)                 | 0x0C | 0x019C5000:0x01A80FFF  | 0xBC000      | d    | -     | same as size | None                                  |
+| [HCODE](#HCODE)             | 0x0D | 0x01A81000:0x01BA0FFF  | 0x120000     | d    | -     | same as size | None                                  |
+| HBRT                        | 0x0E | 0x01BA1000:0x021A0FFF  | 0x600000     | d    | -     | same as size | None                                  |
+| [PAYLOAD](#PAYLOAD)         | 0x0F | 0x021A1000:0x022A0FFF  | 0x100000     | d    | -     | same as size | None                                  |
 | [BOOTKERNEL](#BOOTKERNEL)   | 0x10 | 0x022A1000:0x03820FFF  | 0x1580000    | d    | -     | same as size | skiroot                               |
-| [OCC](#OCC)                 | 0x11 | 0x03821000:0x03940FFF  | 0x120000     | d    | -     | same as size |                                       |
-| FIRDATA                     | 0x12 | 0x03941000:0x03943FFF  | 0x3000       | d    | -     | same as size |                                       |
-| [VERSION](#VERSION)         | 0x13 | 0x03944000:0x03945FFF  | 0x2000       | d    | -     | same as size |                                       |
-| BMC_INV                     | 0x14 | 0x03968000:0x03970FFF  | 0x9000       | d    | -     | same as size |                                       |
-| [HBBL](#HBBL)               | 0x15 | 0x03971000:0x03977FFF  | 0x7000       | d    | -     | same as size |                                       |
-| ATTR_TMP                    | 0x16 | 0x03978000:0x0397FFFF  | 0x8000       | d    | -     | same as size |                                       |
-| ATTR_PERM                   | 0x17 | 0x03980000:0x03987FFF  | 0x8000       | d    | -     | same as size |                                       |
-| [IMA_CATALOG](#IMA_CATALOG) | 0x18 | 0x03989000:0x039C8FFF  | 0x40000      | d    | -     | same as size |                                       |
-| RINGOVD                     | 0x19 | 0x039C9000:0x039E8FFF  | 0x20000      | d    | -     | same as size |                                       |
-| WOFDATA                     | 0x1A | 0x039E9000:0x03CE8FFF  | 0x300000     | d    | -     | same as size |                                       |
-| HB_VOLATILE                 | 0x1B | 0x03CE9000:0x03CEDFFF  | 0x5000       | d    | -     | same as size |                                       |
-| [MEMD](#MEMD)               | 0x1C | 0x03cee000:0x03CFBFFF  | 0xE000       | d    | -     | same as size |                                       |
-| SBKT                        | 0x1D | 0x03d02000:0x03D05FFF  | 0x4000       | d    | -     | same as size |                                       |
-| [HDAT](#HDAT)               | 0x1E | 0x03d06000:0x03D0DFFF  | 0x8000       | d    | -     | same as size |                                       |
-| UVISOR                      | 0x1F | 0x03d10000:0x03E0FFFF  | 0x100000     | d    | -     | same as size |                                       |
-| [BOOTKERNFW](#BOOTKERNFW)   | 0x20 | 0x03e10000:0x03FEFFFF  | 0x1E0000     | d    | -     | same as size |                                       |
-| [BACKUP_PART](#BACKUP_PART) | 0x21 | 0x03ff7000:0x03FFEFFF  | 0x8000       | d    | -     | 0            |                                       |
+| [OCC](#OCC)                 | 0x11 | 0x03821000:0x03940FFF  | 0x120000     | d    | -     | same as size | None                                  |
+| FIRDATA                     | 0x12 | 0x03941000:0x03943FFF  | 0x3000       | d    | -     | same as size | None                                  |
+| [VERSION](#VERSION)         | 0x13 | 0x03944000:0x03945FFF  | 0x2000       | d    | -     | same as size | skiboot verifies this, but just warns about mismatch |
+| BMC_INV                     | 0x14 | 0x03968000:0x03970FFF  | 0x9000       | d    | -     | same as size | None                                  |
+| [HBBL](#HBBL)               | 0x15 | 0x03971000:0x03977FFF  | 0x7000       | d    | -     | same as size | None                                  |
+| ATTR_TMP                    | 0x16 | 0x03978000:0x0397FFFF  | 0x8000       | d    | -     | same as size | None                                  |
+| ATTR_PERM                   | 0x17 | 0x03980000:0x03987FFF  | 0x8000       | d    | -     | same as size | None                                  |
+| [IMA_CATALOG](#IMA_CATALOG) | 0x18 | 0x03989000:0x039C8FFF  | 0x40000      | d    | -     | same as size | None                                  |
+| RINGOVD                     | 0x19 | 0x039C9000:0x039E8FFF  | 0x20000      | d    | -     | same as size | None                                  |
+| WOFDATA                     | 0x1A | 0x039E9000:0x03CE8FFF  | 0x300000     | d    | -     | same as size | None                                  |
+| HB_VOLATILE                 | 0x1B | 0x03CE9000:0x03CEDFFF  | 0x5000       | d    | -     | same as size | None                                  |
+| [MEMD](#MEMD)               | 0x1C | 0x03cee000:0x03CFBFFF  | 0xE000       | d    | -     | same as size | VPD for RAM IIRC                      |
+| SBKT                        | 0x1D | 0x03d02000:0x03D05FFF  | 0x4000       | d    | -     | same as size | None                                  |
+| [HDAT](#HDAT)               | 0x1E | 0x03d06000:0x03D0DFFF  | 0x8000       | d    | -     | same as size | None                                  |
+| UVISOR                      | 0x1F | 0x03d10000:0x03E0FFFF  | 0x100000     | d    | -     | same as size | None                                  |
+| [BOOTKERNFW](#BOOTKERNFW)   | 0x20 | 0x03e10000:0x03FEFFFF  | 0x1E0000     | d    | -     | same as size | None                                  |
+| [BACKUP_PART](#BACKUP_PART) | 0x21 | 0x03ff7000:0x03FFEFFF  | 0x8000       | d    | -     | 0            | Required                              |
+
+> Note: If partition has no coreboot usage means that erasing this partition
+> didn't prevent the platform from starting skiroot.
+> Partition may still be used in some case
+> or in the later stages of the booting process.
 
 Type:
 * l = FFS_TYPE_LOGICAL
