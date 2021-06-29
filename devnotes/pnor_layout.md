@@ -175,7 +175,7 @@ This partition is used by hostboot during update operation.
 This partition holds a list of events supported by OCC microcode.
 
 ## MEMD
-Holds VPD for RAM IIRC.
+Holds memory config data.
 
 ## HDAT
 Holds inforamtions from hostboot similar to device-tree,
