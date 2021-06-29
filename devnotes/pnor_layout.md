@@ -1,11 +1,13 @@
 # About this document
-This document gathers known informations about partition layout in the original
+This document gathers known information about partition layout in the original
 PNOR image from the Talos II platform.
 
 # Partition table
 
 PNOR contains partition table at offset 0. It is constructed out of header and multiple entries.
-Refer to the [ffs source code](https://github.com/open-power/ffs/blob/3ec70fbc458e32eef0d0b1de79688b4dc48cbd57/ffs/ffs.h#L108) for more detailed informations.
+Refer to the
+[ffs source code](https://github.com/open-power/ffs/blob/3ec70fbc458e32eef0d0b1de79688b4dc48cbd57/ffs/ffs.h#L108)
+for more detailed information.
 ```cpp
  struct ffs_hdr {
     uint32_t         magic;         // @magic:          Eye catcher/corruption detector
@@ -116,7 +118,7 @@ This partition contains partition table.
 ## HBEL
 This partition is used by `hostboot` to to save crash information for later
 debug.
-More informations can be found at the
+More information can be found at the
 [wiki page](https://wiki.raptorcs.com/wiki/Hostboot_Debug_Howto).
 
 ## GUARD
@@ -127,14 +129,14 @@ More information about it can be found at the
 
 ## NVRAM
 Non volatile memory required for OPAL systems.
-More informations can be fouind on the
+More information can be fouind on the
 [wiki page](https://open-power.github.io/skiboot/doc/opal-api/opal-nvram-read-write-7-8.html).
 
 ## SECBOOT
 This partition is used to hold secure variables across renppts in
 tamper-resistant manner. Because writes to PNOR can't be prevented, hash of
 this partition is stored in the `TPM NV`, and verified at the boot time.
-More informations can be found at the
+More information can be found at the
 [wiki page](https://open-power.github.io/skiboot/doc/secvar/secboot_tpm.html).
 
 ## HBB
