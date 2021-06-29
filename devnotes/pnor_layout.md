@@ -55,41 +55,41 @@ Block Count: 0x4000
 Entry Size: 0x80
 Number of entries: 0x21
 
-| Name                        | ID | Offset:End         | Size    | Type | Flags | Actual size  |
-| --------------------------- | -- | ------------------ | -------:| ---- | ----- | ------------:|
-| [part](#part)               | 01 | 00000000:00001FFF  | 2000    | p    | p     | same as size |
-| [HBEL](#HBEL)               | 02 | 00008000:0002BFFF  | 24000   | d    | -     | same as size |
-| [GUARD](#GUARD)             | 03 | 0002C000:00030FFF  | 5000    | d    | -     | same as size |
-| NVRAM                       | 04 | 00031000:000C0FFF  | 90000   | d    | -     | same as size |
-| [SECBOOT](#SECBOOT)         | 05 | 000C1000:000E4FFF  | 24000   | d    | -     | same as size |
-| DJVPD                       | 06 | 000E5000:0012CFFF  | 48000   | d    | -     | same as size |
-| MVPD                        | 07 | 0012D000:001BCFFF  | 90000   | d    | -     | same as size |
-| CVPD                        | 08 | 001BD000:00204FFF  | 48000   | d    | -     | same as size |
-| [HBB](#HBB)                 | 09 | 00205000:00304FFF  | 100000  | d    | -     | same as size |
-| HBD                         | 0A | 00305000:00424FFF  | 120000  | d    | -     | same as size |
-| [HBI](#HBI)                 | 0B | 00425000:019C4FFF  | 15A0000 | d    | -     | same as size |
-| SBE                         | 0C | 019C5000:01A80FFF  | BC000   | d    | -     | same as size |
-| [HCODE](#HCODE)             | 0D | 01A81000:01BA0FFF  | 120000  | d    | -     | same as size |
-| HBRT                        | 0E | 01BA1000:021A0FFF  | 600000  | d    | -     | same as size |
-| [PAYLOAD](#PAYLOAD)         | 0F | 021A1000:022A0FFF  | 100000  | d    | -     | same as size |
-| [BOOTKERNEL](#BOOTKERNEL)   | 10 | 022A1000:03820FFF  | 1580000 | d    | -     | same as size |
-| OCC                         | 11 | 03821000:03940FFF  | 120000  | d    | -     | same as size |
-| FIRDATA                     | 12 | 03941000:03943FFF  | 3000    | d    | -     | same as size |
-| [VERSION](#VERSION)         | 13 | 03944000:03945FFF  | 2000    | d    | -     | same as size |
-| BMC_INV                     | 14 | 03968000:03970FFF  | 9000    | d    | -     | same as size |
-| [HBBL](#HBBL)               | 15 | 03971000:03977FFF  | 7000    | d    | -     | same as size |
-| ATTR_TMP                    | 16 | 03978000:0397FFFF  | 8000    | d    | -     | same as size |
-| ATTR_PERM                   | 17 | 03980000:03987FFF  | 8000    | d    | -     | same as size |
-| [IMA_CATALOG](#IMA_CATALOG) | 18 | 03989000:039C8FFF  | 40000   | d    | -     | same as size |
-| RINGOVD                     | 19 | 039C9000:039E8FFF  | 20000   | d    | -     | same as size |
-| WOFDATA                     | 1A | 039E9000:03CE8FFF  | 300000  | d    | -     | same as size |
-| HB_VOLATILE                 | 1B | 03CE9000:03CEDFFF  | 5000    | d    | -     | same as size |
-| MEMD                        | 1C | 03cee000:03CFBFFF  | E000    | d    | -     | same as size |
-| SBKT                        | 1D | 03d02000:03D05FFF  | 4000    | d    | -     | same as size |
-| HDAT                        | 1E | 03d06000:03D0DFFF  | 8000    | d    | -     | same as size |
-| UVISOR                      | 1F | 03d10000:03E0FFFF  | 100000  | d    | -     | same as size |
-| [BOOTKERNFW](#BOOTKERNFW)   | 20 | 03e10000:03FEFFFF  | 1E0000  | d    | -     | same as size |
-| [BACKUP_PART](#BACKUP_PART) | 21 | 03ff7000:03FFEFFF  | 8000    | d    | -     | 0            |
+| Name                        | ID | Offset:End         | Size    | Type | Flags | Actual size  | coreboot usage              |
+| --------------------------- | -- | ------------------ | -------:| ---- | ----- | ------------:| --------------------------- |
+| [part](#part)               | 01 | 00000000:00001FFF  | 2000    | p    | p     | same as size | partition table             |
+| [HBEL](#HBEL)               | 02 | 00008000:0002BFFF  | 24000   | d    | -     | same as size | _unknown_                   |
+| [GUARD](#GUARD)             | 03 | 0002C000:00030FFF  | 5000    | d    | -     | same as size | _unknown_                   |
+| NVRAM                       | 04 | 00031000:000C0FFF  | 90000   | d    | -     | same as size | _unknown_                   |
+| [SECBOOT](#SECBOOT)         | 05 | 000C1000:000E4FFF  | 24000   | d    | -     | same as size | _unknown_                   |
+| DJVPD                       | 06 | 000E5000:0012CFFF  | 48000   | d    | -     | same as size | _unknown_                   |
+| MVPD                        | 07 | 0012D000:001BCFFF  | 90000   | d    | -     | same as size | _unknown_                   |
+| CVPD                        | 08 | 001BD000:00204FFF  | 48000   | d    | -     | same as size | _unknown_                   |
+| [HBB](#HBB)                 | 09 | 00205000:00304FFF  | 100000  | d    | -     | same as size | bootblock                   |
+| HBD                         | 0A | 00305000:00424FFF  | 120000  | d    | -     | same as size | _unknown_                   |
+| [HBI](#HBI)                 | 0B | 00425000:019C4FFF  | 15A0000 | d    | -     | same as size | romstage, ramstage, payload |
+| SBE                         | 0C | 019C5000:01A80FFF  | BC000   | d    | -     | same as size | _unknown_                   |
+| [HCODE](#HCODE)             | 0D | 01A81000:01BA0FFF  | 120000  | d    | -     | same as size | _unknown_                   |
+| HBRT                        | 0E | 01BA1000:021A0FFF  | 600000  | d    | -     | same as size | _unknown_                   |
+| [PAYLOAD](#PAYLOAD)         | 0F | 021A1000:022A0FFF  | 100000  | d    | -     | same as size | _unknown_                   |
+| [BOOTKERNEL](#BOOTKERNEL)   | 10 | 022A1000:03820FFF  | 1580000 | d    | -     | same as size | _unknown_                   |
+| OCC                         | 11 | 03821000:03940FFF  | 120000  | d    | -     | same as size | _unknown_                   |
+| FIRDATA                     | 12 | 03941000:03943FFF  | 3000    | d    | -     | same as size | _unknown_                   |
+| [VERSION](#VERSION)         | 13 | 03944000:03945FFF  | 2000    | d    | -     | same as size | _unknown_                   |
+| BMC_INV                     | 14 | 03968000:03970FFF  | 9000    | d    | -     | same as size | _unknown_                   |
+| [HBBL](#HBBL)               | 15 | 03971000:03977FFF  | 7000    | d    | -     | same as size | _unknown_                   |
+| ATTR_TMP                    | 16 | 03978000:0397FFFF  | 8000    | d    | -     | same as size | _unknown_                   |
+| ATTR_PERM                   | 17 | 03980000:03987FFF  | 8000    | d    | -     | same as size | _unknown_                   |
+| [IMA_CATALOG](#IMA_CATALOG) | 18 | 03989000:039C8FFF  | 40000   | d    | -     | same as size | _unknown_                   |
+| RINGOVD                     | 19 | 039C9000:039E8FFF  | 20000   | d    | -     | same as size | _unknown_                   |
+| WOFDATA                     | 1A | 039E9000:03CE8FFF  | 300000  | d    | -     | same as size | _unknown_                   |
+| HB_VOLATILE                 | 1B | 03CE9000:03CEDFFF  | 5000    | d    | -     | same as size | _unknown_                   |
+| MEMD                        | 1C | 03cee000:03CFBFFF  | E000    | d    | -     | same as size | _unknown_                   |
+| SBKT                        | 1D | 03d02000:03D05FFF  | 4000    | d    | -     | same as size | _unknown_                   |
+| HDAT                        | 1E | 03d06000:03D0DFFF  | 8000    | d    | -     | same as size | _unknown_                   |
+| UVISOR                      | 1F | 03d10000:03E0FFFF  | 100000  | d    | -     | same as size | _unknown_                   |
+| [BOOTKERNFW](#BOOTKERNFW)   | 20 | 03e10000:03FEFFFF  | 1E0000  | d    | -     | same as size | _unknown_                   |
+| [BACKUP_PART](#BACKUP_PART) | 21 | 03ff7000:03FFEFFF  | 8000    | d    | -     | 0            | _unknown_                   |
 
 Type:
 * l = FFS_TYPE_LOGICAL
@@ -141,13 +141,13 @@ FW for PPE
 This partition contains `skiboot`.
 
 ## BOOTKERNEL
-This partition contains `skiroot`
+This partition contains `skiroot`.
 
 ## VERSION
 Probably just an information about versions of a binaries in the PNOR image.
 
 ## HBBL
-nie jest wykonywany z PNOR, to tylko obraz który podczas aktualizacji przeprowadzanej przez hostboota był zapisywany do SEEPROM. Nie wiem czy tak samo jest z SBE, dużo większa ta partycja niż SEEPROM
+This partition is used by hostboot during update operation.
 
 ## IMA_CATALOG
 This partition holds a list of events supported by OCC microcode.
