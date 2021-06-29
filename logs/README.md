@@ -2,6 +2,7 @@
 # config
 This file contains Linux configuration
 extracted from /proc/config.gz at skiroot on Talos II
+Dumped at 28.06.2021
 
 # 28.05.2021_talos_ii_device_tree
 This file contains device-tree dumped from skiroot
