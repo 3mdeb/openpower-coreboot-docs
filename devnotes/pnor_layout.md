@@ -108,7 +108,7 @@ Flags:
 * p = FFS_FLAGS_PROTECTED
 
 # Reproducibility
-Reproducibility of partitions can be found at the
+Reproducibility of partition content can be found at the
 [wiki page](https://wiki.raptorcs.com/wiki/Firmware/Reproducible_Builds/Status).
 
 # Partition original usage
@@ -158,7 +158,8 @@ FW for PPE
 This partition contains `skiboot`.
 
 ## BOOTKERNEL
-This partition contains `skiroot`, `petitboot` and initramfs.
+This partition contains `skiroot`: Linux kernel bundled
+with `initrd` (Linux userspace and  `petitboot` binaries).
 
 ## OCC
 Most likely contains FW for OCC (On Chip Controller).
