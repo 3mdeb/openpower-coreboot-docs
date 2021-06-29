@@ -1,3 +1,12 @@
+
+# config
+This file contains Linux configuration
+extracted from /proc/config.gz at skiroot on Talos II
+
+# 28.05.2021_talos_ii_device_tree
+This file contains device-tree dumped from skiroot
+with following HW configuration:
+
 * Single IBM POWER9 64bit CPU
 
 * RAM configuration:
