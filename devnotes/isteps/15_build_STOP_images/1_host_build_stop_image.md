@@ -268,9 +268,112 @@ getPpeScanRings(hw, PLAT_SGPE, proc, ringData /* buffers */, imgType /* build/re
 	- same as before, but for SGPE
 
 // create a layout of rings in HOMER for consumption of SGPE
-layoutRingsForSGPE( pChipHomer, i_pRingOverride, l_chipFuncModel,
-							  l_ringData, (RingDebugMode_t)l_ringDebug,
-							  l_riskLevel, l_qpmrHdr, i_imgType );
+layoutRingsForSGPE(homer, PNOR->RINGOVD, __proc__, ringData /* buffers */, l_ringDebug, RISK_LEVEL, qpmrHdr, imgType)
+	// RINGOVD is empty, null is passed and some logic doesn't execute
+	// Manage the Quad Common rings in HOMER
+	layoutCmnRingsForSgpe(homer, __proc__, ringData, l_ringDebug, RISK_LEVEL, qpmrHdr, imgType, sgpeRings /* also debug only? */)
+		resolveEqInexBucket(eqInexBucketId)
+			// This return one of EQ_INEX_BUCKET_n, depending on core floor to nest frequency ratio:
+			// ASYNC_SAFE_MODE:  EQ_INEX_BUCKET_1 = 62
+			// 2/8:              EQ_INEX_BUCKET_2 = 63
+			// {7,6,5,4}/8:      EQ_INEX_BUCKET_3 = 64
+			// 8/8:              EQ_INEX_BUCKET_4 = 65
+			// Note that these values are next indices that would be located in rindIds below
+
+		// get core common rings
+		ringIds = [eq_fure, eq_gptr, eq_time, eq_inex,
+		           ex_l3_fure, ex_l3_gptr, ex_l3_time,
+		           ex_l2_mode, ex_l2_fure, ex_l2_gptr, ex_l2_time,
+		           ex_l3_refr_fure, ex_l3_refr_gptr,
+		           eq_ana_func, eq_ana_gptr,
+		           eq_dpll_func, eq_dpll_gptr, eq_dpll_mode,
+		           eq_ana_bndy,
+		           eq_ana_bndy_bucket_{0-25},
+		           eq_ana_bndy_bucket_l3dcc, eq_ana_mode,
+		           eq_ana_bndy_bucket_{26-41}]
+
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+		// The following is based on QuadCmnRingsList_t which is defined in   //
+		// p9_hcode_image_defines.H. It has the same order of rings as        //
+		// ringIds above, which are based on p9_ringId.H (not to be confused  //
+		// with p9_ring_id.h), except ***there is no eq_ana_bndy*** in the    //
+		// struct below. Further rings are shifted back by one because of it. //
+		//                                                                    //
+		// That being said, the hostboot's code doesn't care, it writes all   //
+		// rings as they go (skipping the ones that are not present). This    //
+		// results in bad names in the struct (which may be bad if whatever   //
+		// reads it depends on the same definition) and worse, bad sizeof,    //
+		// which would be catastrophic if it weren't for ALIGN_UP(payload, 8) //
+		// just before memcpy and the fact that the size in the current (bad) //
+		// form is not a multiply of 8 already.                               //
+		//                                                                    //
+		// I strongly suggest implementing it as `u16 ring[62]`, not using    //
+		// multiple structs/unions/enums to describe one thing, and, above    //
+		// all, don't play with pointers when using an array is sufficient.   //
+		//                                                                    //
+		// Either that, or I totally don't understand what happens in this    //
+		// code...                                                            //
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+		struct cmnRingList { u16 ring[61]; u8 payload[]; } *tmp;
+
+		start = &homer->qpmr.sgpe.sram_image[qpmrHdr.img_len]
+		tmp = &homer->qpmr.sgpe.sram_image[qpmrHdr.img_len]
+		payload = tmp->payload
+
+		for id in ringIds:		// MAX_HOMER_QUAD_CMN_RINGS = 66-4 = 62
+			tempBufSize = buf1s
+
+			//For eq_inex, request selected ring bucket else query
+			//the ring that needs to be at this position in the layout.
+
+			torRingId = (id == eq_inex) ? eqInexBucketId : id
+
+			l_ringVariant = RISK_LEVEL
+			if ((torRingId == eq_gptr)         || // EQ GPTR
+			    (torRingId == eq_ana_gptr)     ||
+			    (torRingId == eq_dpll_gptr)    ||
+			    (torRingId == ex_l3_gptr)      || // EX GPTR
+			    (torRingId == ex_l2_gptr)      ||
+			    (torRingId == ex_l3_refr_gptr) ||
+			    (torRingId == eq_time)         || // EQ TIME
+			    (torRingId == ex_l3_time)      || // EX TIME
+			    (torRingId == ex_l2_time)):
+							l_ringVariant = RV_BASE
+
+			tor_get_single_ring(pRingBuffer, dd, torRingId, PT_SGPE, l_ringVariant, CACHE0_CHIPLET_ID = 0x10, buf1, tempBufSize, l_ringDebug)
+			- continue if not found, there are some not found in log
+
+			ALIGN_UP(tempBufSize, 8)
+			ALIGN_UP(payload, 8)
+				- hostboot calculates this wrt start, so (payload - start) % 8 == 0
+				- can we assume that start is always aligned?
+
+			memcpy(payload, buf1, tempBufSize)
+			tmp->ring[id] = payload - start
+			payload += tempBufSize
+
+			//cleaning up what we wrote in temp buffer last time.
+			memset(buf1, 0x00, tempBufSize)
+
+		qpmrHdr.quadCommonRingLength = payload - start
+		qpmrHdr.quadCommonRingOffset = offsetof(homer, qpmr.sgpe.sram_image) + qpmrHdr.img_len
+
+	// Manage the Quad Override rings in HOMER
+	layoutSgpeScanOverride(...)
+		- contrary to CME, this function is always called, but returns early if RINGOVD is empty
+		- this leaves inconsistent traces in debug log
+
+	// Manage the Quad specific rings in HOMER
+	layoutInstRingsForSgpe(homer, __proc__, ringData, l_ringDebug, RV_BASE, qpmrHdr, imgType, sgpeRings)
+		TBD !!!!!!
+
+	if qpmrHdr.quadCommonRingLength == 0
+		//If quad common rings don't exist ensure its offset in image header  is zero
+		SgpeImgHdr->cmn_ring_occ_offset = 0
+
+	if qpmrHdr.quadSpecRingLength > 0
+		SgpeImgHdr->spec_ring_occ_offset = qpmrHdr.sgpeImgLength + qpmrHdr.quadCommonRingLength
+		SgpeImgHdr->scom_offset = SgpeImgHdr->spec_ring_occ_offset + qpmrHdr.quadSpecRingLength
 
 populateUnsecureHomerAddress( i_procTgt, pChipHomer, l_chipFuncModel.isSmfEnabled() );
 
