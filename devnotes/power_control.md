@@ -3,7 +3,7 @@
 ## Power operations
 
 If you don't need to wait for the end of power operation omit the
-`-w` parameter for non-blocking version.
+`-w` parameter for non-blocking version of the command.
 
 * To power on the machine use:
 ```
