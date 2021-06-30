@@ -12,11 +12,14 @@ obmcutil -w poweron
 obmcutil -w poweroff
 ```
 
+If you don't need to wait for the end of power operation omit the
+`-w` parameter for non-blocking operation.
+
 > Note: It is also possible to use chassisoff version of this command.
 
 ## Check power and booting status
 To check current power status and booting progress use:
 ```
-obmcutil -w status
+obmcutil status
 ```
 
