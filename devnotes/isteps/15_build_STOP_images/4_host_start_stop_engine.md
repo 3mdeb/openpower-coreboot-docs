@@ -151,29 +151,62 @@ for each functional proc:
     TP.TPCHIP.TPC.ITR.FMU.KVREF_AND_VMEAS_MODE_STATUS_REG     // 0x01020007
       if ([16] == 0): die()     // VDMs/IVRM are enabled but necessary VREF calibration failed
 
----------------------- TBD from here
-
   //First mask bit 7 in OIMR and then clear bit 7 in OISR
-  l_data64.flush<0>().setBit<P9N2_PU_OCB_OCI_OISR0_GPE2_ERROR>();
-
-  //mask bit 7
-  FAPI_TRY(fapi2::putScom(i_target, P9N2_PU_OCB_OCI_OIMR0_SCOM2, l_data64));
-  //clear bit 7
-  FAPI_TRY(fapi2::putScom(i_target, P9N2_PU_OCB_OCI_OISR0_SCOM1, l_data64));
-
+  TP.TPCHIP.OCC.OCI.OCB.OCB_OCI_OIMR0  (OR)               // 0x0006C006
+    [all] 0
+    [7]   OCB_OCI_OISR0_GPE2_ERROR =  1
+  TP.TPCHIP.OCC.OCI.OCB.OCB_OCI_OISR0  (CLEAR)            // 0x0006C001
+    [all] 0
+    [7]   OCB_OCI_OISR0_GPE2_ERROR =  1
 
   // Setup the SGPE Timer Selects
   // These hardcoded values are assumed by the SGPE Hcode for setting up
   // the FIT and Watchdog values.
-  l_data64.flush<0>()
-  .insertFromRight<0, 4>(0x1)     // Watchdog
-  .insertFromRight<4, 4>(0xA);    // FIT
-  FAPI_TRY(fapi2::putScom(i_target, PU_GPE3_GPETSEL_SCOM, l_data64));
+  TP.TPCHIP.OCC.OCI.GPE3.GPETSEL                          // 0x00066000
+    [all] 0
+    [0-3] GPETSEL_FIT_SEL =       0x1     // FIT - fixed interval timer
+    [4-7] GPETSEL_WATCHDOG_SEL =  0xA
 
   // Clear error injection bits
-  l_data64.flush<0>().setBit<p9hcd::OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ>();
-  FAPI_TRY(fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64));
+  *0x0006C18B                         // undocumented, PU_OCB_OCI_OCCFLG2_CLEAR
+    [all] 0
+    [30]  1       // OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ
 
   // Boot the STOP GPE
-  FAPI_TRY(stop_gpe_init(i_target), "ERROR: failed to initialize Stop GPE");
+  stop_gpe_init():
+    // Debug and FFDC code was skipped
+    // First check if SGPE_ACTIVE is not set in OCCFLAG register
+    if (TP.TPCHIP.OCC.OCI.OCB.OCB_OCI_OCCFLG[8] == 1):        // 0x0006C08A
+      // Print a warning maybe?
+      TP.TPCHIP.OCC.OCI.OCB.OCB_OCI_OCCFLG (CLEAR)            // 0x0006C08B
+        [all] 0
+        [8]   1       // SGPE_ACTIVE, bits in this register are defined by OCC firmware
+
+    // Program SGPE IVPR
+    // ATTR_STOPGPE_BOOT_COPIER_IVPR_OFFSET is set in updateGpeAttributes() in 15.1
+    // in hostboot, it is (homer->qpmr.sgpe.header.l1_offset | (0x80100000))
+    TP.TPCHIP.OCC.OCI.GPE3.GPEIVPR                            // 0x00066001
+      [all]   0
+      [0-31]  GPEIVPR_IVPR = ATTR_STOPGPE_BOOT_COPIER_IVPR_OFFSET
+              // Only bits [0-22] are actually defined, meaning IVPR must be aligned to 512B
+
+    // Program XCR to ACTIVATE SGPE
+    TP.TPCHIP.OCC.OCI.GPE3.GPENXIXCR                          // 0x00066010
+      [all] 0
+      [1-3] PPE_XIXCR_XCR = 6     // hard reset
+    TP.TPCHIP.OCC.OCI.GPE3.GPENXIXCR                          // 0x00066010
+      [all] 0
+      [1-3] PPE_XIXCR_XCR = 4     // toggle XSR[TRH]
+    TP.TPCHIP.OCC.OCI.GPE3.GPENXIXCR                          // 0x00066010
+      [all] 0
+      [1-3] PPE_XIXCR_XCR = 2     // resume
+
+    // Now wait for SGPE to not be halted and for the HCode to indicate to be active.
+    // Warning: consts names in hostboot say timeouts are in ms, but code treats it as us.
+    // With debug output it takes much more than 20us between reads (~150us) and passes
+    // on 5th pass, which gives ~600us, +/- 150us on 4-core CPU (4 active CMEs).
+    timeout(125*20us):
+      if ((TP.TPCHIP.OCC.OCI.OCB.OCB_OCI_OCCFLG[8] == 1) &&     // 0x0006C08A
+          (TP.TPCHIP.OCC.OCI.GPE3.GPEXIXSR[0] == 0)): break     // 0x00066021
+      delay(20us)
 ```
