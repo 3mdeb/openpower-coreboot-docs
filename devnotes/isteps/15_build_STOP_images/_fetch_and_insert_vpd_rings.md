@@ -1,12 +1,12 @@
 ```cpp
 fapi2::ReturnCode _fetch_and_insert_vpd_rings(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procTarget,
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& procChip,
     void*           i_ringSection,
     uint32_t&       io_ringSectionSize,
     uint32_t        i_maxRingSectionSize,
     void*           i_overlaysSection,
     uint8_t         i_ddLevel,
-    uint8_t         i_sysPhase,
+    uint8_t         i_sysPhase,             // CME/SGPE
     void*           i_vpdRing,
     uint32_t        i_vpdRingSize,
     void*           i_ringBuf2,
@@ -14,25 +14,24 @@ fapi2::ReturnCode _fetch_and_insert_vpd_rings(
     void*           i_ringBuf3,
     uint32_t        i_ringBufSize3,
     uint8_t         i_chipletId,
-    uint8_t         i_evenOdd,
+    uint8_t         i_evenOdd,              // 0
     const RingIdList i_ring,
-    uint8_t&        io_ringStatusInMvpd,
-    bool&           i_bImgOutOfSpace,
-    uint32_t&       io_bootCoreMask)
+    uint8_t&        io_ringStatusInMvpd,    // RING_SCAN - unused here, but changed to different status as an output
+    bool&           i_bImgOutOfSpace,       // false
+    uint32_t&       io_bootCoreMask)        // unused
 {
-    MvpdKeyword l_mvpdKeyword = i_ring.vpdKeyword == VPD_KEYWORD_PDG ?
-        fapi2::MVPD_KEYWORD_PDG
-      : fapi2::MVPD_KEYWORD_PDR;
+    MvpdKeyword l_mvpdKeyword =
+        (i_ring.vpdKeyword == VPD_KEYWORD_PDG) ? fapi2::MVPD_KEYWORD_PDG
+                                               : fapi2::MVPD_KEYWORD_PDR;
 
     memset(i_vpdRing,  0, i_vpdRingSize);
     memset(i_ringBuf2, 0, i_ringBufSize2);
     memset(i_ringBuf3, 0, i_ringBufSize3);
 
-    getMvpdRing(
-        i_procTarget,
+    mvpdRingFunc(
+        procChip,
         l_mvpdKeyword,
         i_chipletId,
-        i_evenOdd,
         i_ring.ringId,
         (uint8_t*)i_vpdRing,
         i_vpdRingSize,
@@ -42,7 +41,7 @@ fapi2::ReturnCode _fetch_and_insert_vpd_rings(
     memset(i_ringBuf2, 0, i_ringBufSize2);
 
     io_ringStatusInMvpd = RING_FOUND;
-    auto l_vpdChipletId = (be32toh(((CompressedScanData*)i_vpdRing)->iv_scanAddr) >> 24) & 0xFF;
+    uint32_t l_vpdChipletId = (be32toh(((CompressedScanData*)i_vpdRing)->iv_scanAddr) >> 24) & 0xFF;
 
     if(i_ring.vpdRingClass == VPD_RING_CLASS_GPTR_NEST
     || i_ring.vpdRingClass == VPD_RING_CLASS_GPTR_EQ
@@ -50,7 +49,6 @@ fapi2::ReturnCode _fetch_and_insert_vpd_rings(
     || i_ring.vpdRingClass == VPD_RING_CLASS_GPTR_EC)
     {
         process_gptr_rings(
-            i_procTarget,
             i_overlaysSection,
             i_ddLevel,
             i_vpdRing,
@@ -70,39 +68,12 @@ fapi2::ReturnCode _fetch_and_insert_vpd_rings(
             return;
         }
     }
-
-    if(i_bImgOutOfSpace == true)
-    {
-        return;
-    }
-
-    if(io_ringSectionSize + i_vpdRingSize > i_maxRingSectionSize)
-    {
-        i_bImgOutOfSpace = true;
-    }
+    i_bImgOutOfSpace = i_maxRingSectionSize < io_ringSectionSize + i_vpdRingSize;
 
     uint8_t l_chipletTorId =
-        i_chipletId
-        + ((i_chipletId - i_ring.instanceIdMin)
-        * (i_ring.vpdRingClass == VPD_RING_CLASS_EX_INS ? 1 : 0))
-        + i_evenOdd;
-
-    PpeType_t l_ppeType;
-
-    switch (i_sysPhase)
-    {
-        case SYSPHASE_HB_SBE:
-            l_ppeType = PT_SBE;
-            break;
-
-        case SYSPHASE_RT_CME:
-            l_ppeType = PT_CME;
-            break;
-
-        case SYSPHASE_RT_SGPE:
-            l_ppeType = PT_SGPE;
-            break;
-    }
+        (i_chipletId - i_ring.instanceIdMin)
+      * (i_ring.vpdRingClass == VPD_RING_CLASS_EX_INS ? 1 : 0)
+      + i_chipletId;
 
     tor_append_ring(
         i_ringSection,
@@ -110,8 +81,7 @@ fapi2::ReturnCode _fetch_and_insert_vpd_rings(
         i_ringBuf2,
         i_ringBufSize2,  // Max size.
         i_ring.ringId,
-        l_ppeType,
-        RV_BASE,         // All VPD rings are Base ringVariant
+        (i_sysPhase == SYSPHASE_RT_CME) ? PT_CME : PT_SGPE,
         l_chipletTorId,  // Chiplet instance TOR Index
         i_vpdRing);      // The VPD RS4 ring container
 }
@@ -123,13 +93,11 @@ static void tor_append_ring(
     void*           i_ringBuffer,       // Ring work buffer
     const uint32_t  i_ringBufferSize,   // Max size of ring work buffer
     RingId_t        i_ringId,           // Ring ID
-    PpeType_t       i_ppeType,          // SBE, CME, SGPE
-    RingVariant_t   i_ringVariant,      // Base,CC,RL
+    PpeType_t       i_ppeType,          // CME, SGPE
     uint8_t         i_instanceId,       // Instance ID
     void*           i_rs4Container)     // RS4 ring container
 {
     uint32_t   l_buf = 0;
-    uint32_t*  l_buf_ptr = &l_buf;
     uint32_t   l_ringBlockSize;
     uint16_t   l_ringOffset16;
     uint32_t   l_torOffsetSlot;
@@ -137,12 +105,9 @@ static void tor_append_ring(
     tor_access_ring(
         i_ringSection,
         i_ringId,
-        UNDEFINED_DD_LEVEL,
         i_ppeType,
-        i_ringVariant,
         i_instanceId,
-        PUT_SINGLE_RING,
-        &l_buf_ptr,
+        &l_buf,
         l_torOffsetSlot);
 
     if(io_ringSectionSize - l_buf <= MAX_TOR_RING_OFFSET)
@@ -160,12 +125,9 @@ static void tor_append_ring(
 static void tor_access_ring(
     TorHeader_t*    i_ringSection,     // Ring section ptr
     RingId_t        i_ringId,          // Ring ID
-    uint8_t         i_ddLevel,         // DD level
-    PpeType_t       i_ppeType,         // SBE,CME,SGPE
-    RingVariant_t   i_ringVariant,     // Base,CC,RL (SBE,CME,SGPE only)
+    PpeType_t       i_ppeType,         // CME, SGPE
     uint8_t&        io_instanceId,     // Instance ID
-    RingBlockType_t i_ringBlockType,   // GET_SINGLE_RING,GET_PPE_LEVEL_RINGS,etc
-    void**          io_ringBlockPtr,   // Ring data buffer
+    void*           io_ringBlockPtr,   // Ring data buffer
     uint32_t&       io_ringBlockSize)  // Size of ring data
 {
     uint8_t* postHeaderStart = (uint8_t*)i_ringSection + sizeof(TorHeader_t);
@@ -178,32 +140,15 @@ static void tor_access_ring(
         return;
     }
 
-    if(i_ddLevel != i_ringSection->ddLevel
-    && i_ddLevel != UNDEFINED_DD_LEVEL)
+    if(be32toh(i_ringSection->magic) == TOR_MAGIC_SBE
+    || be32toh(i_ringSection->magic) == TOR_MAGIC_CME
+    || be32toh(i_ringSection->magic) == TOR_MAGIC_SGPE)
     {
-        return;
-    }
-
-    if (i_ringBlockType == GET_SINGLE_RING
-    || (i_ringBlockType == PUT_SINGLE_RING
-        && (be32toh(i_ringSection->magic) == TOR_MAGIC_SBE
-         || be32toh(i_ringSection->magic) == TOR_MAGIC_CME
-         || be32toh(i_ringSection->magic) == TOR_MAGIC_SGPE)))
-    {
-        void* l_ringSection = i_ringSection;
-        if (be32toh(i_ringSection->magic) == TOR_MAGIC_HW)
-        {
-            TorPpeBlock_t*  torPpeBlock;
-            torPpeBlock = (TorPpeBlock_t*)(postHeaderStart + i_ppeType * sizeof(TorPpeBlock_t));
-            l_ringSection = (void*)(postHeaderStart + be32toh(torPpeBlock->offset));
-        }
-
         get_ring_from_ring_section(
-            l_ringSection,
+            (be32toh(i_ringSection->magic) != TOR_MAGIC_HW) ? i_ringSection
+                : postHeaderStart + be32toh((TorPpeBlock_t*)(postHeaderStart + i_ppeType * sizeof(TorPpeBlock_t))->offset);
             i_ringId,
-            i_ringVariant,
             io_instanceId,
-            i_ringBlockType,
             io_ringBlockPtr,
             io_ringBlockSize);
     }
@@ -212,22 +157,16 @@ static void tor_access_ring(
 static void get_ring_from_ring_section(
     void*           i_ringSection,     // Ring section ptr
     RingId_t        i_ringId,          // Ring ID
-    RingVariant_t   i_ringVariant,     // Base,CC,RL (SBE,CME,SGPE only)
     uint8_t&        io_instanceId,     // Instance ID
-    RingBlockType_t i_ringBlockType,   // Single ring, Block
-    void**          io_ringBlockPtr,   // Output ring buffer
+    void*           io_ringBlockPtr,   // Output ring buffer
     uint32_t&       io_ringBlockSize)  // Size of ring data
 {
-    uint8_t           iInst, iRing, iVariant;
     TorHeader_t*      torHeader = (TorHeader_t*)i_ringSection;
-    uint32_t          torMagic;
-    uint8_t           torVersion;
     uint8_t           chipType;
     TorCpltBlock_t*   cpltBlock;
     TorCpltOffset_t   cpltOffset; // Offset from ringSection to chiplet section
     TorRingOffset_t   ringOffset; // Offset to actual ring container
     uint32_t          torSlotNum; // TOR slot number (within a chiplet section)
-    uint32_t          ringSize;   // Size of whole ring container/block.
     RingVariantOrder* ringVariantOrder;
     RingId_t          numRings;
     GenRingIdList*    ringIdListCommon;
@@ -286,54 +225,21 @@ static void get_ring_from_ring_section(
                     {
                         for (varianIndex = 0; varianIndex < numVariants; varianIndex++)
                         {
-                            if(strcmp((ringIdList + ringIndex)->ringName, ringProps[i_ringId].iv_name ) == 0
-                            && (i_ringVariant == ringVariantOrder->variant[varianIndex] || numVariants == 1)
-                            && (!bInstCase || (bInstCase && ringInstance == io_instanceId)))
+                            if(strcmp((ringIdList + ringIndex)->ringName, ringProps[i_ringId].iv_name) == 0
+                            && (RV_BASE == ringVariantOrder->variant[varianIndex] || numVariants == 1)
+                            && ((bInstCase && ringInstance == io_instanceId) || bInstCase == 0))
                             {
-                                ringOffset = cpltOffset + torSlotNum * sizeof(ringOffset);
-                                ringOffset = *(TorRingOffset_t*)((uint8_t*)i_ringSection + ringOffset);
-                                ringOffset = be16toh(ringOffset);
-
-                                if (i_ringBlockType == GET_SINGLE_RING)
-                                {
-                                    ringSize = 0;
-                                    if (ringOffset)
-                                    {
-                                        ringOffset = cpltOffset + ringOffset;
-                                        ringSize = be16toh(((CompressedScanData*)((uint8_t*)i_ringSection + ringOffset))->iv_size);
-
-                                        if (io_ringBlockSize == 0)
-                                        {
-                                            io_ringBlockSize = ringSize;
-                                            return;
-                                        }
-
-                                        if (io_ringBlockSize < ringSize)
-                                        {
-                                            return;
-                                        }
-
-                                        memcpy(*io_ringBlockPtr, (uint8_t*)i_ringSection + ringOffset, ringSize);
-                                        io_ringBlockSize = ringSize;
-                                        io_instanceId = (bInstCase) ? io_instanceId : (ringIdList + ringIndex)->instanceIdMin;
-                                    }
-                                    return;
-                                }
-                                else if (i_ringBlockType == PUT_SINGLE_RING)
-                                {
-                                    if (ringOffset)
-                                    {
-                                        return;
-                                    }
-                                    memcpy(*io_ringBlockPtr, &cpltOffset, sizeof(cpltOffset));
-                                    io_ringBlockSize = cpltOffset + torSlotNum * sizeof(ringOffset);
-
-                                    return;
-                                }
-                                else
+                                ringOffset = be16toh(
+                                    *(TorRingOffset_t*)((uint8_t*)i_ringSection
+                                  + cpltOffset
+                                  + torSlotNum * sizeof(ringOffset)));
+                                if (ringOffset)
                                 {
                                     return;
                                 }
+                                memcpy(io_ringBlockPtr, &cpltOffset, sizeof(cpltOffset));
+                                io_ringBlockSize = cpltOffset + torSlotNum * sizeof(ringOffset);
+                                return;
                             }
                             torSlotNum++;
                         }
@@ -375,7 +281,7 @@ static void ringid_get_properties(
 
                 if(i_torVersion < 7
                 && (i_chipletType == P9_RID::EQ_TYPE
-                    || i_chipletType == P9_RID::EC_TYPE))
+                 || i_chipletType == P9_RID::EC_TYPE))
                 {
                     *o_numVariants = *o_numVariants - 3;
                 }
@@ -419,8 +325,8 @@ static void ringid_get_properties(
             *o_ringProps = (RingProperties_t*)P9_RID::RING_PROPERTIES;
             break;
         case CT_CEN:
-            if ( i_torMagic == TOR_MAGIC_CEN ||
-                 i_torMagic == TOR_MAGIC_OVRD )
+            if(i_torMagic == TOR_MAGIC_CEN
+            || i_torMagic == TOR_MAGIC_OVRD)
             {
                 CEN_RID::ringid_get_chiplet_properties(
                     i_chipletType,
@@ -440,11 +346,8 @@ static void ringid_get_properties(
                 return;
             }
             *o_ringProps = (RingProperties_t*)CEN_RID::RING_PROPERTIES;
-            break;
-        default:
             return;
     }
-    return;
 }
 
 void CEN_RID::ringid_get_chiplet_properties(
@@ -667,6 +570,15 @@ void ringid_get_noof_chiplets(
     }
 }
 
+/// Determine if an RS4 compressed scan string is all 0
+///
+/// \param[in] i_data A pointer to the CompressedScanData header + data to be
+///
+/// \param[out] o_redundant Set to 1 if the RS4 string is the compressed form
+/// of a scan string that is all 0; Otherwise set to 0.
+///
+/// \returns See \ref scan _compression_code
+
 int rs4_redundant(const CompressedScanData* i_data, int* o_redundant)
 {
     uint8_t* data = (uint8_t*)i_data + sizeof(CompressedScanData);
@@ -674,7 +586,6 @@ int rs4_redundant(const CompressedScanData* i_data, int* o_redundant)
     uint32_t pos = stop_decode(&length, data, 0);
 
     *o_redundant = 0;
-
     if (rs4_get_nibble(data, pos) == 0)
     {
         if (rs4_get_nibble(data, pos + 1) == 0)
@@ -719,7 +630,6 @@ static int stop_decode(uint32_t* o_count, const uint8_t* i_string, const uint32_
 }
 
 void process_gptr_rings(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procTarget,
     void*   i_overlaysSection,
     uint8_t i_ddLevel,
     void*   io_vpdRing,
@@ -731,7 +641,6 @@ void process_gptr_rings(
     void* l_ovlyRawRing = io_ringBuf3;
 
     get_overlays_ring(
-        i_procTarget,
         i_overlaysSection,
         i_ddLevel,
         (RingId_t)be16toh(((CompressedScanData*)io_vpdRing)->iv_ringId),
@@ -742,7 +651,6 @@ void process_gptr_rings(
     if (l_ovlyRs4Ring == io_ringBuf2 && l_ovlyRawRing == io_ringBuf3)
     {
         apply_overlays_ring(
-            i_procTarget,
             io_vpdRing,
             io_ringBuf2,
             l_ovlyRawRing,
@@ -751,7 +659,6 @@ void process_gptr_rings(
 }
 
 void apply_overlays_ring(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procTarget,
     void*    io_vpdRing,
     void*    io_ringBuf2,
     void*    i_ovlyRawRing,
@@ -773,24 +680,23 @@ void apply_overlays_ring(
         &vpdUncmpSize,
         (CompressedScanData*)io_vpdRing);
 
-    int i;
-    for (i = 0; i < vpdUncmpSize / 8; i++)
+    for (int index = 0; index < vpdUncmpSize / 8; index++)
     {
-        if (careOvly[i] > 0)
+        if (careOvly[index] > 0)
         {
             for (int j = 0; j < 8; j++)
             {
-                if (careOvly[i] & (0x80 >> j))
+                if (careOvly[index] & (0x80 >> j))
                 {
-                    if (dataOvly[i] & (0x80 >> j))
+                    if (dataOvly[index] & (0x80 >> j))
                     {
-                        dataVpd[i] |= (0x80 >> j);
-                        careVpd[i] |= (0x80 >> j);
+                        dataVpd[index] |= (0x80 >> j);
+                        careVpd[index] |= (0x80 >> j);
                     }
                     else
                     {
-                        dataVpd[i] &= ~(0x80 >> j);
-                        careVpd[i] &= ~(0x80 >> j);
+                        dataVpd[index] &= ~(0x80 >> j);
+                        careVpd[index] &= ~(0x80 >> j);
                     }
                 }
             }
@@ -799,25 +705,24 @@ void apply_overlays_ring(
 
     if (vpdUncmpSize % 8)
     {
-        i = (int)vpdUncmpSize / 8;
+        int index = (int)vpdUncmpSize / 8;
+        careOvly[index] &= ~(0xFF << (8 - (vpdUncmpSize % 8)));
 
-        careOvly[i] &= ~(0xFF << (8 - (vpdUncmpSize % 8)));
-
-        if (careOvly[i] > 0)
+        if (careOvly[index] > 0)
         {
             for (int j = 0; j < (int)vpdUncmpSize % 8; j++)
             {
-                if (careOvly[i] & (0x80 >> j))
+                if (careOvly[index] & (0x80 >> j))
                 {
-                    if(dataOvly[i] & (0x80 >> j))
+                    if(dataOvly[index] & (0x80 >> j))
                     {
-                        dataVpd[i] |= (0x80 >> j);
-                        careVpd[i] |= (0x80 >> j);
+                        dataVpd[index] |= (0x80 >> j);
+                        careVpd[index] |= (0x80 >> j);
                     }
                     else
                     {
-                        dataVpd[i] &= ~(0x80 >> j);
-                        careVpd[i] &= ~(0x80 >> j);
+                        dataVpd[index] &= ~(0x80 >> j);
+                        careVpd[index] &= ~(0x80 >> j);
                     }
                 }
             }
@@ -833,6 +738,44 @@ void apply_overlays_ring(
         be16toh(((CompressedScanData*)io_vpdRing)->iv_ringId));
 }
 
+/// Compress a scan string using the RS4 compression algorithm
+///
+/// \param[in,out] io_rs4 This is a pointer to a memory area which must be
+/// large enough to hold the worst-case result of compressing \a i_data_str
+/// and \a i_care_str (see below). Note that the CompressedScanData is
+/// always created in big-endian format, however the caller can use
+/// compresed_scan_data_translate() to create a copy of the header in
+/// host format.
+///
+/// \param[in] i_size The size of the buffer pointed to by \a io_rs4.
+///
+/// \param[in] i_data_str The string to compress.  Scan data to compress is
+/// left-justified in this input string.
+///
+/// \param[in] i_care_str The care mask that identifies which bits in the
+/// i_data_str that need to be scanned (written). String is left-justified.
+///
+/// \param[in] i_length The length of the input string in \e bits.  It is
+/// assumed the \a i_string contains at least (\a i_length + 7) / 8 bytes.
+///
+/// \param[in] i_scanAddr The 32-bit scan address.
+///
+/// \param[in] i_ringId The ring ID that uniquely identifies the ring. (See
+/// <ChipType> ring ID header files for more info.)
+///
+/// This API is required for integration with PHYP which does not support
+/// local memory allocation, like malloc() and new().  Applications in
+/// environments supporting local memory allocation can use rs4_compress()
+/// instead.
+///
+/// We always require the worst-case amount of memory including the header and
+/// any rounding required to guarantee that the data size is a multiple of 8
+/// bytes.  The final image size is also rounded up to a multiple of 8 bytes.
+/// If the \a io_size is less than this amount (based on \a i_length) the
+/// call will fail.
+///
+/// \returns See \ref scan_compression_codes
+
 static void _rs4_compress(
     CompressedScanData* io_rs4,
     const uint32_t i_size,
@@ -840,158 +783,7 @@ static void _rs4_compress(
     const uint8_t* i_care_str,
     const uint32_t i_length,
     const uint32_t i_scanAddr,
-    const RingId_t i_ringId)
-{
-    uint32_t nibbles = rs4_max_compressed_nibbles(i_length);
-    uint8_t* rs4_str = (uint8_t*)io_rs4 + sizeof(CompressedScanData);
-
-    memset(io_rs4, 0, i_size);
-    __rs4_compress(rs4_str, &nibbles, i_data_str, i_care_str, i_length);
-
-    io_rs4->iv_magic    = htobe16(RS4_MAGIC);
-    io_rs4->iv_version  = RS4_VERSION;
-    io_rs4->iv_type     = RS4_SCAN_DATA_TYPE_NON_CMSK;
-    io_rs4->iv_size     = htobe16(rs4_max_compressed_bytes(nibbles));
-    io_rs4->iv_ringId   = htobe16(i_ringId);
-    io_rs4->iv_scanAddr = htobe32(i_scanAddr);
-}
-
-static void __rs4_compress(
-    uint8_t* o_rs4_str,
-    uint32_t* o_nibbles,
-    const uint8_t* i_data_str,
-    const uint8_t* i_care_str,
-    const uint32_t i_length)
-{
-    int state = 0;
-    uint32_t j = 0;
-    uint32_t k = 0;
-    uint32_t count = 0;
-    int care_nibble = 0;
-    int data_nibble = 0;
-
-    for(uint32_t i = 0; i < i_length / 4;)
-    {
-        care_nibble = rs4_get_nibble(i_care_str, i);
-        data_nibble = rs4_get_nibble(i_data_str, i);
-
-        if (state == 0)
-        {
-            if (care_nibble == 0)
-            {
-                count++;
-                i++;
-            }
-            else
-            {
-                j += rs4_stop_encode(count, o_rs4_str, j);
-                count = 0;
-                k = j;
-                j++;
-
-                if ((care_nibble ^ data_nibble) == 0)
-                {
-                    state = 1;
-                }
-                else
-                {
-                    state = 2;
-                }
-            }
-        }
-        else if (state == 1)
-        {
-            if (care_nibble == 0)
-            {
-                if (((i + 1) < i_length / 4) && (rs4_get_nibble(i_care_str, i + 1) == 0))
-                {
-                    rs4_set_nibble(o_rs4_str, k, count);
-                    count = 0;
-                    state = 0;
-                }
-                else
-                {
-                    rs4_set_nibble(o_rs4_str, j, 0);
-                    count++;
-                    i++;
-                    j++;
-                }
-            }
-            else if ((care_nibble ^ data_nibble) == 0)
-            {
-                rs4_set_nibble(o_rs4_str, j, data_nibble);
-                count++;
-                i++;
-                j++;
-            }
-            else
-            {
-                rs4_set_nibble(o_rs4_str, k, count);
-                count = 0;
-                state = 0;
-            }
-
-            if (state == 1 && count == 14)
-            {
-                rs4_set_nibble(o_rs4_str, k, 14);
-                count = 0;
-                state = 0;
-            }
-        }
-        else
-        {
-            rs4_set_nibble(o_rs4_str, k, 15);
-            rs4_set_nibble(o_rs4_str, j, care_nibble);
-            j++;
-            rs4_set_nibble(o_rs4_str, j, data_nibble);
-            i++;
-            j++;
-            count = 0;
-            state = 0;
-        }
-    }
-
-    if (state == 0)
-    {
-        j += rs4_stop_encode(count, o_rs4_str, j);
-    }
-    else if (state == 1)
-    {
-        rs4_set_nibble(o_rs4_str, k, count);
-        j += rs4_stop_encode(0, o_rs4_str, j);
-    }
-
-    rs4_set_nibble(o_rs4_str, j, 0);
-    j++;
-    if (i_length % 4 == 0)
-    {
-        rs4_set_nibble(o_rs4_str, j, i_length % 4);
-        j++;
-    }
-    else
-    {
-        care_nibble = rs4_get_nibble(i_care_str, i_length / 4) & ((0xf >> (4 - i_length % 4)) << (4 - i_length % 4));
-        data_nibble = rs4_get_nibble(i_data_str, i_length / 4) & ((0xf >> (4 - i_length % 4)) << (4 - i_length % 4));
-
-        if ((care_nibble ^ data_nibble) == 0)
-        {
-            rs4_set_nibble(o_rs4_str, j, i_length % 4);
-            j++;
-            rs4_set_nibble(o_rs4_str, j, data_nibble);
-            j++;
-        }
-        else
-        {
-            rs4_set_nibble(o_rs4_str, j, i_length % 4 + 8);
-            j++;
-            rs4_set_nibble(o_rs4_str, j, care_nibble);
-            j++;
-            rs4_set_nibble(o_rs4_str, j, data_nibble);
-            j++;
-        }
-    }
-    *o_nibbles = j;
-}
+    const RingId_t i_ringId);
 
 static int rs4_set_nibble(uint8_t* io_string, const uint32_t index, const int i_nibble)
 {
@@ -1006,130 +798,42 @@ static int rs4_set_nibble(uint8_t* io_string, const uint32_t index, const int i_
     return i_nibble;
 }
 
-static int rs4_stop_encode(const uint32_t i_count, uint8_t* io_string, const uint32_t index)
-{
-    uint32_t count = i_count >> 3;
-    int digits = 1;
-    int offset;
-
-    while (count)
-    {
-        count >>= 3;
-        digits++;
-    }
-
-    offset = digits - 1;
-    rs4_set_nibble(io_string, index + offset, (i_count & 0x7) | 0x8);
-
-    count = i_count >> 3;
-    offset--;
-
-    while (count)
-    {
-        rs4_set_nibble(io_string, index + offset, count & 0x7);
-        offset--;
-        count >>= 3;
-    }
-
-    return digits;
-}
-
-static inline uint32_t rs4_max_compressed_nibbles(const uint32_t i_length)
-{
-    return ((i_length + 3) / 4) * 4 + 3;
-}
-
-static inline uint32_t rs4_max_compressed_bytes(uint32_t nibbles)
-{
-    return (((((nibbles + 1) / 2) + sizeof(CompressedScanData)) + 3) / 4) * 4;
-}
+/// Decompress a scan string compressed using the RS4 compression algorithm
+///
+/// \param[in,out] io_data_str A caller-supplied data area to contain the
+/// decompressed string. The \a i_stringSize must be large enough to contain
+/// the decompressed string, which is the size of the original string in bits
+/// rounded up to the nearest byte.
+///
+/// \param[in,out] io_care_str A caller-supplied data area to contain the
+/// decompressed care mask. The \a i_stringSize must be large enough to contain
+/// the decompressed care mask, which is the size of the original string in
+/// bits rounded up to the nearest byte.
+///
+/// \param[in] i_size The size in \e bytes of \a o_data_str and \a o_care_str
+/// buffers and which represents the max number of raw ring bits x 8 that may
+/// fit into the two raw ring buffers.
+///
+/// \param[out] o_length The length of the decompressed string in \e bits.
+///
+/// \param[in] i_rs4 A pointer to the CompressedScanData header + data to be
+/// decompressed.
+///
+/// This API is required for integration with PHYP which does not support
+/// local memory allocation, such as malloc() and new().  Applications in
+/// environments supporting local memory allocation can use rs4_decompress()
+/// instead.
+///
+/// \returns See \ref scan_compression_codes
 
 int _rs4_decompress(
     uint8_t* o_data_str,
     uint8_t* o_care_str,
     uint32_t i_size,
     uint32_t* o_length,
-    const CompressedScanData* i_rs4)
-{
-    memset(o_data_str, 0, i_size);
-    memset(o_care_str, 0, i_size);
-    return __rs4_decompress(
-        o_data_str,
-        o_care_str,
-        i_size,
-        o_length,
-        (uint8_t*)i_rs4 + sizeof(CompressedScanData));
-}
-
-static int __rs4_decompress(
-    uint8_t* o_data_str,
-    uint8_t* o_care_str,
-    uint32_t i_size,
-    uint32_t* o_length,
-    const uint8_t* i_rs4_str)
-{
-    int state;                  /* 0 : Rotate, 1 : Scan */
-    uint32_t i;                 /* Nibble index in i_rs4_str */
-    uint32_t j;                 /* Nibble index in o_data_str/o_care_str */
-    uint32_t k;                 /* Loop index */
-    uint32_t bits;              /* Number of output bits decoded so far */
-    uint32_t count;             /* Count of rotate nibbles */
-    uint32_t nibbles;           /* Rotate encoding or scan nibbles to process */
-
-    i = 0;
-    j = 0;
-    bits = 0;
-    state = 0;
-    if (state == 0)
-    {
-        nibbles = stop_decode(&count, i_rs4_str, i);
-        i += nibbles;
-        bits += 4 * count;
-        j += count;
-        state = 1;
-    }
-    else
-    {
-        nibbles = rs4_get_nibble(i_rs4_str, i);
-        i++;
-
-        if (nibbles == 0)
-        {
-            break;
-        }
-
-        nibbles = nibbles == 15 ? 1 : nibbles;
-        bits += 4 * nibbles;
-
-        for (k = 0; k < nibbles; k++)
-        {
-            rs4_set_nibble(o_care_str, j, rs4_get_nibble(i_rs4_str, i));
-            i = (nibbles == 15 ? i + 1 : i);
-            rs4_set_nibble(o_data_str, j, rs4_get_nibble(i_rs4_str, i));
-            i++;
-            j++;
-        }
-
-        state = 0;
-    }
-
-    nibbles = rs4_get_nibble(i_rs4_str, i);
-    i++;
-
-    bits += nibbles & 0x3;
-
-    if (nibbles & 0x3 != 0)
-    {
-        rs4_set_nibble(o_care_str, j, rs4_get_nibble(i_rs4_str, i));
-        i = (nibbles & 0x8 ? i + 1 : i);
-        rs4_set_nibble(o_data_str, j, rs4_get_nibble(i_rs4_str, i));
-    }
-    *o_length = bits;
-    return SCAN_COMPRESSION_OK;
-}
+    const CompressedScanData* i_rs4);
 
 void get_overlays_ring(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procTarget,
     void*     i_overlaysSection,
     uint8_t   i_ddLevel,
     RingId_t  i_ringId,
@@ -1143,9 +847,8 @@ void get_overlays_ring(
     uint8_t  l_instanceId = 0;
     uint32_t l_ringBlockSize = 0xFFFFFFFF;
 
-    tor_get_single_ring(
+    tor_access_ring(
         i_overlaysSection,
-        i_ddLevel,
         i_ringId,
         UNDEFINED_PPE_TYPE,
         UNDEFINED_RING_VARIANT,
@@ -1162,91 +865,36 @@ void get_overlays_ring(
     *o_ovlyUncmpSize = l_ovlyUncmpSize;
 }
 
-static void tor_get_single_ring(
-    void*         i_ringSection,     // Ring section ptr
-    uint8_t       i_ddLevel,         // DD level
-    RingId_t      i_ringId,          // Ring ID
-    PpeType_t     i_ppeType,         // SBE, CME, SGPE
-    RingVariant_t i_ringVariant,     // Base,CC,RL (SBE/CME/SGPE only)
-    uint8_t       i_instanceId,      // Instance ID
-    void**        io_ringBlockPtr,   // Output ring buffer
-    uint32_t&     io_ringBlockSize)  // Size of ring data
-{
-    tor_access_ring(
-        i_ringSection,
-        i_ringId,
-        i_ddLevel,
-        i_ppeType,
-        i_ringVariant,
-        i_instanceId,
-        GET_SINGLE_RING,
-        io_ringBlockPtr,
-        io_ringBlockSize);
-}
-
-static void getMvpdRing(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_fapiTarget,
-    fapi2::MvpdKeyword  i_keyword,
-    const uint8_t       i_chipletId,
-    const uint8_t       i_evenOdd,
-    const RingId_t      i_ringId,
-    uint8_t*            o_pRingBuf,
-    uint32_t&           io_rRingBufsize,
-    uint8_t*            i_pTempBuf,
-    uint32_t            i_tempBufsize)
-{
-    mvpdRingFunc(
-        i_fapiTarget,
-        i_keyword,
-        i_chipletId,
-        i_evenOdd,
-        i_ringId,
-        o_pRingBuf,
-        io_rRingBufsize,
-        i_pTempBuf,
-        i_tempBufsize);
-}
-
 static void mvpdRingFunc(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>
-    & i_fapiTarget,
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& procChip,
     const mvpdRingFuncOp i_mvpdRingFuncOp,
     const uint8_t        i_chipletId,
-    const uint8_t        i_evenOdd,
     const RingId_t       i_ringId,
     uint8_t*             o_pRingBuf,
     uint32_t&            io_rRingBufsize,
     uint8_t*             i_pTempBuf,
-    uint32_t             i_tempBufsize )
+    uint32_t             i_tempBufsize)
 {
     uint32_t                l_recordLen  = 0;
-    uint8_t*                l_recordBuf  = NULL;
+    uint8_t*                l_recordBuf  = i_pTempBuf ? i_pTempBuf
+                                                      : malloc(l_recordLen);
     uint8_t*                l_pRing      = NULL;
     uint32_t                l_ringLen    = 0;
 
-    getMvpdField(
-        i_fapiTarget,
+    deviceRead(
+        procChip.get(),
         NULL,
-        l_recordLen);
+        l_recordLen,
+        DEVICE_MVPD_ADDRESS(MVPD::CRP0, MVPD::ED));
 
-    if(i_pTempBuf)
-    {
-        l_recordBuf = i_pTempBuf;
-    }
-    else
-    {
-        l_recordBuf = malloc(l_recordLen);
-    }
-
-    getMvpdField(
-        i_fapiTarget,
+    deviceRead(
+        procChip.get(),
         l_recordBuf,
-        l_recordLen );
+        l_recordLen,
+        DEVICE_MVPD_ADDRESS(MVPD::CRP0, MVPD::ED));
 
     mvpdRingFuncFind(
-        i_fapiTarget,
         i_chipletId,
-        i_evenOdd,
         i_ringId,
         l_recordBuf,
         l_recordLen,
@@ -1267,7 +915,6 @@ static void mvpdRingFunc(
     else
     {
         mvpdRingFuncSet(
-            i_fapiTarget,
             l_recordBuf,
             l_recordLen,
             l_pRing,
@@ -1275,151 +922,20 @@ static void mvpdRingFunc(
             o_pRingBuf,
             io_rRingBufsize);
 
-        setMvpdField(
-            i_fapiTarget,
+        deviceWrite(
+            procChip.get(),
             l_recordBuf,
-            l_recordLen);
+            l_recordLen,
+            DEVICE_MVPD_ADDRESS(MVPD::CRP0, MVPD::ED));
     }
-    if((i_pTempBuf == nullptr) && l_recordBuf)
+    if(i_pTempBuf == nullptr && l_recordBuf)
     {
         free(l_recordBuf);
         l_recordBuf = NULL;
     }
 }
 
-static void setMvpdField(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> &i_procTarget,
-    const uint8_t * const i_pBuffer,
-    const uint32_t i_fieldSize)
-{
-    uint8_t l_recIndex = MVPD_INVALID_CHIP_UNIT;
-    uint8_t l_keyIndex = MVPD_INVALID_CHIP_UNIT;
-    errlHndl_t l_errl = NULL;
-    MVPD::mvpdRecord l_hbRecord = MVPD::MVPD_INVALID_RECORD;
-    fapi2::MvpdRecordXlate(MVPD_RING_GET, l_hbRecord, l_recIndex);
-    MVPD::mvpdKeyword l_hbKeyword = MVPD::INVALID_MVPD_KEYWORD;
-    fapi2::MvpdKeywordXlate(MVPD_RECORD_CP00, l_hbKeyword, l_keyIndex);
-    size_t l_fieldLen = i_fieldSize;
-    deviceWrite(i_procTarget.get(), i_pBuffer, l_fieldLen, DEVICE_MVPD_ADDRESS(l_hbRecord, l_hbKeyword));
-}
-
-static void MvpdKeywordXlate(
-    const fapi2::MvpdKeyword i_fapiKeyword,
-    MVPD::mvpdKeyword & o_hbKeyword,
-    uint8_t & o_keywordIndex)
-{
-    struct mvpdKeywordToHb
-    {
-        MVPD::mvpdKeyword keyword;
-        uint8_t keywordIndex;
-    };
-    static const mvpdKeywordToHb mvpdFapiKeywordToHbKeyword[] =
-    {
-        {MVPD::VD,  MVPD_KEYWORD_VD},
-        {MVPD::ED,  MVPD_KEYWORD_ED},
-        {MVPD::TE,  MVPD_KEYWORD_TE},
-        {MVPD::DD,  MVPD_KEYWORD_DD},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_PDP},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_ST},
-        {MVPD::DN,  MVPD_KEYWORD_DN},
-        {MVPD::PG,  MVPD_KEYWORD_PG},
-        {MVPD::PK,  MVPD_KEYWORD_PK},
-        {MVPD::pdR, MVPD_KEYWORD_PDR},
-        {MVPD::pdV, MVPD_KEYWORD_PDV},
-        {MVPD::pdH, MVPD_KEYWORD_PDH},
-        {MVPD::SB,  MVPD_KEYWORD_SB},
-        {MVPD::DR,  MVPD_KEYWORD_DR},
-        {MVPD::VZ,  MVPD_KEYWORD_VZ},
-        {MVPD::CC,  MVPD_KEYWORD_CC},
-        {MVPD::CE,  MVPD_KEYWORD_CE},
-        {MVPD::FN,  MVPD_KEYWORD_FN},
-        {MVPD::PN,  MVPD_KEYWORD_PN},
-        {MVPD::SN,  MVPD_KEYWORD_SN},
-        {MVPD::PR,  MVPD_KEYWORD_PR},
-        {MVPD::HE,  MVPD_KEYWORD_HE},
-        {MVPD::CT,  MVPD_KEYWORD_CT},
-        {MVPD::HW,  MVPD_KEYWORD_HW},
-        {MVPD::pdM, MVPD_KEYWORD_PDM},
-        {MVPD::IN,  MVPD_KEYWORD_IN},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_PD2},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_PD3},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_OC},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_FO},
-        {MVPD::pdI, MVPD_KEYWORD_PDI},
-        {MVPD::pdG, MVPD_KEYWORD_PDG},
-        {MVPD::INVALID_MVPD_KEYWORD,  MVPD_KEYWORD_MK},
-        {MVPD::PB,  MVPD_KEYWORD_PB},
-        {MVPD::CH,  MVPD_KEYWORD_CH},
-        {MVPD::IQ,  MVPD_KEYWORD_IQ},
-        {MVPD::L1,  MVPD_KEYWORD_L1},
-        {MVPD::L2,  MVPD_KEYWORD_L2},
-        {MVPD::L3,  MVPD_KEYWORD_L3},
-        {MVPD::L4,  MVPD_KEYWORD_L4},
-        {MVPD::L5,  MVPD_KEYWORD_L5},
-        {MVPD::L6,  MVPD_KEYWORD_L6},
-        {MVPD::L7,  MVPD_KEYWORD_L7},
-        {MVPD::L8,  MVPD_KEYWORD_L8},
-        {MVPD::pdW, MVPD_KEYWORD_PDW},
-        {MVPD::AW,  MVPD_KEYWORD_AW},
-    };
-    o_hbKeyword    = mvpdFapiKeywordToHbKeyword[i_fapiKeyword].keyword;
-    o_keywordIndex = mvpdFapiKeywordToHbKeyword[i_fapiKeyword].keywordIndex;
-}
-
-static void MvpdRecordXlate(
-    const fapi2::MvpdRecord i_fapiRecord,
-    MVPD::mvpdRecord & o_hbRecord,
-    uint8_t & o_recordIndex)
-{
-    struct mvpdRecordToChip
-    {
-        MVPD::mvpdRecord rec;
-        uint8_t recIndex;
-    };
-    static const mvpdRecordToChip mvpdFapiRecordToHbRecord[] =
-    {
-        {MVPD::CRP0,MVPD_RECORD_CRP0},
-        {MVPD::CP00,MVPD_RECORD_CP00},
-        {MVPD::VINI,MVPD_RECORD_VINI},
-        {MVPD::LRP0,MVPD_RECORD_LRP0},
-        {MVPD::LRP1,MVPD_RECORD_LRP1},
-        {MVPD::LRP2,MVPD_RECORD_LRP2},
-        {MVPD::LRP3,MVPD_RECORD_LRP3},
-        {MVPD::LRP4,MVPD_RECORD_LRP4},
-        {MVPD::LRP5,MVPD_RECORD_LRP5},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRP6},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRP7},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRP8},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRP9},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRPA},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRPB},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRPC},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRPD},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LRPE},
-        {MVPD::LWP0,MVPD_RECORD_LWP0},
-        {MVPD::LWP1,MVPD_RECORD_LWP1},
-        {MVPD::LWP2,MVPD_RECORD_LWP2},
-        {MVPD::LWP3,MVPD_RECORD_LWP3},
-        {MVPD::LWP4,MVPD_RECORD_LWP4},
-        {MVPD::LWP5,MVPD_RECORD_LWP5},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWP6},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWP7},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWP8},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWP9},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWPA},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWPB},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWPC},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWPD},
-        {MVPD::MVPD_INVALID_RECORD,MVPD_RECORD_LWPE},
-        {MVPD::VWML,MVPD_RECORD_VWML},
-        {MVPD::MER0,MVPD_RECORD_MER0},
-    };
-    o_hbRecord    = mvpdFapiRecordToHbRecord[i_fapiRecord].rec;
-    o_recordIndex = mvpdFapiRecordToHbRecord[i_fapiRecord].recIndex;
-}
-
 static void mvpdRingFuncSet(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_fapiTarget,
     uint8_t*     i_pRecordBuf,
     uint32_t     i_recordLen,
     uint8_t*     i_pRing,
@@ -1427,30 +943,28 @@ static void mvpdRingFuncSet(
     uint8_t*     i_pCallerRingBuf,
     uint32_t     i_callerRingBufLen)
 {
-    uint8_t*          l_to = NULL;
-    uint8_t*          l_fr = NULL;
-    uint32_t          l_len = 0;
-    uint8_t*          l_pRingEnd;
+    uint8_t* l_to;
+    uint8_t* l_fr;
+    uint32_t l_len;
+    uint8_t* l_pRingEnd;
     if (i_callerRingBufLen == i_ringLen)
     {
         l_to = i_pRing;
         l_fr = i_pCallerRingBuf;
         l_len = i_callerRingBufLen;
-        memcpy (l_to, l_fr, l_len);
+        memcpy(l_to, l_fr, l_len);
         return;
     }
 
     mvpdRingFuncFind(
-        i_fapiTarget,
-        0x00,
-        0x00,
-        0x00,
+        0,
+        0,
         i_pRecordBuf,
         i_recordLen,
         l_pRingEnd,
         l_len);
 
-    if (i_ringLen == 0 )
+    if (i_ringLen == 0)
     {
 
         l_to = i_pRing;
@@ -1469,10 +983,10 @@ static void mvpdRingFuncSet(
 
         l_to = i_pRing + i_callerRingBufLen;
         l_fr = i_pRing + i_ringLen;
-        l_len = (l_pRingEnd) - (i_pRing + i_ringLen);
+        l_len = l_pRingEnd - i_pRing - i_ringLen;
         memmove (l_to, l_fr, l_len);
 
-        l_to = (l_pRingEnd) - (i_ringLen - i_callerRingBufLen);
+        l_to = l_pRingEnd - i_ringLen + i_callerRingBufLen;
         l_len = i_ringLen - i_callerRingBufLen;
         memset (l_to, 0x00, l_len);
         return;
@@ -1482,7 +996,7 @@ static void mvpdRingFuncSet(
     {
         l_to = i_pRing + i_callerRingBufLen;
         l_fr = i_pRing + i_ringLen;
-        l_len = l_pRingEnd - (i_pRing + i_ringLen);
+        l_len = l_pRingEnd - i_pRing - i_ringLen;
         memmove (l_to, l_fr, l_len);
 
         l_to = i_pRing;
@@ -1500,12 +1014,7 @@ static void mvpdRingFuncGet(
     uint8_t*     i_pCallerRingBuf,
     uint32_t&    io_rCallerRingBufLen)
 {
-    if (i_pCallerRingBuf == NULL)
-    {
-        io_rCallerRingBufLen = i_ringLen;
-        break;
-    }
-    if ( io_rCallerRingBufLen < i_ringLen )
+    if (!i_pCallerRingBuf || io_rCallerRingBufLen < i_ringLen)
     {
         io_rCallerRingBufLen = i_ringLen;
         return;
@@ -1515,9 +1024,7 @@ static void mvpdRingFuncGet(
 }
 
 static void mvpdRingFuncFind(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_fapiTarget,
     const uint8_t       i_chipletId,
-    const uint8_t       i_evenOdd,
     const RingId_t      i_ringId,
     uint8_t*            i_pRecordBuf,
     uint32_t            i_recordBufLen,
@@ -1536,16 +1043,13 @@ static void mvpdRingFuncFind(
     {
         l_prevLen = l_recordBufLenLeft;
         mvpdRingFuncFindEnd(
-            i_fapiTarget,
             &i_pRecordBuf,
             &l_recordBufLenLeft,
             &l_mvpdEnd);
         if (!l_mvpdEnd && !l_pScanData)
         {
             mvpdRingFuncFindHdr(
-                i_fapiTarget,
                 i_chipletId,
-                i_evenOdd,
                 i_ringId,
                 &i_pRecordBuf,
                 &l_recordBufLenLeft,
@@ -1566,27 +1070,52 @@ static void mvpdRingFuncFind(
     }
 }
 
-static void getMvpdField(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> &i_procTarget,
-    uint8_t * const i_pBuffer,
-    uint32_t &io_fieldSize)
+static void mvpdRingFuncFindEnd(
+    uint8_t** io_pBufLeft,
+    uint32_t* io_pBufLenLeft,
+    bool*      o_mvpdEnd)
 {
-    uint8_t l_recIndex = MVPD_INVALID_CHIP_UNIT;
-    uint8_t l_keyIndex = MVPD_INVALID_CHIP_UNIT;
-    fapi2::ReturnCode l_rc;
-    MVPD::mvpdRecord l_hbRecord = MVPD::MVPD_INVALID_RECORD;
-    fapi2::MvpdRecordXlate(MVPD_RING_GET, l_hbRecord, l_recIndex);
-    MVPD::mvpdKeyword l_hbKeyword = MVPD::INVALID_MVPD_KEYWORD;
-    fapi2::MvpdKeywordXlate(MVPD_RECORD_CP00, l_hbKeyword, l_keyIndex);
-    size_t l_fieldLen = io_fieldSize;
+    *o_mvpdEnd = false;
 
-    deviceRead(
-            i_procTarget.get(),
-            i_pBuffer,
-            l_fieldLen,
-            DEVICE_MVPD_ADDRESS(l_hbRecord, l_hbKeyword));
-    io_fieldSize = l_fieldLen;
-    return  l_rc;
+    if (*io_pBufLenLeft >= 3
+    && be32toh(**io_pBufLeft) & 0xffffff00 == MVPD_END_OF_DATA_MAGIC & 0xffffff00)
+    {
+        *o_mvpdEnd = true;
+        *io_pBufLeft    += 3;
+        *io_pBufLenLeft -= 3;
+    }
 }
 
+static void mvpdRingFuncFindHdr(
+    const uint8_t       i_chipletId,
+    const RingId_t      i_ringId,
+    uint8_t**           io_pBufLeft,
+    uint32_t*           io_pBufLenLeft,
+    CompressedScanData** o_pScanData)
+{
+    CompressedScanData* l_pScanData = *io_pBufLeft;
+    *o_pScanData = NULL;
+
+    if (*io_pBufLenLeft < sizeof(CompressedScanData)
+    || be16toh(l_pScanData->iv_magic) != RS4_MAGIC)
+    {
+        return;
+    }
+
+    *io_pBufLeft    += be16toh(l_pScanData->iv_size);
+    *io_pBufLenLeft -= be16toh(l_pScanData->iv_size);
+
+    uint32_t l_evenOddMask =
+        (i_ringId == ex_l3_repr) ? 0x00001000
+      : (i_ringId == ex_l2_repr) ? 0x00000400
+      : (i_ringId == ex_l3_refr_time || i_ringId == ex_l3_refr_repr) ? 0x00000040
+      : 0;
+
+    if (be16toh(l_pScanData->iv_ringId) == i_ringId
+    && (be32toh(l_pScanData->iv_scanAddr) >> 24) & 0xFF == i_chipletId
+    && (l_evenOddMask == 0 || be32toh(l_pScanData->iv_scanAddr) & l_evenOddMask))
+    {
+        *o_pScanData = l_pScanData;
+    }
+}
 ```
