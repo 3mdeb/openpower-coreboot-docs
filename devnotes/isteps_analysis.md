@@ -47,3 +47,7 @@
 * [14.3 proc_pcie_config: Configure the PHBs](isteps/14_DRAM_init/3_proc_pcie_config.md)
 * [14.4 mss_power_cleanup: Clean up any MCS/Centaurs](isteps/14_DRAM_init/4_mss_power_cleanup.md)
 * [14.5 proc_setup_bars: Setup Memory BARs](isteps/14_DRAM_init/5_proc_setups_bars.md)
+
+# Step 18 Establish System SMP & TOD
+* [18.11 proc_tod_setup](isteps/18_establish_system_SMP_and_TOD/11_proc_tod_setup.md)
+* [18.12 proc_tod_init](isteps/18_establish_system_SMP_and_TOD/12_proc_tod_init.md)

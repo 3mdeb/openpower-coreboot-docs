@@ -1,0 +1,463 @@
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 bootblock starting (log level: 7)...
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+FMAP: Found "FLASH" version 1.1 at 0x20000.
+FMAP: base = 0x0 size = 0x200000 #areas = 4
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+CBFS: mcache @0x00031000 built for 8 files, used 0x1a8 of 0x2000 bytes
+CBFS: Found 'fallback/romstage' @0x80 size 0xc558 in mcache @0x0003102c
+BS: bootblock times (exec / console): total (unknown) / 2 ms
+
+
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 romstage starting (log level: 7)...
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+MEMD partition has ECC
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address 51
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address 53
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address D5
+I2C transfer failed (0x04011f0104000000)
+No memory DIMM at address D7
+SPD @ 0x50
+SPD: module type is DDR4
+SPD: module part number is M393A2K40CB2-CTD    
+SPD: banks 16, ranks 1, rows 17, columns 10, density 8192 Mb
+SPD: device width 4 bits, bus width 64 bits
+SPD: module size is 16384 MB (per channel)
+SPD @ 0x52
+SPD: module type is DDR4
+SPD: module part number is 9ASF1G72PZ-2G6J1    
+SPD: banks 16, ranks 1, rows 16, columns 10, density 8192 Mb
+SPD: device width 8 bits, bus width 64 bits
+SPD: module size is 8192 MB (per channel)
+SPD @ 0xD4
+SPD: module type is DDR4
+SPD: module part number is M393A4K40CB2-CTD    
+SPD: banks 16, ranks 2, rows 17, columns 10, density 8192 Mb
+SPD: device width 4 bits, bus width 64 bits
+SPD: module size is 32768 MB (per channel)
+SPD @ 0xD6
+SPD: module type is DDR4
+SPD: module part number is HMA82GR7CJR8N-VK    
+SPD: banks 16, ranks 2, rows 16, columns 10, density 8192 Mb
+SPD: device width 8 bits, bus width 64 bits
+SPD: module size is 16384 MB (per channel)
+starting istep 13.2
+ending istep 13.2
+starting istep 13.3
+putRing took 3 ms
+putRing took 3 ms
+ending istep 13.3
+starting istep 13.4
+ending istep 13.4
+starting istep 13.6
+ending istep 13.6
+starting istep 13.8
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+Please FIXME: ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+ending istep 13.8
+starting istep 13.9
+ending istep 13.9
+starting istep 13.10
+CCS took 2 us (3 us timeout), 1 instruction(s)
+CCS took 2 us (2 us timeout), 14 instruction(s)
+RCD dump for I2C address 0x58:
+0x0000fab0: c7 18 42 00 01 00 00 00 02 51 55 03 cb e4 40 0d  ..B......QU...@.
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (2 us timeout), 14 instruction(s)
+RCD dump for I2C address 0x5a:
+0x0000fab0: c7 18 42 00 00 00 00 00 02 01 00 03 cb e4 40 0d  ..B...........@.
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (3 us timeout), 1 instruction(s)
+CCS took 2 us (2 us timeout), 28 instruction(s)
+RCD dump for I2C address 0xdc:
+0x0000fab0: 86 32 42 00 00 00 00 00 02 61 55 00 cb e4 c0 0d  .2B......aU.....
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+CCS took 2 us (2 us timeout), 28 instruction(s)
+RCD dump for I2C address 0xde:
+0x0000fab0: 86 32 42 00 00 00 00 00 02 11 00 00 cb e4 c0 0d  .2B.............
+0x0000fac0: 00 00 47 00 00 00 00 00 00 00 07 00 00 00 00 00  ..G.............
+ending istep 13.10
+starting istep 13.11
+CCS took 2 us (7 us timeout), 2 instruction(s)
+Write Leveling starting
+CCS took 12 us (84 us timeout), 5 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 5 us (38 us timeout), 5 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 10 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 7 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7937 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 5 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 2 us (7 us timeout), 2 instruction(s)
+Write Leveling starting
+CCS took 12 us (84 us timeout), 5 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 5 us (38 us timeout), 5 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 9 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 7 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 34 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7429 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 5 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 3 us (12 us timeout), 4 instruction(s)
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 10 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 6956 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7151 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+CCS took 3 us (12 us timeout), 4 instruction(s)
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 8631 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+Write Leveling starting
+CCS took 13 us (84 us timeout), 3 instruction(s)
+Write Leveling done
+Initial Pattern Write starting
+CCS took 6 us (38 us timeout), 3 instruction(s)
+Initial Pattern Write done
+DQS alignment starting
+CCS took 11 us (40 us timeout), 1 instruction(s)
+DQS alignment done
+Read Clock Alignment starting
+CCS took 8 us (74 us timeout), 1 instruction(s)
+Read Clock Alignment done
+Read Centering starting
+CCS took 35 us (107 us timeout), 1 instruction(s)
+Read Centering done
+Write Centering starting
+CCS took 7626 us (10526 us timeout), 7 instruction(s)
+Write Centering done
+Coarse write/read starting
+CCS took 6 us (22 us timeout), 1 instruction(s)
+Coarse write/read done
+ending istep 13.11
+starting istep 13.13
+ending istep 13.13
+starting istep 14.1
+MCBIST0 took 1832878 us
+MCBIST1 took 3664755 us
+ending istep 14.1
+starting istep 14.5
+ending istep 14.5
+starting istep 18.11
+starting istep 18.12
+0xF000F = 223d104900008040
+CBMEM:
+IMD: root @ 0xffeff000 254 entries.
+IMD: root @ 0xffefec00 62 entries.
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+CBFS: Found 'fallback/ramstage' @0xc640 size 0x743c in mcache @0x00031080
+BS: romstage times (exec / console): total (unknown) / 35 ms
+
+
+coreboot-4.12-8197-g7d33f3c0b0-dirty Thu Jun 24 12:58:39 UTC 2021 ramstage starting (log level: 7)...
+Enumerating buses...
+Root Device scanning...
+CPU_CLUSTER: 0 enabled
+scan_bus: bus Root Device finished in 0 msecs
+done
+BS: BS_DEV_ENUMERATE run times (exec / console): 0 / 1 ms
+Allocating resources...
+Reading resources...
+CPU_CLUSTER: 0 missing read_resources
+Done reading resources.
+CPU_CLUSTER: 0 missing set_resources
+Done setting resources.
+Done allocating resources.
+BS: BS_DEV_RESOURCES run times (exec / console): 0 / 1 ms
+Enabling resources...
+done.
+Initializing devices...
+Devices initialized
+Finalize devices...
+Devices finalized
+Writing coreboot table at 0xffedc000
+ 0. 0000000000000000-00000000efffffff: RAM
+ 1. 00000000f0000000-00000000f8007fff: RESERVED
+ 2. 00000000f8008000-00000000f800ffff: RAMSTAGE
+ 3. 00000000f8010000-00000000f82fffff: RESERVED
+ 4. 00000000f8300000-00000000f8416fff: RAMSTAGE
+ 5. 00000000f8417000-00000000ffedbfff: RESERVED
+ 6. 00000000ffedc000-00000000ffefffff: CONFIGURATION TABLES
+ 7. 00000000fff00000-00000000ffffffff: RESERVED
+ 8. 0000000100000000-00000011ffffffff: RAM
+FMAP: area COREBOOT found @ 20200 (1965568 bytes)
+FFS header at 0x80060300ffff7000
+PNOR base at 0x80060300fc000000
+HBI partition has ECC
+Wrote coreboot table at: 0xffedc000, 0x200 bytes, checksum 68ec
+coreboot table: 536 bytes.
+IMD ROOT    0. 0xffeff000 0x00001000
+IMD SMALL   1. 0xffefe000 0x00001000
+CONSOLE     2. 0xffede000 0x00020000
+COREBOOT    3. 0xffedc000 0x00002000
+IMD small region:
+  IMD ROOT    0. 0xffefec00 0x00000400
+  RO MCACHE   1. 0xffefea40 0x000001a8
+  FMAP        2. 0xffefe960 0x000000e0
+BS: BS_WRITE_TABLES run times (exec / console): 0 / 4 ms
+CBFS: Found 'fallback/payload' @0x13f80 size 0x1ad93d in mcache @0xffefeb7c
+FIT: Examine payload fallback/payload
+FIT: Loading FIT from 0xf9000000
+FIT: Image fdt-1 has 91743 bytes.
+FIT: Image kernel has 1666040 bytes.
+FIT: Compat preference (lowest to highest priority) : raptor-cs,talos-ii
+FIT: config conf-1 (default), kernel kernel, fdt fdt-1, compat ibm,powernv ibm,p9-openbmc rcs,talos
+FIT: No match, choosing default conf-1.
+FIT: Updating devicetree memory entries
+ 0. 0000000000000000-0000000000196fff: PAYLOAD
+ 1. 0000000000197000-00000000efffffff: RAM
+ 2. 00000000f0000000-00000000f004dfff: PAYLOAD
+ 3. 00000000f004e000-00000000f8007fff: RESERVED
+ 4. 00000000f8008000-00000000f800ffff: RAMSTAGE
+ 5. 00000000f8010000-00000000f82fffff: RESERVED
+ 6. 00000000f8300000-00000000f8416fff: RAMSTAGE
+ 7. 00000000f8417000-00000000ffedbfff: RESERVED
+ 8. 00000000ffedc000-00000000ffefffff: CONFIGURATION TABLES
+ 9. 00000000fff00000-00000000ffffffff: RESERVED
+10. 0000000100000000-00000011ffffffff: RAM
+FIT: Flattening FDT to 0xf0000000
+FIT: Relocating uncompressed kernel to 0x00000000
+BS: BS_PAYLOAD_LOAD run times (exec / console): 860 / 4 ms
+Jumping to boot code at 0x00000010(0x[   10.121672649,5] OPAL 98581863-debug starting...
+[   10.121677811,7] initial console log level: memory 8, driver 7
+[   10.121681620,8] OPAL is Powered By Linked-List Technology.
+[   10.121685208,6] CPU: P9 generation processor (max 4 threads/core)
+[   10.121688911,7] CPU: Boot CPU PIR is 0x0004 PVR is 0x004e1202
+[   10.121695329,7] OPAL table: 0x30128c30 .. 0x30129210, branch table: 0x30002000
+[   10.121703368,7] Assigning physical memory map table for nimbus
+[   10.138389193,7] FDT: Parsing fdt @0xf0000000
+[   10.141861967,7] CPUFT: creating cpufeatures for cpu:32 isa:3000
+[   10.141873076,7] CPUFT:   'big-endian'
+[   10.141881627,7] CPUFT:   'little-endian'
+[   10.141890605,7] CPUFT:   'hypervisor'
+[   10.141898376,7] CPUFT:   'interrupt-facilities'
+[   10.141909083,7] CPUFT:   'smt'
+[   10.141918780,7] CPUFT:   'program-priority-register'
+[   10.141928909,7] CPUFT:   'virtual-page-class-key-protection'
+[   10.141943365,7] CPUFT:   'strong-access-ordering'
+[   10.141955322,7] CPUFT:   'no-execute'
+[   10.141964744,7] CPUFT:   'cache-inhibited-large-page'
+[   10.141976289,7] CPUFT:   'debug-facilities'
+[   10.141986277,7] CPUFT:   'come-from-address-register'
+[   10.141999228,7] CPUFT:   'branch-tracing'
+[   10.142009673,7] CPUFT:   'floating-point'
+[   10.142022364,7] CPUFT:   'vector'
+[   10.142037063,7] CPUFT:   'vector-scalar'
+[   10.142052075,7] CPUFT:   'vector-crypto'
+[   10.142064536,7] CPUFT:   'quadword-load-store'
+[   10.142075291,7] CPUFT:   'decimal-integer'
+[   10.142083816,7] CPUFT:   'decimal-floating-point'
+[   10.142095792,7] CPUFT:   'data-stream-control-register'
+[   10.142112168,7] CPUFT:   'branch-history-rolling-buffer'
+[   10.142125733,7] CPUFT:   'event-based-branch'
+[   10.142141360,7] CPUFT:   'target-address-register'
+[   10.142160670,7] CPUFT:   'control-register'
+[   10.142171688,7] CPUFT:   'processor-utilization-of-resources-register'
+[   10.142193069,7] CPUFT:   'mmu-radix'
+[   10.142205421,7] CPUFT:   'mmu-hash-v3'
+[   10.142218115,7] CPUFT:   'wait-v3'
+[   10.142230505,7] CPUFT:   'idle-stop'
+[   10.142242359,7] CPUFT:   'hypervisor-virtualization-interrupt'
+[   10.142259159,7] CPUFT:   'machine-check-power9'
+[   10.142273969,7] CPUFT:   'performance-monitor-power9'
+[   10.142291380,7] CPUFT:   'system-call-vectored'
+[   10.142309867,7] CPUFT:   'processor-control-facility-v3'
+[   10.142328447,7] CPUFT:   'pc-relative-addressing'
+[   10.142342748,7] CPUFT:   'timer-facilities'
+[   10.142358228,7] CPUFT:   'timer-facilities-v3'
+[   10.142375692,7] CPUFT:   'random-number-generator'
+[   10.142393009,7] CPUFT:   'fixed-point-v3'
+[   10.142403176,7] CPUFT:   'decimal-integer-v3'
+[   10.142414966,7] CPUFT:   'floating-point-v3'
+[   10.142427521,7] CPUFT:   'decimal-floating-point-v3'
+[   10.142440652,7] CPUFT:   'vector-v3'
+[   10.142458120,7] CPUFT:   'vector-scalar-v3'
+[   10.142477287,7] CPUFT:   'vector-binary128'
+[   10.142497193,7] CPUFT:   'vector-binary16'
+[   10.142515688,7] CPUFT:   'event-based-branch-v3'
+[   10.142528927,7] CPUFT:   'atomic-memory-operations'
+[   10.142538157,7] CPUFT:   'copy-paste'
+[   10.142546876,7] CPUFT:   'tm-suspend-hypervisor-assist'
+[   10.142569621,7] CPUFT:   'tm-suspend-xer-so-bug'
+[   10.142595342,7] CPUFT: feature branch-tracing has 1 dependencies (debug-facilities)
+[   10.142604016,7] CPUFT:  branch-tracing found dep (debug-facilities)
+[   10.142613331,7] CPUFT: feature come-from-address-register has 1 dependencies (debug-facilities)
+[   10.142624133,7] CPUFT:  come-from-address-register found dep (debug-facilities)
+[   10.142636477,7] CPUFT: feature decimal-floating-point has 1 dependencies (floating-point)
+[   10.142647023,7] CPUFT:  decimal-floating-point found dep (floating-point)
+[   10.142659077,7] CPUFT: feature decimal-floating-point-v3 has 2 dependencies (floating-point-v3 decimal-floating-point)
+[   10.142676246,7] CPUFT:  decimal-floating-point-v3 found dep (floating-point-v3)
+[   10.142686441,7] CPUFT:  decimal-floating-point-v3 found dep (decimal-floating-point)
+[   10.142700311,7] CPUFT: feature decimal-integer-v3 has 2 dependencies (fixed-point-v3 decimal-integer)
+[   10.142713043,7] CPUFT:  decimal-integer-v3 found dep (fixed-point-v3)
+[   10.142721681,7] CPUFT:  decimal-integer-v3 found dep (decimal-integer)
+[   10.142732786,7] CPUFT: feature event-based-branch-v3 has 1 dependencies (event-based-branch)
+[   10.142743354,7] CPUFT:  event-based-branch-v3 found dep (event-based-branch)
+[   10.142755082,7] CPUFT: feature floating-point-v3 has 1 dependencies (floating-point)
+[   10.142764721,7] CPUFT:  floating-point-v3 found dep (floating-point)
+[   10.142780668,7] CPUFT: feature timer-facilities-v3 has 1 dependencies (timer-facilities)
+[   10.142793979,7] CPUFT:  timer-facilities-v3 found dep (timer-facilities)
+[   10.142804411,7] CPUFT: feature vector has 1 dependencies (floating-point)
+[   10.142812697,7] CPUFT:  vector found dep (floating-point)
+[   10.142821750,7] CPUFT: feature vector-binary128 has 1 dependencies (vector-scalar-v3)
+[   10.142835624,7] CPUFT:  vector-binary128 found dep (vector-scalar-v3)
+[   10.142845869,7] CPUFT: feature vector-binary16 has 1 dependencies (vector-v3)
+[   10.142858810,7] CPUFT:  vector-binary16 found dep (vector-v3)
+[   10.142866870,7] CPUFT: feature vector-crypto has 1 dependencies (vector)
+[   10.142878281,7] CPUFT:  vector-crypto found dep (vector)
+[   10.142885797,7] CPUFT: feature vector-scalar has 1 dependencies (vector)
+[   10.142897186,7] CPUFT:  vector-scalar found dep (vector)
+[   10.142906318,7] CPUFT: feature vector-scalar-v3 has 2 dependencies (vector-v3 vector-scalar)
+[   10.142921646,7] CPUFT:  vector-scalar-v3 found dep (vector-v3)
+[   10.142933712,7] CPUFT:  vector-scalar-v3 found dep (vector-scalar)
+[   10.142943430,7] CPUFT: feature vector-v3 has 1 dependencies (vector)
+[   10.142954304,7] CPUFT:  vector-v3 found dep (vector)
+[   10.143055304,6] CHIP: Initialised chip 0 from xscom@603fc00000000
+[   10.143177353,6] P9 DD2.30 detected
+[   10.143180433,5] CHIP: Chip ID 0000 type: P9N DD2.30
+[   10.143184648,7] XSCOM: Base address: 0x603fc00000000
+[   10.143220573,7] XSTOP: XSCOM addr = 0x5012000, FIR bit = 31
+[   10.143225940,6] MFSI 0:0: Initialized
+[   10.143229039,6] MFSI 0:2: Initialized
+[   10.143232042,6] MFSI 0:1: Initialized
+[   10.143526422,6] LPC: LPC[000]: Initialized
+[   10.143529525,7] LPC: access via MMIO @0x6030000000000
+[   10.143588090,7] LPC: Default bus on chip 0x0
+[   10.143597089,7] CPU: New max PIR set to 0x7
+[   10.143782883,6] MEM: parsing reserved memory from node /ibm,hostboot/reserved-memory
+[   10.143840634,7] HOMER: Init chip 0
+[   10.143844820,7]   PBA BAR0 : 0x0000000000000000
+[   10.143848277,7]   PBA MASK0: 0x0000000000000000
+[   10.143853023,7]   PBA BAR2 : 0x0000000000000000
+[   10.143856392,7]   PBA MASK2: 0x0000000000000000
+[   13.032930272,7] HBRT: Chip 0 HOMER base 0000000032c00000 : 00400000
+[   13.032936741,7] HBRT: OCC common base 0000000032000000 : 00800000
+[   13.032941650,7] CPU: decrementer bits 56
+[   13.032962096,6] CPU: CPU from DT PIR=0x0004 Server#=0x4 State=3
+[   13.032978548,8] CPU:   secondary thread 1 found
+[   13.032982111,8] CPU:   secondary thread 2 found
+[   13.032985547,8] CPU:   secondary thread 3 found
+[   13.032988995,6] CPU:  4 secondary threads
+[   13.033241761,6] PLAT: AST SIO unavailable!
+[   13.033310657,7] UART: Using LPC IRQ 4
+[   13.044567599,5] PLAT: Detected Talos platform
+[   13.044670971,5] PLAT: Detected BMC platform ast2500:openbmc
+[   13.045088993,7] XIVE[ IC 00  ] Initializing rev 2 block ID 0...
+[   13.045217798,7] XIVE[ IC 00  ] Handling interrupts [00000000..000fffff]
+[   13.045383567,7] XIVE[ IC 00  ] IC: 0x6030203100000 [0x000000080000/16]
+[   13.045518383,7] XIVE[ IC 00  ] TM: 0x6030203180000 [0x000000040000/16]
+[   13.045598682,7] XIVE[ IC 00  ] PC: 0x6018000000000 [0x001000000000]
+[   13.045713965,7] XIVE[ IC 00  ] VC: 0x6010000000000 [0x008000000000]
+[   13.045793795,7] XIVE[ IC 00  ] PC_GLOBAL_CONFIG=0000000080800000
+[   13.045853861,7] XIVE[ IC 00  ] PC_TCTXT_CFG=e3c0c40200000000
+[   13.045964661,7] XIVE[ IC 00  ] store EOI is disabled
+[   13.046075488,7]  CQ_CFG_PB_GEN = 1000002400000000
+[   13.046161669,7]  CQ_MSGSND     = ffffff0000000000
+[   13.046648888,7] XIVE[ IC 00  ] SBE at 0x33140000 size 0x800000
+[   13.048510973,7] XIVE[ IC 00  ] IVT at 0x33800000 size 0x800000
+[   13.048629694,7] XIVE[ IC 00  ] EQi at 0x34010000 size 0x10000
+[   13.048756445,7] XIVE[ IC 00  ] VPi at 0x34030000 size 0x10000
+[   13.048852090,7] XIVE[ IC 00  ] Allocating pages 0 to 0 of VPs (for 128 VPs)
+[   13.049004691,7] XIVE[ IC 00  ] VP0 at 0x34050000 size 0x10000
+[   13.049156432,7] IRQ: Registering 0000..fffff ops @0x300fa780 (data 0x0) [secondary]
+[   13.049300455,7] IRQ: Registering 1000000..10fffff ops @0x300fa780 (data 0x0)
+[   13.049439351,6] XIVE: 1 chips considered for VP allocations
+[   13.108335348,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x84
+[   13.110325346,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x85
+[   13.112312597,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x86
+[   13.114281809,7] XIVE[ IC 00  ] 1000 iterations test success at 0/0x87
+[   13.114726181,7] PSI[0x000]: ESB MMIO at @0x60302031c0000
+[   13.114835360,7] PSI[0x000]: Interrupts sources registered for P9 DD2.x
+[   13.114952710,7] IRQ: Registering ffff0..ffffd ops @0x300fa780 (data 0x30491808)
+[   13.115404657,6] PSI[0x000]: Found PSI bridge [active=0]
+[   13.115515540,6] CPU: Setting up secondary CPU state
+[   13.115604465,6] CPU: Calling in all processors...
