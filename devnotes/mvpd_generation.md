@@ -20,10 +20,11 @@ pflash -e -P MVPD -p /dev/zero
 ## Test results
 
 * After flashing original pnor image, `MVPD` partition contains some data.
-* After running hostboot on default `PNOR` image, `MVPD` partition is modified.
-* After running coreboot on default `PNOR` image, `MVPD` is modified
+* After running `hostboot` on default `PNOR` image, `MVPD` partition is modified.
+* After running `hostboot` for a second time, `MVPD` is not modified anymore and equal to image after first `hostboot` run.
+* After running `coreboot` on default `PNOR` image, `MVPD` is modified
   and is identical to `MVPD` after running hostboot on default `PNOR` image.
-* After running coreboot on zeroed-out `MVPD`, `MVPD` is still zeroed
-* after running hostboot on zeroed `MVPD`, `MVPD` is modified
-  and is different to `MVPD` after running hostboot on default image
-  or coreboot on default or zeroed image.
+* After running `coreboot` on zeroed-out `MVPD`, `MVPD` is still zeroed
+* after running `hostboot` on zeroed `MVPD`, `MVPD` is modified
+  and is different to `MVPD` after running `hostboot` on default image
+  or `coreboot` on default or zeroed image.
