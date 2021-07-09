@@ -184,9 +184,9 @@ layoutRingsForCME(homer, __proc__, ringData /* buffers */, l_ringDebug, RISK_LEV
 
 	CmeHdr->common_ring_len = ringLength - (CmeHdr->hcode_offset + CmeHdr->hcode_len)
 
-	if(!pCmeHdr->common_ring_length)
+	if(!CmeHdr->common_ring_length)
 		//No common ring , so force offset to be 0
-		pCmeHdr->common_ring_offset = 0
+		CmeHdr->common_ring_offset = 0
 
 	ALIGN_UP(ringLength, 32)
 	tempLength = ringLength / 32
@@ -375,17 +375,81 @@ layoutRingsForSGPE(homer, PNOR->RINGOVD, __proc__, ringData /* buffers */, l_rin
 		SgpeImgHdr->spec_ring_occ_offset = qpmrHdr.sgpeImgLength + qpmrHdr.quadCommonRingLength
 		SgpeImgHdr->scom_offset = SgpeImgHdr->spec_ring_occ_offset + qpmrHdr.quadSpecRingLength
 
-populateUnsecureHomerAddress( i_procTgt, pChipHomer, l_chipFuncModel.isSmfEnabled() );
+populateUnsecureHomerAddress(proc, homer, SmfEnabled = false):
+	// For SMF disabled
+	CmeHdr->unsec_cpmr_PhyAddr = CmeHdr->cpmr_PhyAddr;
 
-//Update P State parameter block info in HOMER
-buildParameterBlock( pChipHomer, i_procTgt, l_ppmrHdr, i_imgType, i_pBuf1, i_sizeBuf1 );
+// Update P State parameter block info in HOMER
+buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf1s):
+	p9_pstate_parameter_block(proc, &stateSupStruct /*13K struct */, buf1, wofTableSize = buf1s):
+		TBD			- this prints a lot
+	// Assuming >= CPMR_2.0
+	buildCmePstateInfo(homer, proc, imgType, &stateSupStruct):
+		TBD
+	TBD !!
 
-//Update CPMR Header with Scan Ring details
-updateCpmrCmeRegion( pChipHomer, i_procTgt );
+// Update CPMR Header with Scan Ring details
+updateCpmrCmeRegion(homer, proc):
+	// This function for each entry does one of:
+	// - write constant value
+	// - copy value form other field
+	// - one or both of the above with arithmetic operations
+	// Consider writing these fields in previous functions instead.
+	CpmrHdr = &homer->cpmr.header
+	CmeHdr = &homer->cpmr.cme_sram_region[CME_INT_VECTOR_SIZE]
+	CpmrHdr->img_offset            = offsetof(cpmr_st, cme_sram_region) / 32
+	CpmrHdr->cme_pstate_offset     = offsetof(cpmr_st, cme_sram_region) + CmeHdr->pstate_region_offset
+	CpmrHdr->cme_pstate_len        = CmeHdr->pstate_region_len
+	CpmrHdr->img_len               = CmeHdr->hcode_len
+	CpmrHdr->core_scom_offset      = offsetof(cpmr_st, core_scom)
+	CpmrHdr->core_scom_len         = CORE_SCOM_RESTORE_SIZE			// 6k
+	CpmrHdr->core_max_scom_entry   = 15
 
+	if CmeHdr->common_ring_len:
+		CpmrHdr->cme_common_ring_offset = offsetof(cpmr_st, cme_sram_region) + CmeHdr->common_ring_offset
+		CpmrHdr->cme_common_ring_len    = CmeHdr->common_ring_len
 
-//Update QPMR Header area in HOMER
-updateQpmrHeader( pChipHomer, l_qpmrHdr );
+	if CmeHdr->max_spec_ring_len:
+		CpmrHdr->core_spec_ring_offset  = ALIGN_UP(CpmrHdr->img_offset * 32 +
+		                                           CpmrHdr->img_len) +
+		                                           CpmrHdr->cme_pstate_len +
+		                                           CpmrHdr->cme_common_ring_len,
+		                                           32) / 32
+		CpmrHdr->core_spec_ring_len     = CmeHdr->max_spec_ring_len
+
+	for each functional CME:
+		// CME index/position is the same as EX, however this means that Pstate
+		// offset is overwritten when there are 2 functional CMEs in one quad.
+		// Maybe we can use "for each functional quad" instead, but maybe
+		// 'cme * CmeHdr->custom_length' points to different data, based on
+		// whether there is one or two functional CMEs (is that even possible?).
+		// Assuming >= CPMR_2.0
+		CpmrHdr->quad<cme/2>_pstate_offset  = CpmrHdr->core_spec_ring_offset +
+		                                      CpmrHdr->core_spec_ring_len +
+		                                      cme * CmeHdr->custom_length
+
+	// Updating CME Image header
+	// Assuming >= CPMR_2.0
+	// sizeof(LocalPstateParmBlock) = 0x280?
+	CmeHdr->scom_offset   = CmeHdr->pstate_offset + sizeof(LocalPstateParmBlock) / 32
+
+	// Adding to it instance ring length which is already a multiple of 32B
+	CmeHdr->scom_len      = 512
+
+	// Timebase frequency
+	CmeHdr->timebase_hz = 1866MHz / 64
+
+// Update QPMR Header area in HOMER
+updateQpmrHeader(homer, qpmrHdr):
+	// In hostboot, qpmrHdr is a copy of the header, it doesn't operate on HOMER
+	// directly until now - it fills the following fields in the copy and then
+	// does memcpy() to HOMER. As BAR is set up in next istep, I don't see why.
+	homer->qpmr.sgpe.header.sram_img_size =
+	              homer->qpmr.sgpe.header.img_len +
+	              homer->qpmr.sgpe.header.common_ring_len +
+	              homer->qpmr.sgpe.header.spec_ring_len
+	homer->qpmr.sgpe.header.max_quad_restore_entry  = 255
+	homer->qpmr.sgpe.header.build_ver               = 3
 
 //update PPMR Header area in HOMER
 updatePpmrHeader( pChipHomer, l_ppmrHdr, i_procTgt );
@@ -410,16 +474,31 @@ updateImageFlags( pChipHomer, i_procTgt );
 
 //Set the Fabric IDs
 setFabricIds( pChipHomer, i_procTgt );
+	- doesn't modify anything?
 
 //Update the attributes storing PGPE and SGPE's boot copier offset.
 updateGpeAttributes( pChipHomer, i_procTgt );
+	- updates the IVPR attributes for SGPE, PGPE, doesn't touch HW
 
 //customize magic word based on endianess
 customizeMagicWord( pChipHomer );
 
-addUrmorRestore( i_pHomerImage, fuseModeState, l_chipFuncModel );
+addUrmorRestore():
+	- no-op, runs only if __URMOR_TEST is defined
 
-verifySprSelfSave( i_pHomerImage, fuseModeState, l_chipFuncModel );
+verifySprSelfSave():
+	- no-op, runs only if __SELF_SAVE_TEST is defined
 
-initUnsecureHomer( i_pBuf2, i_sizeBuf2 );
+initUnsecureHomer():
+	- fills all of unsecure HOMER with attn, reset vector with sc2
+	- unsecure HOMER isn't actually used without SMF, so no-op
+
+----------------------------------
+
+p9_setup_runtime_wakeup_mode():
+	for each functional core:
+		TP.TPCHIP.NET.PCBSLEC14.PPMC.PPM_CORE_REGS.CPPM_CPMMR		// 0x200F0106
+			// These bits, when set, make core wake up in HV (not UV)
+			[3]	CPPM_CPMMR_RESERVED_2_9	= 1
+			[4]	CPPM_CPMMR_RESERVED_2_9	= 1
 ```
