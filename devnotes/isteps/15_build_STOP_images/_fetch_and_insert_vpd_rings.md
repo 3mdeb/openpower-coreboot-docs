@@ -917,10 +917,15 @@ static void mvpdRingFunc(
     uint32_t             i_tempBufsize)
 {
     uint32_t                l_recordLen  = 0;
-    uint8_t*                l_recordBuf  = i_pTempBuf ? i_pTempBuf
-                                                      : malloc(l_recordLen);
+    uint8_t*                l_recordBuf  = i_pTempBuf;
     uint8_t*                l_pRing      = NULL;
     uint32_t                l_ringLen    = 0;
+
+    // mvpd.C
+    // DEVICE_REGISTER_ROUTE( DeviceFW::READ,
+    //                        DeviceFW::MVPD,
+    //                        TARGETING::TYPE_PROC,
+    //                        mvpdRead );
 
     deviceRead(
         procChip.get(),
@@ -942,93 +947,517 @@ static void mvpdRingFunc(
         l_pRing,
         l_ringLen);
 
-    if (l_ringLen != 0)
+    if(l_ringLen && o_pRingBuf)
     {
-        mvpdRingFuncGet(
-            l_pRing,
-            l_ringLen,
-            o_pRingBuf,
-            io_rRingBufsize);
-    }
-    if(i_pTempBuf == nullptr && l_recordBuf)
-    {
-        free(l_recordBuf);
-        l_recordBuf = NULL;
+        io_rRingBufsize = l_ringLen;
+        memcpy(o_pRingBuf, l_pRing, l_ringLen);
     }
 }
 
-static void mvpdRingFuncSet(
-    uint8_t*     i_pRecordBuf,
-    uint32_t     i_recordLen,
-    uint8_t*     i_pRing,
-    uint32_t     i_ringLen,
-    uint8_t*     i_pCallerRingBuf,
-    uint32_t     i_callerRingBufLen)
+ static void mvpdRead(
+    TARGETING::Target * i_target,
+    void * io_buffer,
+    size_t & io_buflen,
+    va_list i_args)
 {
-    uint8_t* l_to;
-    uint8_t* l_fr;
-    uint32_t l_len;
-    uint8_t* l_pRingEnd;
-    if (i_callerRingBufLen == i_ringLen)
-    {
-        memcpy(i_pRing, i_pCallerRingBuf, i_callerRingBufLen);
-        return;
-    }
+    IpVpdFacade::input_args_t args;
+    args.record = ((mvpdRecord)va_arg( i_args, uint64_t ));
+    args.keyword = ((mvpdKeyword)va_arg( i_args, uint64_t ));
+    args.location = ((VPD::vpdCmdTarget)va_arg( i_args, uint64_t ));
 
-    mvpdRingFuncFind(
-        0,
-        0,
-        i_pRecordBuf,
-        i_recordLen,
-        l_pRingEnd,
-        l_len);
-
-    if (i_ringLen == 0)
-    {
-        memcpy(i_pRing, i_pCallerRingBuf, i_callerRingBufLen);
-        return;
-    }
-
-    if (i_callerRingBufLen < i_ringLen)
-        memcpy(i_pRing, i_pCallerRingBuf, i_callerRingBufLen);
-        memmove(
-            i_pRing + i_callerRingBufLen,
-            i_pRing + i_ringLen,
-            l_pRingEnd - i_pRing - i_ringLen);
-        memset(
-            l_pRingEnd - i_ringLen + i_callerRingBufLen,
-            0x00,
-            i_ringLen - i_callerRingBufLen);
-        return;
-    }
-
-    if (i_callerRingBufLen > i_ringLen)
-    {
-        memmove(
-            i_pRing + i_callerRingBufLen,
-            i_pRing + i_ringLen,
-            l_pRingEnd - i_pRing - i_ringLen);
-        memcpy(i_pRing, i_pCallerRingBuf, i_callerRingBufLen);
-        return;
-    }
+    // Will call IpVpdFacade::read
+    Singleton<MvpdFacade>::instance().read(
+        i_target,
+        io_buffer,
+        io_buflen,
+        args);
 }
 
-
-static void mvpdRingFuncGet(
-    uint8_t*     i_pRing,
-    uint32_t     i_ringLen,
-    uint8_t*     i_pCallerRingBuf,
-    uint32_t&    io_rCallerRingBufLen)
+static void IpVpdFacade::read(
+    TARGETING::Target * i_target,
+    void* io_buffer,
+    size_t & io_buflen,
+    input_args_t i_args )
 {
-    if (!i_pCallerRingBuf || io_rCallerRingBufLen < i_ringLen)
+    const char * recordName = NULL;
+    const char * keywordName = NULL;
+    uint16_t recordOffset = 0x0;
+
+    // Get the Record/keyword names
+    translateRecord(i_args.record, recordName);
+    translateKeyword(i_args.keyword, keywordName);
+    findRecordOffset(recordName, recordOffset, iv_configInfo.vpdReadPNOR, iv_configInfo.vpdReadHW, i_target, i_args );
+
+    if(IPVPD::FULL_RECORD == i_args.keyword)
     {
-        io_rCallerRingBufLen = i_ringLen;
-        return;
+        retrieveRecord(recordName, recordOffset, i_target, io_buffer, io_buflen, i_args);
     }
-    memcpy(i_pCallerRingBuf, i_pRing, i_ringLen);
-    io_rCallerRingBufLen = i_ringLen;
+    else
+    {
+        retrieveKeyword(keywordName, recordName, recordOffset, 0, i_target, io_buffer, io_buflen, i_args);
+    }
 }
 
+static void IpVpdFacade::retrieveKeyword(
+    const char * i_keywordName,
+    const char * i_recordName,
+    uint16_t i_offset,
+    uint16_t i_index,
+    TARGETING::Target * i_target,
+    void * io_buffer,
+    size_t & io_buflen,
+    input_args_t i_args)
+{
+    size_t keywordSize = 0x0;
+    uint64_t byteAddr = 0x0;
+    findKeywordAddr(i_keywordName, i_recordName, i_offset, i_index, i_target, keywordSize, byteAddr, i_args);
+    if(NULL == io_buffer )
+    {
+        io_buflen = keywordSize;
+        return;
+    }
+    fetchData(i_offset + byteAddr, keywordSize, io_buffer, i_target, i_args.location, i_recordName );
+    io_buflen = keywordSize;
+}
+
+static void IpVpdFacade::fetchData(
+    uint64_t            i_byteAddr,
+    size_t              i_numBytes,
+    void *              o_data,
+    TARGETING::Target * i_target,
+    VPD::vpdCmdTarget   i_location,
+    const char*         i_record )
+{
+    input_args_t inputArgs;
+    inputArgs.location = i_location;
+    fetchData(i_byteAddr, i_numBytes, o_data, i_target, inputArgs, i_record);
+}
+
+static void IpVpdFacade::fetchData(
+    uint64_t i_byteAddr,
+    size_t i_numBytes,
+    void * o_data,
+    TARGETING::Target * i_target,
+    input_args_t i_args,
+    const char* i_record )
+{
+    bool l_foundOverride = false;
+    if(i_args.location & VPD::OVERRIDE_MASK != VPD::USEVPD)
+    {
+        VPD::RecordTargetPair_t l_recTarg = VPD::makeRecordTargetPair(i_record,i_target);
+        VPD::OverrideMap_t::iterator l_overItr = iv_overridePtr.find(l_recTarg);
+        if(l_overItr != iv_overridePtr.end())
+        {
+            if(l_overItr->second)
+            {
+                memcpy(o_data, l_overItr->second+i_byteAddr, i_numBytes);
+                l_foundOverride = true;
+            }
+        }
+        else if(0 == memcmp(i_record, "VHDR", 4)
+             || 0 == memcmp(i_record, "VTOC", 4))
+        {
+            iv_overridePtr[l_recTarg] = nullptr;
+        }
+    }
+
+    fetchDataFromPnor(i_byteAddr, i_numBytes, o_data, i_target );
+    // vpd data can also originate from VPD::SEEPROM
+    // fetchDataFromEeprom(i_byteAddr, i_numBytes, o_data, i_target, i_args.eepromSource);
+}
+
+bool resolveVpdSource( TARGETING::Target * i_target,
+                       bool i_rwPnorEnabled,
+                       bool i_rwHwEnabled,
+                       vpdCmdTarget i_vpdCmdTarget,
+                       vpdCmdTarget& o_vpdSource )
+{
+    o_vpdSource = VPD::INVALID_LOCATION;
+    if((i_vpdCmdTarget & VPD::LOCATION_MASK) == VPD::PNOR)
+    {
+        if(i_rwPnorEnabled)
+        {
+            o_vpdSource = VPD::PNOR;
+        }
+    }
+    else if(i_vpdCmdTarget & VPD::LOCATION_MASK == VPD::SEEPROM )
+    {
+        if(i_rwHwEnabled)
+        {
+            o_vpdSource = VPD::SEEPROM;
+        }
+    }
+    else
+    {
+        if(i_rwPnorEnabled
+        && i_rwHwEnabled)
+        {
+            TARGETING::ATTR_VPD_SWITCHES_type vpdSwitches = i_target->getAttr<TARGETING::ATTR_VPD_SWITCHES>();
+            if(vpdSwitches.pnorCacheValid)
+            {
+                o_vpdSource = VPD::PNOR;
+            }
+            else
+            {
+                o_vpdSource = VPD::SEEPROM;
+            }
+        }
+        else if(i_rwPnorEnabled)
+        {
+            o_vpdSource = VPD::PNOR;
+        }
+        else if(i_rwHwEnabled)
+        {
+            o_vpdSource = VPD::SEEPROM;
+        }
+    }
+}
+
+static void IpVpdFacade::findKeywordAddr(
+    const char * i_keywordName,
+    const char * i_recordName,
+    uint16_t i_offset,
+    uint16_t i_index,
+    TARGETING::Target * i_target,
+    size_t& o_keywordSize,
+    uint64_t& o_byteAddr,
+    input_args_t i_args )
+{
+    uint16_t offset = i_offset;
+    uint16_t recordSize = 0x0;
+    uint16_t keywordSize = 0x0;
+    char record[RECORD_BYTE_SIZE] = { '\0' };
+    char keyword[KEYWORD_BYTE_SIZE] = { '\0' };
+    int matchesFound = 0;
+
+    fetchData(offset, RECORD_ADDR_BYTE_SIZE, &recordSize, i_target, i_args.location, i_recordName);
+    offset += RECORD_ADDR_BYTE_SIZE;
+
+    recordSize = le16toh(recordSize);
+    offset += RT_SKIP_BYTES;
+    fetchData(offset, RECORD_BYTE_SIZE, record, i_target, i_args.location, i_recordName);
+
+    if(memcmp(i_keywordName, "RT", KEYWORD_BYTE_SIZE) == 0) {
+        o_keywordSize = RECORD_BYTE_SIZE;
+        o_byteAddr = offset - i_offset;
+        matchesFound++;
+        if (matchesFound == i_index + 1)
+        {
+            return;
+        }
+    }
+
+    offset += RECORD_BYTE_SIZE;
+
+    while(( offset < (recordSize + i_offset + RECORD_ADDR_BYTE_SIZE) ) )
+    {
+        fetchData(offset, KEYWORD_BYTE_SIZE, keyword, i_target, i_args.location, i_recordName );
+        offset += KEYWORD_BYTE_SIZE;
+
+        uint32_t keywordLength = KEYWORD_SIZE_BYTE_SIZE;
+        bool isPoundKwd = false;
+        if( !(memcmp( keyword, "#", 1 )))
+        {
+            isPoundKwd = true;
+            keywordLength++;
+        }
+
+        fetchData(offset, keywordLength, &keywordSize, i_target, i_args.location, i_recordName);
+        offset += keywordLength;
+
+        if(isPoundKwd)
+        {
+            keywordSize = le16toh(keywordSize);
+        }
+        else
+        {
+            keywordSize = keywordSize >> 8;
+        }
+
+        if(!(memcmp(keyword, i_keywordName, KEYWORD_BYTE_SIZE)))
+        {
+            o_keywordSize = keywordSize;
+            o_byteAddr = offset - i_offset;
+            matchesFound++;
+            if (matchesFound == i_index + 1) {
+                break;
+            }
+            offset += keywordSize;
+        }
+        else
+        {
+            offset += keywordSize;
+        }
+    }
+
+    if(matchesFound == i_index + 1)
+    {
+        break;
+    }
+}
+
+static void IpVpdFacade::retrieveRecord(
+    const char * i_recordName,
+    uint16_t i_offset,
+    TARGETING::Target * i_target,
+    void * io_buffer,
+    size_t & io_buflen,
+    input_args_t i_args )
+{
+    uint16_t l_size = 0x0;
+
+    fetchData(i_offset, sizeof(l_size), &l_size, i_target, i_args.location, i_recordName);
+    l_size = le16toh(l_size);
+    l_size += 2;
+
+    if(NULL == io_buffer)
+    {
+        io_buflen = l_size;
+        return;
+    }
+
+    fetchData(i_offset, l_size, io_buffer, i_target, i_args.location, i_recordName );
+    io_buflen = l_size;
+}
+
+static void IpVpdFacade::findRecordOffset(
+    const char * i_record,
+    uint16_t & o_offset,
+    bool i_rwPnorEnabled,
+    bool i_rwHwEnabled,
+    TARGETING::Target * i_target,
+    input_args_t i_args )
+{
+    if((i_args.location & VPD::OVERRIDE_MASK) != VPD::USEVPD)
+    {
+        uint8_t* l_overridePtr = nullptr;
+        VPD::RecordTargetPair_t l_recTarg = std::make_pair(i_record, i_target);
+
+        VPD::OverrideMap_t::iterator l_overItr = iv_overridePtr.find(l_recTarg);
+        if(l_overItr != iv_overridePtr.end())
+        {
+            l_overridePtr = l_overItr->second;
+        }
+        else
+        {
+            checkForRecordOverride(i_record,i_target,l_overridePtr);
+        }
+
+        if(l_overridePtr != nullptr)
+        {
+            o_offset = 0;
+            return;
+        }
+    }
+
+    // Get the record offset
+    findRecordOffsetPnor(i_record, o_offset, i_target, i_args);
+    // vpd data can also originate from VPD::SEEPROM
+    // findRecordOffsetSeeprom(i_record, o_offset, o_length, i_target, i_args);
+}
+
+static void CvpdFacade::checkForRecordOverride(
+    const char* i_record,
+    TARGETING::Target* i_target,
+    uint8_t*& o_ptr)
+{
+    o_ptr = nullptr;
+    VPD::RecordTargetPair_t l_recTarg = VPD::makeRecordTargetPair(i_record,i_target);
+
+    if(strcmp(i_record, "SPDX"))
+    {
+        iv_overridePtr[l_recTarg] = nullptr;
+        return;
+    }
+
+    getMEMDFromPNOR(
+        { CVPD::SPDX, CVPD::VM, VPD::AUTOSELECT },
+        i_target,
+        0xF00);
+    o_ptr = iv_overridePtr[l_recTarg];
+}
+
+static void IpVpdFacade::getMEMDFromPNOR(
+    input_args_t i_recKw,
+    TARGETING::Target* i_target,
+    uint32_t i_vmMask )
+{
+    struct MemdHeader_t
+    {
+        uint32_t eyecatch;         /* Eyecatch to determine validity. "OKOK" */
+        uint32_t header_version;   /* What version of the header this is in */
+        uint32_t memd_version;     /* What version of the MEMD this includes */
+        uint32_t expected_size_k;  /* Size in thousands (not KB) of each MEMD instance */
+        uint16_t expected_num;     /* Number of MEMD instances in this section */
+        uint8_t  padding[14];      /* Padding for future changes */
+    }__attribute__((packed));
+
+    enum MEMD_valid_constants
+    {
+        MEMD_VALID_HEADER = 0x4f4b4f4b, // "OKOK"
+        MEMD_VALID_HEADER_VERSION = 0x30312e30, // "01.0";
+    };
+    // Get the Record/keyword names
+    const char* l_record = nullptr;
+    l_errl = translateRecord( i_recKw.record,
+                                l_record );
+    if( l_errl )
+    {
+        break;
+    }
+
+    const char* l_keyword = nullptr;
+    l_errl = translateKeyword( i_recKw.keyword,
+                                l_keyword );
+    if( l_errl )
+    {
+        break;
+    }
+
+    VPD::RecordTargetPair_t l_recTarg =
+        VPD::makeRecordTargetPair(l_record,i_target);
+
+#ifdef __HOSTBOOT_RUNTIME
+    uint64_t l_memdSize = 0;
+    uint64_t l_memd_addr = hb_get_rt_rsvd_mem(Util::HBRT_MEM_LABEL_VPD_MEMD, 0, l_memdSize );
+    if(l_memd_addr == 0 || l_memdSize == 0)
+    {
+        break;
+    }
+    uint8_t* l_memd_vaddr = l_memd_addr;
+#else
+    PNOR::SectionInfo_t l_memd_info;
+    PNOR::getSectionInfo(PNOR::MEMD,l_memd_info);
+    uint8_t* l_memd_vaddr = l_memd_info.vaddr;
+#endif
+
+    MemdHeader_t l_header;
+    memcpy(&l_header, l_memd_vaddr, sizeof(l_header));
+    if(!(l_header.eyecatch == MEMD_VALID_HEADER
+      && l_header.header_version == MEMD_VALID_HEADER_VERSION
+      && (l_header.memd_version == l_recTarg.first
+          || l_header.memd_version == MEMD_VALID_HEADER_VERSION)) )
+    {
+        iv_overridePtr[l_recTarg] = nullptr;
+        break;
+    }
+
+    size_t l_vm_size = 0;
+    input_args_t l_vm_args = i_recKw;
+    l_vm_args.location = VPD::USEVPD;
+    read(i_target, nullptr, l_vm_size, l_vm_args );
+    uint32_t l_vm_kw = 0;
+    read(i_target, &l_vm_kw, l_vm_size, l_vm_args );
+    uint16_t l_memd_offset = sizeof(MemdHeader_t);
+    bool l_found_match = false;
+
+    for(auto l_inst = 0; l_inst < l_header.expected_num; ++l_inst)
+    {
+        input_args_t l_pnor_args = i_recKw;
+        l_pnor_args.location = VPD::USEOVERRIDE;
+        iv_overridePtr[l_recTarg] = l_memd_vaddr + l_memd_offset;
+        uint32_t l_memd_vm = 0;
+        retrieveKeyword(l_keyword, l_record, 0, 0, i_target, &l_memd_vm, l_vm_size, l_pnor_args);
+
+        if(l_memd_vm != 0
+        && l_vm_kw & i_vmMask == l_memd_vm & i_vmMask )
+        {
+            l_found_match = true;
+            break;
+        }
+        l_memd_offset += (l_header.expected_size_k * 1000);
+    }
+
+    if(!l_found_match)
+    {
+        iv_overridePtr[l_recTarg] = nullptr;
+    }
+}
+
+uint64_t hb_get_rt_rsvd_mem(
+    Util::hbrt_mem_label_t i_label,
+    uint32_t i_instance,
+    uint64_t & o_size)
+{
+    uint64_t l_label_data_addr = 0;
+    o_size = 0;
+    if(g_hostInterfaces != NULL
+    && g_hostInterfaces->get_reserved_mem)
+    {
+        uint64_t hb_data_addr = g_hostInterfaces->get_reserved_mem(HBRT_RSVD_MEM__DATA, i_instance);
+        if (0 != hb_data_addr)
+        {
+            Util::hbrtTableOfContents_t * toc_ptr = hb_data_addr;
+            l_label_data_addr = Util::hb_find_rsvd_mem_label(i_label, toc_ptr, o_size);
+        }
+    }
+    return l_label_data_addr;
+}
+
+uint64_t hb_find_rsvd_mem_label(
+    hbrt_mem_label_t i_label,
+    hbrtTableOfContents_t * i_hb_data_toc_addr,
+    uint64_t & o_size)
+{
+    uint64_t l_label_data_addr = 0;
+    o_size = 0;
+    hbrtTableOfContents_t * toc_ptr = i_hb_data_toc_addr;
+    for (uint16_t i = 0; i < toc_ptr->total_entries; i++)
+    {
+        if (toc_ptr->entry[i].label == i_label)
+        {
+            l_label_data_addr = i_hb_data_toc_addr + toc_ptr->entry[i].offset;
+            o_size = toc_ptr->entry[i].size;
+            break;
+        }
+    }
+    return l_label_data_addr;
+}
+
+static void IpVpdFacade::translateKeyword(
+    VPD::vpdKeyword i_keyword,
+    const char *& o_keyword )
+{
+    keywordInfo tmpKeyword;
+    tmpKeyword.keyword = i_keyword;
+    o_keyword = std::lower_bound(iv_vpdKeywords, &iv_vpdKeywords[iv_keySize], tmpKeyword, compareKeywords)->keywordName;
+}
+
+static void IpVpdFacade::translateRecord(VPD::vpdRecord i_record, const char *& o_record)
+{
+    recordInfo tmpRecord;
+    tmpRecord.record = i_record;
+    o_record = std::lower_bound(iv_vpdRecords, &iv_vpdRecords[iv_recSize], tmpRecord, compareRecords)->recordName;
+}
+
+// this function tries to find next mvpd ring
+/**
+*  @brief MVPD Ring Function Find
+*
+*  @par Detailed Description:
+*           Step through the record looking at rings for a match.
+*
+*  @param[in]  i_chipletId
+*                   Chiplet ID for the op
+*
+*  @param[in]  i_ringId
+*                   Ring ID for the op
+*
+*  @param[in]  i_pRecordBuf
+*                   Pointer to record buffer
+*
+*  @param[in]  i_recordBufLen
+*                   Length of record buffer
+*
+*  @param[out] o_rpRing
+*                   Pointer to the ring in the record, if it is there
+*                   Pointer to the start of the padding after the last
+*                   ring, if it is not there
+*
+*  @param[out] o_rRingLen
+*                   Number of bytes in the ring (header and data)
+*                   Will be 0 if ring not found
+**/
 static void mvpdRingFuncFind(
     const uint8_t       i_chipletId,
     const RingId_t      i_ringId,
@@ -1038,38 +1467,34 @@ static void mvpdRingFuncFind(
     uint32_t&           o_rRingLen)
 {
     bool l_mvpdEnd;
-    CompressedScanData* l_pScanData = NULL;
+    CompressedScanData* o_rpRing = NULL;
     i_recordBufLen--;
     i_pRecordBuf++;
 
     do
     {
+        // Check if mvpd ends here
         mvpdRingFuncFindEnd(
             &i_pRecordBuf,
             &i_recordBufLen,
             &l_mvpdEnd);
-        if (!l_mvpdEnd && !l_pScanData)
+        if (!l_mvpdEnd && !o_rpRing)
         {
+            // Searches for next mvpdRing header
             mvpdRingFuncFindHdr(
                 i_chipletId,
                 i_ringId,
                 &i_pRecordBuf,
                 &i_recordBufLen,
-                &l_pScanData);
+                &o_rpRing);
         }
     }
-    while (!l_mvpdEnd && !l_pScanData && i_recordBufLen);
+    // while mvpd has not ended,
+    // next ring hasn't been found and
+    // space in i_pRecordBuf has not ended
+    while (!l_mvpdEnd && !o_rpRing && i_recordBufLen);
 
-    if (l_pScanData)
-    {
-        o_rpRing = l_pScanData;
-        o_rRingLen = be16toh(l_pScanData->iv_size);
-    }
-    else
-    {
-        o_rpRing = i_pRecordBuf;
-        o_rRingLen = 0;
-    }
+    o_rRingLen = be16toh(o_rpRing->iv_size);
 }
 
 static void mvpdRingFuncFindEnd(
@@ -1078,8 +1503,7 @@ static void mvpdRingFuncFindEnd(
     bool*      o_mvpdEnd)
 {
     *o_mvpdEnd = false;
-
-    if (*io_pBufLenLeft >= 3
+    if(*io_pBufLenLeft >= 3
     && be32toh(**io_pBufLeft) & 0xffffff00 == MVPD_END_OF_DATA_MAGIC & 0xffffff00)
     {
         *o_mvpdEnd = true;
@@ -1089,35 +1513,35 @@ static void mvpdRingFuncFindEnd(
 }
 
 static void mvpdRingFuncFindHdr(
-    const uint8_t       i_chipletId,
-    const RingId_t      i_ringId,
-    uint8_t**           io_pBufLeft,
-    uint32_t*           io_pBufLenLeft,
+    const uint8_t        i_chipletId,
+    const RingId_t       i_ringId,
+    CompressedScanData** io_pBufLeft,
+    uint32_t*            io_pBufLenLeft,
     CompressedScanData** o_pScanData)
 {
     CompressedScanData* l_pScanData = *io_pBufLeft;
     *o_pScanData = NULL;
 
     if (*io_pBufLenLeft < sizeof(CompressedScanData)
-    || be16toh(l_pScanData->iv_magic) != RS4_MAGIC)
+    || be16toh(*io_pBufLeft->iv_magic) != RS4_MAGIC)
     {
         return;
     }
 
-    *io_pBufLeft    += be16toh(l_pScanData->iv_size);
-    *io_pBufLenLeft -= be16toh(l_pScanData->iv_size);
+    *io_pBufLeft    += be16toh(*io_pBufLeft->iv_size);
+    *io_pBufLenLeft -= be16toh(*io_pBufLeft->iv_size);
 
     uint32_t l_evenOddMask =
-        (i_ringId == ex_l3_repr) ? 0x00001000
-      : (i_ringId == ex_l2_repr) ? 0x00000400
-      : (i_ringId == ex_l3_refr_time || i_ringId == ex_l3_refr_repr) ? 0x00000040
+        (i_ringId == 0xDD) ? 0x00001000
+      : (i_ringId == 0xDE) ? 0x00000400
+      : (i_ringId == 0xB9 || i_ringId == 0xDF) ? 0x00000040
       : 0;
 
-    if (be16toh(l_pScanData->iv_ringId) == i_ringId
-    && (be32toh(l_pScanData->iv_scanAddr) >> 24) & 0xFF == i_chipletId
-    && (l_evenOddMask == 0 || be32toh(l_pScanData->iv_scanAddr) & l_evenOddMask))
+    if (be16toh(*io_pBufLeft->iv_ringId) == i_ringId
+    && (be32toh(*io_pBufLeft->iv_scanAddr) >> 24) & 0xFF == i_chipletId
+    && (l_evenOddMask == 0 || be32toh(*io_pBufLeft->iv_scanAddr) & l_evenOddMask))
     {
-        *o_pScanData = l_pScanData;
+        *o_pScanData = *io_pBufLeft;
     }
 }
 ```
