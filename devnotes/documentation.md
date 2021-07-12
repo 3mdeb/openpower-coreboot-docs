@@ -124,12 +124,11 @@ In order to build coreboot image, follow the steps below:
 ## Running the coreboot on Talos II
 
 1. At the end of build process you should see `Built raptor-cs/talos-2 (Talos II)`.
-   Copy the resulting binaries to the BMC
+   Copy the result binary from `<coreboot_dir>/build/coreboot.rom` to the BMC
    (assuming in the coreboot root directory):
 
    ```
-   scp build/bootblock.signed.ecc root@<BMC_IP>:/tmp/bootblock.signed.ecc
-   scp build/coreboot.rom.signed.ecc root@<BMC_IP>:/tmp/coreboot.rom.signed.ecc
+   scp build/coreboot.rom.signed.ecc root@<BMC_IP>:/tmp
    ```
    > If that file is not present, use `coreboot.rom` instead
 
@@ -140,11 +139,10 @@ In order to build coreboot image, follow the steps below:
    pflash -P HBB -r /tmp/hbb.bin
    ```
 
-3. Flash the binaries by replacing HBB partition (execute from BMC):
+3. Flash the binary by replacing HBB partition (execute from BMC):
 
    ```
-   pflash -e -P HBB -p /tmp/bootblock.signed.ecc
-   pflash -e -P HBI -p /tmp/coreboot.rom.signed.ecc
+   pflash -e -P HBB -p /tmp/coreboot.signed.ecc
    ```
    > Again, if that file is not present, use `coreboot.rom` instead
 
@@ -157,7 +155,7 @@ In order to build coreboot image, follow the steps below:
 
    Wait for a while until coreboot shows up:
 
-   [![asciicast](https://asciinema.org/a/CLBuLvaAyeQLlij7aiKtnncx7.svg)](https://asciinema.org/a/CLBuLvaAyeQLlij7aiKtnncx7)
+   [![asciicast](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0.svg)](https://asciinema.org/a/OTEPFRHlasyXQI2eRBLso0AB0)
 
 5. Enjoy the coreboot running on Talos II.
 
