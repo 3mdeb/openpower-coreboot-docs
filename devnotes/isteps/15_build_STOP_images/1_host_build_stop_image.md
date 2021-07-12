@@ -382,7 +382,193 @@ populateUnsecureHomerAddress(proc, homer, SmfEnabled = false):
 // Update P State parameter block info in HOMER
 buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf1s):
 	p9_pstate_parameter_block(proc, &stateSupStruct /*13K struct */, buf1, wofTableSize = buf1s):
-		TBD			- this prints a lot
+		// Instantiate pstate object
+		PlatPmPPB l_pmPPB(proc)
+			- this constructor makes a local copy of attributes and prints them
+
+		// -----------------------------------------------------------
+		// Clear the PstateSuperStructure and install the magic number
+		//----------------------------------------------------------
+		memset(stateSupStruct, 0, sizeof(stateSupStruct))
+
+		*stateSupStruct.magic = PSTATE_PARMSBLOCK_MAGIC		// 0x5053544154453030ull, PSTATE00
+
+		// ----------------
+		// get VPD data (#V,#W,IQ)
+		// ----------------
+		l_pmPPB.vpd_init():
+			// Read #V data
+			get_mvpd_poundV():
+				for each functional quad:
+					// 'quad' below is index including non-functional ones
+					p9_pm_get_poundv_bucket(quad, /* voltageBucketData_t */ poundV_raw_data):
+						- 61 bytes "read directly from VPD"
+						- "reading directly" parses data differently based on version
+						- version is read from different MVPD record and keyword
+						TBD
+
+					bucket_id = poundV_raw_data.bucketId;
+
+					// Whole lot of casting: voltageBucketData_t -> VpdPoint[5]
+					// Data in MVPD is big endian, but offsets in TOC are little?
+
+					chk_valid_poundv():
+						- check that none of the fields from MVPD is 0
+						- check that all fields are >= the same fields for lower performance Pstate
+						- note: Pstates in MVPD aren't sorted
+						- PowerBus is excluded from tests (not a core Pstate)
+
+					if first functional chiplet:
+						first = poundV_raw_data
+						poundV_bucket_id = bucket_id
+					else:
+						// on subsequent chiplets, check that frequencies are same for each operating point for each chiplet
+						if ((poundV_raw_data.nomFreq    != first.nomFreq) ||
+						    (poundV_raw_data.PSFreq     != first.PSFreq) ||
+						    (poundV_raw_data.turboFreq  != first.turboFreq) ||
+						    (poundV_raw_data.uTurboFreq != first.uTurboFreq) ||
+						    (poundV_raw_data.pbFreq     != first.pbFreq) ):
+							die()
+
+					// Check each bucket for max voltage and if max, save bucket's data
+					// Relative voltages were tested in chk_valid_poundv() so it is not
+					// possible for VddPSVltg > VddNomVltg etc.
+					if ((poundV_raw_data.VddNomVltg    > first.VddNomVltg) ||
+					    (poundV_raw_data.VddPSVltg     > first.VddPSVltg) ||
+					    (poundV_raw_data.VddTurboVltg  > first.VddTurboVltg) ||
+					    (poundV_raw_data.VddUTurboVltg > first.VddUTurboVltg) ||
+					    (poundV_raw_data.VdnPbVltg     > first.VdnPbVltg) ):
+						first = poundV_raw_data
+						poundV_bucket_id = bucket_id
+
+			// Apply biased values if any
+			apply_biased_values():
+				- this function gives the opportunity to change values obtained above
+				- does a lot of floating point multiplications by 1
+				- does chk_valid_poundv() on "new" values
+				- nothing changes, can be skipped (at least for Talos)
+
+--------------------
+            //Read #W data
+
+            // ----------------
+            // get VDM Parameters data
+            // ----------------
+            // Note:  the get_mvpd_poundW has the conditional checking for VDM
+            // and WOF enablement as #W has both VDM and WOF content
+            l_rc = get_mvpd_poundW();
+            if (l_rc)
+            {
+                FAPI_ASSERT_NOEXIT(false,
+                                   fapi2::PSTATE_PB_POUND_W_ACCESS_FAIL(fapi2::FAPI2_ERRL_SEV_RECOVERED)
+                                  .set_CHIP_TARGET(iv_procChip)
+                                  .set_FAPI_RC(l_rc),
+                                   "Pstate Parameter Block get_mvpd_poundW function failed");
+                fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
+            }
+
+            //Read #IQ data
+
+            //if wof is disabled.. don't call IQ function
+            if (is_wof_enabled())
+            {
+                // ----------------
+                // get IQ (IDDQ) data
+                // ----------------
+                FAPI_INF("Getting IQ (IDDQ) Data");
+                l_rc = get_mvpd_iddq ();
+
+                if (l_rc)
+                {
+                    FAPI_ASSERT_NOEXIT(false,
+                                       fapi2::PSTATE_PB_IQ_ACCESS_ERROR(fapi2::FAPI2_ERRL_SEV_RECOVERED)
+                                       .set_CHIP_TARGET(iv_procChip)
+                                       .set_FAPI_RC(l_rc),
+                                       "Pstate Parameter Block get_mvpd_iddq function failed");
+                    fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
+                }
+            }
+            else
+            {
+                FAPI_INF("Skipping IQ (IDDQ) Data as WOF is disabled");
+                iv_wof_enabled = false;
+            }
+
+            FAPI_INF("Load RAW VPD");
+            load_mvpd_operating_point(RAW);
+
+            FAPI_INF("Load VPD");
+            // VPD operating point
+            load_mvpd_operating_point(BIASED);
+
+        // ----------------
+        // get IVRM Parameters data
+        // ----------------
+        // TBD
+        FAPI_INF("Getting IVRM Parameters Data");
+        FAPI_TRY(l_pmPPB.get_ivrm_parms());
+
+        // ----------------
+        // Compute VPD points for different regions
+        // ----------------
+        l_pmPPB.compute_vpd_pts();
+
+        // ----------------
+        // Safe mode freq and volt init
+        // ----------------
+        FAPI_TRY(l_pmPPB.safe_mode_init());
+
+        // ----------------
+        // Initialize  VDM data
+        // ----------------
+        FAPI_TRY(l_pmPPB.vdm_init());
+
+        // ----------------
+        // get Resonant clocking attributes
+        // ----------------
+        FAPI_TRY(l_pmPPB.resclk_init());
+
+        // ----------------
+        // Initialize GPPB structure
+        // ----------------
+        FAPI_TRY(l_pmPPB.gppb_init(&l_globalppb));
+
+        // ----------------
+        // Initialize LPPB structure
+        // ----------------
+        FAPI_TRY(l_pmPPB.lppb_init(&l_localppb[0]));
+
+        // ----------------
+        // WOF initialization
+        // ----------------
+        io_size = 0;
+        FAPI_TRY(l_pmPPB.wof_init(
+                 o_buf,
+                 io_size),
+                 "WOF initialization failure");
+
+        // ----------------
+        //Initialize OPPB structure
+        // ----------------
+        FAPI_TRY(l_pmPPB.oppb_init(&l_occppb));
+
+        // ----------------
+        //Initialize pstate feature attribute state
+        // ----------------
+        FAPI_TRY(l_pmPPB.set_global_feature_attributes());
+
+
+        // Put out the Parmater Blocks to the trace
+        FAPI_TRY(gppb_print(&(l_globalppb), i_target));
+        oppb_print(&(l_occppb));
+
+        // Populate Global,local and OCC parameter blocks into Pstate super structure
+        *stateSupStruct.globalppb =   l_globalppb;
+        *stateSupStruct.occppb    =   l_occppb;
+
+        memcpy( &(*stateSupStruct.localppb), &l_localppb, ( MAX_QUADS_PER_CHIP * sizeof(LocalPstateParmBlock) ) );
+
+--------------------
 	// Assuming >= CPMR_2.0
 	buildCmePstateInfo(homer, proc, imgType, &stateSupStruct):
 		TBD
