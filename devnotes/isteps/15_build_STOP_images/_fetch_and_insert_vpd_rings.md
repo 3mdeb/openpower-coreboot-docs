@@ -930,14 +930,12 @@ static void mvpdRingFunc(
     deviceRead(
         procChip.get(),
         NULL,
-        l_recordLen,
-        DEVICE_MVPD_ADDRESS(MVPD::CRP0, MVPD::ED));
+        l_recordLen;
 
     deviceRead(
         procChip.get(),
         l_recordBuf,
-        l_recordLen,
-        DEVICE_MVPD_ADDRESS(MVPD::CRP0, MVPD::ED));
+        l_recordLen);
 
     mvpdRingFuncFind(
         i_chipletId,
@@ -957,45 +955,34 @@ static void mvpdRingFunc(
  static void mvpdRead(
     TARGETING::Target * i_target,
     void * io_buffer,
-    size_t & io_buflen,
-    va_list i_args)
+    size_t & io_buflen)
 {
-    IpVpdFacade::input_args_t args;
-    args.record = ((mvpdRecord)va_arg( i_args, uint64_t ));
-    args.keyword = ((mvpdKeyword)va_arg( i_args, uint64_t ));
-    args.location = ((VPD::vpdCmdTarget)va_arg( i_args, uint64_t ));
-
     // Will call IpVpdFacade::read
     Singleton<MvpdFacade>::instance().read(
         i_target,
         io_buffer,
-        io_buflen,
-        args);
+        io_buflen);
 }
 
 static void IpVpdFacade::read(
     TARGETING::Target * i_target,
-    void* io_buffer,
-    size_t & io_buflen,
-    input_args_t i_args )
+    void* o_buffer,
+    size_t & io_buflen)
 {
     const char * recordName = NULL;
     const char * keywordName = NULL;
     uint16_t recordOffset = 0x0;
 
     // Get the Record/keyword names
-    translateRecord(i_args.record, recordName);
-    translateKeyword(i_args.keyword, keywordName);
-    findRecordOffset(recordName, recordOffset, iv_configInfo.vpdReadPNOR, iv_configInfo.vpdReadHW, i_target, i_args );
+    translateRecord(MVPD::CRP0, recordName);
+    translateKeyword(MVPD::ED, keywordName);
+    findRecordOffset(recordName, recordOffset, iv_configInfo.vpdReadPNOR, iv_configInfo.vpdReadHW, i_target);
 
-    if(IPVPD::FULL_RECORD == i_args.keyword)
-    {
-        retrieveRecord(recordName, recordOffset, i_target, io_buffer, io_buflen, i_args);
-    }
-    else
-    {
-        retrieveKeyword(keywordName, recordName, recordOffset, 0, i_target, io_buffer, io_buflen, i_args);
-    }
+    IpVpdFacade::input_args_t args;
+    args.record = MVPD::CRP0;
+    args.keyword = MVPD::ED;
+    args.location = VPD::AUTOSELECT;
+    retrieveKeyword(keywordName, recordName, recordOffset, 0, i_target, o_buffer, io_buflen, args);
 }
 
 static void IpVpdFacade::retrieveKeyword(
@@ -1004,20 +991,17 @@ static void IpVpdFacade::retrieveKeyword(
     uint16_t i_offset,
     uint16_t i_index,
     TARGETING::Target * i_target,
-    void * io_buffer,
+    void * o_buffer,
     size_t & io_buflen,
     input_args_t i_args)
 {
-    size_t keywordSize = 0x0;
     uint64_t byteAddr = 0x0;
-    findKeywordAddr(i_keywordName, i_recordName, i_offset, i_index, i_target, keywordSize, byteAddr, i_args);
-    if(NULL == io_buffer )
+    findKeywordAddr(i_keywordName, i_recordName, i_offset, i_index, i_target, io_buflen, byteAddr, i_args);
+    if(NULL == o_buffer)
     {
-        io_buflen = keywordSize;
         return;
     }
-    fetchData(i_offset + byteAddr, keywordSize, io_buffer, i_target, i_args.location, i_recordName );
-    io_buflen = keywordSize;
+    fetchData(i_offset + byteAddr, io_buflen, o_buffer, i_target, VPD::AUTOSELECT, i_recordName );
 }
 
 static void IpVpdFacade::fetchData(
@@ -1041,17 +1025,15 @@ static void IpVpdFacade::fetchData(
     input_args_t i_args,
     const char* i_record )
 {
-    bool l_foundOverride = false;
     if(i_args.location & VPD::OVERRIDE_MASK != VPD::USEVPD)
     {
         VPD::RecordTargetPair_t l_recTarg = VPD::makeRecordTargetPair(i_record,i_target);
-        VPD::OverrideMap_t::iterator l_overItr = iv_overridePtr.find(l_recTarg);
-        if(l_overItr != iv_overridePtr.end())
+        VPD::OverrideMap_t::iterator l_overrideItr = iv_overridePtr.find(l_recTarg);
+        if(l_overrideItr != iv_overridePtr.end())
         {
-            if(l_overItr->second)
+            if(l_overrideItr->second)
             {
-                memcpy(o_data, l_overItr->second+i_byteAddr, i_numBytes);
-                l_foundOverride = true;
+                memcpy(o_data, l_overrideItr->second+i_byteAddr, i_numBytes);
             }
         }
         else if(0 == memcmp(i_record, "VHDR", 4)
@@ -1061,58 +1043,13 @@ static void IpVpdFacade::fetchData(
         }
     }
 
-    fetchDataFromPnor(i_byteAddr, i_numBytes, o_data, i_target );
+    fetchDataFromPnor(i_byteAddr, i_numBytes, o_data, i_target);
     // vpd data can also originate from VPD::SEEPROM
     // fetchDataFromEeprom(i_byteAddr, i_numBytes, o_data, i_target, i_args.eepromSource);
 }
 
-bool resolveVpdSource( TARGETING::Target * i_target,
-                       bool i_rwPnorEnabled,
-                       bool i_rwHwEnabled,
-                       vpdCmdTarget i_vpdCmdTarget,
-                       vpdCmdTarget& o_vpdSource )
-{
-    o_vpdSource = VPD::INVALID_LOCATION;
-    if((i_vpdCmdTarget & VPD::LOCATION_MASK) == VPD::PNOR)
-    {
-        if(i_rwPnorEnabled)
-        {
-            o_vpdSource = VPD::PNOR;
-        }
-    }
-    else if(i_vpdCmdTarget & VPD::LOCATION_MASK == VPD::SEEPROM )
-    {
-        if(i_rwHwEnabled)
-        {
-            o_vpdSource = VPD::SEEPROM;
-        }
-    }
-    else
-    {
-        if(i_rwPnorEnabled
-        && i_rwHwEnabled)
-        {
-            TARGETING::ATTR_VPD_SWITCHES_type vpdSwitches = i_target->getAttr<TARGETING::ATTR_VPD_SWITCHES>();
-            if(vpdSwitches.pnorCacheValid)
-            {
-                o_vpdSource = VPD::PNOR;
-            }
-            else
-            {
-                o_vpdSource = VPD::SEEPROM;
-            }
-        }
-        else if(i_rwPnorEnabled)
-        {
-            o_vpdSource = VPD::PNOR;
-        }
-        else if(i_rwHwEnabled)
-        {
-            o_vpdSource = VPD::SEEPROM;
-        }
-    }
-}
 
+// This function looks for an address of a particular keyword
 static void IpVpdFacade::findKeywordAddr(
     const char * i_keywordName,
     const char * i_recordName,
@@ -1121,47 +1058,41 @@ static void IpVpdFacade::findKeywordAddr(
     TARGETING::Target * i_target,
     size_t& o_keywordSize,
     uint64_t& o_byteAddr,
-    input_args_t i_args )
+    input_args_t i_args)
 {
     uint16_t offset = i_offset;
-    uint16_t recordSize = 0x0;
-    uint16_t keywordSize = 0x0;
-    char record[RECORD_BYTE_SIZE] = { '\0' };
-    char keyword[KEYWORD_BYTE_SIZE] = { '\0' };
-    int matchesFound = 0;
+    uint16_t recordSize = 0;
 
     fetchData(offset, RECORD_ADDR_BYTE_SIZE, &recordSize, i_target, i_args.location, i_recordName);
-    offset += RECORD_ADDR_BYTE_SIZE;
+    offset += RECORD_ADDR_BYTE_SIZE + RT_SKIP_BYTES;
 
-    recordSize = le16toh(recordSize);
-    offset += RT_SKIP_BYTES;
-    fetchData(offset, RECORD_BYTE_SIZE, record, i_target, i_args.location, i_recordName);
-
-    if(memcmp(i_keywordName, "RT", KEYWORD_BYTE_SIZE) == 0) {
+    if(memcmp(i_keywordName, "RT", KEYWORD_BYTE_SIZE) == 0)
+    {
         o_keywordSize = RECORD_BYTE_SIZE;
         o_byteAddr = offset - i_offset;
-        matchesFound++;
-        if (matchesFound == i_index + 1)
+        if(0 == i_index)
         {
             return;
         }
     }
 
     offset += RECORD_BYTE_SIZE;
-
-    while(( offset < (recordSize + i_offset + RECORD_ADDR_BYTE_SIZE) ) )
+    int matchesFound = 0;
+    while(offset < le16toh(recordSize) + i_offset + RECORD_ADDR_BYTE_SIZE)
     {
+        char keyword[KEYWORD_BYTE_SIZE] = { '\0' };
         fetchData(offset, KEYWORD_BYTE_SIZE, keyword, i_target, i_args.location, i_recordName );
         offset += KEYWORD_BYTE_SIZE;
 
         uint32_t keywordLength = KEYWORD_SIZE_BYTE_SIZE;
         bool isPoundKwd = false;
-        if( !(memcmp( keyword, "#", 1 )))
+        if(keyword[0] == '#')
         {
             isPoundKwd = true;
             keywordLength++;
         }
 
+        uint16_t keywordSize = 0;
         fetchData(offset, keywordLength, &keywordSize, i_target, i_args.location, i_recordName);
         offset += keywordLength;
 
@@ -1176,84 +1107,76 @@ static void IpVpdFacade::findKeywordAddr(
 
         if(!(memcmp(keyword, i_keywordName, KEYWORD_BYTE_SIZE)))
         {
-            o_keywordSize = keywordSize;
-            o_byteAddr = offset - i_offset;
             matchesFound++;
-            if (matchesFound == i_index + 1) {
+            if (matchesFound == i_index + 1)
+            {
+                o_keywordSize = keywordSize;
+                o_byteAddr = offset - i_offset;
                 break;
             }
-            offset += keywordSize;
         }
-        else
-        {
-            offset += keywordSize;
-        }
-    }
-
-    if(matchesFound == i_index + 1)
-    {
-        break;
+        offset += keywordSize;
     }
 }
 
-static void IpVpdFacade::retrieveRecord(
-    const char * i_recordName,
-    uint16_t i_offset,
-    TARGETING::Target * i_target,
-    void * io_buffer,
-    size_t & io_buflen,
-    input_args_t i_args )
-{
-    uint16_t l_size = 0x0;
 
-    fetchData(i_offset, sizeof(l_size), &l_size, i_target, i_args.location, i_recordName);
-    l_size = le16toh(l_size);
-    l_size += 2;
-
-    if(NULL == io_buffer)
-    {
-        io_buflen = l_size;
-        return;
-    }
-
-    fetchData(i_offset, l_size, io_buffer, i_target, i_args.location, i_recordName );
-    io_buflen = l_size;
-}
-
+// Finds the record offset
 static void IpVpdFacade::findRecordOffset(
     const char * i_record,
     uint16_t & o_offset,
     bool i_rwPnorEnabled,
     bool i_rwHwEnabled,
-    TARGETING::Target * i_target,
-    input_args_t i_args )
+    TARGETING::Target * i_target)
 {
-    if((i_args.location & VPD::OVERRIDE_MASK) != VPD::USEVPD)
+    if((VPD::AUTOSELECT & VPD::OVERRIDE_MASK) != VPD::USEVPD)
     {
         uint8_t* l_overridePtr = nullptr;
-        VPD::RecordTargetPair_t l_recTarg = std::make_pair(i_record, i_target);
-
-        VPD::OverrideMap_t::iterator l_overItr = iv_overridePtr.find(l_recTarg);
-        if(l_overItr != iv_overridePtr.end())
-        {
-            l_overridePtr = l_overItr->second;
-        }
-        else
-        {
-            checkForRecordOverride(i_record,i_target,l_overridePtr);
-        }
-
+        checkForRecordOverride(i_record, i_target, l_overridePtr);
         if(l_overridePtr != nullptr)
         {
             o_offset = 0;
             return;
         }
     }
-
     // Get the record offset
-    findRecordOffsetPnor(i_record, o_offset, i_target, i_args);
+    findRecordOffsetPnor(i_record, o_offset, i_target, VPD::AUTOSELECT);
     // vpd data can also originate from VPD::SEEPROM
     // findRecordOffsetSeeprom(i_record, o_offset, o_length, i_target, i_args);
+}
+
+// return offset where the record is located in o_offset argument
+static void IpVpdFacade::findRecordOffsetPnor(
+    const char * i_record,
+    uint16_t & o_offset,
+    TARGETING::Target * i_target,
+    VPD::vpdCmdTarget i_location)
+{
+    uint16_t offset = 0;
+    char l_record[RECORD_BYTE_SIZE] = { '\0' };
+    // --------------------------------------
+    // Start reading at beginning of file
+    // First 256 bytes are the TOC
+    // --------------------------------------
+    // TOC Format is as follows:
+    //      8 bytes per entry - 32 entries possible
+    //   Entry:
+    //      byte 0 - 3: ASCII Record Name
+    //      byte 4 - 5: OFFSET (byte swapped)
+    //      byte 6 - 7: UNUSED
+    // --------------------------------------
+    for(uint64_t tmpOffset = 0;
+        tmpOffset < IPVPD_TOC_SIZE;
+        tmpOffset += RECORD_BYTE_SIZE + RECORD_ADDR_BYTE_SIZE + RECORD_TOC_UNUSED)
+    {
+        //Read Record Name
+        fetchData(tmpOffset, RECORD_BYTE_SIZE, l_record, i_target, i_location, i_record);
+        if(!(memcmp(l_record, i_record, RECORD_BYTE_SIZE)))
+        {
+            fetchData(tmpOffset + RECORD_BYTE_SIZE, RECORD_ADDR_BYTE_SIZE, &offset, i_target, i_location, i_record);
+            o_offset = le16toh(offset);
+            return;
+        }
+    }
 }
 
 static void CvpdFacade::checkForRecordOverride(
@@ -1264,23 +1187,18 @@ static void CvpdFacade::checkForRecordOverride(
     o_ptr = nullptr;
     VPD::RecordTargetPair_t l_recTarg = VPD::makeRecordTargetPair(i_record,i_target);
 
-    if(strcmp(i_record, "SPDX"))
+    if(strcmp(i_record, "SPDX") != 0)
     {
         iv_overridePtr[l_recTarg] = nullptr;
         return;
     }
-
-    getMEMDFromPNOR(
-        { CVPD::SPDX, CVPD::VM, VPD::AUTOSELECT },
-        i_target,
-        0xF00);
+    getMEMDFromPNOR(i_target);
     o_ptr = iv_overridePtr[l_recTarg];
 }
 
-static void IpVpdFacade::getMEMDFromPNOR(
-    input_args_t i_recKw,
-    TARGETING::Target* i_target,
-    uint32_t i_vmMask )
+// This function sets up override pointer based on MEMD section.
+// Override is supported only for SPDX record
+static void IpVpdFacade::getMEMDFromPNOR(TARGETING::Target* i_target)
 {
     struct MemdHeader_t
     {
@@ -1299,23 +1217,12 @@ static void IpVpdFacade::getMEMDFromPNOR(
     };
     // Get the Record/keyword names
     const char* l_record = nullptr;
-    l_errl = translateRecord( i_recKw.record,
-                                l_record );
-    if( l_errl )
-    {
-        break;
-    }
+    translateRecord(CVPD::SPDX, l_record);
 
     const char* l_keyword = nullptr;
-    l_errl = translateKeyword( i_recKw.keyword,
-                                l_keyword );
-    if( l_errl )
-    {
-        break;
-    }
+    translateKeyword(CVPD::VM, l_keyword);
 
-    VPD::RecordTargetPair_t l_recTarg =
-        VPD::makeRecordTargetPair(l_record,i_target);
+    VPD::RecordTargetPair_t l_recTarg = VPD::makeRecordTargetPair(l_record, i_target);
 
 #ifdef __HOSTBOOT_RUNTIME
     uint64_t l_memdSize = 0;
@@ -1336,15 +1243,14 @@ static void IpVpdFacade::getMEMDFromPNOR(
     if(!(l_header.eyecatch == MEMD_VALID_HEADER
       && l_header.header_version == MEMD_VALID_HEADER_VERSION
       && (l_header.memd_version == l_recTarg.first
-          || l_header.memd_version == MEMD_VALID_HEADER_VERSION)) )
+          || l_header.memd_version == MEMD_VALID_HEADER_VERSION)))
     {
         iv_overridePtr[l_recTarg] = nullptr;
-        break;
+        return;
     }
 
     size_t l_vm_size = 0;
-    input_args_t l_vm_args = i_recKw;
-    l_vm_args.location = VPD::USEVPD;
+    input_args_t l_vm_args = { CVPD::SPDX, CVPD::VM, VPD::USEVPD };
     read(i_target, nullptr, l_vm_size, l_vm_args );
     uint32_t l_vm_kw = 0;
     read(i_target, &l_vm_kw, l_vm_size, l_vm_args );
@@ -1353,23 +1259,21 @@ static void IpVpdFacade::getMEMDFromPNOR(
 
     for(auto l_inst = 0; l_inst < l_header.expected_num; ++l_inst)
     {
-        input_args_t l_pnor_args = i_recKw;
-        l_pnor_args.location = VPD::USEOVERRIDE;
         iv_overridePtr[l_recTarg] = l_memd_vaddr + l_memd_offset;
         uint32_t l_memd_vm = 0;
-        retrieveKeyword(l_keyword, l_record, 0, 0, i_target, &l_memd_vm, l_vm_size, l_pnor_args);
+        retrieveKeyword(l_keyword, l_record, 0, 0, i_target, &l_memd_vm, l_vm_size, { CVPD::SPDX, CVPD::VM, VPD::USEOVERRIDE });
 
         if(l_memd_vm != 0
-        && l_vm_kw & i_vmMask == l_memd_vm & i_vmMask )
+        && l_vm_kw & 0xF00 == l_memd_vm & 0xF00 )
         {
-            l_found_match = true;
-            break;
+            return;
         }
         l_memd_offset += (l_header.expected_size_k * 1000);
     }
 
     if(!l_found_match)
     {
+        // Is it ok? It sets only last entry
         iv_overridePtr[l_recTarg] = nullptr;
     }
 }
