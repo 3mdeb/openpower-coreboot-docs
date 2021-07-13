@@ -2,7 +2,7 @@
 
 ## TOC
 At the begining of `MVPD` partition `Table Of Content` is placed.
-It includes names and addresses of Records counting from the begining
+It includes names and addresses of `Records` counting from the begining
 of the partition, but not including checksums.
 `TOC` can have up to 32 entries, but only 20 are filled by `Hostboot`.
 
@@ -21,9 +21,10 @@ toc_def TOC[32];
 ```
 
 ## Record
-Each record includes some kind of address which purpouse is yet unknown,
-RT keyword holding 1 byte of data, string name of the record
-and an array of keywords which can be as long as the next record doesn't begin.
+Each `Record` includes some kind of address which purpouse is yet unknown,
+RT `Keyword` holding 1 byte of data, string name of the record
+and an array of `Keywords` which can be as long as
+the space before the next `Keyword` beginning.
 
 Following records are present in MVPD after Hostboot has filled the partition:\
 `CP00`, `CRP0`, `LRP0`, `LRP1`,\
@@ -31,7 +32,7 @@ Following records are present in MVPD after Hostboot has filled the partition:\
 `LWP0`, `LWP1`, `LWP2`, `LWP3`,\
 `LWP4`, `LWP5`, `MER0`, `VER0`,\
 `VINI`, `VMSC`, `VRML`, `VWML`\
-It is unknown if other keyword names could also be present in `MVPD`.
+It is unknown if other `Keyword` names could also be present in `MVPD`.
 
 ```cpp
 struct record {
@@ -46,12 +47,12 @@ struct record {
 
 ## Keyword
 
-There are two possible types of keywords. Pound and non-pound ones.
-In each case the structure is a bit different and pound keywords can be larger.
+There are two possible types of `Keywords`. `Pound` and `Non-Pound` ones.
+In each case the structure is a bit different and `Pound Keywords` can be larger.
 
-Only some defined keywords names are valid.
+Only some defined `Keywords` names are valid.
 
-Possible keyword names:\
+Possible `Keyword` names:\
 `20`, `21`, `30`, `31`, `AW`, `CC`,\
 `CE`, `CH`, `CT`, `DD`, `DN`, `DR`,\
 `ED`, `FN`, `HE`, `HW`, `IN`, `IQ`,\
@@ -60,7 +61,7 @@ Possible keyword names:\
 `PN`, `PR`, `PZ`, `RT`, `SB`, `SN`,\
 `TE`, `VD`, `VZ`
 
-Possible pound keyword names:\
+Possible `Pound Keyword` names:\
 `#G`, `#H`, `#I`, `#M`, `#R`, `#V`, `#W`
 
 ```cpp
