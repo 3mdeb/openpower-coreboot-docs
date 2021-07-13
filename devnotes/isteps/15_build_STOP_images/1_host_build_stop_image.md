@@ -448,26 +448,99 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 				- does chk_valid_poundv() on "new" values
 				- nothing changes, can be skipped (at least for Talos)
 
---------------------
-            //Read #W data
+			// Read #W data
 
-            // ----------------
-            // get VDM Parameters data
-            // ----------------
-            // Note:  the get_mvpd_poundW has the conditional checking for VDM
-            // and WOF enablement as #W has both VDM and WOF content
-            l_rc = get_mvpd_poundW();
-            if (l_rc)
-            {
-                FAPI_ASSERT_NOEXIT(false,
-                                   fapi2::PSTATE_PB_POUND_W_ACCESS_FAIL(fapi2::FAPI2_ERRL_SEV_RECOVERED)
-                                  .set_CHIP_TARGET(iv_procChip)
-                                  .set_FAPI_RC(l_rc),
-                                   "Pstate Parameter Block get_mvpd_poundW function failed");
-                fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
-            }
+			// ----------------
+			// get VDM Parameters data
+			// ----------------
+			// Note:  the get_mvpd_poundW has the conditional checking for VDM
+			// and WOF enablement as #W has both VDM and WOF content
+			l_rc = get_mvpd_poundW();
+				- Exit if both VDM and WOF is disabled
+				for each functional quad:
+					- Best to merge with previous loop, poundW needs bucketId from poundV
+					p9_pm_get_poundw_bucket(quad, /* vdmData_t */ l_vdmBuf):
+						struct vdmData_t {
+							u8 version;			/* 0x1, 0x2-0xF or >=0x30 */
+							u8 bucketId;
+							u8 vdmData[0x87];	/* For biggest version */
+						};
+						- Structure above is as defined in p9_pm_get_poundw_bucket.H
+						- It is returned in that form
+						- In VPD this actually is version followed by 5 pairs of bucket ID/data
+						- VPD is packed and data size depends on version:
+						  - 0x1 -     0x28
+						  - 0x2-0xF - 0x3C		// dumped MVPD has version 0x7
+						  - >= 0x30 - 0x87
+						- copy version and ID/data pair for bucket ID from #V
 
-            //Read #IQ data
+					bucket_id   =   l_vdmBuf.bucketId;
+					version_id  =   l_vdmBuf.version;
+					- returned l_vdmBuf.vdmData is either PoundW_data (versions <0x30) or PoundW_data_per_quad
+					if (version < 0x30):
+						- for all 4 operating points, copy existing fields 1:1, except:
+						vdm_vid_compare_per_quad[0-5] = vdm_vid_compare_ivid
+						resistance_data.r_undervolt_allowed = undervolt_tested
+
+					// If we match with the bucket id, then we don't need to continue
+					if (poundV_bucket_id == bucket_id)
+						break
+
+				// Only now hostboot tests ATTR_POUND_W_STATIC_DATA_ENABLE and
+				// discards l_vdmBuf altogether, using hardcoded values instead.
+				// This attribute is not set on Talos.
+				memcpy(iv_poundW_data, l_vdmBuf.vdmData, sizeof (l_vdmBuf.vdmData))
+
+				// Re-ordering to Natural order
+				// When we read the data from VPD image the order will be N,PS,T,UT.
+				// But we need the order PS,N,T,UT.. hence we are swapping the data
+				// between PS and Nominal.
+				swap(iv_poundW_data.poundw[VPD_PV_POWERSAVE], iv_poundW_data.poundw[VPD_PV_NOMINAL])
+
+				// If the #W version is less than 3, validate Turbo VDM large threshold
+				// not larger than -32mV. This filters out parts that have bad VPD.  If
+				// this check fails, log a recovered error, mark the VDMs disabled and
+				// break out of the reset of the checks.
+				if (version_id < FULLY_VALID_POUNDW_VERSION):
+					// For now, implement if needed
+					die()
+
+				// Validate the WOF content is non-zero - assuming WOF is enabled
+				- Log if any of the ivdd_tdp_{a,d}c_current_10ma is zero and set iv_wof_enabled = false
+
+				// Assuming VDM is enabled (return otherwise)
+				// VDM_ENABLE is OFF in talos.xml, yet code after this point still executes. Why?
+				// Validate threshold values
+				validate_quad_spec_data():
+					for each functional quad:
+						- if any of these checks fail: iv_vdm_enabled = false and return
+						- check that none of iv_poundW_data.poundw[0-3].vdm_vid_compare_per_quad[quad] is 0
+						  - special case for all 0s, needed for lab only?
+						- check that iv_poundW_data.poundw[0-3].vdm_vid_compare_per_quad[quad] is not decreasing for higher operating points
+						- apply bias from ATTR_VDM_VID_COMPARE_BIAS_0P5PCT
+						  - no change, may be skipped
+
+				- check that for all operating points:
+				  - ((iv_poundW_data.poundw[p].vdm_overvolt_small_thresholds >> 4) & 0x0F)		<= 7 || == 0xC
+				  - ((iv_poundW_data.poundw[p].vdm_overvolt_small_thresholds) & 0x0F)			!= 8 && != 9
+				  - ((iv_poundW_data.poundw[p].vdm_large_extreme_thresholds >> 4) & 0x0F)		!= 8 && != 9
+				  - ((iv_poundW_data.poundw[p].vdm_large_extreme_thresholds) & 0x0F)			!= 8 && != 9
+				  - ((iv_poundW_data.poundw[p].vdm_normal_freq_drop) & 0x0F)					<= 7				// N_L
+				  - ((iv_poundW_data.poundw[p].vdm_normal_freq_drop >> 4) & 0x0F)				<= N_L				// N_S
+				  - ((iv_poundW_data.poundw[p].vdm_normal_freq_return >> 4) & 0x0F)				<= N_L - S_N		// L_S
+				  - ((iv_poundW_data.poundw[p].vdm_normal_freq_return) & 0x0F)					<= N_S				// S_N
+
+				// If we have reached this point, that means VDM is ok to be enabled. Only then we try to
+				// enable wov undervolting
+				// Based only on resistance_data.r_undervolt_allowed from MVPD
+				iv_wov_underv_enabled = false
+
+			if (l_rc):
+				- print info about recovered error
+				- return from vpd_init() with success
+
+----------------------------
+            // Read #IQ data
 
             //if wof is disabled.. don't call IQ function
             if (is_wof_enabled())
