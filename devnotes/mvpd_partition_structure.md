@@ -44,7 +44,7 @@ struct record {
 
 ```
 
-# Keyword
+## Keyword
 
 There are two possible types of keywords. Pound and non-pound ones.
 In each case the structure is a bit different and pound keywords can be larger.
