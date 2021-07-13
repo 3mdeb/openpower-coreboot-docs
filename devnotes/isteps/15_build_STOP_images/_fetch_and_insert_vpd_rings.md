@@ -26,12 +26,13 @@ static void _fetch_and_insert_vpd_rings(
 
     mvpdRingFunc(
         procChip,
+        "CP00"
+        (i_ring.vpdKeyword == VPD_KEYWORD_PDG) ? "#G" : "#R",
         i_chipletId,
-        i_ring.ringId,
-        (uint8_t*)i_vpdRing,
+        i_ring.ringId,          // looking for a ring with this id (beware magic in mvpdRingFuncFindHdr)
+        (uint8_t*)i_vpdRing,    // ring is retured in this parameter
         i_vpdRingSize,
-        (uint8_t*)i_ringBuf2,
-        i_ringBufSize2);
+        (uint8_t*)i_ringBuf2);  // just a temporary buffer for this function
 
     memset(i_ringBuf2, 0, i_ringBufSize2);
 
@@ -139,11 +140,6 @@ static void tor_append_ring(
     }
 }
 
-///
-/// ****************************************************************************
-/// Function declares.
-/// ****************************************************************************
-///
 /// Traverse on TOR structure and copies data in granular up to DD type,
 /// ppe type, ring type, RS4 ring container and ring address
 ///
@@ -906,76 +902,45 @@ void get_overlays_ring(
     *o_ovlyUncmpSize = l_ovlyUncmpSize;
 }
 
+// This function extract Ring data from particular keyword in a given Record
 static void mvpdRingFunc(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& procChip,
-    const mvpdRingFuncOp i_mvpdRingFuncOp,
+    fapi2::MvpdRecord   i_record,
+    fapi2::MvpdKeyword  i_keyword,
     const uint8_t        i_chipletId,
     const RingId_t       i_ringId,
     uint8_t*             o_pRingBuf,
-    uint32_t&            io_rRingBufsize,
-    uint8_t*             i_pTempBuf,
-    uint32_t             i_tempBufsize)
+    uint32_t&            o_rRingBufsize,
+    uint8_t*             i_recordBuf)
 {
-    uint32_t                l_recordLen  = 0;
-    uint8_t*                l_recordBuf  = i_pTempBuf;
-    uint8_t*                l_pRing      = NULL;
-    uint32_t                l_ringLen    = 0;
+    uint32_t l_recordLen  = 0;
 
-    // mvpd.C
-    // DEVICE_REGISTER_ROUTE( DeviceFW::READ,
-    //                        DeviceFW::MVPD,
-    //                        TARGETING::TYPE_PROC,
-    //                        mvpdRead );
-
-    // read "ED" keyword from "CRP0" record
     mvpdRead(
+        i_record,
+        i_keyword,
         procChip.get(),
-        l_recordBuf,
+        i_recordBuf,
         l_recordLen);
+
+    uint8_t* l_pRing = NULL;
+    uint32_t l_ringLen = 0;
 
     mvpdRingFuncFind(
         i_chipletId,
         i_ringId,
-        l_recordBuf,
+        i_recordBuf,
         l_recordLen,
         l_pRing,
         l_ringLen);
 
     if(l_ringLen && o_pRingBuf)
     {
-        io_rRingBufsize = l_ringLen;
+        o_rRingBufsize = l_ringLen;
         memcpy(o_pRingBuf, l_pRing, l_ringLen);
     }
 }
 
-// this function tries to find next mvpd ring
-/**
-*  @brief MVPD Ring Function Find
-*
-*  @par Detailed Description:
-*           Step through the record looking at rings for a match.
-*
-*  @param[in]  i_chipletId
-*                   Chiplet ID for the op
-*
-*  @param[in]  i_ringId
-*                   Ring ID for the op
-*
-*  @param[in]  i_pRecordBuf
-*                   Pointer to record buffer
-*
-*  @param[in]  i_recordBufLen
-*                   Length of record buffer
-*
-*  @param[out] o_rpRing
-*                   Pointer to the ring in the record, if it is there
-*                   Pointer to the start of the padding after the last
-*                   ring, if it is not there
-*
-*  @param[out] o_rRingLen
-*                   Number of bytes in the ring (header and data)
-*                   Will be 0 if ring not found
-**/
+// this function tries to find correct mvpd ring in given keyword buffer
 static void mvpdRingFuncFind(
     const uint8_t       i_chipletId,
     const RingId_t      i_ringId,
@@ -1015,33 +980,97 @@ static void mvpdRingFuncFind(
     o_rRingLen = be16toh(o_rpRing->iv_size);
 }
 
- static void mvpdRead(
+typedef uint16_t  RingId_t;
+
+typedef struct
+{
+    uint16_t iv_magic;
+    uint8_t  iv_version;
+    uint8_t  iv_type;
+    uint16_t iv_size;
+    RingId_t iv_ringId;
+    uint32_t iv_scanAddr;
+} CompressedScanData;
+
+// This function seeks for a correct Ring by id (doing some magic with id)
+// and if found, copies it to the output buffer
+static void mvpdRingFuncFindHdr(
+    const uint8_t        i_chipletId,
+    const RingId_t       i_ringId,
+    CompressedScanData** io_pBufLeft,
+    uint32_t*            io_pBufLenLeft,
+    CompressedScanData** o_pScanData)
+{
+    CompressedScanData* l_pScanData = *io_pBufLeft;
+    *o_pScanData = NULL;
+
+    if (*io_pBufLenLeft < sizeof(CompressedScanData)
+    || be16toh(*io_pBufLeft->iv_magic) != RS4_MAGIC)
+    {
+        return;
+    }
+
+    *io_pBufLeft    += be16toh(*io_pBufLeft->iv_size);
+    *io_pBufLenLeft -= be16toh(*io_pBufLeft->iv_size);
+
+    uint32_t l_evenOddMask =
+        (i_ringId == 0xDD) ? 0x00001000
+      : (i_ringId == 0xDE) ? 0x00000400
+      : (i_ringId == 0xB9 || i_ringId == 0xDF) ? 0x00000040
+      : 0;
+
+    if (be16toh(*io_pBufLeft->iv_ringId) == i_ringId
+    && (be32toh(*io_pBufLeft->iv_scanAddr) >> 24) & 0xFF == i_chipletId
+    && (l_evenOddMask == 0 || be32toh(*io_pBufLeft->iv_scanAddr) & l_evenOddMask))
+    {
+        *o_pScanData = *io_pBufLeft;
+    }
+}
+
+// Check if rings end here. End is marked by an "END" string
+static void mvpdRingFuncFindEnd(
+    uint8_t** io_pBufLeft,
+    uint32_t* io_pBufLenLeft,
+    bool*      o_mvpdEnd)
+{
+    *o_mvpdEnd = false;
+    if(*io_pBufLenLeft >= 3
+    && be32toh(**io_pBufLeft) & 0xffffff00 == MVPD_END_OF_DATA_MAGIC & 0xffffff00)
+    {
+        *o_mvpdEnd = true;
+        *io_pBufLeft    += 3;
+        *io_pBufLenLeft -= 3;
+    }
+}
+
+static void mvpdRead(
+    fapi2::MvpdRecord   i_record,
+    fapi2::MvpdKeyword  i_keyword,
     TARGETING::Target * i_target,
     void * io_buffer,
     size_t & io_buflen)
 {
     // Will call IpVpdFacade::read
     Singleton<MvpdFacade>::instance().read(
+        i_record,
+        i_keyword,
         i_target,
         io_buffer,
         io_buflen);
 }
 
 static void IpVpdFacade::read(
+    fapi2::MvpdRecord   i_record,
+    fapi2::MvpdKeyword  i_keyword,
     TARGETING::Target * i_target,
     void* o_buffer,
     size_t & io_buflen)
 {
     uint16_t recordOffset = 0x0;
-    findRecordOffsetPnor("CRP0", recordOffset, i_target, VPD::AUTOSELECT);
+    findRecordOffsetPnor(i_record, recordOffset, i_target, VPD::AUTOSELECT);
     // vpd data can also originate from VPD::SEEPROM
     // findRecordOffsetSeeprom(i_record, o_offset, o_length, i_target, i_args);
-
-    IpVpdFacade::input_args_t args;
-    args.record = MVPD::CRP0;
-    args.keyword = MVPD::ED;
-    args.location = VPD::AUTOSELECT;
-    retrieveKeyword("ED", "CRP0", recordOffset, 0, i_target, o_buffer, io_buflen, args);
+    retrieveKeyword(i_keyword, i_record, recordOffset, 0, i_target, o_buffer, io_buflen);
 }
 
 
@@ -1052,11 +1081,10 @@ static void IpVpdFacade::retrieveKeyword(
     uint16_t i_index,
     TARGETING::Target * i_target,
     void * o_buffer,
-    size_t & io_buflen,
-    input_args_t i_args)
+    size_t & io_buflen)
 {
     uint64_t byteAddr = 0x0;
-    findKeywordAddr(i_keywordName, i_recordName, i_offset, i_index, i_target, io_buflen, byteAddr, i_args);
+    findKeywordAddr(i_keywordName, i_recordName, i_offset, i_index, i_target, io_buflen, byteAddr);
     if(NULL == o_buffer)
     {
         return;
@@ -1072,13 +1100,12 @@ static void IpVpdFacade::findKeywordAddr(
     uint16_t i_index,
     TARGETING::Target * i_target,
     size_t& o_keywordSize,
-    uint64_t& o_byteAddr,
-    input_args_t i_args)
+    uint64_t& o_byteAddr)
 {
     uint16_t offset = i_offset;
     uint16_t recordSize = 0;
 
-    fetchData(offset, RECORD_ADDR_BYTE_SIZE, &recordSize, i_target, i_args.location, i_recordName);
+    fetchData(offset, RECORD_ADDR_BYTE_SIZE, &recordSize, i_target, VPD::AUTOSELECT, i_recordName);
     offset += RECORD_ADDR_BYTE_SIZE + RT_SKIP_BYTES; // 5 bytes in total
 
     // RT keyword is always first, but probably doesn't exist in pound records
@@ -1101,7 +1128,7 @@ static void IpVpdFacade::findKeywordAddr(
     while(offset < le16toh(recordSize) + i_offset + RECORD_ADDR_BYTE_SIZE)
     {
         char keyword[KEYWORD_BYTE_SIZE] = { '\0' };
-        fetchData(offset, KEYWORD_BYTE_SIZE, keyword, i_target, i_args.location, i_recordName );
+        fetchData(offset, KEYWORD_BYTE_SIZE, keyword, i_target, VPD::AUTOSELECT, i_recordName );
         offset += KEYWORD_BYTE_SIZE;
 
         uint32_t keywordLength = KEYWORD_SIZE_BYTE_SIZE;
@@ -1113,7 +1140,7 @@ static void IpVpdFacade::findKeywordAddr(
         }
 
         uint16_t keywordSize = 0;
-        fetchData(offset, keywordLength, &keywordSize, i_target, i_args.location, i_recordName);
+        fetchData(offset, keywordLength, &keywordSize, i_target, VPD::AUTOSELECT, i_recordName);
         offset += keywordLength;
 
         if(isPoundKwd)
@@ -1379,53 +1406,5 @@ static void IpVpdFacade::translateRecord(VPD::vpdRecord i_record, const char *& 
     recordInfo tmpRecord;
     tmpRecord.record = i_record;
     o_record = std::lower_bound(iv_vpdRecords, &iv_vpdRecords[iv_recSize], tmpRecord, compareRecords)->recordName;
-}
-
-static void mvpdRingFuncFindEnd(
-    uint8_t** io_pBufLeft,
-    uint32_t* io_pBufLenLeft,
-    bool*      o_mvpdEnd)
-{
-    *o_mvpdEnd = false;
-    if(*io_pBufLenLeft >= 3
-    && be32toh(**io_pBufLeft) & 0xffffff00 == MVPD_END_OF_DATA_MAGIC & 0xffffff00)
-    {
-        *o_mvpdEnd = true;
-        *io_pBufLeft    += 3;
-        *io_pBufLenLeft -= 3;
-    }
-}
-
-static void mvpdRingFuncFindHdr(
-    const uint8_t        i_chipletId,
-    const RingId_t       i_ringId,
-    CompressedScanData** io_pBufLeft,
-    uint32_t*            io_pBufLenLeft,
-    CompressedScanData** o_pScanData)
-{
-    CompressedScanData* l_pScanData = *io_pBufLeft;
-    *o_pScanData = NULL;
-
-    if (*io_pBufLenLeft < sizeof(CompressedScanData)
-    || be16toh(*io_pBufLeft->iv_magic) != RS4_MAGIC)
-    {
-        return;
-    }
-
-    *io_pBufLeft    += be16toh(*io_pBufLeft->iv_size);
-    *io_pBufLenLeft -= be16toh(*io_pBufLeft->iv_size);
-
-    uint32_t l_evenOddMask =
-        (i_ringId == 0xDD) ? 0x00001000
-      : (i_ringId == 0xDE) ? 0x00000400
-      : (i_ringId == 0xB9 || i_ringId == 0xDF) ? 0x00000040
-      : 0;
-
-    if (be16toh(*io_pBufLeft->iv_ringId) == i_ringId
-    && (be32toh(*io_pBufLeft->iv_scanAddr) >> 24) & 0xFF == i_chipletId
-    && (l_evenOddMask == 0 || be32toh(*io_pBufLeft->iv_scanAddr) & l_evenOddMask))
-    {
-        *o_pScanData = *io_pBufLeft;
-    }
 }
 ```
