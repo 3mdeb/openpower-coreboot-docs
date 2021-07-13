@@ -22,11 +22,11 @@ toc_def TOC[32];
 
 ## Record
 Each `Record` includes some kind of address which purpouse is yet unknown,
-RT `Keyword` holding 1 byte of data, string name of the record
+`RT Keyword` holding 1 byte of data, string name of the record
 and an array of `Keywords` which can be as long as
 the space before the next `Keyword` beginning.
 
-Following records are present in MVPD after Hostboot has filled the partition:\
+Following records are present in `MVPD` after `Hostboot` has filled the partition:\
 `CP00`, `CRP0`, `LRP0`, `LRP1`,\
 `LRP2`, `LRP3`, `LRP4`, `LRP5`,\
 `LWP0`, `LWP1`, `LWP2`, `LWP3`,\
