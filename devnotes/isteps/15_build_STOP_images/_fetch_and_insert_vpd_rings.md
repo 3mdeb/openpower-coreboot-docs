@@ -927,12 +927,8 @@ static void mvpdRingFunc(
     //                        TARGETING::TYPE_PROC,
     //                        mvpdRead );
 
-    deviceRead(
-        procChip.get(),
-        NULL,
-        l_recordLen;
-
-    deviceRead(
+    // read "ED" keyword from "CRP0" record
+    mvpdRead(
         procChip.get(),
         l_recordBuf,
         l_recordLen);
@@ -950,6 +946,73 @@ static void mvpdRingFunc(
         io_rRingBufsize = l_ringLen;
         memcpy(o_pRingBuf, l_pRing, l_ringLen);
     }
+}
+
+// this function tries to find next mvpd ring
+/**
+*  @brief MVPD Ring Function Find
+*
+*  @par Detailed Description:
+*           Step through the record looking at rings for a match.
+*
+*  @param[in]  i_chipletId
+*                   Chiplet ID for the op
+*
+*  @param[in]  i_ringId
+*                   Ring ID for the op
+*
+*  @param[in]  i_pRecordBuf
+*                   Pointer to record buffer
+*
+*  @param[in]  i_recordBufLen
+*                   Length of record buffer
+*
+*  @param[out] o_rpRing
+*                   Pointer to the ring in the record, if it is there
+*                   Pointer to the start of the padding after the last
+*                   ring, if it is not there
+*
+*  @param[out] o_rRingLen
+*                   Number of bytes in the ring (header and data)
+*                   Will be 0 if ring not found
+**/
+static void mvpdRingFuncFind(
+    const uint8_t       i_chipletId,
+    const RingId_t      i_ringId,
+    uint8_t*            i_pRecordBuf,
+    uint32_t            i_recordBufLen,
+    uint8_t*&           o_rpRing,
+    uint32_t&           o_rRingLen)
+{
+    bool l_mvpdEnd;
+    CompressedScanData* o_rpRing = NULL;
+    i_recordBufLen--;
+    i_pRecordBuf++;
+
+    do
+    {
+        // Check if mvpd ends here
+        mvpdRingFuncFindEnd(
+            &i_pRecordBuf,
+            &i_recordBufLen,
+            &l_mvpdEnd);
+        if (!l_mvpdEnd && !o_rpRing)
+        {
+            // Searches for next mvpdRing header
+            mvpdRingFuncFindHdr(
+                i_chipletId,
+                i_ringId,
+                &i_pRecordBuf,
+                &i_recordBufLen,
+                &o_rpRing);
+        }
+    }
+    // while mvpd has not ended,
+    // next ring hasn't been found and
+    // space in i_pRecordBuf has not ended
+    while (!l_mvpdEnd && !o_rpRing && i_recordBufLen);
+
+    o_rRingLen = be16toh(o_rpRing->iv_size);
 }
 
  static void mvpdRead(
@@ -1316,73 +1379,6 @@ static void IpVpdFacade::translateRecord(VPD::vpdRecord i_record, const char *& 
     recordInfo tmpRecord;
     tmpRecord.record = i_record;
     o_record = std::lower_bound(iv_vpdRecords, &iv_vpdRecords[iv_recSize], tmpRecord, compareRecords)->recordName;
-}
-
-// this function tries to find next mvpd ring
-/**
-*  @brief MVPD Ring Function Find
-*
-*  @par Detailed Description:
-*           Step through the record looking at rings for a match.
-*
-*  @param[in]  i_chipletId
-*                   Chiplet ID for the op
-*
-*  @param[in]  i_ringId
-*                   Ring ID for the op
-*
-*  @param[in]  i_pRecordBuf
-*                   Pointer to record buffer
-*
-*  @param[in]  i_recordBufLen
-*                   Length of record buffer
-*
-*  @param[out] o_rpRing
-*                   Pointer to the ring in the record, if it is there
-*                   Pointer to the start of the padding after the last
-*                   ring, if it is not there
-*
-*  @param[out] o_rRingLen
-*                   Number of bytes in the ring (header and data)
-*                   Will be 0 if ring not found
-**/
-static void mvpdRingFuncFind(
-    const uint8_t       i_chipletId,
-    const RingId_t      i_ringId,
-    uint8_t*            i_pRecordBuf,
-    uint32_t            i_recordBufLen,
-    uint8_t*&           o_rpRing,
-    uint32_t&           o_rRingLen)
-{
-    bool l_mvpdEnd;
-    CompressedScanData* o_rpRing = NULL;
-    i_recordBufLen--;
-    i_pRecordBuf++;
-
-    do
-    {
-        // Check if mvpd ends here
-        mvpdRingFuncFindEnd(
-            &i_pRecordBuf,
-            &i_recordBufLen,
-            &l_mvpdEnd);
-        if (!l_mvpdEnd && !o_rpRing)
-        {
-            // Searches for next mvpdRing header
-            mvpdRingFuncFindHdr(
-                i_chipletId,
-                i_ringId,
-                &i_pRecordBuf,
-                &i_recordBufLen,
-                &o_rpRing);
-        }
-    }
-    // while mvpd has not ended,
-    // next ring hasn't been found and
-    // space in i_pRecordBuf has not ended
-    while (!l_mvpdEnd && !o_rpRing && i_recordBufLen);
-
-    o_rRingLen = be16toh(o_rpRing->iv_size);
 }
 
 static void mvpdRingFuncFindEnd(

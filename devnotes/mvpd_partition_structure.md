@@ -37,9 +37,10 @@ It is unknown if other `Keyword` names could also be present in `MVPD`.
 ```cpp
 struct record {
   uint16_t address,
-  keyword RTKeyword,    // Total size of this keyword is always 3
-                        // containing only 1 byte of data.
-  char recordName[4],
+  keyword RTKeyword{  // This record is always present
+                      // and holds Record name as data.
+    char recordName[4],
+  }
   keyword keywords[]    // Can hold any amount of keywords.
 }
 
