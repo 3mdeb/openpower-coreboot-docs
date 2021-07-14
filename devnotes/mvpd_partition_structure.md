@@ -36,13 +36,12 @@ It is unknown if other `Keyword` names could also be present in `MVPD`.
 
 ```cpp
 struct record {
-  uint16_t address,
-  keyword RTKeyword(    // This keyword is always present
-    char recordName[4], // and holds Record name as data.
-  ),
-  keyword keywords[]    // Can hold any amount of keywords.
-}
-
+  uint16_t address;
+  keyword RTKeyword(    // This Keyword is always present
+    char recordName[4] // and holds Record name as data.
+  );
+  keyword keywords[];    // Can hold any amount of Keywords.
+};
 ```
 
 ## Keyword
@@ -66,18 +65,18 @@ Possible `Pound Keyword` names:\
 
 ```cpp
 struct keyword {
-  char keywordName[2],
-  uint8_t keywordSize, // Little Endian
+  char keywordName[2];
+  uint8_t keywordSize; // Little Endian
                        // Doesn't include checksums.
-  char data[keywordSize],
+  char data[keywordSize];
 };
 
 struct pound_keyword {
-  char keywordName[2],  // NOTE must include leading '#'
-  uint16_t keywordSize, // Little Endian
+  char keywordName[2];  // NOTE must include leading '#'
+  uint16_t keywordSize; // Little Endian
                         // Doesn't include checksums.
-  char data[keywordSize],
-} ;
+  char data[keywordSize];
+};
 ```
 
 ## Ring
@@ -86,8 +85,7 @@ Some of the keywords contain structures called `Ring`.
 This structure is compressed usign RS4 algorithm and has a header of
 following structure.
 ```cpp
-typedef struct
-{
+struct CompressedScanData {
     uint16_t iv_magic;    // Always "RS"
     uint8_t  iv_version;
     uint8_t  iv_type;
@@ -96,5 +94,6 @@ typedef struct
                           // Doesn't include checksums.
     RingId_t iv_ringId;   // This is used to recognize correct Ring
     uint32_t iv_scanAddr;
-} CompressedScanData;
+    char data[]
+};
 ```
