@@ -1,7 +1,7 @@
 ```cpp
 static void _fetch_and_insert_vpd_rings(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& procChip,
-    void*           i_ringSection,
+    TorHeader_t*    i_ringSection,
     uint32_t&       io_ringSectionSize,
     uint32_t        i_maxRingSectionSize,
     void*           i_overlaysSection,
@@ -113,7 +113,7 @@ static void _fetch_and_insert_vpd_rings(
 
 // this function puts extracted, compressed ring into a free slot in ringSection
 static void tor_append_ring(
-    void*           i_ringSection,      // Ring section ptr
+    TorHeader_t*    i_ringSection,      // Ring section ptr
     uint32_t&       io_ringSectionSize, // In: Exact size of ring section.
                                         // Out: Updated size of ring section.
     RingId_t        i_ringId,           // Ring ID
@@ -140,8 +140,7 @@ static void tor_append_ring(
         uint32_t l_ringBlockSize = be16toh(i_rs4Container->iv_size);
         memcpy(i_ringSection + io_ringSectionSize, i_rs4Container, l_ringBlockSize);
         io_ringSectionSize += l_ringBlockSize;
-        TorHeader_t* torHeader = (TorHeader_t*)i_ringSection;
-        torHeader->size = htobe32(be32toh(torHeader->size) + l_ringBlockSize);
+        i_ringSection->size = htobe32(be32toh(i_ringSection->size) + l_ringBlockSize);
     }
 }
 
@@ -187,9 +186,9 @@ static void tor_access_ring(
     && i_ringSection->chipType < NUM_CHIP_TYPES)
     {
         get_ring_from_ring_section(
-            (be32toh(i_ringSection->magic) != TOR_MAGIC_HW) ?
-                i_ringSection
-              : postHeaderStart + be32toh((TorPpeBlock_t*)(postHeaderStart + i_ppeType * sizeof(TorPpeBlock_t))->offset),
+            (be32toh(i_ringSection->magic) == TOR_MAGIC_HW) ?
+                postHeaderStart + be32toh((TorPpeBlock_t*)(postHeaderStart + i_ppeType * sizeof(TorPpeBlock_t))->offset)
+              : i_ringSection,
             i_ringId,
             io_instanceId,
             &io_ringBlockPtr,
@@ -205,7 +204,7 @@ typedef struct
     uint8_t      instanceIdMin;
     uint8_t      instanceIdMax;
     RingClass_t  ringClass;
-    uint32_t     scanScomAddress;
+    uint32_t     scanScomAddress; // probably used unly with Centaur
 } GenRingIdList;
 
 typedef struct
@@ -236,86 +235,69 @@ static void get_ring_from_ring_section(
                                       // output: offset to the ring in ringSection
     RingBlockType_t i_ringBlockType)  // PUT_SINGLE_RING or GET_SINGLE_RING
 {
-    ChipletType_t numChiplets;
+    ChipletData_t* cpltData;
+    GenRingIdList* ringIdListCommon;
+    GenRingIdList* ringIdListInstance;
+    RingProperties_t* ringProperties;
 
-    // Get number of chiplets for a given ringSection type
-    ringid_get_noof_chiplets(
+    // get some predefined properties based on ringSection type (magic)
+    ringid_get_properties(
         be32toh(i_ringSection->magic),
-        &numChiplets);
+        &cpltData,           // number of common and instance rings are used
+        &ringIdListCommon,
+        &ringIdListInstance,
+        &ringProperties);    // only ringProperties->name is used
 
-    for (ChipletType_t chipletIndex = 0; chipletIndex < numChiplets; chipletIndex++)
+    // process ringIdListCommon and ringIdListInstance
+    for(uint8_t bInstCase = 0; bInstCase <= 1; bInstCase++)
     {
-        ChipletData_t* cpltData;
-        GenRingIdList* ringIdListCommon;
-        GenRingIdList* ringIdListInstance;
-        RingVariantOrder* ringVariantOrder;
-        RingProperties_t* ringProperties;
-        uint8_t numVariants;
+        // ringIdListCommon in the first iteration
+        // ringIdListInstance in the second iteration
+        GenRingIdList* ringIdList = !bInstCase ?
+            ringIdListCommon
+            : ringIdListInstance;
 
-        // get some predefined properties based on ringSection type, version and chiplet
-        ringid_get_properties(
-            be32toh(i_ringSection->magic),
-            i_ringSection->version,
-            chipletIndex,
-            &cpltData,          // number of common and instance rings are used
-            &ringIdListCommon,
-            &ringIdListInstance,
-            &ringVariantOrder,  // unused
-            &ringProperties,    // only ringProperties->name is used
-            &numVariants);      // unused
-
-        // process ringIdListCommon and ringIdListInstance
-        for(uint8_t bInstCase = 0; bInstCase <= 1; bInstCase++)
+        if(ringIdList)
         {
-            // ringIdListCommon in the first iteration
-            // ringIdListInstance in the second iteration
-            GenRingIdList* ringIdList = !bInstCase ?
-                ringIdListCommon
-              : ringIdListInstance;
+            TorCpltOffset_t cpltOffset =
+                sizeof(TorHeader_t)
+                + be32toh(*(uint32_t*)(
+                    (void*)i_ringSection
+                + sizeof(TorHeader_t)
+                + bInstCase * sizeof(TorCpltOffset_t)));
 
-            if(ringIdList)
+            uint32_t torSlotNum = 0;
+            // for each instance of each ring
+            // if ring name is as predefined and instanceId is correct or we are itherating over ringIdInstance list
+            for(ringInstance = ringIdList->instanceIdMin; ringInstance <= ringIdList->instanceIdMax; ringInstance++)
+            for(ringIndex = 0; ringIndex < bInstCase ? cpltData->iv_num_instance_rings : cpltData->iv_num_common_rings; ringIndex++)
+            if(strcmp(ringIdList[ringIndex].ringName, ringProperties[i_ringId].iv_name) == 0
+            && (ringInstance == io_instanceId || bInstCase == 0))
             {
-                TorCpltOffset_t cpltOffset =
-                    sizeof(TorHeader_t)
-                  + be32toh(*(uint32_t*)(
-                      (void*)i_ringSection
-                    + sizeof(TorHeader_t)
-                    + chipletIndex * sizeof(TorCpltBlock_t)
-                    + bInstCase * sizeof(TorCpltOffset_t)));
-
-                uint32_t torSlotNum = 0;
-                // for each instance of each ring
-                // if ring name is as predefined and instanceId is correct or we are itherating over ringIdInstance list
-                for(ringInstance = ringIdList->instanceIdMin; ringInstance <= ringIdList->instanceIdMax; ringInstance++)
-                for(ringIndex = 0; ringIndex < bInstCase ? cpltData->iv_num_instance_rings : cpltData->iv_num_common_rings; ringIndex++)
-                if(strcmp(ringIdList[ringIndex].ringName, ringProperties[i_ringId].iv_name) == 0
-                && (ringInstance == io_instanceId || bInstCase == 0))
+                TorRingOffset_t ringOffset = be16toh(*(TorRingOffset_t*)(
+                    i_ringSection
+                    + torSlotNum
+                    * sizeof(TorRingOffset_t)));
+                uint32_t ringSize = be16toh(((CompressedScanData*)((uint8_t*)i_ringSection + ringOffset + cpltOffset))->iv_size);
+                if (i_ringBlockType == GET_SINGLE_RING && ringOffset)
                 {
-                    TorRingOffset_t ringOffset = be16toh(*(TorRingOffset_t*)(
-                        i_ringSection
-                        + torSlotNum
-                        * sizeof(TorRingOffset_t)));
-                    uint32_t ringSize = be16toh(((CompressedScanData*)((uint8_t*)i_ringSection + ringOffset + cpltOffset))->iv_size);
-                    if (i_ringBlockType == GET_SINGLE_RING && ringOffset)
+                    if(io_ringBlockSize && io_ringBlockSize >= ringSize)
                     {
-                        if(io_ringBlockSize && io_ringBlockSize >= ringSize)
-                        {
-                            memcpy(*o_ringBlockPtr, (uint8_t*)i_ringSection + ringOffset + cpltOffset, ringSize);
-                            io_instanceId = bInstCase ?
-                                io_instanceId
-                              : ringIdList[ringIndex].instanceIdMin;
-                        }
-                        io_ringBlockSize = ringSize;
+                        memcpy(*o_ringBlockPtr, (uint8_t*)i_ringSection + ringOffset + cpltOffset, ringSize);
+                        io_instanceId = bInstCase ?
+                            io_instanceId
+                            : ringIdList[ringIndex].instanceIdMin;
                     }
-                    else if (i_ringBlockType == PUT_SINGLE_RING && !ringOffset)
-                    {
-                        *o_ringBlockPtr = cpltOffset;
-                        io_ringBlockSize = cpltOffset + torSlotNum * sizeof(TorRingOffset_t);
-                    }
-                    return;
+                    io_ringBlockSize = ringSize;
                 }
-                torSlotNum++;
+                else if (i_ringBlockType == PUT_SINGLE_RING && !ringOffset)
+                {
+                    *o_ringBlockPtr = cpltOffset;
+                    io_ringBlockSize = cpltOffset + torSlotNum * sizeof(TorRingOffset_t);
+                }
+                return;
             }
+            torSlotNum++;
         }
     }
 }
@@ -342,67 +324,23 @@ enum TorMagicNum
 };
 
 static void ringid_get_properties(
-    uint32_t           i_torMagic
-    uint8_t            i_torVersion
-    ChipletType_t      i_chipletType
-    ChipletData_t**    o_chipletData
-    GenRingIdList**    o_ringIdListCommon
-    GenRingIdList**    o_ringIdListInstance
-    RingVariantOrder** o_ringVariantOrder
-    RingProperties_t** o_ringProps
-    uint8_t*           o_numVariants)
+    uint32_t           i_torMagic,
+    ChipletData_t**    o_chipletData,
+    GenRingIdList**    o_ringIdListCommon,
+    GenRingIdList**    o_ringIdListInstance,
+    RingProperties_t** o_ringProps)
 {
-
-    if(i_torMagic == TOR_MAGIC_SBE
-    || i_torMagic == TOR_MAGIC_OVRD
-    || i_torMagic == TOR_MAGIC_OVLY)
-    {
-        P9_RID::ringid_get_chiplet_properties(
-            i_chipletType,
-            o_chipletData,
-            o_ringIdListCommon,
-            o_ringIdListInstance,
-            o_ringVariantOrder,
-            o_numVariants);
-
-        if(i_torVersion < 7
-        && (i_chipletType == P9_RID::EQ_TYPE
-         || i_chipletType == P9_RID::EC_TYPE))
-        {
-            *o_numVariants -= 3;
-        }
-
-        if(i_torMagic == TOR_MAGIC_OVRD
-        || i_torMagic == TOR_MAGIC_OVLY)
-        {
-            *o_numVariants = 1;
-        }
-    }
-    else if(i_torMagic == TOR_MAGIC_CME)
+    if(i_torMagic == TOR_MAGIC_CME)
     {
         *o_chipletData        = (ChipletData_t*)&P9_RID::EC::g_chipletData;
         *o_ringIdListCommon   = (GenRingIdList*)P9_RID::EC::RING_ID_LIST_COMMON;
         *o_ringIdListInstance = (GenRingIdList*)P9_RID::EC::RING_ID_LIST_INSTANCE;
-        *o_ringVariantOrder   = (RingVariantOrder*)P9_RID::EC::RING_VARIANT_ORDER;
-        *o_numVariants        = P9_RID::EC::g_chipletData.iv_num_common_ring_variants;
-
-        if (i_torVersion < 7)
-        {
-            *o_numVariants -= 3;
-        }
     }
     else if(i_torMagic == TOR_MAGIC_SGPE)
     {
         *o_chipletData        = (ChipletData_t*)&P9_RID::EQ::g_chipletData;
         *o_ringIdListCommon   = (GenRingIdList*)P9_RID::EQ::RING_ID_LIST_COMMON;
         *o_ringIdListInstance = (GenRingIdList*)P9_RID::EQ::RING_ID_LIST_INSTANCE;
-        *o_ringVariantOrder   = (RingVariantOrder*)P9_RID::EQ::RING_VARIANT_ORDER;
-        *o_numVariants        = P9_RID::EQ::g_chipletData.iv_num_common_ring_variants;
-
-        if (i_torVersion < 7)
-        {
-            *o_numVariants -= 3;
-        }
     }
     *o_ringProps = (RingProperties_t*)P9_RID::RING_PROPERTIES;
 }
@@ -411,9 +349,7 @@ void P9_RID::ringid_get_chiplet_properties(
     ChipletType_t      i_chipletType,
     ChipletData_t**    o_cpltData,
     GenRingIdList**    o_ringComm,
-    GenRingIdList**    o_ringInst,
-    RingVariantOrder** o_varOrder,
-    uint8_t*           o_numVariants)
+    GenRingIdList**    o_ringInst)
 {
     switch (i_chipletType)
     {
@@ -421,136 +357,102 @@ void P9_RID::ringid_get_chiplet_properties(
             *o_cpltData = (ChipletData_t*)&PERV::g_chipletData;
             *o_ringComm = (GenRingIdList*)PERV::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)PERV::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)PERV::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case N0_TYPE :
             *o_cpltData = (ChipletData_t*)&N0::g_chipletData;
             *o_ringComm = (GenRingIdList*)N0::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)N0::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)N0::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case N1_TYPE :
             *o_cpltData = (ChipletData_t*)&N1::g_chipletData;
             *o_ringComm = (GenRingIdList*)N1::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)N1::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)N1::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case N2_TYPE :
             *o_cpltData = (ChipletData_t*)&N2::g_chipletData;
             *o_ringComm = (GenRingIdList*)N2::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)N2::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)N2::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case N3_TYPE :
             *o_cpltData = (ChipletData_t*)&N3::g_chipletData;
             *o_ringComm = (GenRingIdList*)N3::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)N3::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)N3::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case XB_TYPE :
             *o_cpltData = (ChipletData_t*)&XB::g_chipletData;
             *o_ringComm = (GenRingIdList*)XB::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)XB::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)XB::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case MC_TYPE :
             *o_cpltData = (ChipletData_t*)&MC::g_chipletData;
             *o_ringComm = (GenRingIdList*)MC::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)MC::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)MC::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case OB0_TYPE :
             *o_cpltData = (ChipletData_t*)&OB0::g_chipletData;
             *o_ringComm = (GenRingIdList*)OB0::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)OB0::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)OB0::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case OB1_TYPE :
             *o_cpltData = (ChipletData_t*)&OB1::g_chipletData;
             *o_ringComm = (GenRingIdList*)OB1::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)OB1::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)OB1::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case OB2_TYPE :
             *o_cpltData = (ChipletData_t*)&OB2::g_chipletData;
             *o_ringComm = (GenRingIdList*)OB2::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)OB2::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)OB2::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case OB3_TYPE :
             *o_cpltData = (ChipletData_t*)&OB3::g_chipletData;
             *o_ringComm = (GenRingIdList*)OB3::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)OB3::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)OB3::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case PCI0_TYPE :
             *o_cpltData = (ChipletData_t*)&PCI0::g_chipletData;
             *o_ringComm = (GenRingIdList*)PCI0::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)PCI0::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)PCI0::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case PCI1_TYPE :
             *o_cpltData = (ChipletData_t*)&PCI1::g_chipletData;
             *o_ringComm = (GenRingIdList*)PCI1::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)PCI1::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)PCI1::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case PCI2_TYPE :
             *o_cpltData = (ChipletData_t*)&PCI2::g_chipletData;
             *o_ringComm = (GenRingIdList*)PCI2::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)PCI2::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)PCI2::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case EQ_TYPE :
             *o_cpltData = (ChipletData_t*)&EQ::g_chipletData;
             *o_ringComm = (GenRingIdList*)EQ::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)EQ::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)EQ::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         case EC_TYPE :
             *o_cpltData = (ChipletData_t*)&EC::g_chipletData;
             *o_ringComm = (GenRingIdList*)EC::RING_ID_LIST_COMMON;
             *o_ringInst = (GenRingIdList*)EC::RING_ID_LIST_INSTANCE;
-            *o_varOrder = (RingVariantOrder*)EC::RING_VARIANT_ORDER;
-            *o_numVariants  = (*(*o_cpltData)).iv_num_common_ring_variants;
             break;
 
         default :
             *o_cpltData = NULL;
             *o_ringComm = NULL;
             *o_ringInst = NULL;
-            *o_varOrder = NULL;
-            *o_numVariants = 0;
             break;
     }
 }
@@ -559,23 +461,13 @@ static void ringid_get_noof_chiplets(
     uint32_t    i_torMagic,
     uint8_t*    o_numChiplets)
 {
-    if(i_torMagic == TOR_MAGIC_SBE
-    || i_torMagic == TOR_MAGIC_OVRD
-    || i_torMagic == TOR_MAGIC_OVLY)
-    {
-        *o_numChiplets = P9_RID::SBE_NOOF_CHIPLETS;
-    }
-    else if ( i_torMagic == TOR_MAGIC_CME)
+    if (i_torMagic == TOR_MAGIC_CME)
     {
         *o_numChiplets = P9_RID::CME_NOOF_CHIPLETS;
     }
-    else if ( i_torMagic == TOR_MAGIC_SGPE)
+    else if (i_torMagic == TOR_MAGIC_SGPE)
     {
         *o_numChiplets = P9_RID::SGPE_NOOF_CHIPLETS;
-    }
-    else
-    {
-        return;
     }
 }
 
@@ -642,12 +534,9 @@ void process_gptr_rings(
     void*               i_overlaysSection,
     uint8_t             i_ddLevel,
     CompressedScanData* io_vpdRing,
-    void*               io_ringBuf2,
-    void*               io_ringBuf3)
+    void*               l_overlayRs4Ring, // zeroed
+    void*               l_overlayRawRing) // zeroed
 {
-    void* l_overlayRs4Ring = io_ringBuf2;
-    void* l_overlayRawRing = io_ringBuf3;
-
     get_overlays_ring(
         i_overlaysSection,
         i_ddLevel,
@@ -655,54 +544,47 @@ void process_gptr_rings(
         &l_overlayRs4Ring,
         &l_overlayRawRing);
 
-    if (l_overlayRs4Ring == io_ringBuf2 && l_overlayRawRing == io_ringBuf3)
-    {
-        apply_overlays_ring(
-            io_vpdRing,
-            l_overlayRs4Ring,
-            l_overlayRawRing);
-    }
+    apply_overlays_ring(
+        io_vpdRing,
+        l_overlayRs4Ring,
+        l_overlayRawRing);
 }
 
 void get_overlays_ring(
     void*     i_overlaysSection,
     uint8_t   i_ddLevel,
     RingId_t  i_ringId,
-    void**    io_ringBuf2,
-    void**    io_ringBuf3)
+    void**    io_compressedRingData,
+    void**    io_decompressedRingData)
 {
-    ReturnCode l_fapiRc = fapi2::FAPI2_RC_SUCCESS;
-    uint32_t l_maxRingByteSize = MAX_RING_BUF_SIZE;
-    uint32_t l_ovlyUncmpSize = 0;
     uint8_t  l_instanceId = 0;
     uint32_t l_ringBlockSize = 0xFFFFFFFF;
-
     tor_access_ring(
         i_overlaysSection,
         i_ringId,
         UNDEFINED_PPE_TYPE,
-        UNDEFINED_RING_VARIANT,
         l_instanceId,
-        io_ringBuf2,
+        io_compressedRingData,
         l_ringBlockSize,
         GET_SINGLE_RING);
 
+    uint32_t l_ovlyUncmpSize;
     _rs4_decompress(
-        *io_ringBuf3,
-        *io_ringBuf3 + l_maxRingByteSize / 2,
-        l_maxRingByteSize / 2,
+        *io_decompressedRingData,
+        *io_decompressedRingData + MAX_RING_BUF_SIZE / 2,
+        MAX_RING_BUF_SIZE / 2,
         &l_ovlyUncmpSize,
-        (CompressedScanData*)(*io_ringBuf2));
+        (CompressedScanData*)(*io_compressedRingData));
 }
 
 // This function decompreses data, applies a mask and compresses it back
 void apply_overlays_ring(
     CompressedScanData* io_vpdRing,
-    void*               io_ringBuf2,
+    void*               io_overlayRs4Ring,
     uint8_t*            i_overlayRawRing)
 {
-    uint8_t* dataVpd = (uint8_t*)io_ringBuf2;
-    uint8_t* careVpd = (uint8_t*)io_ringBuf2 + MAX_RING_BUF_SIZE / 2;
+    uint8_t* dataVpd = (uint8_t*)io_overlayRs4Ring;
+    uint8_t* careVpd = (uint8_t*)io_overlayRs4Ring + MAX_RING_BUF_SIZE / 2;
     uint8_t* careOvly = i_overlayRawRing + MAX_RING_BUF_SIZE / 2;
     uint32_t vpdUncmpSize;
 
