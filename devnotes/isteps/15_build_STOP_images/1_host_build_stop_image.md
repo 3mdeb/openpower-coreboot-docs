@@ -404,7 +404,8 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 					p9_pm_get_poundv_bucket(quad, /* voltageBucketData_t */ poundV_raw_data):
 						- 61 bytes "read directly from VPD"
 						- "reading directly" parses data differently based on version
-						- version is read from different MVPD record and keyword
+						- version is read from (MVPD_RECORD_LRP<quad>, MVPD_KEYWORD_PDV)
+						- data read from (MVPD_RECORD_VINI, MVPD_KEYWORD_PR)
 						TBD
 
 					bucket_id = poundV_raw_data.bucketId;
@@ -446,6 +447,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 				- this function gives the opportunity to change values obtained above
 				- does a lot of floating point multiplications by 1
 				- does chk_valid_poundv() on "new" values
+				- is later recalculated in compute_vpd_pts()
 				- nothing changes, can be skipped (at least for Talos)
 
 			// Read #W data
@@ -473,6 +475,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 						  - 0x2-0xF - 0x3C		// dumped MVPD has version 0x7
 						  - >= 0x30 - 0x87
 						- copy version and ID/data pair for bucket ID from #V
+						- read from (MVPD_RECORD_CRP0, MVPD_KEYWORD_PDW)
 
 					bucket_id   =   l_vdmBuf.bucketId;
 					version_id  =   l_vdmBuf.version;
@@ -539,68 +542,145 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 				- print info about recovered error
 				- return from vpd_init() with success
 
+			// Read #IQ data
+			get_mvpd_iddq():
+				- read from (MVPD_RECORD_CRP0, MVPD_KEYWORD_IQ)
+				- log warning and return with succes if any of the following is 0:
+				  - iddq_version
+				  - good_quads_per_sort
+				  - good_normal_cores_per_sort
+				  - good_caches_per_sort
+				if (ivdd_all_cores_off_caches_off[i = 0..5] & 0x8000):
+					ivdd_all_cores_off_caches_off[i] = 0
+
+			// Load RAW VPD
+			load_mvpd_operating_point(RAW)
+				- for all OPs copies data from VpdPoint to VpdOperatingPoint
+				- VpdOperatingPoint.pstate = (ultra_turbo_frequency - op_frequency) * 1000 / 16666 /* frequency step in kHz */
+
+			// Load VPD operating point
+			load_mvpd_operating_point(BIASED)
+				- same as above
+
+		// ----------------
+		// get IVRM Parameters data
+		// ----------------
+		// TBD
+		l_pmPPB.get_ivrm_parms():
+			// "This is presently hardcoded to FALSE until validation code is in
+			// place to ensure turning IVRM on is a good thing."
+			- no-op
+
+		// ----------------
+		// Compute VPD points for different regions
+		// ----------------
+		l_pmPPB.compute_vpd_pts():
+			- combines 4 sets in one structure:
+			  - raw OPs - copy of what load_mvpd_operating_point(RAW) produced
+			  - system params applied - mostly copy of raw, except voltages:
+			    - vdd_mv = raw.vdd_mv + (idd_ma * (vdd_loadline_uohm + vdd_distloss_uohm) / 1000 + vdd_distoffset_uv) / 1000
+			      - vdd_loadline_uohm = 254, vdd_distloss_uohm =  0, vdd_distoffset_uv = 0 - from talos.xml
+			    - vcs_mv = raw.vcs_mv + (ics_ma * (vcs_loadline_uohm + vcs_distloss_uohm) / 1000 + vcs_distoffset_uv) / 1000
+			      - vcs_loadline_uohm =   0, vcs_distloss_uohm = 64, vcs_distoffset_uv = 0 - from talos.xml
+			  - biased
+			    - idd_100ma, ics_100ma - copy of biased
+			    - voltages and frequency are biased AGAIN from raw
+			      - different order of floating point math than before, something may be lost due to precision
+			    - ultra turbo frequency is saved as a reference frequency
+			    - pstate is AGAIN calculated the same way as before
+			  - biased with system params applied
+			    - same as raw with system parameters, but based on biased values
+
+		// ----------------
+		// Safe mode freq and volt init
+		// ----------------
+		l_pmPPB.safe_mode_init():
+			- no-op if ATTR_SAFE_MODE_FREQUENCY_MHZ and ATTR_SAFE_MODE_VOLTAGE_MV are not 0
+			- 2152 and 667 respectively
+			- probably isn't safe to hardcode
+			  - safe_mode_computation() sets them if they are not set previously
+			  - compute_boot_safe() sets them in 8.12, called by p9_setup_evid()
+			- assuming attributes are not set
+			safe_mode_computation():
+				- this depends on ATTR_FREQ_CORE_FLOOR_MHZ with default value of 4800
+				  - it is set in 6.12 through an alias `setAttr<ATTR_MIN_FREQ_MHZ>`
+				  - default value of 4800 doesn't make any sense
+				  - description in nest_attributes.xml says it is the highest Power Saving frequency across all cores
+				    - get_mvpd_poundV() ensures that all cores have the same frequencies so there is only one PS freq
+				    - comments say that only the nominal frequency must be same across cores, code ensures all modes
+				jump_value = (iv_poundW_data.poundw[PS].vdm_normal_freq_drop & 0x0F) +	// N_L
+				             (((iv_poundW_data.poundw[NOM].vdm_normal_freq_drop & 0x0F) -	// N_L
+				               (iv_poundW_data.poundw[PS].vdm_normal_freq_drop & 0x0F)) /	// N_L
+				              (ps_ps - nom_ps))
+				- vdm_normal_freq_drop is the same for all OPs in current MVPD, can we rely on it?
+				  - if yes, the above can be simplified to (iv_poundW_data.poundw[PS].vdm_normal_freq_drop & 0x0F)
+				// ref_freq is biased ultra turbo
+				// -1 because SM must be greater than PS
+				// Use integer math to properly round it down (i.e. towards higher frequency)
+				// step_size = 16666 kHz
+				rounded_ps_ps = (ref_freq - ps_freq - 1) / step_size
+				safe_mode_freq = (ref_freq - (rounded_ps_ps * step_size)) * 32 / (32 - jump_value)		// rounded to closest integer
+				// Comment says "Safe frequency must be less than ultra turbo freq" but in code equal is still good
+				assert (safe_mode_freq < ref_freq)
+				safe_mode_ps = (ref_freq - safe_mode_freq) / step_size		// rounded down - use integer math
+
+				// Now calculate safe voltages
+				// Frequency to Pstate relation is always linear, but voltage to Pstate isn't.
+				// All calculations done below operate on biased values with sysparams
+				- find out in which segment safe_mode_ps is (i.e. between PS and NOM, NOM and TURBO or TURBO and ULTRATURBO)
+				- take appropriate iv_operating_points[VPD_PT_SET_BIASED_SYSP][op].{vdd_mv, pstate}
+				- do a linear interpolation
+				  - hostboot can't do rounding: https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/pm/p9_pstate_parameter_block.C#L1803
+
+		// ----------------
+		// Initialize  VDM data
+		// ----------------
+		l_pmPPB.vdm_init():
+			- assuming VDM is enabled
+			compute_vdm_threshold_pts():
+				- this copies data from #W to different structures:
+				  - vdm_vid_compare_per_quad to iv_vid_point_set (for each OP for functional quad)
+				  - vdm_overvolt_small_thresholds and vdm_large_extreme_thresholds to iv_threshold_set (for each OP)
+				    - split nibbles and applied Grey encoding
+				  - vdm_normal_freq_drop and vdm_normal_freq_return to iv_jump_value_set (for each OP)
+				    - split nibbles
+
+			// VID slope calculation
+			compute_PsVIDCompSlopes_slopes():
+				for each functional quad, for each Pstate segment:
+					- saves VID slopes: iv_vid_point_set to biased pstate ratio to iv_PsVIDCompSlopes
+					  - 4.12 fixed point format
+
+			// VDM threshold slope calculation
+			compute_PsVDMThreshSlopes():
+				for each Pstate segment:
+					- saves VDM slopes: iv_threshold_set to biased pstate ratio to iv_PsVDMThreshSlopes
+
+			// VDM Jump slope calculation
+			compute_PsVDMJumpSlopes ():
+				for each Pstate segment:
+					- saves jump slopes: iv_jump_value_set to biased pstate ratio to iv_PsVDMJumpSlopes
+
+		// ----------------
+		// get Resonant clocking attributes
+		// ----------------
+		l_pmPPB.resclk_init():
+			- assuming Resonant Clocks are enabled
+			set_resclk_table_attrs():
+				- reads data from p9_resclk_defines.H and writes it to attributes:
+				  - ATTR_SYSTEM_RESCLK_L3_VALUE
+				  - ATTR_SYSTEM_RESCLK_FREQ_REGIONS
+				  - ATTR_SYSTEM_RESCLK_FREQ_REGION_INDEX
+				  - ATTR_SYSTEM_RESCLK_VALUE
+				  - ATTR_SYSTEM_RESCLK_L3_VOLTAGE_THRESHOLD_MV
+			res_clock_setup():
+				- reads data from attributes and saves it to iv_resclk_setup
+				  - all of the p9_resclk_defines.H
+				  - ATTR_SYSTEM_RESCLK_STEP_DELAY (= 0?)
+				  - none of these is used anywhere else
+				  - pstates and indices are capped at ultra turbo, but all entries are still written
+
 ----------------------------
-            // Read #IQ data
-
-            //if wof is disabled.. don't call IQ function
-            if (is_wof_enabled())
-            {
-                // ----------------
-                // get IQ (IDDQ) data
-                // ----------------
-                FAPI_INF("Getting IQ (IDDQ) Data");
-                l_rc = get_mvpd_iddq ();
-
-                if (l_rc)
-                {
-                    FAPI_ASSERT_NOEXIT(false,
-                                       fapi2::PSTATE_PB_IQ_ACCESS_ERROR(fapi2::FAPI2_ERRL_SEV_RECOVERED)
-                                       .set_CHIP_TARGET(iv_procChip)
-                                       .set_FAPI_RC(l_rc),
-                                       "Pstate Parameter Block get_mvpd_iddq function failed");
-                    fapi2::current_err = fapi2::FAPI2_RC_SUCCESS;
-                }
-            }
-            else
-            {
-                FAPI_INF("Skipping IQ (IDDQ) Data as WOF is disabled");
-                iv_wof_enabled = false;
-            }
-
-            FAPI_INF("Load RAW VPD");
-            load_mvpd_operating_point(RAW);
-
-            FAPI_INF("Load VPD");
-            // VPD operating point
-            load_mvpd_operating_point(BIASED);
-
-        // ----------------
-        // get IVRM Parameters data
-        // ----------------
-        // TBD
-        FAPI_INF("Getting IVRM Parameters Data");
-        FAPI_TRY(l_pmPPB.get_ivrm_parms());
-
-        // ----------------
-        // Compute VPD points for different regions
-        // ----------------
-        l_pmPPB.compute_vpd_pts();
-
-        // ----------------
-        // Safe mode freq and volt init
-        // ----------------
-        FAPI_TRY(l_pmPPB.safe_mode_init());
-
-        // ----------------
-        // Initialize  VDM data
-        // ----------------
-        FAPI_TRY(l_pmPPB.vdm_init());
-
-        // ----------------
-        // get Resonant clocking attributes
-        // ----------------
-        FAPI_TRY(l_pmPPB.resclk_init());
-
         // ----------------
         // Initialize GPPB structure
         // ----------------
