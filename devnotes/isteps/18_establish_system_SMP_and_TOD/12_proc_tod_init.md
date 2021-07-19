@@ -1,3 +1,4 @@
+```cpp
 void TodSvc::todInit()
 {
     p9_tod_clear_error_reg(TOD::iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data);
@@ -66,3 +67,4 @@ void init_tod_node(const tod_topology_node* i_tod_node)
       | PPC_BIT(PERV_TOD_ERROR_MASK_REG_RX_TTYPE_4)
       | PPC_BIT(PERV_TOD_ERROR_MASK_REG_RX_TTYPE_5));
 }
+```
