@@ -544,7 +544,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 
 			// Read #IQ data
 			get_mvpd_iddq():
-				- read from (MVPD_RECORD_CRP0, MVPD_KEYWORD_IQ)
+				- read from (MVPD_RECORD_CRP0, MVPD_KEYWORD_IQ) to iv_iddqt
 				- log warning and return with succes if any of the following is 0:
 				  - iddq_version
 				  - good_quads_per_sort
@@ -575,7 +575,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 		// Compute VPD points for different regions
 		// ----------------
 		l_pmPPB.compute_vpd_pts():
-			- combines 4 sets in one structure:
+			- combines 4 sets in one structure (iv_operating_points):
 			  - raw OPs - copy of what load_mvpd_operating_point(RAW) produced
 			  - system params applied - mostly copy of raw, except voltages:
 			    - vdd_mv = raw.vdd_mv + (idd_ma * (vdd_loadline_uohm + vdd_distloss_uohm) / 1000 + vdd_distoffset_uv) / 1000
@@ -648,18 +648,18 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			// VID slope calculation
 			compute_PsVIDCompSlopes_slopes():
 				for each functional quad, for each Pstate segment:
-					- saves VID slopes: iv_vid_point_set to biased pstate ratio to iv_PsVIDCompSlopes
+					- saves VID slopes: iv_vid_point_set to biased pstate ratio in iv_PsVIDCompSlopes
 					  - 4.12 fixed point format
 
 			// VDM threshold slope calculation
 			compute_PsVDMThreshSlopes():
 				for each Pstate segment:
-					- saves VDM slopes: iv_threshold_set to biased pstate ratio to iv_PsVDMThreshSlopes
+					- saves VDM slopes: iv_threshold_set to biased pstate ratio in iv_PsVDMThreshSlopes
 
 			// VDM Jump slope calculation
 			compute_PsVDMJumpSlopes ():
 				for each Pstate segment:
-					- saves jump slopes: iv_jump_value_set to biased pstate ratio to iv_PsVDMJumpSlopes
+					- saves jump slopes: iv_jump_value_set to biased pstate ratio in iv_PsVDMJumpSlopes
 
 		// ----------------
 		// get Resonant clocking attributes
@@ -680,12 +680,126 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 				  - none of these is used anywhere else
 				  - pstates and indices are capped at ultra turbo, but all entries are still written
 
-----------------------------
-        // ----------------
-        // Initialize GPPB structure
-        // ----------------
-        FAPI_TRY(l_pmPPB.gppb_init(&l_globalppb));
+		// ----------------
+		// Initialize GPPB structure
+		// ----------------
+		l_pmPPB.gppb_init(&l_globalppb):
+			// LHS fields are members of l_globalppb
+			// This function is basically one big unnecessary memcpy...
+			magic = PSTATE_PARMSBLOCK_MAGIC		// 0x5053544154453030, "PSTATE00"
+			options.options = 0
+			reference_frequency_khz = reference_frequency_khz	// from compute_vpd_pts()
+			nest_frequency_mhz = ATTR_FREQ_PB_MHZ
+			frequency_step_khz = ATTR_FREQ_DPLL_REFCLOCK_KHZ / ATTR_PROC_DPLL_DIVIDER
+			                     // 133333 / 8 = 16666 from default values
 
+			// VpdBias External and Internal Biases for Global and Local parameter
+			// block
+			for each OP point:
+				ext_biases[op] = iv_bias[op]		// = 0?
+				int_biases[op] = iv_bias[op]
+
+			// Those 3 fields are structs, each has 3x u32: loadline_uohm, distloss_uohm, distoffset_uv
+			// Defaul values are from talos.xml
+			vdd_sysparm = {ATTR_PROC_R_LOADLINE_VDD_UOHM, ATTR_PROC_R_DISTLOSS_VDD_UOHM, ATTR_PROC_VRM_VOFFSET_VDD_UV} = {254, 0, 0}
+			vcs_sysparm = {ATTR_PROC_R_LOADLINE_VCS_UOHM, ATTR_PROC_R_DISTLOSS_VCS_UOHM, ATTR_PROC_VRM_VOFFSET_VCS_UV} = {0, 64, 0}
+			vdn_sysparm = {ATTR_PROC_R_LOADLINE_VDN_UOHM, ATTR_PROC_R_DISTLOSS_VDN_UOHM, ATTR_PROC_VRM_VOFFSET_VDN_UV} = {0, 50, 0}
+
+			// External VRM parameters
+			ext_vrm_transition_start_ns           = ATTR_EXTERNAL_VRM_TRANSITION_START_NS				// 8000 (internal default)
+			ext_vrm_transition_rate_inc_uv_per_us = ATTR_EXTERNAL_VRM_TRANSITION_RATE_INC_UV_PER_US		// 10000 (internal default)
+			ext_vrm_transition_rate_dec_uv_per_us = ATTR_EXTERNAL_VRM_TRANSITION_RATE_DEC_UV_PER_US		// 10000 (internal default)
+			ext_vrm_stabilization_time_us         = ATTR_EXTERNAL_VRM_TRANSITION_STABILIZATION_TIME_NS	// 5 (internal default)
+			ext_vrm_step_size_mv                  = ATTR_EXTERNAL_VRM_STEPSIZE							// 50 (internal default)
+
+
+
+			// safe_voltage_mv
+			safe_voltage_mv = ATTR_SAFE_MODE_VOLTAGE_MV			// also from safe_mode_computation()
+			safe_frequency_khz = ATTR_SAFE_MODE_FREQUENCY_MHZ * 1000	// also from safe_mode_computation()
+
+			// Struct definition in p9_pstates_pgpe.h
+			vdm = {ATTR_VDM_VID_COMPARE_OVERRIDE_MV, ATTR_DPLL_VDM_RESPONSE,
+			       ATTR_VDM_DROOP_SMALL_OVERRIDE, ATTR_VDM_DROOP_LARGE_OVERRIDE, ATTR_VDM_DROOP_EXTREME_OVERRIDE,
+			       ATTR_VDM_OVERVOLT_OVERRIDE, ATTR_VDM_FMIN_OVERRIDE_KHZ, ATTR_VDM_FMAX_OVERRIDE_KHZ}
+
+			// Struct definition in p9_pstates_cmeqm.h
+			ivrm = {ATTR_IVRM_STRENGTH_LOOKUP, ATTR_IVRM_VIN_MULTIPLIER, ATTR_IVRM_VIN_MAX_MV,
+			        ATTR_IVRM_STEP_DELAY_NS, ATTR_IVRM_STABILIZATION_DELAY_NS, ATTR_IVRM_DEADZONE_MV}
+
+			// Load vpd operating points - use biased values from compute_vpd_pts()
+			for each OP point:
+				operating_points[op].frequency_mhz  = iv_operating_points[BIASED][op].frequency_mhz
+				operating_points[op].vdd_mv         = iv_operating_points[BIASED][op].vdd_mv
+				operating_points[op].idd_100ma      = iv_operating_points[BIASED][op].idd_100ma
+				operating_points[op].vcs_mv         = iv_operating_points[BIASED][op].vcs_mv
+				operating_points[op].ics_100ma      = iv_operating_points[BIASED][op].ics_100ma
+				operating_points[op].pstate         = iv_operating_points[BIASED][op].pstate
+
+			// Initialize res clk data
+			resclk = iv_resclk_setup		// from res_clock_setup()
+
+			// -----------------------------------------------
+			// populate VpdOperatingPoint with biased MVPD attributes
+			// -----------------------------------------------
+			for each VPD set:
+				for each OP point:
+					io_globalppb->operating_points_set[set][op].frequency_mhz = iv_operating_points[set][op].frequency_mhz
+					io_globalppb->operating_points_set[set][op].vdd_mv        = iv_operating_points[set][op].vdd_mv
+					io_globalppb->operating_points_set[set][op].idd_100ma     = iv_operating_points[set][op].idd_100ma
+					io_globalppb->operating_points_set[set][op].vcs_mv        = iv_operating_points[set][op].vcs_mv
+					io_globalppb->operating_points_set[set][op].ics_100ma     = iv_operating_points[set][op].ics_100ma
+					io_globalppb->operating_points_set[set][op].pstate        = iv_operating_points[set][op].pstate
+
+			// Calculate pre-calculated slopes
+			compute_PStateV_slope():
+				for each VPD set:
+					for each Pstate segment:
+						PStateVSlopes[set][segment] = vdd_mv / pstate
+						VPStateSlopes[set][segment] = pstate / vdd_mv
+
+			// This is Pstate value that would be assigned to frequency of 0
+			dpll_pstate0_value = reference_frequency_khz / frequency_step_khz
+
+			//Initializing threshold and jump values for GPPB
+			for each OP point:
+				vid_point_set[op] = iv_vid_point_set[0][op]		// from compute_vdm_threshold_pts()
+
+			threshold_set  = iv_threshold_set					// from compute_vdm_threshold_pts()
+			jump_value_set = iv_jump_value_set					// from compute_vdm_threshold_pts()
+
+			for each Pstate segment:
+				PsVIDCompSlopes[segment] = iv_PsVIDCompSlopes[0][segment]	// from compute_PsVIDCompSlopes_slopes()
+
+			PsVDMThreshSlopes = iv_PsVDMThreshSlopes			// from compute_PsVDMThreshSlopes()
+			PsVDMJumpSlopes   = iv_PsVDMJumpSlopes				// from compute_PsVDMJumpSlopes()
+
+			// Put the good_normal_cores value into the GPPB for PGPE
+			// This is u8 -> u32 conversion
+			options.pad = iv_iddqt.good_normal_cores_per_sort	// from get_mvpd_iddq()
+
+			// WOV parameters
+			wov_sample_125us                = ATTR_WOV_SAMPLE_125US						// 2 (internal default)
+			wov_max_droop_pct               = ATTR_WOV_MAX_DROOP_10THPCT				// 125 (internal default)
+			wov_underv_perf_loss_thresh_pct = ATTR_WOV_UNDERV_PERF_LOSS_THRESH_10THPCT	// 5 (internal default)
+			wov_underv_step_incr_pct        = ATTR_WOV_UNDERV_STEP_INCR_10THPCT			// 5 (internal default)
+			wov_underv_step_decr_pct        = ATTR_WOV_UNDERV_STEP_DECR_10THPCT			// 5 (internal default)
+			wov_underv_max_pct              = ATTR_WOV_UNDERV_MAX_10THPCT				// 0 (internal default)
+			wov_underv_vmin_mv              = ATTR_WOV_UNDERV_VMIN_MV					// safe_voltage_mv
+			wov_overv_vmax_mv               = ATTR_WOV_OVERV_VMAX_SETPOINT_MV			// 1150 (internal default)
+			wov_overv_step_incr_pct         = ATTR_WOV_OVERV_STEP_INCR_10THPCT			// 5 (internal default)
+			wov_overv_step_decr_pct         = ATTR_WOV_OVERV_STEP_DECR_10THPCT			// 5 (internal default)
+			wov_overv_max_pct               = ATTR_WOV_OVERV_MAX_10THPCT				// 100 (internal default)
+
+			// Avs Bus topology - values come from talos.xml
+			avs_bus_topology.vdd_avsbus_num  = ATTR_VDD_AVSBUS_BUSNUM	// 0
+			avs_bus_topology.vdd_avsbus_rail = ATTR_VDD_AVSBUS_RAIL		// 0
+			avs_bus_topology.vdn_avsbus_num  = ATTR_VDN_AVSBUS_BUSNUM	// 1
+			avs_bus_topology.vdn_avsbus_rail = ATTR_VDN_AVSBUS_RAIL		// 0
+			avs_bus_topology.vcs_avsbus_num  = ATTR_VCS_AVSBUS_BUSNUM	// 0
+			avs_bus_topology.vcs_avsbus_rail = ATTR_VCS_AVSBUS_RAIL		// 1
+
+----------------------------
         // ----------------
         // Initialize LPPB structure
         // ----------------
