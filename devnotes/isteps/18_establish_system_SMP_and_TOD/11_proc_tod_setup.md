@@ -3,18 +3,21 @@ void TodSvc::todSetup()
 {
     TodTopologyManager l_primary(); // NOOP
     iv_proc0 = TARGETING::getAllChips(l_targetList, TARGETING::TYPE_PROC, false)[0];
-    TOD::buildTodDrawers();
+    TOD::buildTodDrawers();         // assgn drawers to iv_todConfig[TOD_PRIMARY].iv_todDrawerList
     l_primary.create();
-    p9_tod_setup();       // some scom's
-    p9_tod_save_config(); // some scom's
+    p9_tod_setup();                 // some scom's
+    p9_tod_save_config();           // some scom's
 }
 
+// for each functional prcessor in each node (childs of SystemTarget)
+// If Drawer is found just assign TodProc to iv_todConfig[TOD_PRIMARY].iv_todDrawerList and exit
+// If Drawer for this processor does not exist, create a new one, assign, append to a list and continue
 static void TodControls::buildTodDrawers()
 {
     TARGETING::TargetHandleList l_funcNodeTargetList;
     TARGETING::Target* l_pSysTarget;
     TARGETING::targetService().getTopLevelTarget(l_pSysTarget);
-    TOD::TodSvcUtil::getFuncNodeTargetsOnSystem(l_pSysTarget, l_funcNodeTargetList, true);
+    TOD::TodSvcUtil::getFuncNodeTargetsOnSystem(l_pSysTarget, l_funcNodeTargetList, true); // get functional childs of SystemTarget
     TARGETING::TargetHandleList l_funcProcTargetList;
     TARGETING::PredicateCTM l_procCTM(TARGETING::CLASS_CHIP,TARGETING::TYPE_PROC);
     TARGETING::PredicateHwas l_funcPred;
@@ -22,30 +25,24 @@ static void TodControls::buildTodDrawers()
     TARGETING::PredicatePostfixExpr l_funcProcPostfixExpr;
     l_funcProcPostfixExpr.push(&l_procCTM).push(&l_funcPred).And();
 
-    for(uint32_t l_nodeIndex = 0;
-        l_nodeIndex < l_funcNodeTargetList.size();
-        ++l_nodeIndex)
+    for(uint32_t l_nodeIndex = 0; l_nodeIndex < l_funcNodeTargetList.size(); ++l_nodeIndex)
     {
-        l_funcProcTargetList.clear();
-
         TARGETING::targetService().getAssociated(
-            l_funcProcTargetList,
-            l_funcNodeTargetList[l_nodeIndex],
-            TARGETING::TargetService::CHILD,
-            &l_funcProcPostfixExpr);
+            l_funcProcTargetList,               // child processors are returned here
+            l_funcNodeTargetList[l_nodeIndex],  // node to get children from
+            TARGETING::TargetService::CHILD,    // get the children
+            &l_funcProcPostfixExpr);            // only functional processors
 
-        for(uint32_t l_procIndex = 0;
-            l_procIndex < l_funcProcTargetList.size();
-            ++l_procIndex)
+        for(uint32_t l_procIndex = 0; l_procIndex < l_funcProcTargetList.size(); ++l_procIndex)
         {
             for(TodDrawerContainer::iterator l_todDrawerIter = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
-                l_todDrawerIter != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end();
-                ++l_todDrawerIter)
+                l_todDrawerIter != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end(); ++l_todDrawerIter)
             if((*l_todDrawerIter)->iv_todDrawerId == l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>())
             {
                 (*l_todDrawerIter)->iv_todProcList.push_back(new TodProc(l_funcProcTargetList[l_procIndex], (*l_todDrawerIter)));
                 return;
             }
+            // TodDrawer constructor just initializes iv_todDrawerId, iv_parentNodeTarget and iv_isTodMaster(false)
             TodDrawer *l_pTodDrawer = new TodDrawer(
                 l_funcNodeTargetList[l_nodeIndex]->getAttr<TARGETING::ATTR_ORDINAL_ID>(),
                 l_funcNodeTargetList[l_nodeIndex]);
@@ -84,24 +81,84 @@ struct tod_topology_node
 
 static void TodTopologyManager::create()
 {
-    TOD::pickMdmt();
+    TOD::pickMdmt(); // select and assign MDMT processor to the iv_todConfig[TOD_PRIMARY].iv_mdmt
     TodProcContainer l_targetsList = iv_todConfig[TOD_PRIMARY].iv_todDrawerList[0]->iv_todProcList;
     TodProc* l_pDrawerMaster = NULL;
     iv_todConfig[TOD_PRIMARY].iv_todDrawerList[0]->findMasterProc(l_pDrawerMaster);
     TodProcContainer l_sourcesList;
+    // push TOD_MASTER or DRAWER_MASTER proc as first
     l_sourcesList.push_back(l_pDrawerMaster);
 
+    // At the start, sources contain only masterProc
+    // in the loops bellow it is filled with more
     for(TodProcContainer::iterator l_sourceItr = l_sourcesList.begin(); l_sourcesList.end() != l_sourceItr; ++l_sourceItr)
-    for(TodProcContainer::iterator l_targetItr = l_targetsList.begin(); l_targetItr != l_targetsList.end();)
+    for(TodProcContainer::iterator l_targetItr = l_targetsList.begin(); l_targetItr != l_targetsList.end(); l_targetItr = l_targetsList.erase(l_targetItr))
     {
         l_sourcesList.push_back(*l_targetItr);
         if((*l_sourceItr)->iv_proc0->getAttr<TARGETING::ATTR_HUID>()
-        != (*l_sourceItr)->*l_targetItr->getTarget()->getAttr<TARGETING::ATTR_HUID>())
+        != (*l_sourceItr)->(*l_targetItr)->getTarget()->getAttr<TARGETING::ATTR_HUID>())
         {
             (*l_sourceItr)->iv_childrenList.push_back(*l_targetItr);
             (*l_sourceItr)->iv_tod_node_data->i_children.push_back(*l_targetItr->getTopologyNode());
         }
-        l_targetItr = l_targetsList.erase(l_targetItr);
+    }
+}
+
+// Find and configure correct processor to be MDMT
+// amd assign it to the iv_todConfig[TOD_PRIMARY].iv_mdmt
+static void TodControls ::pickMdmt()
+{
+    // if we alreade have MDMT (probably not)
+    // but it is somehow not configured to be pickable
+    // then find it in a Drawer and configure properly
+    if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
+    {
+        if(NULL == pickMdmt(iv_todConfig[l_oppConfig].iv_mdmt, iv_todConfig[l_oppConfig].iv_mdmt))
+        for (const auto & drawer: iv_todConfig[TOD_PRIMARY].iv_todDrawerList)
+        {
+            // iterate over processors
+            for (const auto & proc: iv_todProcList)
+            // check if this proc in this drawer is previously picked MDMT
+            if(proc->getTarget() == iv_todConfig[TOD_PRIMARY].iv_mdmt->getTarget())
+            {
+                // set this drawer and processor as master
+                iv_todConfig[TOD_PRIMARY].iv_mdmt = proc;
+                proc->setMasterType(TodProc::TOD_MASTER);
+                drawer->setMasterDrawer(true);
+                return;
+            }
+        }
+    }
+    // iterate over all Drawers to find processor with most cores
+    // and set it as a new MDMT
+    else
+    {
+        TodDrawer* l_pTodDrw = NULL;
+        TodProc* l_newMdmt = NULL;
+        TodProc* l_pTodProc;
+        uint32_t l_maxCoreCount = 0;
+        // iterate over Drawers
+        for (const auto & l_drwItr: l_todDrawerList)
+        {
+            // make sure that the core count is the largest in all Drawers
+            uint32_t l_coreCount;
+            l_drwItr->getProcWithMaxCores(l_pTodProc, l_coreCount);
+            if(l_coreCount > l_maxCoreCount)
+            {
+                l_maxCoreCount = l_coreCount;
+                l_pTodDrw = l_drwItr;
+                l_newMdmt = l_pTodProc;
+            }
+        }
+
+        // if found any, assign new MDMT
+        if(l_newMdmt)
+        {
+            iv_todConfig[TOD_PRIMARY].iv_mdmt = l_newMdmt;
+            l_newMdmt->iv_tod_node_data->i_drawer_master = true;
+            l_newMdmt->iv_tod_node_data->i_tod_master = true;
+            l_pTodDrw->iv_isTodMaster = true;
+        }
     }
 }
 
@@ -109,11 +166,13 @@ TodProc* TodControls::pickMdmt(
     const TodProc* i_otherConfigMdmt,
     const p9_tod_setup_tod_sel& i_config)
 {
-    TodProc *l_pTodProc = NULL;
+    TodProc* l_pTodProc = NULL;
     TodDrawer* l_pMasterDrw = NULL;
     uint32_t l_coreCount;
 
-    for (TodDrawerContainer::iterator l_todDrawerIter = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
+    // FIRST PART
+    // iterate over todDrawerList (why no for-range syntax?)
+    for(TodDrawerContainer::iterator l_todDrawerIter = iv_todConfig[TOD_PRIMARY].iv_todDrawerList.begin();
         l_todDrawerIter != iv_todConfig[TOD_PRIMARY].iv_todDrawerList.end();
         ++l_todDrawerIter)
     {
@@ -137,6 +196,8 @@ TodProc* TodControls::pickMdmt(
         return l_pTodProc;
     }
 
+    // SECOND PART
+    // iterate over const references (no modification allowed to l_todDrawerList)
     for(const auto & l_todDrawerIter : l_todDrawerList)
     {
         if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->getParentNodeTarget()->getAttr<TARGETING::ATTR_HUID>()
@@ -162,11 +223,12 @@ TodProc* TodControls::pickMdmt(
         return l_pTodProc;
     }
 
-    for (const auto l_todDrawerIter : l_todDrawerList)
+    // THIRD PART
+    // iterate over local copies
+    for(const auto l_todDrawerIter : l_todDrawerList)
     {
         l_pTodProc = NULL;
-        if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->iv_todDrawerId
-           == l_todDrawerIter->iv_todDrawerId)
+        if(iv_todConfig[l_oppConfig].iv_mdmt->getParentDrawer()->iv_todDrawerId == l_todDrawerIter->iv_todDrawerId)
         {
             l_todDrawerIter->getProcWithMaxCores(
                 iv_todConfig[l_oppConfig].iv_mdmt,
@@ -187,57 +249,10 @@ TodProc* TodControls::pickMdmt(
     return l_pTodProc;
 }
 
-static void TodControls ::pickMdmt()
+// iterates over iv_todProcList and returns TOD or DRAWER proc master
+static void TodDrawer::findMasterProc(TodProc*& i_pDrawerMaster) const
 {
-    if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
-    {
-        if(NULL == pickMdmt(iv_todConfig[l_oppConfig].iv_mdmt, iv_todConfig[l_oppConfig].iv_mdmt))
-        {
-            for (const auto & drawer: iv_todConfig[TOD_PRIMARY].iv_todDrawerList)
-            {
-                for (const auto & proc: iv_todProcList)
-                {
-                    if(proc->getTarget() == iv_todConfig[TOD_PRIMARY].iv_mdmt->getTarget())
-                    {
-                        iv_todConfig[TOD_PRIMARY].iv_mdmt = proc;
-                        proc->setMasterType(TodProc::TOD_MASTER);
-                        drawer->setMasterDrawer(true);
-                        break;
-                    }
-                }
-                if(iv_todConfig[TOD_PRIMARY].iv_mdmt)
-                {
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        for (const auto & l_drwItr: l_todDrawerList)
-        {
-            TodProc* l_pTodProc;
-            uint32_t l_coreCount;
-            l_drwItr->getProcWithMaxCores(l_pTodProc, l_coreCount);
-            if(l_coreCount > 0)
-            {
-                l_pTodDrw = l_drwItr;
-            }
-        }
-
-        if(l_pTodProc)
-        {
-            iv_todConfig[TOD_PRIMARY].iv_mdmt = l_pTodProc;
-            l_pTodProc->iv_tod_node_data->i_drawer_master = true;
-            l_pTodProc->iv_tod_node_data->i_tod_master = true;
-            l_pTodDrw->iv_isTodMaster = true;
-        }
-    }
-}
-
-static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
-{
-    l_pDrawerMaster = NULL;
+    i_pDrawerMaster = NULL;
     for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
         l_procIter != iv_todProcList.end();
         ++l_procIter)
@@ -245,7 +260,7 @@ static void TodDrawer::findMasterProc(TodProc*& l_pDrawerMaster) const
         if((*l_procIter)->iv_masterType == TodProc::TOD_MASTER
         || (*l_procIter)->iv_masterType == TodProc::DRAWER_MASTER)
         {
-            l_pDrawerMaster = *l_procIter;
+            i_pDrawerMaster = *l_procIter;
             return;
         }
     }
@@ -264,9 +279,7 @@ static void TodDrawer::getProcWithMaxCores(
     TARGETING::PredicateCTM l_coreCTM(TARGETING::CLASS_UNIT, TARGETING::TYPE_CORE);
     l_funcCorePostfixExpr.push(&l_coreCTM).push(&l_funcPred).And();
 
-    for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin();
-        l_procIter != iv_todProcList.end();
-        ++l_procIter)
+    for(TodProcContainer::const_iterator l_procIter = iv_todProcList.begin(); l_procIter != iv_todProcList.end(); ++l_procIter)
     {
         TARGETING::TargetHandleList l_funcCoreTargetList;
         l_funcCoreTargetList.clear();
@@ -284,7 +297,7 @@ static void TodDrawer::getProcWithMaxCores(
     }
 }
 
-static void p9_tod_setup()
+static void p9_tod_setup(void)
 {
     if (fapi2::ATTR_IS_MPIPL) // Attribute of the TARGET_TYPE_SYSTEM
     {
@@ -304,7 +317,8 @@ static void p9_tod_setup()
     uint64_t l_pss_mss_ctrl_reg;
     fapi2::getScom(*(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_target), PERV_TOD_PSS_MSS_CTRL_REG, l_pss_mss_ctrl_reg);
 
-    if (iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
+    if(iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_tod_master
+    && iv_todConfig[TOD_PRIMARY].iv_mdmt->iv_tod_node_data->i_drawer_master)
     {
         l_pss_mss_ctrl_reg.setBit<1>();
         l_pss_mss_ctrl_reg.clearBit<0>();
