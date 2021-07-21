@@ -640,6 +640,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			compute_vdm_threshold_pts():
 				- this copies data from #W to different structures:
 				  - vdm_vid_compare_per_quad to iv_vid_point_set (for each OP for functional quad)
+				    - although there is different data per quad, LPPB is written with quad0 data
 				  - vdm_overvolt_small_thresholds and vdm_large_extreme_thresholds to iv_threshold_set (for each OP)
 				    - split nibbles and applied Grey encoding
 				  - vdm_normal_freq_drop and vdm_normal_freq_return to iv_jump_value_set (for each OP)
@@ -799,21 +800,98 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			avs_bus_topology.vcs_avsbus_num  = ATTR_VCS_AVSBUS_BUSNUM	// 0
 			avs_bus_topology.vcs_avsbus_rail = ATTR_VCS_AVSBUS_RAIL		// 1
 
+		// ----------------
+		// Initialize LPPB structure
+		// ----------------
+		// l_localppb is an array of 6 (quads per CPU)
+		l_pmPPB.lppb_init(&l_localppb[0]):
+			for each functional quad:
+				// LHS is l_localppb[quad]
+				magic = LOCAL_PARMSBLOCK_MAGIC		// 434d455050423030, "CMEPPB00"
+
+				// VpdBias External and Internal Biases for Global and Local parameter
+				// block
+				for each OP point:
+					ext_biases[op] = iv_bias[op]		// = 0?
+					int_biases[op] = iv_bias[op]
+
+				// Load vpd operating points - use biased values from compute_vpd_pts()
+				for each OP point:
+					operating_points[op].frequency_mhz  = iv_operating_points[BIASED][op].frequency_mhz
+					operating_points[op].vdd_mv         = iv_operating_points[BIASED][op].vdd_mv
+					operating_points[op].idd_100ma      = iv_operating_points[BIASED][op].idd_100ma
+					operating_points[op].vcs_mv         = iv_operating_points[BIASED][op].vcs_mv
+					operating_points[op].ics_100ma      = iv_operating_points[BIASED][op].ics_100ma
+					operating_points[op].pstate         = iv_operating_points[BIASED][op].pstate
+
+				// Defaul values are from talos.xml
+				vdd_sysparm = {ATTR_PROC_R_LOADLINE_VDD_UOHM, ATTR_PROC_R_DISTLOSS_VDD_UOHM, ATTR_PROC_VRM_VOFFSET_VDD_UV} = {254, 0, 0}
+
+				// IvrmParmBlock
+				// Struct definition in p9_pstates_cmeqm.h
+				ivrm = {ATTR_IVRM_STRENGTH_LOOKUP, ATTR_IVRM_VIN_MULTIPLIER, ATTR_IVRM_VIN_MAX_MV,
+						ATTR_IVRM_STEP_DELAY_NS, ATTR_IVRM_STABILIZATION_DELAY_NS, ATTR_IVRM_DEADZONE_MV}
+
+				// VDMParmBlock
+				// WARNING: this is different than in GPPB
+				memset(vdm, 0, sizeof(vdm))
+
+				dpll_pstate0_value = reference_frequency_khz / frequency_step_khz
+
+				resclk = iv_resclk_setup		// from res_clock_setup()
+
+				// Code memcpies always from data for first quad, seems like a bug
+				for each OP point:
+					vid_point_set[op] = iv_vid_point_set[0][op]		// from compute_vdm_threshold_pts()
+
+				threshold_set  = iv_threshold_set					// from compute_vdm_threshold_pts()
+				jump_value_set = iv_jump_value_set					// from compute_vdm_threshold_pts()
+
+				// Code memcpies always from data for first quad, seems like a bug
+				for each Pstate segment:
+					PsVIDCompSlopes[segment] = iv_PsVIDCompSlopes[0][segment]	// from compute_PsVIDCompSlopes_slopes()
+
+				PsVDMThreshSlopes = iv_PsVDMThreshSlopes			// from compute_PsVDMThreshSlopes()
+				PsVDMJumpSlopes   = iv_PsVDMJumpSlopes				// from compute_PsVDMJumpSlopes()
+
+		// ----------------
+		// WOF initialization
+		// ----------------
+		l_pmPPB.wof_init(o_buf /* will be homer->ppmr.wof_tables after few more memcpies */):
+			- Search for proper data in WOFDATA PNOR partition
+			- WOFDATA is 3M, make sure CBFS_CACHE is big enough
+			- search until match is found:
+			  - core count
+			  - socket power (nominal, as read from #V)
+			  - frequency (nominal, as read from #V)
+			  - if version >= WOF_TABLE_VERSION_POWERMODE (2):
+			    - mode matches current mode (WOF_MODE_NOMINAL = 1) or wildcard (WOF_MODE_UNKNOWN = 0)
+			- structures used:
+			  - wofImageHeader_t from plat_wof_access.C
+			    - check magic and version
+			  - wofSectionTableEntry_t from plat_wof_access.C
+			  - WofTablesHeader_t from p9_pstates_common.h
+			memcpy(o_buf, &WofTablesHeader_t /* for found entry */, wofSectionTableEntry_t[found_entry_idx].size)
+
+			// Just the header, rest needs parsing
+			memcpy(homer->ppmr.wof_tables, o_buf, sizeof(WofTablesHeader_t))
+
+			for vfrt_index in 0..((WofTablesHeader_t*)o_buf->vdn_size * (WofTablesHeader_t*)o_buf->vdd_size * ACTIVE_QUADS) -1:
+				src = o_buf                  + sizeof(WofTablesHeader_t) + vfrt_index * 128 /* vRTF size */
+				dst = homer->ppmr.wof_tables + sizeof(WofTablesHeader_t) + vfrt_index * sizeof(HomerVFRTLayout_t) /* 256B */
+				update_vfrt (src, dst):
+					- Assumption: no bias, makes this function so much easier
+					// Data in src has 8B header followed by 5*24 bytes of frequency information, such that freq = value*step_size + 1GHz.
+					// Data in dst has (almost) the same header followed by 5*24 bytes of Pstates.
+					// Copy header
+					memcpy(dst, src, 8)
+					// Flip type from System to Homer
+					dst.type_version |= 0x10
+					assert(dst.magic = "VT")
+					for idx in 0..5*24 -1:
+						dst[8+idx] = freq_to_pstate(src[8+idx])		// rounded properly
+
 ----------------------------
-        // ----------------
-        // Initialize LPPB structure
-        // ----------------
-        FAPI_TRY(l_pmPPB.lppb_init(&l_localppb[0]));
-
-        // ----------------
-        // WOF initialization
-        // ----------------
-        io_size = 0;
-        FAPI_TRY(l_pmPPB.wof_init(
-                 o_buf,
-                 io_size),
-                 "WOF initialization failure");
-
         // ----------------
         //Initialize OPPB structure
         // ----------------
