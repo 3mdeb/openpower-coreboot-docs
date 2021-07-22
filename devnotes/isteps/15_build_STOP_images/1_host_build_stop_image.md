@@ -18,7 +18,6 @@ getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /* build/reb
 				- memcpy(pRingBuf, ppeBlock[CME/SGPE].offset, ppeBlock[CME/SGPE].size)
 
 		fetch_and_insert_vpd_rings(proc, pRingBuf, ringBufSize, maxRingSectionSize = ringBufSize, hw, CME/SGPE, buf1, buf1s, buf2, buf2s, buf3, buf3s, bootCoreMask)
-			// no-op if MVPD is empty?
 			resolve_gptr_overlays(proc, hw, &overlaySection, dd, bGptrMvpdSupport)
 				- if dd < 20 || hw->overlays->dd_support == 0: return overlaySection = NULL
 				- overlaySection = hw + hw->overlays...->offset, bGptrMvpdSupport = true
@@ -33,8 +32,8 @@ getPpeScanRings(hw, PLAT_CME, proc, ringData /* buffers */, imgType /* build/reb
 						- clear bu1, buf2, buf3
 						getMvpdRing(proc, MVPD_RECORD_CP00, l_mvpdKeyword, chiplet_id, evenOdd, l_ringIdList[iRing].ringId, buf1, buf1s, buf2, buf2s)
 							// This reads from MVPD PNOR partition. This partition is clear in freshly built image, but not in image read from platform that already run.
-							// Who fills it and when? Can we assume it isn't necessary and return "not found" every time? This would make most of this loop no-op...
-							TBD !!!!!!!!!!!!!!!!!!!!! (maybe)
+							// Who fills it and when?
+							TBD !!!!!!!!!!!!!!!!!!!!!
 
 						- clear buf2
 						- if MVPD ring not found - return with success
@@ -713,11 +712,9 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			ext_vrm_stabilization_time_us         = ATTR_EXTERNAL_VRM_TRANSITION_STABILIZATION_TIME_NS	// 5 (internal default)
 			ext_vrm_step_size_mv                  = ATTR_EXTERNAL_VRM_STEPSIZE							// 50 (internal default)
 
-
-
 			// safe_voltage_mv
-			safe_voltage_mv = ATTR_SAFE_MODE_VOLTAGE_MV			// also from safe_mode_computation()
-			safe_frequency_khz = ATTR_SAFE_MODE_FREQUENCY_MHZ * 1000	// also from safe_mode_computation()
+			safe_voltage_mv = ATTR_SAFE_MODE_VOLTAGE_MV					// from safe_mode_computation()
+			safe_frequency_khz = ATTR_SAFE_MODE_FREQUENCY_MHZ * 1000	// from safe_mode_computation()
 
 			// Struct definition in p9_pstates_pgpe.h
 			vdm = {ATTR_VDM_VID_COMPARE_OVERRIDE_MV, ATTR_DPLL_VDM_RESPONSE,
@@ -807,7 +804,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 		l_pmPPB.lppb_init(&l_localppb[0]):
 			for each functional quad:
 				// LHS is l_localppb[quad]
-				magic = LOCAL_PARMSBLOCK_MAGIC		// 434d455050423030, "CMEPPB00"
+				magic = LOCAL_PARMSBLOCK_MAGIC		// 0x434d455050423030, "CMEPPB00"
 
 				// VpdBias External and Internal Biases for Global and Local parameter
 				// block
@@ -857,7 +854,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 		// ----------------
 		// WOF initialization
 		// ----------------
-		l_pmPPB.wof_init(o_buf /* will be homer->ppmr.wof_tables after few more memcpies */):
+		l_pmPPB.wof_init(o_buf /* will be homer->ppmr.wof_tables after few more memcpies */, o_size):
 			- Search for proper data in WOFDATA PNOR partition
 			- WOFDATA is 3M, make sure CBFS_CACHE is big enough
 			- search until match is found:
@@ -891,36 +888,96 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 					for idx in 0..5*24 -1:
 						dst[8+idx] = freq_to_pstate(src[8+idx])		// rounded properly
 
-----------------------------
-        // ----------------
-        //Initialize OPPB structure
-        // ----------------
-        FAPI_TRY(l_pmPPB.oppb_init(&l_occppb));
+		// ----------------
+		//Initialize OPPB structure
+		// ----------------
+		l_pmPPB.oppb_init(&l_occppb):
+			// LHS is l_occppb, it eventually will be homer->ppmr.occ_parm_block
+			magic = OCC_PARMSBLOCK_MAGIC		// 0x4f43435050423030, "OCCPPB00"
 
-        // ----------------
-        //Initialize pstate feature attribute state
-        // ----------------
-        FAPI_TRY(l_pmPPB.set_global_feature_attributes());
+			wof.wof_enabled = 1		// Assuming wof_init() succeeded
+
+			vdd_sysparm = {ATTR_PROC_R_LOADLINE_VDD_UOHM, ATTR_PROC_R_DISTLOSS_VDD_UOHM, ATTR_PROC_VRM_VOFFSET_VDD_UV} = {254, 0, 0}
+			vcs_sysparm = {ATTR_PROC_R_LOADLINE_VCS_UOHM, ATTR_PROC_R_DISTLOSS_VCS_UOHM, ATTR_PROC_VRM_VOFFSET_VCS_UV} = {0, 64, 0}
+			vdn_sysparm = {ATTR_PROC_R_LOADLINE_VDN_UOHM, ATTR_PROC_R_DISTLOSS_VDN_UOHM, ATTR_PROC_VRM_VOFFSET_VDN_UV} = {0, 50, 0}
+
+			// Load vpd operating points - use biased values from compute_vpd_pts()
+			for each OP point:
+				operating_points[op].frequency_mhz  = iv_operating_points[BIASED][op].frequency_mhz
+				operating_points[op].vdd_mv         = iv_operating_points[BIASED][op].vdd_mv
+				operating_points[op].idd_100ma      = iv_operating_points[BIASED][op].idd_100ma
+				operating_points[op].vcs_mv         = iv_operating_points[BIASED][op].vcs_mv
+				operating_points[op].ics_100ma      = iv_operating_points[BIASED][op].ics_100ma
+				operating_points[op].pstate         = iv_operating_points[BIASED][op].pstate
 
 
-        // Put out the Parmater Blocks to the trace
-        FAPI_TRY(gppb_print(&(l_globalppb), i_target));
-        oppb_print(&(l_occppb));
+			// The minimum Pstate must be rounded down so that core floor constraints are not violated.
+			pstate_min = freq_to_pstate(ATTR_SAFE_MODE_FREQUENCY_MHZ * 1000)	// from safe_mode_computation()
 
-        // Populate Global,local and OCC parameter blocks into Pstate super structure
-        *stateSupStruct.globalppb =   l_globalppb;
-        *stateSupStruct.occppb    =   l_occppb;
+			frequency_min_khz = iv_reference_frequency_khz - (pstate_min * iv_frequency_step_khz)
+			frequency_max_khz = iv_reference_frequency_khz
+			frequency_step_khz = iv_frequency_step_khz
 
-        memcpy( &(*stateSupStruct.localppb), &l_localppb, ( MAX_QUADS_PER_CHIP * sizeof(LocalPstateParmBlock) ) );
 
---------------------
+			// Iddq Table
+			iddq = iv_iddqt				// from get_mvpd_iddq()
+
+			wof.tdp_rdp_factor = ATTR_TDP_RDP_CURRENT_FACTOR		// 0 from talos.xml
+			nest_leakage_percent = ATTR_NEST_LEAKAGE_PERCENT		// 60 (0x3C) from hb_temp_defaults.xml
+
+			lac_tdp_vdd_turbo_10ma =
+			         iv_poundW_data.poundw[TURBO].ivdd_tdp_ac_current_10ma
+			lac_tdp_vdd_nominal_10ma =
+			         iv_poundW_data.poundw[NOMINAL].ivdd_tdp_ac_current_10ma
+
+			// As the Vdn dimension is not supported in the WOF tables,
+			// hardcoding this value to the OCC as non-zero to keep it happy.
+			ceff_tdp_vdn = 1;
+
+			//Update nest frequency in OPPB
+			nest_frequency_mhz = ATTR_FREQ_PB_MHZ				// 1866 from talos.xml
+
+		// ----------------
+		//Initialize pstate feature attribute state
+		// ----------------
+		l_pmPPB.set_global_feature_attributes():
+			- just sets attributes based on class' variables
+			- no-op
+
+		- copy all local tables to stateSupStruct
+
 	// Assuming >= CPMR_2.0
 	buildCmePstateInfo(homer, proc, imgType, &stateSupStruct):
-		TBD
-	TBD !!
+		CmeHdr = &homer->cpmr.cme_sram_region[INT_VECTOR_SIZE]
+		CmeHdr->pstate_offset = CmeHdr->core_spec_ring_offset + CmeHdr->max_spec_ring_len
+		CmeHdr->custom_length = ROUND_UP(sizeof(LocalPstateParmBlock), 32) / 32 + CmeHdr->max_spec_ring_len
+		for each functional CME:
+			memcpy(&homer->cpmr.cme_sram_region[cme * CmeHdr->custom_length * 32 + CmeHdr->pstate_offset], stateSupStruct->localppb[cme/2], sizeof(LocalPstateParmBlock))
+
+	memcpy(&homer->ppmr.pgpe_sram_img[homer->ppmr.header.hcode_len], stateSupStruct->globalppb, sizeof(GlobalPstateParmBlock))
+	homer->ppmr.header.gppb_offset = homer->ppmr.header.hcode_offset + homer->ppmr.header.hcode_len
+	homer->ppmr.header.gppb_len    = ALIGN_UP(sizeof(GlobalPstateParmBlock), 8)
+
+	memcpy(&homer->ppmr.occ_parm_block, stateSupStruct->occppb, sizeof(OCCPstateParmBlock))
+	homer->ppmr.header.oppb_offset = offsetof(ppmr, ppmr.occ_parm_block)
+	homer->ppmr.header.oppb_len    = ALIGN_UP(sizeof(OCCPstateParmBlock), 8)
+
+	// Assuming >= CPMR_2.0
+	homer->ppmr.header.lppb_offset = 0
+	homer->ppmr.header.lppb_len = 0
+
+	homer->ppmr.header.pstables_offset = offsetof(ppmr, ppmr.pstate_table)
+	homer->ppmr.header.pstables_len    = PSTATE_OUTPUT_TABLES_SIZE		// 16 KiB
+
+	homer->ppmr.header.wof_table_offset = OCC_WOF_TABLES_OFFSET
+	homer->ppmr.header.wof_table_len    = OCC_WOF_TABLES_SIZE
+	// Instead of this memcpy write it directly to its final destination in wof_init()
+	memcpy(homer->ppmr.wof_tables, o_buf/* see wof_init() */, o_size/* see wof_init() */)
+
+	homer->ppmr.header.sram_img_size = homer->ppmr.header.hcode_len + homer->ppmr.header.gppb_len
 
 // Update CPMR Header with Scan Ring details
-updateCpmrCmeRegion(homer, proc):
+updateCpmrCmeRegion():
 	// This function for each entry does one of:
 	// - write constant value
 	// - copy value form other field
@@ -971,7 +1028,7 @@ updateCpmrCmeRegion(homer, proc):
 	CmeHdr->timebase_hz = 1866MHz / 64
 
 // Update QPMR Header area in HOMER
-updateQpmrHeader(homer, qpmrHdr):
+updateQpmrHeader():
 	// In hostboot, qpmrHdr is a copy of the header, it doesn't operate on HOMER
 	// directly until now - it fills the following fields in the copy and then
 	// does memcpy() to HOMER. As BAR is set up in next istep, I don't see why.
@@ -981,10 +1038,36 @@ updateQpmrHeader(homer, qpmrHdr):
 	              homer->qpmr.sgpe.header.spec_ring_len
 	homer->qpmr.sgpe.header.max_quad_restore_entry  = 255
 	homer->qpmr.sgpe.header.build_ver               = 3
+	SgpeHdr = &homer->qpmr.sgpe.sram_image[INT_VECTOR_SIZE]
+	SgpeHdr->scom_mem_offset = offsetof(homer, homer.qpmr.cache_scom_region)
 
 //update PPMR Header area in HOMER
 updatePpmrHeader( pChipHomer, l_ppmrHdr, i_procTgt );
+	PgpeHdr = &homer->ppmr.pgpe_sram_img[INT_VECTOR_SIZE]
+	PgpeHdr->core_throttle_assert_cnt   = 0
+	PgpeHdr->core_throttle_deassert_cnt = 0
+	PgpeHdr->ivpr_addr                  = 0xFFF20000	// OCC_SRAM_PGPE_BASE_ADDR
+	                                 // = homer->ppmr.header.sram_region_start
+	PgpeHdr->gppb_sram_addr             = 0		// set by PGPE Hcode (or not? It is still 0 in dumped HOMER)
+	PgpeHdr->hcode_len                  = homer->ppmr.header.hcode_len
+	PgpeHdr->gppb_mem_offset            = 0x80000000 + offsetof(homer, ppmr) + homer->ppmr.header.gppb_offset
+	PgpeHdr->gppb_len                   = homer->ppmr.header.gppb_len
+	PgpeHdr->gen_pstables_mem_offset    = 0x80000000 + offsetof(homer, ppmr) + homer->ppmr.header.pstables_offset
+	PgpeHdr->gen_pstables_len           = homer->ppmr.header.pstables_len
+	PgpeHdr->occ_pstables_sram_addr     = 0
+	PgpeHdr->occ_pstables_len           = 0
+	PgpeHdr->beacon_addr                = 0
+	PgpeHdr->quad_status_addr           = 0
+	PgpeHdr->wof_state_address          = 0
+	PgpeHdr->wof_values_address         = 0
+	PgpeHdr->req_active_quad_address    = 0
+	PgpeHdr->wof_table_addr             = homer->ppmr.header.wof_table_offset
+	PgpeHdr->wof_table_len              = homer->ppmr.header.wof_table_len
+	PgpeHdr->timebase_hz                = 1866MHz / 64
+	PgpeHdr->doptrace_offset            = homer->ppmr.header.doptrace_offset
+	PgpeHdr->doptrace_len               = homer->ppmr.header.doptrace_len
 
+--------------------
 //Update L2 Epsilon SCOM Registers
 populateEpsilonL2ScomReg( pChipHomer );
 
@@ -996,12 +1079,17 @@ populateL3RefreshScomReg( pChipHomer, i_procTgt);
 
 //populate HOMER with SCOM restore value of NCU RNG BAR SCOM Register
 populateNcuRngBarScomReg( pChipHomer, i_procTgt );
+--------------------
 
 //validate SRAM Image Sizes of PPE's
-validateSramImageSize( pChipHomer, sramImgSize );
+validateSramImageSize():
+	- checks if any component overflows of its assigned area
+	- can be done as they are written instead
 
 //Update CME/SGPE Flags in respective image header.
-updateImageFlags( pChipHomer, i_procTgt );
+updateImageFlags():
+	- flags are set based on attributes
+	TBD !!!!!!!!!!!!!!!!!
 
 //Set the Fabric IDs
 setFabricIds( pChipHomer, i_procTgt );
