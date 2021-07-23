@@ -1088,8 +1088,30 @@ validateSramImageSize():
 
 //Update CME/SGPE Flags in respective image header.
 updateImageFlags():
-	- flags are set based on attributes
-	TBD !!!!!!!!!!!!!!!!!
+	- flags are set based on attributes, which are set based on #V and #W mostly
+	- most of those were assumed in the code above so it _should_ be safe to set them unconditionally
+	CmeHdr->mode_flags = 0
+		- mostly flags for downgrading STOP states
+		- bit 5 is CME_VDM_ENABLE, but it is not set despite VDM being enabled
+	CmeHdr->qm_mode_flags = 0xF100:
+		[0] - RESCLK_ENABLE
+		[1] - SYS_IVRM_ENABLE
+		[2] - SYS_VDM_ENABLE
+		[3] - SYS_WOF_ENABLE
+		[7] - PER_QUAD_VDM_ENABLE
+	SgpeHdr->reserve_flags = 0x04000000:
+		[5] - SGPE_VDM_ENABLE
+	SgpeHdr->chtm_mem_cfg = 0
+		- exact copy of ATTR_CME_CHTM_TRACE_MEMORY_CONFIG
+	PgpeHdr->flags = 0xF032:
+		[0]  - RESCLK_ENABLE
+		[1]  - IVRM_ENABLE
+		[2]  - VDM_ENABLE
+		[3]  - WOF_ENABLE
+		[10] - ENABLE_FRATIO
+		[11] - ENABLE_VRATIO
+		[14] - WOV_OVERVOLT_ENABLE
+		- bit 13 _WOV_UNDERVOLT_ENABLE is not set because undervolt_tested in #W is not set
 
 //Set the Fabric IDs
 setFabricIds( pChipHomer, i_procTgt );
@@ -1100,7 +1122,13 @@ updateGpeAttributes( pChipHomer, i_procTgt );
 	- updates the IVPR attributes for SGPE, PGPE, doesn't touch HW
 
 //customize magic word based on endianess
-customizeMagicWord( pChipHomer );
+customizeMagicWord():
+	homer->qpmr.sgpe.header.magic = 0x51504d525f312e30	// QPMR_1.0
+	homer->cpmr.header.magic      = 0x43504d525f322e30	// CPMR_2.0
+	homer->ppmr.header.magic      = 0x50504d525f312e30	// PPMR_1.0
+	SgpeHdr->magic                = 0x534750455f312e30	// SGPE_1.0
+	CMeHdr->magic                 = 0x434d455f5f312e30	// CME__1.0
+	PgpeHdr->magic                = 0x504750455f312e30	// PGPE_1.0
 
 addUrmorRestore():
 	- no-op, runs only if __URMOR_TEST is defined
