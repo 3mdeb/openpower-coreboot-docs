@@ -44,10 +44,10 @@ and registers that code analysis proofed to work differently than described.
 **P9N2_C_DIRECT_CONTROLS 20010A9C**
 | Bit range | Name                                   | Description    |
 | --------- | -------------------------------------- | -------------- |
-|           | C_DIRECT_CONTROLS_DC_T0_SRESET_REQUEST |                | // shift of 4
-|           | C_DIRECT_CONTROLS_DC_T0_CORE_START     |                | // shift of 6
-|           | C_DIRECT_CONTROLS_DC_T0_CORE_STOP      |                | // shift of 7
-|           | C_DIRECT_CONTROLS_DC_T0_CORE_STEP      |                | // shift of 5
+|           | C_DIRECT_CONTROLS_DC_T0_SRESET_REQUEST |                | // shift of 4 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_START     |                | // shift of 6 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_STOP      |                | // shift of 7 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_STEP      |                | // shift of 5 in Hostboot code
 
 **P9N2_MCS_PORT02_MCPERF0 5010823**
 | Bit range | Name      | Value assigned in code | Description |
