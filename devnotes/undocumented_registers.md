@@ -9,12 +9,50 @@ and registers that code analysis proofed to work differently than described.
 | --------- | ---------------------------- | -------------- |
 | 56-63     | According to documentation, this range is read-only and constant to 0 | hostboot is writing to it in [p9_nx_scom.C:668](https://github.com/open-power/hostboot/blob/3e6bf45bea9b61ef6b3da1df9f7e63e0b8ec5403/src/import/chips/p9/procedures/hwp/initfiles/p9_nx_scom.C#L668) |
 
+**PU_IOE_PB_OLINK_DLY_0123_REG 501380E**
+**PU_IOE_PB_OLINK_DLY_4567_REG 501380F**
+| Bit range | Description in documentation | Actual working |
+| --------- | ---------------------------- | -------------- |
+| 0-3       | Constant = 0b0000            |                |
+| 4-15      | ROX Reserved.                | Results of round-trip delay calculation can be read from here after triggering it using PB_ELINK_RT_DELAY_CTL_REG register |
+| 16-19     | RO Constant = 0b0000         |                |
+| 20-31     | ROX Reserved.                | Same as above  |
+| 32-35     | RO Constant = 0b0000         |                |
+| 36-47     | ROX Reserved.                | Same as above  |
+| 48-51     | RO Constant = 0b0000         |                |
+| 52-63     | ROX Reserved.                | Same as above  |
+
+
 ## Undocumented registers
+
+**P9N2_C_RAM_CTRL 20010A4F**
+| Bit range | Name                      | Description |
+| --------- | ------------------------- | ----------- |
+| 0-1       | C_RAM_CTRL_RAM_VTID       |             |
+| 2-5       | C_RAM_CTRL_PPC_PREDCD     |             |
+| 8-39      | C_RAM_CTRL_PPC_INSTR      |             |
+
+**P9N2_C_RAM_STATUS 20010A50**
+| Bit range | Name                                         | Description |
+| --------- | -------------------------------------------- | ----------- |
+| 0         | C_RAM_STATUS_RAM_CONTROL_ACCESS_DURING_RECOV |             |
+| 2         | C_RAM_STATUS_RAM_EXCEPTION                   |             |
+| 1         | C_RAM_STATUS_RAM_COMPLETION                  |             |
+| 3         | C_RAM_STATUS_LSU_EMPTY                       |             |
+
+
+**P9N2_C_DIRECT_CONTROLS 20010A9C**
+| Bit range | Name                                   | Description    |
+| --------- | -------------------------------------- | -------------- |
+|           | C_DIRECT_CONTROLS_DC_T0_SRESET_REQUEST |                | // shift of 4 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_START     |                | // shift of 6 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_STOP      |                | // shift of 7 in Hostboot code
+|           | C_DIRECT_CONTROLS_DC_T0_CORE_STEP      |                | // shift of 5 in Hostboot code
 
 **P9N2_MCS_PORT02_MCPERF0 5010823**
 | Bit range | Name      | Value assigned in code | Description |
 | --------- | --------- | ---------------------- | ----------- |
-| 22-27     | AMO_LIMIT | 20                   |             |
+| 22-27     | AMO_LIMIT | 20                     |             |
 
 **P9N2_MCS_PORT02_MCPERF2 5010824**
 | Bit range | Name                      | Value assigned in code                     | Description                                                                        |
@@ -36,7 +74,7 @@ and registers that code analysis proofed to work differently than described.
 | Bit range | Name                              | Value assigned in code | Description |
 | --------- | --------------------------------- | ---------------------- | ----------- |
 | 1         | FORCE_PF_DROP0                    | 0                      |             |
-| 4-28      | WRTO_AMO_COLLISION_RULES          | 19FFFFF              |             |
+| 4-28      | WRTO_AMO_COLLISION_RULES          | 19FFFFF                |             |
 | 29-31     | AMO_SIZE_SELECT, 128B_RW_64B_DATA | 1                      |             |
 
 **P9N2_MCS_PORT02_MCEPSQ 5010826** \
