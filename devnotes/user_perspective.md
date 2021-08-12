@@ -9,7 +9,7 @@
 -
     Repository: [https://scm.raptorcs.com/scm/git/talos-op-build](https://scm.raptorcs.com/scm/git/talos-op-build)
 
-[![asciicast](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW.svg)](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW)
+[![asciicast](https://asciinema.org/a/vcNPPv4dR6OtWqW52NjzggvQS.svg)](https://asciinema.org/a/vcNPPv4dR6OtWqW52NjzggvQS)
 
 ### Hostboot normal boot
 
@@ -40,4 +40,4 @@
 > This and the fact, coreboot doesn't initialize everything yet,
 > may affect the boot time in the future.
 
-[![asciicast](https://asciinema.org/a/dahG9QDc7FLPGy4Vgh8foV31d.svg)](https://asciinema.org/a/dahG9QDc7FLPGy4Vgh8foV31d)
+[![asciicast](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW.svg)](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW)
