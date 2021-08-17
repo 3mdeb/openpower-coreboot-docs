@@ -70,9 +70,7 @@ void* host_start_occ_xstop_handler( void *io_pArgs )
     HBPM::loadPMComplex(
         masterproc,
         l_homerPhysAddrBase,
-        l_commonPhysAddr,
-        HBPM::PM_LOAD,
-        true);
+        l_commonPhysAddr);
     HBOCC::startOCCFromSRAM(masterproc);
 #endif
     uint64_t l_xstopXscom = XSCOM::generate_mmio_addr(
@@ -84,6 +82,122 @@ void* host_start_occ_xstop_handler( void *io_pArgs )
         Kernel::MachineCheck::MCHK_XSTOP_FIR_VALUE );
 
     return l_stepError.getErrorHandle();
+}
+
+ errlHndl_t loadOCCSetup(TARGETING::Target* i_target,
+                        uint64_t i_occImgPaddr,
+                        uint64_t i_occImgVaddr, // dest
+                        uint64_t i_commonPhysAddr)
+{
+    // cast OUR type of target to a FAPI type of target.
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_fapiTarg(i_target);
+
+    // Remove bit 0, may be set for physical addresses
+    uint64_t l_occ_addr = i_occImgPaddr & PHYSICAL_ADDR_MASK;
+    p9_pm_pba_bar_config(
+        l_fapiTarg,
+        0,
+        l_occ_addr,
+        VMM_HOMER_INSTANCE_SIZE_IN_MB,
+        p9pba::LOCAL_NODAL,
+        0xFF);
+
+    // BAR2 is the OCC Common Area
+    // Bar size is in MB
+    TARGETING::Target* sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget(sys);
+    sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(i_commonPhysAddr);
+
+    // Remove bit 0, may be set for physical addresses
+    uint64_t l_common_addr = i_commonPhysAddr & PHYSICAL_ADDR_MASK;
+    p9_pm_pba_bar_config(
+        l_fapiTarg,
+        2,
+        l_common_addr,
+        VMM_OCC_COMMON_SIZE_IN_MB,
+        p9pba::LOCAL_NODAL,
+        0xFF);
+}
+
+fapi2::ReturnCode p9_pm_pba_bar_config (
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint32_t i_index,
+    const uint64_t i_pba_bar_addr,
+    const uint64_t i_pba_bar_size,
+    const p9pba::CMD_SCOPE i_pba_cmd_scope,
+    const uint16_t i_vectorTarget)
+{
+    fapi2::buffer<uint64_t> l_bar64;
+    uint64_t                l_work_size;
+    uint64_t                l_finalMask;
+
+    l_bar64.set(i_pba_bar_addr);
+    l_bar64.insertFromRight<PU_PBABAR0_CMD_SCOPE, PU_PBABAR0_CMD_SCOPE_LEN>(i_pba_cmd_scope);
+    if (i_pba_cmd_scope == p9pba::VECTORED_GROUP)
+    {
+        l_bar64.insertFromRight<PU_PBABAR0_VTARGET, PU_PBABAR0_VTARGET_LEN>(i_vectorTarget);
+    }
+    fapi2::putScom(i_target, PBA_BARs[i_index], l_bar64);
+
+    if (i_pba_bar_size != 0)
+    {
+        l_work_size = PowerOf2Roundedup(i_pba_bar_size);
+    }
+    else
+    {
+        l_work_size = PowerOf2Roundedup(1ull);
+    }
+
+    l_finalMask = (l_work_size - 1) << 20;
+    l_bar64.flush<0>();
+    l_bar64.set(l_finalMask);
+    fapi2::putScom(i_target, PBA_BARMSKs[i_index], l_bar64);
+}
+
+static void loadPMComplex(
+    TARGETING::Target * i_target,
+    uint64_t i_homerPhysAddr,
+    uint64_t i_commonPhysAddr)
+{
+    errlHndl_t l_errl = nullptr;
+    void* l_homerVAddr = nullptr;
+    resetPMComplex(i_target);
+
+    l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
+    if(nullptr == l_homerVAddr)
+    {
+        return;
+    }
+    uint64_t l_occImgPaddr = i_homerPhysAddr + HOMER_OFFSET_TO_OCC_IMG;
+    uint64_t l_occImgVaddr = l_homerVAddr + HOMER_OFFSET_TO_OCC_IMG;
+    loadOCCSetup(i_target, l_occImgPaddr, l_occImgVaddr, i_commonPhysAddr);
+#ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
+    void* l_occVirt = reinterpret_cast<void *>(l_occImgVaddr);
+    HBOCC::loadOCCImageDuringIpl(i_target, l_occVirt);
+#else
+    loadOCCImageToHomer(i_target, l_occImgPaddr, l_occImgVaddr, HBPM::PM_LOAD);
+#endif
+#if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
+    HBOCC::loadHostDataToSRAM(i_target, PRDF::MASTER_PROC_CORE);
+#else
+    void* l_occDataVaddr = l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA;
+    loadHostDataToHomer(i_target, l_occDataVaddr);
+    loadHcode(
+        i_target,
+        l_homerVAddr,
+        HBPM::PM_LOAD);
+#endif
+
+    //If i_useSRAM is true, then we're in istep 6.11. This address needs
+    //to be reset here, so that it's recalculated again in istep 21.1
+    //where this function is called.
+    i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(0);
+    if ((TARGETING::is_phyp_load()) && (nullptr != l_homerVAddr))
+    {
+        int lRc = HBPM_UNMAP(l_homerVAddr);
+        uint64_t lZeroAddr = 0;
+        i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(reinterpret_cast<uint64_t>(lZeroAddr));
+    }
 }
 
 void readSemiPersistData(semiPersistData_t & o_data)
@@ -463,30 +577,106 @@ void SetMchkData(task_t* t)
 
 void set_mchk_data(uint64_t i_xstopAddr, uint64_t i_xstopData)
 {
-    _syscall2(MISC_SETMCHKDATA,
-              reinterpret_cast<void*>(i_xstopAddr),
-              reinterpret_cast<void*>(i_xstopData));
+    _syscall2(
+        MISC_SETMCHKDATA,
+        reinterpret_cast<void*>(i_xstopAddr),
+        reinterpret_cast<void*>(i_xstopData));
 }
 
 fapi2::ReturnCode clear_occ_special_wakeups(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
     fapi2::buffer<uint64_t> l_data64;
-    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>
-                        (fapi2::TARGET_STATE_FUNCTIONAL);
+    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
 
     // Iterate through the EX chiplets
     for (auto l_ex_chplt : l_exChiplets)
     {
         fapi2::ATTR_CHIP_UNIT_POS_Type l_ex_num;
-        FAPI_ATTR_GET( fapi2::ATTR_CHIP_UNIT_POS, l_ex_chplt, l_ex_num);
+        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ex_chplt, l_ex_num);
         fapi2::getScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, l_data64);
         l_data64.clearBit<0>();
         fapi2::putScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, l_data64);
     }
+}
+
+template <FIRType Ftype>
+fapi2::ReturnCode PMFir<Ftype>::setRecvAttn(const uint32_t i_bit)
+{
+    FAPI_TRY(iv_action0.clearBit(i_bit));
+    FAPI_TRY(iv_action1.setBit(i_bit));
+    FAPI_TRY(iv_and_mask.clearBit(i_bit));
+    FAPI_TRY(iv_mask.clearBit(i_bit));
+    iv_action0_write = true;
+    iv_action1_write = true;
+    iv_mask_write = true;
+    iv_mask_and_write = true;
 
 fapi_try_exit:
     return fapi2::current_err;
+}
+
+template <FIRType Ftype>
+fapi2::ReturnCode PMFir<Ftype>::mask(const uint32_t i_bit)
+{
+    FAPI_TRY(iv_or_mask.setBit(i_bit));
+    FAPI_TRY(iv_mask.setBit(i_bit));
+    iv_mask_write = true;
+    iv_mask_or_write = true;
+
+fapi_try_exit:
+    return fapi2::current_err;
+}
+
+template <FIRType Ftype>
+fapi2::ReturnCode PMFir<Ftype>::clearAllRegBits(const regType i_reg)
+{
+    if (i_reg == REG_FIR || i_reg == REG_ALL)
+    {
+        iv_fir.flush<0>();
+        iv_fir_write = true;
+    }
+
+    if(i_reg == REG_ACTION0 || i_reg == REG_ALL)
+    {
+        iv_action0.flush<0>();
+        iv_action0_write = true;
+    }
+
+    if(i_reg == REG_ACTION1 || i_reg == REG_ALL)
+    {
+        iv_action1.flush<0>();
+        iv_action1_write = true;
+    }
+
+    if(i_reg == REG_FIRMASK || i_reg == REG_ERRMASK || i_reg == REG_ALL)
+    {
+        iv_mask.flush<0>();
+        iv_or_mask.flush<0>();
+        iv_and_mask.flush<0>();
+        iv_mask_write = true;
+        iv_mask_or_write = true;
+        iv_mask_and_write = true;
+    }
+
+    return fapi2::current_err;
+}
+
+template <> inline
+fapi2::ReturnCode PMFir<FIRTYPE_OCC_LFIR>::restoreSavedMask()
+{
+    uint64_t l_mask = 0;
+    uint64_t l_tempMask = 0;
+
+    FAPI_ATTR_GET(fapi2::ATTR_OCC_LFIR, iv_proc, l_mask);
+    iv_mask.extract<0, 64>(l_tempMask);
+    l_mask |= l_tempMask;
+    iv_mask.insertFromRight<0, 64>(l_mask);
+    iv_or_mask = iv_mask;
+    iv_and_mask = iv_mask;
+    iv_mask_write = true;
+    iv_mask_and_write = true;
+    iv_mask_or_write = true;
 }
 
 fapi2::ReturnCode pm_occ_fir_init(
@@ -575,9 +765,6 @@ fapi2::ReturnCode pm_occ_fir_init(
         l_occFir.restoreSavedMask();
     }
     l_occFir.put();
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
 fapi2::ReturnCode pm_occ_fir_reset(
@@ -606,8 +793,7 @@ fapi_try_exit:
 }
 
 fapi2::ReturnCode p9_pm_occ_firinit(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9pm::PM_FLOW_MODE i_mode)
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
     fapi2::buffer<uint64_t> l_data64;
     fapi2::buffer<uint64_t> l_mask64;
@@ -621,18 +807,7 @@ fapi2::ReturnCode p9_pm_occ_firinit(
     l_data64.extractToRight<0, 64>(l_fir);
     l_mask64.extractToRight<0, 64>(l_mask);
     l_unmaskedErrors = l_fir & l_mask;
-
-    if(i_mode == p9pm::PM_RESET)
-    {
-        pm_occ_fir_reset(i_target);
-    }
-    else if(i_mode == p9pm::PM_INIT)
-    {
-        pm_occ_fir_init(i_target);
-    }
-
-fapi_try_exit:
-    return fapi2::current_err;
+    pm_occ_fir_init(i_target);
 }
 
 api2::ReturnCode pm_pss_reset(
@@ -706,311 +881,199 @@ fapi_try_exit:
 fapi2::ReturnCode pm_pss_init(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
+    uint64_t l_data64;
 
-    fapi2::buffer<uint64_t> l_data64;
-
-    const uint8_t  l_default_apss_chip_select = 0;
-    const uint8_t  l_default_spipss_frame_size = 0x20;
-    const uint8_t  l_default_spipss_in_delay = 0;
-    const uint8_t  l_default_spipss_clock_polarity = 0;
-    const uint8_t  l_default_spipss_clock_phase = 0;
-    const uint16_t l_default_attr_pm_spipss_clock_divider = 0xA;
-
-    uint32_t l_attr_proc_pss_init_nest_frequency;
-    uint8_t  l_attr_pm_apss_chip_select;
-    uint8_t  l_attr_pm_spipss_frame_size;
-    uint8_t  l_attr_pm_spipss_in_delay;
-    uint8_t  l_attr_pm_spipss_clock_polarity;
-    uint8_t  l_attr_pm_spipss_clock_phase;
-    uint16_t l_attr_pm_spipss_clock_divider;
-    uint32_t l_attr_pm_spipss_inter_frame_delay;
-
-    uint32_t l_spipss_100ns_value;
-    uint8_t  l_p2s_fsm_enable;
-    uint8_t  l_p2s_nr_of_frames;
-    uint8_t  l_hwctrl_fsm_enable;
-    uint8_t  l_hwctrl_nr_of_frames;
-
-    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> l_sysTarget =
-        i_target.getParent<fapi2::TARGET_TYPE_SYSTEM>();
-
-    FAPI_ATTR_GET(fapi2::ATTR_FREQ_PB_MHZ, l_sysTarget,
-                           l_attr_proc_pss_init_nest_frequency);
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_APSS_CHIP_SELECT,
-                    "ATTR_PM_APSS_CHIP_SELECT",
-                    i_target, l_attr_pm_apss_chip_select,
-                    l_default_apss_chip_select);
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_SPIPSS_FRAME_SIZE,
-                    "ATTR_PM_SPIPSS_FRAME_SIZE",
-                    i_target, l_attr_pm_spipss_frame_size,
-                    l_default_spipss_frame_size);
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_SPIPSS_IN_DELAY, "ATTR_PM_SPIPSS_IN_DELAY",
-                    i_target, l_attr_pm_spipss_in_delay,
-                    l_default_spipss_in_delay );
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_SPIPSS_CLOCK_POLARITY,
-                    "ATTR_PM_SPIPSS_CLOCK_POLARITY", i_target,
-                    l_attr_pm_spipss_clock_polarity,
-                    l_default_spipss_clock_polarity );
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_SPIPSS_CLOCK_PHASE,
-                    "ATTR_PM_SPIPSS_CLOCK_PHASE",
-                    i_target, l_attr_pm_spipss_clock_phase,
-                    l_default_spipss_clock_phase );
-
-    GETATTR_DEFAULT(fapi2::ATTR_PM_SPIPSS_CLOCK_DIVIDER,
-                    "ATTR_PM_SPIPSS_CLOCK_DIVIDER", i_target,
-                    l_attr_pm_spipss_clock_divider,
-                    l_default_attr_pm_spipss_clock_divider);
-
-    FAPI_ATTR_GET(fapi2::ATTR_PM_SPIPSS_INTER_FRAME_DELAY_SETTING,
-                           i_target, l_attr_pm_spipss_inter_frame_delay);
-
-    // ------------------------------------------
-    //  -- Init procedure
-    // ------------------------------------------
-
-    //  ******************************************************************
-    //     - set SPIPSS_ADC_CTRL_REG0 with the values read from attributes
-    //  ******************************************************************
     fapi2::getScom(i_target, PU_SPIMPSS_ADC_CTRL_REG0, l_data64);
-
-    l_data64.insertFromRight<0, 6>(l_attr_pm_spipss_frame_size);
-    l_data64.insertFromRight<12, 6>(l_attr_pm_spipss_in_delay);
-
+    l_data64.insertFromRight<0, 6>(0x20);
+    l_data64.insertFromRight<12, 6>(0);
     fapi2::putScom(i_target, PU_SPIMPSS_ADC_CTRL_REG0, l_data64);
 
-    //  ******************************************************************
-    //     - set SPIPSS_ADC_CTRL_REG1
-    //         adc_fsm_enable = disable
-    //         adc_device     = APSS
-    //         adc_cpol       = 0
-    //         adc_cpha       = 0
-    //         adc_clock_divider = set to 10Mhz
-    //         adc_nr_of_frames  = 0x16 (for auto 2 mode)
-    //  ******************************************************************
-
     fapi2::getScom(i_target, PU_SPIPSS_ADC_CTRL_REG1, l_data64);
-
-    l_hwctrl_fsm_enable = 0x1;
-    l_hwctrl_nr_of_frames = 0x10;
-
-    l_data64.insertFromRight<0, 1>(l_hwctrl_fsm_enable);
-    l_data64.insertFromRight<1, 1>(l_attr_pm_apss_chip_select);
-    l_data64.insertFromRight<2, 1>(l_attr_pm_spipss_clock_polarity);
-    l_data64.insertFromRight<3, 1>(l_attr_pm_spipss_clock_phase);
-    l_data64.insertFromRight<4, 10>(l_attr_pm_spipss_clock_divider);
-    l_data64.insertFromRight<14, 4>(l_hwctrl_nr_of_frames);
-
+    l_data64.insertFromRight<0, 1>(1);
+    l_data64.insertFromRight<1, 1>(0);
+    l_data64.insertFromRight<2, 1>(0);
+    l_data64.insertFromRight<3, 1>(0);
+    l_data64.insertFromRight<4, 10>(0xA);
+    l_data64.insertFromRight<14, 4>(0x10);
     fapi2::putScom(i_target, PU_SPIPSS_ADC_CTRL_REG1, l_data64);
 
-    //  ******************************************************************
-    //     - set SPIPSS_ADC_CTRL_REG2
-    //  ******************************************************************
-
     fapi2::getScom(i_target, PU_SPIPSS_ADC_CTRL_REG2, l_data64);
-    l_data64.insertFromRight<0, 17>(l_attr_pm_spipss_inter_frame_delay);
+    l_data64.insertFromRight<0, 17>(0);
     fapi2::putScom(i_target, PU_SPIPSS_ADC_CTRL_REG2, l_data64);
 
-    //  ******************************************************************
-    //     - clear SPIPSS_ADC_Wdata_REG
-    //  ******************************************************************
-    l_data64.flush<0>();
-    fapi2::putScom(i_target, PU_SPIPSS_ADC_WDATA_REG, l_data64);
-
-    //  ******************************************************************
-    //     - set SPIPSS_P2S_CTRL_REG0
-    //  ******************************************************************
+    fapi2::putScom(i_target, PU_SPIPSS_ADC_WDATA_REG, 0);
 
     fapi2::getScom(i_target, PU_SPIPSS_P2S_CTRL_REG0, l_data64);
-
-    l_data64.insertFromRight<0, 6>(l_attr_pm_spipss_frame_size);
-    l_data64.insertFromRight<12, 6>(l_attr_pm_spipss_in_delay);
-
+    l_data64.insertFromRight<0, 6>(0x20);
+    l_data64.insertFromRight<12, 6>(0);
     fapi2::putScom(i_target, PU_SPIPSS_P2S_CTRL_REG0, l_data64);
 
-    //  ******************************************************************
-    //     - set SPIPSS_P2S_CTRL_REG1
-    //         p2s_fsm_enable = disable
-    //         p2s_device     = APSS
-    //         p2s_cpol       = 0
-    //         p2s_cpha       = 0
-    //         p2s_clock_divider = set to 10Mhz
-    //         p2s_nr_of_frames = 1 (for auto 2 mode)
-    //  ******************************************************************
-
     fapi2::getScom(i_target, PU_SPIPSS_P2S_CTRL_REG1, l_data64);
-
-    l_p2s_fsm_enable = 0x1;
-    l_p2s_nr_of_frames = 0x1;
-
-    l_data64.insertFromRight<0, 1>(l_p2s_fsm_enable);
-    l_data64.insertFromRight<1, 1>(l_attr_pm_apss_chip_select);
-    l_data64.insertFromRight<2, 1>(l_attr_pm_spipss_clock_polarity);
-    l_data64.insertFromRight<3, 1>(l_attr_pm_spipss_clock_phase);
-    l_data64.insertFromRight<4, 10>(l_attr_pm_spipss_clock_divider);
-    l_data64.insertFromRight<17, 1>(l_p2s_nr_of_frames);
-
+    l_data64.insertFromRight<0, 1>(1);
+    l_data64.insertFromRight<1, 1>(0);
+    l_data64.insertFromRight<2, 1>(0);
+    l_data64.insertFromRight<3, 1>(0);
+    l_data64.insertFromRight<4, 10>(0xA);
+    l_data64.insertFromRight<17, 1>(1);
     fapi2::putScom(i_target, PU_SPIPSS_P2S_CTRL_REG1, l_data64);
 
-    //  ******************************************************************
-    //     - set SPIPSS_P2S_CTRL_REG2
-    //  ******************************************************************
-
     fapi2::getScom(i_target, PU_SPIPSS_P2S_CTRL_REG2, l_data64);
-    l_data64.insertFromRight<0, 17>(l_attr_pm_spipss_inter_frame_delay);
+    l_data64.insertFromRight<0, 17>(0);
     fapi2::putScom(i_target, PU_SPIPSS_P2S_CTRL_REG2, l_data64);
 
-    //  ******************************************************************
-    //     - clear SPIPSS_P2S_Wdata_REG
-    //  ******************************************************************
-    l_data64.flush<0>();
-    fapi2::putScom(i_target, PU_SPIPSS_P2S_WDATA_REG, l_data64);
+    fapi2::putScom(i_target, PU_SPIPSS_P2S_WDATA_REG, 0);
 
-    //  ******************************************************************
-    //     - Set 100ns Register for Interframe delay
-    //  ******************************************************************
-    l_spipss_100ns_value = l_attr_proc_pss_init_nest_frequency / 40;
     fapi2::getScom(i_target, PU_SPIPSS_100NS_REG, l_data64);
-    l_data64.insertFromRight<0, 32>(l_spipss_100ns_value);
+    l_data64.insertFromRight<0, 32>(FREQ_PB_MHZ / 40);
     fapi2::putScom(i_target, PU_SPIPSS_100NS_REG, l_data64);
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
-fapi2::ReturnCode p9_pm_pss_init(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9pm::PM_FLOW_MODE i_mode)
+errlHndl_t resetPMAll( resetOptions_t i_opt,
+                           uint8_t i_skip_fir_attr_reset)
 {
-    // Initialization:  perform order or dynamic operations to initialize
-    // the PMC using necessary Platform or Feature attributes.
-    if (i_mode == p9pm::PM_INIT)
+    TargetHandleList l_procChips;
+    getAllChips(l_procChips, TYPE_PROC, true);
+
+    for (const auto & l_procChip: l_procChips)
     {
-        pm_pss_init(i_target);
-    }
-    // Reset:  perform reset of PSS
-    else if (i_mode == p9pm::PM_RESET)
-    {
-        pm_pss_reset(i_target);
+        if( RESET_HW & i_opt )
+        {
+            resetPMComplex(l_procChip);
+        }
+
+        if( CLEAR_ATTRIBUTES & i_opt )
+        {
+            // Zero out the HOMER vars
+            (void) convertHomerPhysToVirt( l_procChip, 0 );
+
+            if (!i_skip_fir_attr_reset)
+            {
+                // Zero out the FIR save/restore
+                l_procChip->setAttr<ATTR_PM_FIRINIT_DONE_ONCE_FLAG>(0);
+            }
+        }
     }
 
-fapi_try_exit:
-    return fapi2::current_err;
+    if(CLEAR_ATTRIBUTES & i_opt)
+    {
+        TARGETING::Target* sys = nullptr;
+        TARGETING::targetService().getTopLevelTarget(sys);
+        sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(0);
+    }
 }
 
-errlHndl_t startOCCFromSRAM(TARGETING::Target* i_proc)
+fapi2::ReturnCode p9_pm_occ_control
+(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+ const p9occ_ctrl::PPC_CONTROL i_ppc405_reset_ctrl,
+ const p9occ_ctrl::PPC_BOOT_CONTROL i_ppc405_boot_ctrl,
+ const uint64_t i_ppc405_jump_to_main_instr)
 {
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::buffer<uint64_t> l_firMask;
+    fapi2::buffer<uint64_t> l_occfir;
+    fapi2::buffer<uint64_t> l_jtagcfg;
 
-    errlHndl_t l_errl = NULL;
+    if (i_ppc405_boot_ctrl != p9occ_ctrl::PPC405_BOOT_NULL)
+    {
+        fapi2::putScom(i_target, PU_SRAM_SRBV0_SCOM, 0);
+        fapi2::putScom(i_target, PU_SRAM_SRBV1_SCOM, 0);
+        fapi2::putScom(i_target, PU_SRAM_SRBV2_SCOM, 0);
+
+        if (i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_SRAM)
+        {
+            l_data64.flush<0>().insertFromRight(PPC405_BRANCH_SRAM_INSTR, 0, 32);
+        }
+        else if (i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_MEM)
+        {
+            bootMemory(i_target, l_data64);
+        }
+        else if(i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_WITHOUT_BL)
+        {
+            l_data64.flush<0>().insertFromRight(i_ppc405_jump_to_main_instr, 0, 64);
+        }
+        else
+        {
+            l_data64.flush<0>().insertFromRight(PPC405_BRANCH_OLD_INSTR, 0, 32);
+        }
+        FAPI_TRY(fapi2::putScom(i_target, PU_SRAM_SRBV3_SCOM, l_data64));
+    }
+
+    switch (i_ppc405_reset_ctrl)
+    {
+        case p9occ_ctrl::PPC405_RESET_NULL:
+            break;
+        case p9occ_ctrl::PPC405_RESET_OFF:
+            fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, ~BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+            break;
+        case p9occ_ctrl::PPC405_RESET_ON:
+            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+            break;
+        case p9occ_ctrl::PPC405_HALT_OFF:
+            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+            break;
+        case p9occ_ctrl::PPC405_HALT_ON:
+            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_OR, BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+            break;
+        case p9occ_ctrl::PPC405_RESET_SEQUENCE:
+            fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK, l_firMask);
+            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK_OR, BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
+            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_OR, BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+            fapi2::delay(5000000ns);
+            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR_AND, ~BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
+            fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR, l_occfir);
+            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR_AND, ~BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
+            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK, l_firMask);
+            break;
+        case p9occ_ctrl::PPC405_START:
+            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+            fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+            break;
+        default:
+            break;
+    }
+}
+
+static void startOCCFromSRAM(TARGETING::Target* i_proc)
+{
     uint64_t l_start405MainInstr = 0;
-
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_target(i_proc);
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>master_proc_target(i_proc);
     fapi2::ReturnCode l_rc;
 
-    //  ************************************************************
-    //  Issue init to OCB
-    //  ************************************************************
-    FAPI_INVOKE_HWP(l_errl, p9_pm_ocb_init,
-                    l_target,
-                    p9pm::PM_INIT,// Channel setup type
-                    p9ocb::OCB_CHAN1,// Channel
-                    p9ocb:: OCB_TYPE_NULL,// Channel type
-                    0,// Channel base address
-                    0,// Push/Pull queue length
-                    p9ocb::OCB_Q_OUFLOW_NULL,// Channel flow control
-                    p9ocb::OCB_Q_ITPTYPE_NULL// Channel interrupt ctrl
-                    );
+    p9_pm_ocb_init(
+        master_proc_target, // master proc
+        p9pm::PM_INIT, // Channel setup type
+        p9ocb::OCB_CHAN1, // Channel
+        p9ocb:: OCB_TYPE_NULL, // Channel type
+        0, // Channel base address
+        0, // Push/Pull queue length
+        p9ocb::OCB_Q_OUFLOW_NULL, // Channel flow control
+        p9ocb::OCB_Q_ITPTYPE_NULL); // Channel interrupt ctrl
+    pm_pss_init(master_proc_target);
+    p9_pm_occ_firinit(master_proc_target);
+    clear_occ_special_wakeups(master_proc_target);
+    deviceWrite(i_proc, &0x218780f800000000, 8, DEVICE_SCOM_ADDRESS(0x6C040));
+    deviceWrite(i_proc, &0x0003d03c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C050));
+    deviceWrite(i_proc, &0x2181801800000000, 8, DEVICE_SCOM_ADDRESS(0x6C044));
+    deviceWrite(i_proc, &0x0003d00c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C054));
+    deviceWrite(i_proc, &0x010280ac00000000, 8, DEVICE_SCOM_ADDRESS(0x6C048));
+    deviceWrite(i_proc, &0x0001901400000000, 8, DEVICE_SCOM_ADDRESS(0x6C058));
+    makeStart405Instruction(i_proc, &l_start405MainInstr);
 
-    //  ************************************************************
-    //  Initializes P2S and HWC logic
-    //  ************************************************************
-    FAPI_INVOKE_HWP(l_errl, p9_pm_pss_init, l_target, p9pm::PM_INIT);
+    p9_pm_occ_control(
+        master_proc_target,
+        p9occ_ctrl::PPC405_START,
+        p9occ_ctrl::PPC405_BOOT_WITHOUT_BL,
+        l_start405MainInstr);
 
-    //  ************************************************************
-    //  Set the OCC FIR actions
-    //  ************************************************************
-    FAPI_INVOKE_HWP(l_errl, p9_pm_occ_firinit, l_target, p9pm::PM_INIT);
-
-    // *************************************************************
-    // Switch off OCC initiated special wakeup on EX to allowSTOP
-    // functionality
-    // *************************************************************
-    FAPI_INVOKE_HWP(l_errl, clear_occ_special_wakeups, l_target);
-
-    // Hack provided by Doug Gilbert (@dgilbert). The following six
-    // scoms set up the communications between GPE0 and the 405. This
-    // allows to not load and start SGPE that is responsible for setting
-    // up the IRQ routing.
-    // TODO: RTC 178699 come up with a more permanent solution for
-    // communication setup
-    uint64_t l_writeData;
-    uint32_t l_writeAddress;
-    size_t l_writeSize = sizeof(l_writeData);
-
-    l_writeAddress = 0x6C040;
-    l_writeData = 0x218780f800000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = 0x6C050;
-    l_writeData = 0x0003d03c00000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = 0x6C044;
-    l_writeData = 0x2181801800000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = 0x6C054;
-    l_writeData = 0x0003d00c00000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = 0x6C048;
-    l_writeData = 0x010280ac00000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = 0x6C058;
-    l_writeData = 0x0001901400000000;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    //  ************************************************************
-    //  Start OCC PPC405
-    //  ************************************************************
-    l_errl = makeStart405Instruction(i_proc, &l_start405MainInstr);
-
-    FAPI_INVOKE_HWP(l_errl, p9_pm_occ_control, l_target,
-                    p9occ_ctrl::PPC405_START,// Operation on PPC405
-                    p9occ_ctrl::PPC405_BOOT_WITHOUT_BL, // PPC405 boot loc
-                    l_start405MainInstr);
-
-    // Set checkstop interrupt to be active-high and rising edge
-    // TODO RTC:178798 Remove the following workaround
-    l_writeAddress = OCB_OITR0;
-    l_writeData = 0xffffffffffffffff;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    l_writeAddress = OCB_OIEPR0;
-    l_writeData = 0xffffffffffffffff;
-    l_errl = deviceWrite(i_proc, &l_writeData, l_writeSize,
-                            DEVICE_SCOM_ADDRESS(l_writeAddress));
-
-    // Need to clear out some state variables that get messed up
-    //  during the PM Reset, e.g. the FIR Init flags
-    l_errl = HBPM::resetPMAll(HBPM::CLEAR_ATTRIBUTES);
-
-    return l_errl;
+    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OITR0));
+    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OIEPR0));
+    HBPM::resetPMAll(HBPM::CLEAR_ATTRIBUTES);
 }
 
-errlHndl_t makeStart405Instruction(const TARGETING::Target* i_target,
+static void makeStart405Instruction(const TARGETING::Target* i_target,
                                        uint64_t* o_instr)
 {
     errlHndl_t l_errl = NULL;
@@ -1020,7 +1083,7 @@ errlHndl_t makeStart405Instruction(const TARGETING::Target* i_target,
         i_target,
         OCC_405_SRAM_ADDRESS + OCC_OFFSET_MAIN_EP,
         &l_epAddr,
-        sizeof(uint64_t));
+        8);
 
     // The branch instruction is of the form 0x4BXXXXX200000000, where X
     // is the address of the 405 main's entry point (alligned as shown).
@@ -1042,334 +1105,102 @@ errlHndl_t readSRAM(const TARGETING::Target * i_pTarget,
         i_pTarget,
         i_addr,
         io_dataBuf,
-        i_dataLen);
+        8);
 }
 
-errlHndl_t accessOCBIndirectChannel(accessOCBIndirectCmd i_cmd,
-                                    const TARGETING::Target * i_pTarget,
-                                    const uint32_t i_addr,
-                                    uint64_t * io_dataBuf,
-                                    size_t i_dataLen )
+static void accessOCBIndirectChannel(
+    accessOCBIndirectCmd i_cmd,
+    const TARGETING::Target * i_pTarget,
+    const uint32_t i_addr,
+    uint64_t * io_dataBuf,
+    size_t i_dataLen)
 {
-    errlHndl_t l_errl = nullptr;
-    uint32_t   l_len  = 0;
     TARGETING::Target* l_pChipTarget = nullptr;
 
-    p9ocb::PM_OCB_CHAN_NUM   l_channel = p9ocb::OCB_CHAN0;  // OCB channel (0,1,2,3)
-    p9ocb::PM_OCB_ACCESS_OP   l_operation;  // Operation(Get, Put)
-    bool       l_ociAddrValid = true;  // use oci_address
-    bool       l_setup=true;           // set up linear
+    getChipTarget(i_pTarget, l_pChipTarget);
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarget(l_pChipTarget);
 
-    switch (i_cmd)
-    {
-        case (ACCESS_OCB_READ_LINEAR):
-            l_operation = p9ocb::OCB_GET
-            break;
-        case (ACCESS_OCB_WRITE_LINEAR):
-            l_operation = p9ocb::OCB_PUT;
-            break;
-        case (ACCESS_OCB_WRITE_CIRCULAR):
-            l_channel = p9ocb::OCB_CHAN1;
-            l_operation = p9ocb::OCB_PUT;
-            l_ociAddrValid = false;
-            l_setup = false;
-            break;
-    }
-    getChipTarget(i_pTarget,l_pChipTarget);
-
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarget( l_pChipTarget );
-
-    // TODO RTC: 116027 To be consistent with FSP code hwcoOCC.C,
-    // p8_ocb_indir_setup_linear is always called for read and write
-    // linear and not called for write circular.
-    // a) linear read and write set up may only be needed once
-    // b) circular write may need to be set up once
-    if (l_setup)
-    {
-
-        FAPI_INVOKE_HWP(
-            l_errl,
-            p9_pm_ocb_indir_setup_linear,
-            l_fapiTarget,
-            p9ocb::OCB_CHAN0,
-            p9ocb::OCB_TYPE_LINSTR,
-            i_addr );
-    }
-
-    // perform operation
-    FAPI_INVOKE_HWP(
-        l_errl,
-        p9_pm_ocb_indir_access,
+    p9_pm_ocb_init(
         l_fapiTarget,
-        l_channel,
-        l_operation,
-        i_dataLen/8, // Number of 8-byte blocks
-        l_ociAddrValid,
+        p9pm::PM_SETUP_PIB,
+        p9ocb::OCB_CHAN0,
+        p9ocb::OCB_TYPE_LINSTR,
         i_addr,
-        l_len,
-        io_dataBuf );
-    return l_errl;
+        0,
+        p9ocb::OCB_Q_OUFLOW_NULL,
+        p9ocb::OCB_Q_ITPTYPE_NULL);
+    p9_pm_ocb_indir_access(
+        l_fapiTarget,
+        i_addr,
+        0,
+        io_dataBuf);
 }
 
 fapi2::ReturnCode p9_pm_ocb_indir_access(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9ocb::PM_OCB_CHAN_NUM  i_ocb_chan,
-    const p9ocb::PM_OCB_ACCESS_OP i_ocb_op,
-    const uint32_t                i_ocb_req_length,
-    const bool                    i_oci_address_valid,
     const uint32_t                i_oci_address,
-    uint32_t&                     o_ocb_act_length,
+    uint32_t&                     o_ocb_act_length = 0,
     uint64_t*                     io_ocb_buffer)
 {
-    uint64_t l_OCBAR_address   = 0;
-    uint64_t l_OCBDR_address   = 0;
-    uint64_t l_OCBCSR_address  = 0;
-    uint64_t l_OCBSHCS_address = 0;
+
+    fapi2::buffer<uint64_t> l_data64;
+    l_data64.insert<0, 32>(i_oci_address);
+    fapi2::putScom(i_target, PU_OCB_PIB_OCBAR1, l_data64);
+
     o_ocb_act_length = 0;
-
-    switch ( i_ocb_chan )
-    {
-        case p9ocb::OCB_CHAN0:
-            l_OCBAR_address   = PU_OCB_PIB_OCBAR0;
-            l_OCBDR_address   = PU_OCB_PIB_OCBDR0;
-            l_OCBCSR_address  = PU_OCB_PIB_OCBCSR0_RO;
-            l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS0_SCOM;
-            break;
-
-        case p9ocb::OCB_CHAN1:
-            l_OCBAR_address   = PU_OCB_PIB_OCBAR1;
-            l_OCBDR_address   = PU_OCB_PIB_OCBDR1;
-            l_OCBCSR_address  = PU_OCB_PIB_OCBCSR1_RO;
-            l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS1_SCOM;
-            break;
-
-        case p9ocb::OCB_CHAN2:
-            l_OCBAR_address   = PU_OCB_PIB_OCBAR2;
-            l_OCBDR_address   = PU_OCB_PIB_OCBDR2;
-            l_OCBCSR_address  = PU_OCB_PIB_OCBCSR2_RO;
-            l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS2_SCOM;
-            break;
-
-        case p9ocb::OCB_CHAN3:
-            l_OCBAR_address   = PU_OCB_PIB_OCBAR3;
-            l_OCBDR_address   = PU_OCB_PIB_OCBDR3;
-            l_OCBCSR_address  = PU_OCB_PIB_OCBCSR3_RO;
-            l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS3_SCOM;
-            break;
-    }
-
-    if ( i_oci_address_valid )
-    {
-        fapi2::buffer<uint64_t> l_data64;
-        l_data64.insert<0, 32>(i_oci_address);
-        fapi2::putScom(i_target, l_OCBAR_address, l_data64);
-    }
-
-    if ( i_ocb_op == p9ocb::OCB_PUT )
-    {
-        fapi2::buffer<uint64_t> l_data64;
-        fapi2::getScom(i_target, l_OCBCSR_address, l_data64);
-
-        // The following check for circular mode is an additional check
-        // performed to ensure a valid data access.
-        if (l_data64.getBit<4>() && l_data64.getBit<5>())
-        {
-            // Check if push queue is enabled. If not, let the store occur
-            // anyway to let the PIB error response return occur. (that is
-            // what will happen if this checking code were not here)
-            fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
-
-            if (l_data64.getBit<31>())
-            {
-                bool l_push_ok_flag = false;
-                uint8_t l_counter = 0;
-
-                do
-                {
-                    // If the OCB_OCI_OCBSHCS0_PUSH_FULL bit (bit 0) is clear,
-                    // proceed. Otherwise, poll
-                    if (!l_data64.getBit<0>())
-                    {
-                        l_push_ok_flag = true;
-                        break;
-                    }
-
-                    // Delay, before next polling.
-                    fapi2::delay(OCB_FULL_POLL_DELAY_HDW,
-                                 OCB_FULL_POLL_DELAY_SIM);
-
-                    fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
-                    l_counter++;
-                }
-                while (l_counter < OCB_FULL_POLL_MAX);
-            }
-        }
-
-        // Walk the input buffer (io_ocb_buffer) 8B (64bits) at a time to write
-        // the channel data register
-        for(uint32_t l_index = 0; l_index < i_ocb_req_length; l_index++)
-        {
-            l_data64.insertFromRight(io_ocb_buffer[l_index], 0, 64);
-            /* The data read is done via this getscom operation.
-             * A data write failure will be logged off as a simple scom failure.
-             * Need to find a way to distiniguish this error and collect
-             * additional information incase of a failure.*/
-            // @TODO RTC 173286 - FAPI2:  FAPI_TRY (or surrogate name)
-            //                    that allows access to the return code for
-            //                    HWP reaction
-            o_ocb_act_length++;
-        }
-    }
-    // GET Operation: Data read from the given location in SRAM via OCB channel
-    else if( i_ocb_op == p9ocb::OCB_GET )
-    {
-        fapi2::buffer<uint64_t> l_data64;
-        uint64_t l_data = 0;
-
-        // Read data from the Channel Data Register in blocks of 64 bits.
-        for (uint32_t l_loopCount = 0; l_loopCount < i_ocb_req_length;
-             l_loopCount++)
-        {
-            /* The data read is done via this getscom operation.
-             * A data read failure will be logged off as a simple scom failure.
-             * Need to find a way to distiniguish this error and collect
-             * additional information incase of a failure.*/
-            // @TODO RTC 173286 - FAPI2:  FAPI_TRY (or surrogate name)
-            //                    that allows access to the return code for
-            //                    HWP reaction
-            l_data64.extract(l_data, 0, 64);
-            io_ocb_buffer[l_loopCount] = l_data;
-            o_ocb_act_length++;
-        }
-
-    }
-fapi_try_exit:
-    return fapi2::current_err;
-
-}
-
-fapi2::ReturnCode p9_pm_ocb_indir_setup_linear(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9ocb::PM_OCB_CHAN_NUM  i_ocb_chan,
-    const p9ocb::PM_OCB_CHAN_TYPE i_ocb_type,
-    const uint32_t      i_ocb_bar)
-{
-    FAPI_EXEC_HWP(l_rc,
-                  p9_pm_ocb_init,
-                  i_target,
-                  p9pm::PM_SETUP_PIB,
-                  i_ocb_chan,
-                  i_ocb_type,
-                  i_ocb_bar,
-                  0, // ocb_q_len
-                  p9ocb::OCB_Q_OUFLOW_NULL,
-                  p9ocb::OCB_Q_ITPTYPE_NULL);
+    l_data64 = 0;
+    uint64_t l_data = 0;
+    l_data64.extract(l_data, 0, 64);
+    io_ocb_buffer[0] = l_data;
+    o_ocb_act_length++;
 }
 
 fapi2::ReturnCode pm_ocb_reset(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::putScom(i_target, OCBARn[1], 0);
+    l_data64.flush<1>();
+    fapi2::putScom(i_target, OCBCSRn_CLEAR[1], l_data64);
+    l_data64.flush<0>().setBit<4>().setBit<5>();
+    fapi2::putScom(i_target, OCBCSRn_OR[1], l_data64);
+    fapi2::putScom(i_target, OCBESRn[1], 0);
+    fapi2::putScom(i_target, OCBSLBRn[1], 0);
+    fapi2::putScom(i_target, OCBSHBRn[1], 0);
+    fapi2::putScom(i_target, OCBSLCSn[1], 0);
+    fapi2::putScom(i_target, OCBSHCSn[1], 0);
+    fapi2::putScom(i_target, OCBSESn[1], 0);
+    fapi2::putScom(i_target, OCBLWCRn[1], 0);
+    l_data64 = 0;
+    l_data64.setBit<3, 7>();
+    fapi2::putScom(i_target, OCBLWSBRn[1], l_data64);
     fapi2::buffer<uint64_t> l_buf64;
-
-    // vector of reset channels
-    std::vector<uint8_t> v_reset_chan;
-    v_reset_chan.push_back(1);
-
-    // -------------------------------------------------------------------------
-    // Loop over PIB Registers
-    // -------------------------------------------------------------------------
-    for (auto& chan : v_reset_chan)
-    {
-        fapi2::buffer<uint64_t> l_data64;
-        // Clear out OCB Channel BAR registers
-        fapi2::putScom(i_target, OCBARn[chan], 0);
-
-        // Clear out OCB Channel control and status registers
-        l_data64.flush<1>();
-        fapi2::putScom(i_target, OCBCSRn_CLEAR[chan], l_data64);
-
-        // Put channels in Circular mode
-        //  - set bits 4,5 (circular mode) using OR
-        l_data64.flush<0>().setBit<4>().setBit<5>();
-        fapi2::putScom(i_target, OCBCSRn_OR[chan], l_data64);
-
-        // Clear out OCB Channel Error Status registers
-        fapi2::putScom(i_target, OCBESRn[chan], 0);
-    }
-
-    // -------------------------------------------------------------------------
-    // Loop over OCI Registers
-    // -------------------------------------------------------------------------
-    for (auto& chan : v_reset_chan)
-    {
-        fapi2::buffer<uint64_t> l_data64;
-        // Clear out Pull Base
-        fapi2::putScom(i_target, OCBSLBRn[chan], 0);
-        // Clear out Push Base
-        fapi2::putScom(i_target, OCBSHBRn[chan], 0);
-        // Clear out Pull Control & Status
-        fapi2::putScom(i_target, OCBSLCSn[chan], 0);
-        // Clear out Push Control & Status
-        fapi2::putScom(i_target, OCBSHCSn[chan], 0);
-        // Clear out Stream Error Status
-        fapi2::putScom(i_target, OCBSESn[chan], 0);
-        // Clear out Linear Window Control
-        fapi2::putScom(i_target, OCBLWCRn[chan], 0);
-        // Clear out Linear Window Base
-        //  - set bits 3:9
-        l_data64.setBit<3, 7>();
-        fapi2::putScom(i_target, OCBLWSBRn[chan], l_data64);
-    }
-
-    // Set Interrupt Source Mask Registers 0 & 1
-    //  - keep word1 0's for simics
     l_buf64.flush<0>().insertFromRight<0, 32>(INTERRUPT_SRC_MASK_REG);
     fapi2::putScom(i_target, PU_OCB_OCI_OIMR0_OR, l_buf64);
-
     fapi2::putScom(i_target, PU_OCB_OCI_OIMR1_OR, l_buf64);
-    // Clear OCC Interrupt Type Registers 0 & 1
     l_buf64.flush<1>();
     fapi2::putScom(i_target, PU_OCB_OCI_OITR0_CLEAR, l_buf64);
     fapi2::putScom(i_target, PU_OCB_OCI_OITR1_CLEAR, l_buf64);
-    // Clear OCC Interupt Edge/Polarity Registers 0 & 1
     fapi2::putScom(i_target, PU_OCB_OCI_OIEPR0_CLEAR, l_buf64);
     fapi2::putScom(i_target, PU_OCB_OCI_OIEPR1_CLEAR, l_buf64);
-    // Clear OCC Interrupt Source Registers 0 & 1
     fapi2::putScom(i_target, PU_OCB_OCI_OISR0_CLEAR, l_buf64);
     fapi2::putScom(i_target, PU_OCB_OCI_OISR1_CLEAR, l_buf64);
-    // Clear Interrupt Route (A, B, C) Registers 0 & 1
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR0A_SCOM, 0);
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR0B_SCOM, 0);
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR0C_SCOM, 0);
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR1A_SCOM, 0);
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR1B_SCOM, 0);
     fapi2::putScom(i_target, PU_OCB_OCI_OIRR1C_SCOM, 0);
-    // Clear OCC Interrupt Timer Registers 0 & 1
-    //  - need bits 0&1 set to clear register
     l_buf64.flush<0>().setBit<0, 2>();
     fapi2::putScom(i_target, PU_OCB_OCI_OTR0_SCOM, l_buf64);
     fapi2::putScom(i_target, PU_OCB_OCI_OTR1_SCOM, l_buf64);
-
-    // Clear PBA Enable Marker Acknowledgement mode to remove collisions
-    // with any accesses to the OCB DCR registers (eg OSTOESR).
-    // This function is only enabled by OCC firmware and is not via
-    // hardware procedures.
     fapi2::getScom(i_target, PU_PBAMODE_SCOM, l_buf64);
     l_buf64.clearBit<PU_PBAMODE_EN_MARKER_ACK>();
     fapi2::putScom(i_target, PU_PBAMODE_SCOM, l_buf64);
-
-    // Clear OCC special timeout error status register
     fapi2::putScom(i_target, PU_OCB_PIB_OSTOESR, 0);
-
-    // Explicitly disable the OCC Heartbeat (RTC: 172638)
-    // Only clearing the OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN and leaving the
-    // Heartbeat count intact as this may prove useful for debug later.
     fapi2::getScom(i_target, PU_OCB_OCI_OCCHBR_SCOM, l_buf64);
     l_buf64.clearBit<PU_OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN>();
     fapi2::putScom(i_target, PU_OCB_OCI_OCCHBR_SCOM, l_buf64);
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
 fapi2::ReturnCode p9_pm_ocb_init(
@@ -1382,25 +1213,17 @@ fapi2::ReturnCode p9_pm_ocb_init(
     const p9ocb::PM_OCB_CHAN_OUFLOW  i_ocb_ouflow_en,
     const p9ocb::PM_OCB_ITPTYPE      i_ocb_itp_type)
 {
-    // -------------------------------------------------------------------------
-    // RESET mode: Change the OCB channel registers to scan-0 flush state
-    // -------------------------------------------------------------------------
     if (i_mode == p9pm::PM_RESET)
     {
         pm_ocb_reset(i_target);
     }
-    // -------------------------------------------------------------------------
-    // SETUP mode: Perform user setup of an indirect channel
-    // -------------------------------------------------------------------------
     else if (i_mode == p9pm::PM_SETUP_ALL || i_mode == p9pm::PM_SETUP_PIB)
     {
         p9ocb::PM_OCB_CHAN_REG l_upd_reg = p9ocb::OCB_UPD_PIB_REG;
-
         if (i_mode == p9pm::PM_SETUP_ALL)
         {
             l_upd_reg = p9ocb::OCB_UPD_PIB_OCI_REG;
         }
-
         pm_ocb_setup(
             i_target,
             i_ocb_chan,
@@ -1411,9 +1234,6 @@ fapi2::ReturnCode p9_pm_ocb_init(
             i_ocb_ouflow_en,
             i_ocb_itp_type);
     }
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
 fapi2::ReturnCode pm_ocb_setup(
@@ -1431,28 +1251,20 @@ fapi2::ReturnCode pm_ocb_setup(
     fapi2::buffer<uint64_t> l_mask_clear(0);
     fapi2::buffer<uint64_t> l_data64;
 
-    // -------------------------------------------------------------------------
-    // Init Status and Control Register (OCBCSRn, OCBCSRn_CLEAR, OCBCSRn_OR)
-    //    bit 2 => pull_read_underflow_en (0=disabled 1=enabled)
-    //    bit 3 => push_write_overflow_en (0=disabled 1=enabled)
-    //    bit 4 => ocb_stream_mode        (0=disabled 1=enabled)
-    //    bit 5 => ocb_stream_type        (0=linear   1=circular)
-    // -------------------------------------------------------------------------
-
-    if (i_ocb_type == p9ocb::OCB_TYPE_LIN) // linear non-streaming
+    if (i_ocb_type == p9ocb::OCB_TYPE_LIN)
     {
         l_mask_clear.setBit<4, 2>();
     }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_LINSTR) // linear streaming
+    else if (i_ocb_type == p9ocb::OCB_TYPE_LINSTR)
     {
         l_mask_or.setBit<4>();
         l_mask_clear.setBit<5>();
     }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_CIRC) // circular
+    else if (i_ocb_type == p9ocb::OCB_TYPE_CIRC)
     {
         l_mask_or.setBit<4, 2>();
     }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_PUSHQ) // push queue
+    else if (i_ocb_type == p9ocb::OCB_TYPE_PUSHQ)
     {
         l_mask_or.setBit<4, 2>();
 
@@ -1479,30 +1291,21 @@ fapi2::ReturnCode pm_ocb_setup(
         }
     }
 
-    // write using OR mask
     fapi2::putScom(i_target, OCBCSRn_OR[i_ocb_chan], l_mask_or);
-    // write using AND mask
     fapi2::putScom(i_target, OCBCSRn_CLEAR[i_ocb_chan], l_mask_clear);
 
-    //--------------------------------------------------------------------------
-    // set address base register for linear, pull queue or push queue
-    //--------------------------------------------------------------------------
-    //don't update bar if type null or circular
-    if (!(i_ocb_type == p9ocb::OCB_TYPE_NULL ||
-          i_ocb_type == p9ocb::OCB_TYPE_CIRC))
+    if(!(i_ocb_type == p9ocb::OCB_TYPE_NULL
+    || i_ocb_type == p9ocb::OCB_TYPE_CIRC))
     {
-        // BAR for linear (streaming / non-streaming)
-        if ((i_ocb_type == p9ocb::OCB_TYPE_LIN) ||
-            (i_ocb_type == p9ocb::OCB_TYPE_LINSTR))
+        if(i_ocb_type == p9ocb::OCB_TYPE_LIN
+        || i_ocb_type == p9ocb::OCB_TYPE_LINSTR)
         {
             l_ocbase = OCBARn[i_ocb_chan];
         }
-        // BAR for push queue
         else if (i_ocb_type == p9ocb::OCB_TYPE_PUSHQ)
         {
             l_ocbase = OCBSHBRn[i_ocb_chan];
         }
-        // BAR for pull queue
         else
         {
             l_ocbase = OCBSLBRn[i_ocb_chan];
@@ -1511,36 +1314,14 @@ fapi2::ReturnCode pm_ocb_setup(
         l_data64.flush<0>().insertFromRight<0, 32>(i_ocb_bar);
         fapi2::putScom(i_target, l_ocbase, l_data64);
     }
-
-    // -------------------------------------------------------------------------
-    // set up push queue control register
-    //    bits 4:5  => push interrupt action
-    //                   00=full
-    //                   01=not full
-    //                   10=empty
-    //                   11=not empty
-    //    bits 6:10 => push queue length
-    //    bit  31   => push queue enable
-    // -------------------------------------------------------------------------
-    if ((i_ocb_type == p9ocb::OCB_TYPE_PUSHQ) &&
-        (i_ocb_upd_reg == p9ocb::OCB_UPD_PIB_OCI_REG))
+    if(i_ocb_type == p9ocb::OCB_TYPE_PUSHQ
+    && i_ocb_upd_reg == p9ocb::OCB_UPD_PIB_OCI_REG)
     {
         l_data64.flush<0>().insertFromRight<6, 5>(i_ocb_q_len);
         l_data64.insertFromRight<4, 2>(i_ocb_itp_type);
         l_data64.setBit<31>();
         fapi2::putScom(i_target, OCBSHCSn[i_ocb_chan], l_data64);
     }
-
-    // -------------------------------------------------------------------------
-    // set up pull queue control register
-    //    bits 4:5  => pull interrupt action
-    //                   00=full
-    //                   01=not full
-    //                   10=empty
-    //                   11=not empty
-    //    bits 6:10 => pull queue length
-    //    bit  31   => pull queue enable
-    // -------------------------------------------------------------------------
     if ((i_ocb_type == p9ocb::OCB_TYPE_PULLQ) &&
         (i_ocb_upd_reg == p9ocb::OCB_UPD_PIB_OCI_REG))
     {
@@ -1549,7 +1330,4 @@ fapi2::ReturnCode pm_ocb_setup(
         l_data64.setBit<31>();
         fapi2::putScom(i_target, OCBSLCSn[i_ocb_chan], l_data64);
     }
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
