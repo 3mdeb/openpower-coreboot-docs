@@ -77,30 +77,25 @@ void* host_start_occ_xstop_handler( void *io_pArgs )
         masterproc,
         Kernel::MachineCheck::MCHK_XSTOP_FIR_SCOM_ADDR );
 
-    set_mchk_data(
+    Kernel::MachineCheck::setCheckstopData(
         l_xstopXscom,
-        Kernel::MachineCheck::MCHK_XSTOP_FIR_VALUE );
+        Kernel::MachineCheck::MCHK_XSTOP_FIR_VALUE);
 
     return l_stepError.getErrorHandle();
 }
 
- errlHndl_t loadOCCSetup(TARGETING::Target* i_target,
-                        uint64_t i_occImgPaddr,
-                        uint64_t i_occImgVaddr, // dest
-                        uint64_t i_commonPhysAddr)
+errlHndl_t loadOCCSetup(
+    TARGETING::Target* i_target,
+    uint64_t i_occImgPaddr,
+    uint64_t i_occImgVaddr,
+    uint64_t i_commonPhysAddr)
 {
     // cast OUR type of target to a FAPI type of target.
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_fapiTarg(i_target);
 
     // Remove bit 0, may be set for physical addresses
     uint64_t l_occ_addr = i_occImgPaddr & PHYSICAL_ADDR_MASK;
-    p9_pm_pba_bar_config(
-        l_fapiTarg,
-        0,
-        l_occ_addr,
-        VMM_HOMER_INSTANCE_SIZE_IN_MB,
-        p9pba::LOCAL_NODAL,
-        0xFF);
+    p9_pm_pba_bar_config(l_fapiTarg, 0, l_occ_addr);
 
     // BAR2 is the OCC Common Area
     // Bar size is in MB
@@ -110,43 +105,23 @@ void* host_start_occ_xstop_handler( void *io_pArgs )
 
     // Remove bit 0, may be set for physical addresses
     uint64_t l_common_addr = i_commonPhysAddr & PHYSICAL_ADDR_MASK;
-    p9_pm_pba_bar_config(
-        l_fapiTarg,
-        2,
-        l_common_addr,
-        VMM_OCC_COMMON_SIZE_IN_MB,
-        p9pba::LOCAL_NODAL,
-        0xFF);
+    p9_pm_pba_bar_config(l_fapiTarg, 2, l_common_addr);
 }
 
 fapi2::ReturnCode p9_pm_pba_bar_config (
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     const uint32_t i_index,
-    const uint64_t i_pba_bar_addr,
-    const uint64_t i_pba_bar_size,
-    const p9pba::CMD_SCOPE i_pba_cmd_scope,
-    const uint16_t i_vectorTarget)
+    const uint64_t i_pba_bar_addr)
 {
     fapi2::buffer<uint64_t> l_bar64;
     uint64_t                l_work_size;
     uint64_t                l_finalMask;
 
     l_bar64.set(i_pba_bar_addr);
-    l_bar64.insertFromRight<PU_PBABAR0_CMD_SCOPE, PU_PBABAR0_CMD_SCOPE_LEN>(i_pba_cmd_scope);
-    if (i_pba_cmd_scope == p9pba::VECTORED_GROUP)
-    {
-        l_bar64.insertFromRight<PU_PBABAR0_VTARGET, PU_PBABAR0_VTARGET_LEN>(i_vectorTarget);
-    }
+    l_bar64.insertFromRight<PU_PBABAR0_CMD_SCOPE, PU_PBABAR0_CMD_SCOPE_LEN>(p9pba::LOCAL_NODAL);
     fapi2::putScom(i_target, PBA_BARs[i_index], l_bar64);
 
-    if (i_pba_bar_size != 0)
-    {
-        l_work_size = PowerOf2Roundedup(i_pba_bar_size);
-    }
-    else
-    {
-        l_work_size = PowerOf2Roundedup(1ull);
-    }
+    l_work_size = 4;
 
     l_finalMask = (l_work_size - 1) << 20;
     l_bar64.flush<0>();
@@ -174,9 +149,6 @@ static void loadPMComplex(
 #ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
     void* l_occVirt = reinterpret_cast<void *>(l_occImgVaddr);
     HBOCC::loadOCCImageDuringIpl(i_target, l_occVirt);
-#else
-    loadOCCImageToHomer(i_target, l_occImgPaddr, l_occImgVaddr, HBPM::PM_LOAD);
-#endif
 #if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
     HBOCC::loadHostDataToSRAM(i_target, PRDF::MASTER_PROC_CORE);
 #else
@@ -198,6 +170,162 @@ static void loadPMComplex(
         uint64_t lZeroAddr = 0;
         i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(reinterpret_cast<uint64_t>(lZeroAddr));
     }
+}
+
+void *convertHomerPhysToVirt(TARGETING::Target* i_proc_target, uint64_t i_phys_addr)
+{
+    void *l_virt_addr =  i_proc_target->getAttr<ATTR_HOMER_VIRT_ADDR>();
+    if(i_proc_target->getAttr<ATTR_HOMER_PHYS_ADDR>() != i_phys_addr
+    || nullptr == l_virt_addr)
+    {
+        if(nullptr != l_virt_addr)
+        {
+            HBPM_UNMAP(l_virt_addr);
+        }
+
+        if(i_phys_addr)
+        {
+            l_virt_addr = HBPM_MAP(HBPM_PHYS_ADDR, sizeof(Homerlayout_t));
+        }
+        else
+        {
+            l_virt_addr = nullptr;
+        }
+
+        i_proc_target->setAttr<ATTR_HOMER_PHYS_ADDR>(i_phys_addr);
+        i_proc_target->setAttr<ATTR_HOMER_VIRT_ADDR>(l_virt_addr);
+    }
+    return l_virt_addr;
+}
+
+errlHndl_t loadHostDataToSRAM( TARGETING::Target* i_proc,
+                                const PRDF::HwInitialized_t i_curHw)
+{
+    //Treat virtual address as starting pointer
+    //for config struct
+    HBPM::occHostConfigDataArea_t * config_data = new HBPM::occHostConfigDataArea_t();
+
+    // Get top level system target
+    TARGETING::TargetService & tS = TARGETING::targetService();
+    TARGETING::Target * sysTarget = NULL;
+    tS.getTopLevelTarget(sysTarget);
+
+    uint32_t nestFreq =  sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
+
+    config_data->version = HBOCC::OccHostDataVersion;
+    config_data->nestFrequency = nestFreq;
+
+    // Figure out the interrupt type
+    if( INITSERVICE::spBaseServicesEnabled() )
+    {
+        config_data->interruptType = USE_FSI2HOST_MAILBOX;
+    }
+    else
+    {
+        config_data->interruptType = USE_PSIHB_COMPLEX;
+    }
+
+    config_data->firMaster = IS_FIR_MASTER;
+    PRDF::writeHomerFirData(
+        config_data->firdataConfig,
+        sizeof(config_data->firdataConfig),
+        i_curHw);
+
+    if (SECUREBOOT::SMF::isSmfEnabled())
+    {
+        config_data->smfMode = SMF_MODE_ENABLED;
+    }
+    else
+    {
+        config_data->smfMode = SMF_MODE_DISABLED;
+    }
+
+
+    HBOCC::writeSRAM(
+        i_proc,
+        OCC_SRAM_FIR_DATA,
+        (uint64_t*)config_data->firdataConfig,
+        sizeof(config_data->firdataConfig));
+    delete(config_data);
+}
+
+errlHndl_t loadOCCImageDuringIpl(TARGETING::Target* i_target,
+                                void* i_occVirtAddr)
+{
+    errlHndl_t l_errl = NULL;
+    uint8_t* l_occImage = NULL;
+    void* l_modifiedSectionPtr = NULL;
+
+    //The OCC image should always be in the virtual address space
+    UtilLidMgr lidMgr(HBOCC::OCC_LIDID);
+    void* l_tmpOccImage = const_cast<void*>(lidMgr.getLidVirtAddr());
+    l_occImage = (uint8_t*)l_tmpOccImage;
+
+    // Get system target in order to access ATTR_NEST_FREQ_MHZ
+    TARGETING::TargetService & l_tS = TARGETING::targetService();
+    TARGETING::Target * l_sysTarget = NULL;
+    l_tS.getTopLevelTarget(l_sysTarget);
+
+    //Save Nest Frequency:
+    ATTR_FREQ_PB_MHZ_type l_nestFreq = l_sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
+    size_t l_length = 0; // length of current section
+
+    uint32_t* l_ptrToLength = (uint32_t*)((char*)l_occImage + OCC_OFFSET_LENGTH);
+    l_length = *l_ptrToLength; // Length of the bootloader
+
+    // Write the OCC Bootloader into memory
+    memcpy(i_occVirtAddr, l_occImage, l_length);
+
+    // OCC Main Application
+    char* l_occMainAppPtr = l_occImage + l_length;
+    l_ptrToLength = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_LENGTH);
+    l_length = *l_ptrToLength; // Length of the OCC Main
+
+    // Write 405 Main application to SRAM
+    HBOCC::writeSRAM(
+        i_target,
+        HBOCC::OCC_405_SRAM_ADDRESS,
+        (uint64_t*)l_occMainAppPtr,
+        l_length);
+
+    l_modifiedSectionPtr = malloc(OCC_OFFSET_FREQ + sizeof(l_nestFreq));
+    // Populate this section with data from PNOR
+    memcpy(l_modifiedSectionPtr, l_occMainAppPtr, OCC_OFFSET_FREQ + sizeof(l_nestFreq));
+
+    // Change the fequency and set the IPL flag
+    uint16_t* l_ptrToIplFlag = (uint16_t*)((char*)l_modifiedSectionPtr + OCC_OFFSET_IPL_FLAG);
+    uint32_t* l_ptrToFreq = (uint32_t*)((char*)l_modifiedSectionPtr + OCC_OFFSET_FREQ);
+
+    *l_ptrToIplFlag |= 0x001;
+    *l_ptrToFreq     = l_nestFreq;
+
+    // Overwrite the part of Main we modified above in SRAM:
+    HBOCC::writeSRAM(
+        i_target,
+        HBOCC::OCC_405_SRAM_ADDRESS,
+        (uint64_t*)l_modifiedSectionPtr,
+        (uint32_t)OCC_OFFSET_FREQ +
+        sizeof(l_nestFreq));
+
+    // GPE0 application is stored right after the 405 main in memory
+    char* l_gpe0AppPtr = l_occMainAppPtr + l_length;
+    uint32_t* l_ptrToGpe0Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE0_LENGTH);
+    l_length = *l_ptrToGpe0Length;
+    HBOCC::writeSRAM(
+        i_target,
+        HBOCC::OCC_GPE0_SRAM_ADDRESS,
+        (uint64_t*)l_gpe0AppPtr,
+        l_length);
+
+    char* l_gpe1AppPtr = l_gpe0AppPtr + l_length;
+    uint32_t* l_ptrToGpe1Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE1_LENGTH);
+    l_length = *l_ptrToGpe1Length;
+    HBOCC::writeSRAM(
+        i_target,
+        HBOCC::OCC_GPE1_SRAM_ADDRESS,
+        (uint64_t*)l_gpe1AppPtr,
+        l_length);
+    free(l_modifiedSectionPtr);
 }
 
 void readSemiPersistData(semiPersistData_t & o_data)
@@ -518,102 +646,35 @@ errlHndl_t SensorBase::processCompletionCode( IPMI::completion_code i_rc )
             }
         }
 
-            // shift the sensor number into to bytes 0-3 and then
-            // or in the HUID to bytes 4-7
-            uint32_t sensor_number = getSensorNumber();
-            uint32_t huid = TARGETING::get_huid( iv_target );
+        l_err = new ERRORLOG::ErrlEntry(
+            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
+            IPMI::MOD_IPMISENSOR,
+            l_reasonCode,
+            i_rc,
+            TWO_UINT32_TO_UINT64(
+                TWO_UINT16_TO_UINT32(
+                    iv_name,
+                    getSensorNumber()),
+                TARGETING::get_huid(iv_target)),
+            true);
 
-
-            l_err = new ERRORLOG::ErrlEntry(
-                            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
-                            IPMI::MOD_IPMISENSOR,
-                            l_reasonCode,
-                            i_rc,
-                            TWO_UINT32_TO_UINT64(
-                                    TWO_UINT16_TO_UINT32(iv_name,
-                                                        sensor_number),
-                                    huid ),
-                            true);
-
-            l_err->collectTrace(IPMI_COMP_NAME);
+        l_err->collectTrace(IPMI_COMP_NAME);
 
     }
     return l_err;
 }
 
-inline uint64_t getMSR()
-{
-    register uint64_t msr = 0;
-    asm volatile("mfmsr %0" : "=r" (msr));
-    return msr;
-}
-
-inline void setMSR(uint64_t _msr)
-{
-    register uint64_t msr = _msr;
-    asm volatile("mtmsr %0; isync" :: "r" (msr));
-}
-
-void setCheckstopData(uint64_t i_xstopAddr, uint64_t i_xstopData)
-{
-    g_xstopRegPtr = reinterpret_cast<uint64_t*>(i_xstopAddr | VmmManager::FORCE_PHYS_ADDR);
-    g_xstopRegValue = i_xstopData;
-
-    // Now that the machine check handler can do the xscom we
-    //  can set MSR[ME]=1 to enable the regular machine check
-    //  handling
-    uint64_t l_msr = getMSR();
-    l_msr |= 0x0000000000001000; //set bit 51
-    setMSR(l_msr);
-}
-
-void SetMchkData(task_t* t)
-{
-    uint64_t i_xstopAddr = (uint64_t)(TASK_GETARG0(t));
-    uint64_t i_xstopData = (uint64_t)(TASK_GETARG1(t));
-
-    Kernel::MachineCheck::setCheckstopData(i_xstopAddr,i_xstopData);
-}
-
-void set_mchk_data(uint64_t i_xstopAddr, uint64_t i_xstopData)
-{
-    _syscall2(
-        MISC_SETMCHKDATA,
-        reinterpret_cast<void*>(i_xstopAddr),
-        reinterpret_cast<void*>(i_xstopData));
-}
-
-fapi2::ReturnCode clear_occ_special_wakeups(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    fapi2::buffer<uint64_t> l_data64;
-    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
-
-    // Iterate through the EX chiplets
-    for (auto l_ex_chplt : l_exChiplets)
-    {
-        fapi2::ATTR_CHIP_UNIT_POS_Type l_ex_num;
-        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ex_chplt, l_ex_num);
-        fapi2::getScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, l_data64);
-        l_data64.clearBit<0>();
-        fapi2::putScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, l_data64);
-    }
-}
-
 template <FIRType Ftype>
 fapi2::ReturnCode PMFir<Ftype>::setRecvAttn(const uint32_t i_bit)
 {
-    FAPI_TRY(iv_action0.clearBit(i_bit));
-    FAPI_TRY(iv_action1.setBit(i_bit));
-    FAPI_TRY(iv_and_mask.clearBit(i_bit));
-    FAPI_TRY(iv_mask.clearBit(i_bit));
+    iv_action0.clearBit(i_bit);
+    iv_action1.setBit(i_bit);
+    iv_and_mask.clearBit(i_bit);
+    iv_mask.clearBit(i_bit);
     iv_action0_write = true;
     iv_action1_write = true;
     iv_mask_write = true;
     iv_mask_and_write = true;
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
 template <FIRType Ftype>
@@ -788,8 +849,6 @@ fapi2::ReturnCode pm_occ_fir_reset(
     l_occFir.setAllRegBits(p9pmFIR::REG_FIRMASK);
     l_occFir.setRecvIntr(OCC_HB_NOTIFY);
     l_occFir.put();
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
 fapi2::ReturnCode p9_pm_occ_firinit(
@@ -810,52 +869,93 @@ fapi2::ReturnCode p9_pm_occ_firinit(
     pm_occ_fir_init(i_target);
 }
 
-api2::ReturnCode pm_pss_reset(
+static void startOCCFromSRAM(TARGETING::Target* i_proc)
+{
+    uint64_t l_start405MainInstr = 0;
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>master_proc_target(i_proc);
+    fapi2::ReturnCode l_rc;
+
+    pm_pss_init(master_proc_target);
+    p9_pm_occ_firinit(master_proc_target);
+    clear_occ_special_wakeups(master_proc_target);
+    deviceWrite(i_proc, &0x218780f800000000, 8, DEVICE_SCOM_ADDRESS(0x6C040));
+    deviceWrite(i_proc, &0x0003d03c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C050));
+    deviceWrite(i_proc, &0x2181801800000000, 8, DEVICE_SCOM_ADDRESS(0x6C044));
+    deviceWrite(i_proc, &0x0003d00c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C054));
+    deviceWrite(i_proc, &0x010280ac00000000, 8, DEVICE_SCOM_ADDRESS(0x6C048));
+    deviceWrite(i_proc, &0x0001901400000000, 8, DEVICE_SCOM_ADDRESS(0x6C058));
+    makeStart405Instruction(i_proc, &l_start405MainInstr);
+
+    p9_pm_occ_control(
+        master_proc_target,
+        p9occ_ctrl::PPC405_START,
+        p9occ_ctrl::PPC405_BOOT_WITHOUT_BL,
+        l_start405MainInstr);
+
+    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OITR0));
+    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OIEPR0));
+    HBPM::resetPMAll();
+}
+
+fapi2::ReturnCode clear_occ_special_wakeups(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
+    // Iterate through the EX chiplets
+    for (auto l_ex_chplt : l_exChiplets)
+    {
+        fapi2::getScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
+        fapi2::putScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
+    }
+}
+
+errlHndl_t resetPMAll()
+{
+    TargetHandleList l_procChips;
+    getAllChips(l_procChips, TYPE_PROC, true);
+
+    for (const auto & l_procChip: l_procChips)
+    {
+        (void)convertHomerPhysToVirt(l_procChip, 0);
+        l_procChip->setAttr<ATTR_PM_FIRINIT_DONE_ONCE_FLAG>(0);
+    }
+    TARGETING::Target* sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget(sys);
+    sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(0);
+}
+
+//////////////////////////
+// Fully analyzed below //
+//////////////////////////
+
+static void pm_pss_reset(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
     fapi2::buffer<uint64_t> l_data64;
-    uint32_t l_pollcount = 0;
-    uint32_t l_max_polls;
-    // timeout period is 10 millisecond. (Far longer than needed)
-    const uint32_t l_pss_timeout_us = 10000;
-    const uint32_t l_pss_poll_interval_us = 10;
 
     //  ******************************************************************
     //     - Poll status register for ongoing or no errors to give the
     //       chance for on-going operations to complete
     //  ******************************************************************
 
-    l_max_polls = l_pss_timeout_us / l_pss_poll_interval_us;
-
-    for (l_pollcount = 0; l_pollcount < l_max_polls; l_pollcount++)
+    for (uint32_t l_pollcount = 0; l_pollcount < 1000; l_pollcount++)
     {
         FAPI_TRY(fapi2::getScom(i_target, PU_SPIPSS_ADC_STATUS_REG, l_data64));
-
-        // ADC on-going complete
         if (l_data64.getBit<PU_SPIPSS_ADC_STATUS_REG_HWCTRL_ONGOING>() == 0)
         {
             break;
         }
-        fapi2::delay(l_pss_poll_interval_us * 1000, 1000);
+        fapi2::delay(10000us);
     }
-
-    //  ******************************************************************
-    //     - Poll status register for ongoing or errors to give the
-    //       chance for on-going operations to complete
-    //  ******************************************************************
-
-
-    for (l_pollcount = 0; l_pollcount < l_max_polls; l_pollcount++)
+    for (uint32_t l_pollcount = 0; l_pollcount < 1000; l_pollcount++)
     {
         fapi2::getScom(i_target, PU_SPIPSS_P2S_STATUS_REG, l_data64);
-
         //P2S On-going complete
         if (l_data64.getBit<0>() == 0)
         {
             break;
         }
-
-        fapi2::delay(l_pss_poll_interval_us * 1000, 1000);
+        fapi2::delay(10000us);
     }
 
     //  ******************************************************************
@@ -873,13 +973,9 @@ api2::ReturnCode pm_pss_reset(
     l_data64.flush<0>();
     fapi2::putScom(i_target, PU_SPIPSS_ADC_RESET_REGISTER, l_data64);
     fapi2::putScom(i_target, PU_SPIPSS_P2S_RESET_REGISTER, l_data64);
-
-fapi_try_exit:
-    return fapi2::current_err;
 }
 
-fapi2::ReturnCode pm_pss_init(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+static void pm_pss_init(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
     uint64_t l_data64;
 
@@ -928,157 +1024,28 @@ fapi2::ReturnCode pm_pss_init(
     fapi2::putScom(i_target, PU_SPIPSS_100NS_REG, l_data64);
 }
 
-errlHndl_t resetPMAll( resetOptions_t i_opt,
-                           uint8_t i_skip_fir_attr_reset)
-{
-    TargetHandleList l_procChips;
-    getAllChips(l_procChips, TYPE_PROC, true);
-
-    for (const auto & l_procChip: l_procChips)
-    {
-        if( RESET_HW & i_opt )
-        {
-            resetPMComplex(l_procChip);
-        }
-
-        if( CLEAR_ATTRIBUTES & i_opt )
-        {
-            // Zero out the HOMER vars
-            (void) convertHomerPhysToVirt( l_procChip, 0 );
-
-            if (!i_skip_fir_attr_reset)
-            {
-                // Zero out the FIR save/restore
-                l_procChip->setAttr<ATTR_PM_FIRINIT_DONE_ONCE_FLAG>(0);
-            }
-        }
-    }
-
-    if(CLEAR_ATTRIBUTES & i_opt)
-    {
-        TARGETING::Target* sys = nullptr;
-        TARGETING::targetService().getTopLevelTarget(sys);
-        sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(0);
-    }
-}
-
-fapi2::ReturnCode p9_pm_occ_control
-(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
- const p9occ_ctrl::PPC_CONTROL i_ppc405_reset_ctrl,
- const p9occ_ctrl::PPC_BOOT_CONTROL i_ppc405_boot_ctrl,
- const uint64_t i_ppc405_jump_to_main_instr)
+static void p9_pm_occ_control(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9occ_ctrl::PPC_CONTROL i_ppc405_reset_ctrl = p9occ_ctrl::PPC405_START,
+    const p9occ_ctrl::PPC_BOOT_CONTROL i_ppc405_boot_ctrl = p9occ_ctrl::PPC405_BOOT_WITHOUT_BL,
+    const uint64_t i_ppc405_jump_to_main_instr)
 {
     fapi2::buffer<uint64_t> l_data64;
-    fapi2::buffer<uint64_t> l_firMask;
-    fapi2::buffer<uint64_t> l_occfir;
-    fapi2::buffer<uint64_t> l_jtagcfg;
-
-    if (i_ppc405_boot_ctrl != p9occ_ctrl::PPC405_BOOT_NULL)
-    {
-        fapi2::putScom(i_target, PU_SRAM_SRBV0_SCOM, 0);
-        fapi2::putScom(i_target, PU_SRAM_SRBV1_SCOM, 0);
-        fapi2::putScom(i_target, PU_SRAM_SRBV2_SCOM, 0);
-
-        if (i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_SRAM)
-        {
-            l_data64.flush<0>().insertFromRight(PPC405_BRANCH_SRAM_INSTR, 0, 32);
-        }
-        else if (i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_MEM)
-        {
-            bootMemory(i_target, l_data64);
-        }
-        else if(i_ppc405_boot_ctrl == p9occ_ctrl::PPC405_BOOT_WITHOUT_BL)
-        {
-            l_data64.flush<0>().insertFromRight(i_ppc405_jump_to_main_instr, 0, 64);
-        }
-        else
-        {
-            l_data64.flush<0>().insertFromRight(PPC405_BRANCH_OLD_INSTR, 0, 32);
-        }
-        FAPI_TRY(fapi2::putScom(i_target, PU_SRAM_SRBV3_SCOM, l_data64));
-    }
-
-    switch (i_ppc405_reset_ctrl)
-    {
-        case p9occ_ctrl::PPC405_RESET_NULL:
-            break;
-        case p9occ_ctrl::PPC405_RESET_OFF:
-            fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, ~BIT(OCB_PIB_OCR_CORE_RESET_BIT));
-            break;
-        case p9occ_ctrl::PPC405_RESET_ON:
-            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
-            break;
-        case p9occ_ctrl::PPC405_HALT_OFF:
-            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
-            break;
-        case p9occ_ctrl::PPC405_HALT_ON:
-            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_OR, BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
-            break;
-        case p9occ_ctrl::PPC405_RESET_SEQUENCE:
-            fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK, l_firMask);
-            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK_OR, BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
-            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_OR, BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
-            fapi2::delay(5000000ns);
-            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR_AND, ~BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
-            fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR, l_occfir);
-            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
-            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
-            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR_AND, ~BIT(OCCLFIR_PPC405_DBGSTOPACK_BIT));
-            fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK, l_firMask);
-            break;
-        case p9occ_ctrl::PPC405_START:
-            fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
-            fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
-            fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
-            break;
-        default:
-            break;
-    }
+    l_data64.flush<0>().insertFromRight(i_ppc405_jump_to_main_instr, 0, 64);
+    fapi2::putScom(i_target, PU_SRAM_SRBV3_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+    fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+    fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
 }
 
-static void startOCCFromSRAM(TARGETING::Target* i_proc)
+static void makeStart405Instruction(
+    const TARGETING::Target* i_target,
+    uint64_t* o_instr)
 {
-    uint64_t l_start405MainInstr = 0;
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>master_proc_target(i_proc);
-    fapi2::ReturnCode l_rc;
-
-    p9_pm_ocb_init(
-        master_proc_target, // master proc
-        p9pm::PM_INIT, // Channel setup type
-        p9ocb::OCB_CHAN1, // Channel
-        p9ocb:: OCB_TYPE_NULL, // Channel type
-        0, // Channel base address
-        0, // Push/Pull queue length
-        p9ocb::OCB_Q_OUFLOW_NULL, // Channel flow control
-        p9ocb::OCB_Q_ITPTYPE_NULL); // Channel interrupt ctrl
-    pm_pss_init(master_proc_target);
-    p9_pm_occ_firinit(master_proc_target);
-    clear_occ_special_wakeups(master_proc_target);
-    deviceWrite(i_proc, &0x218780f800000000, 8, DEVICE_SCOM_ADDRESS(0x6C040));
-    deviceWrite(i_proc, &0x0003d03c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C050));
-    deviceWrite(i_proc, &0x2181801800000000, 8, DEVICE_SCOM_ADDRESS(0x6C044));
-    deviceWrite(i_proc, &0x0003d00c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C054));
-    deviceWrite(i_proc, &0x010280ac00000000, 8, DEVICE_SCOM_ADDRESS(0x6C048));
-    deviceWrite(i_proc, &0x0001901400000000, 8, DEVICE_SCOM_ADDRESS(0x6C058));
-    makeStart405Instruction(i_proc, &l_start405MainInstr);
-
-    p9_pm_occ_control(
-        master_proc_target,
-        p9occ_ctrl::PPC405_START,
-        p9occ_ctrl::PPC405_BOOT_WITHOUT_BL,
-        l_start405MainInstr);
-
-    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OITR0));
-    deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OIEPR0));
-    HBPM::resetPMAll(HBPM::CLEAR_ATTRIBUTES);
-}
-
-static void makeStart405Instruction(const TARGETING::Target* i_target,
-                                       uint64_t* o_instr)
-{
-    errlHndl_t l_errl = NULL;
     uint64_t l_epAddr;
 
+    // OCC_405_SRAM_ADDRESS  = 0xFFF40000
+    // OCC_OFFSET_MAIN_EP    = 0x6C
     HBOCC::readSRAM(
         i_target,
         OCC_405_SRAM_ADDRESS + OCC_OFFSET_MAIN_EP,
@@ -1091,21 +1058,34 @@ static void makeStart405Instruction(const TARGETING::Target* i_target,
     // will be 0x4bf5b57200000000. The last two bits of the first byte of
     // the branch instruction must be '2' according to the OCC instruction
     // set manual.
+
+    // OCC_BRANCH_INSTR = 0x4B00000200000000
+    // BRANCH_ADDR_MASK = 0x00FFFFFC
     *o_instr = OCC_BRANCH_INSTR | (((uint64_t)(BRANCH_ADDR_MASK & l_epAddr)) << 32);
 }
 
-// Read OCC SRAM
-errlHndl_t readSRAM(const TARGETING::Target * i_pTarget,
-                             const uint32_t i_addr,
-                             uint64_t * io_dataBuf,
-                             size_t i_dataLen )
+fapi2::ReturnCode p9_pm_ocb_indir_setup_linear(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint32_t      i_ocb_bar)
 {
-    accessOCBIndirectChannel(
-        ACCESS_OCB_READ_LINEAR,
-        i_pTarget,
-        i_addr,
-        io_dataBuf,
-        8);
+    p9_pm_ocb_init(
+        i_target,
+        i_ocb_bar);
+}
+
+fapi2::ReturnCode p9_pm_ocb_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint32_t                   i_ocb_bar)
+{
+    pm_ocb_setup(
+        i_target,
+        p9ocb::OCB_CHAN0,
+        p9ocb::OCB_TYPE_LINSTR,
+        i_ocb_bar,
+        p9ocb::OCB_UPD_PIB_REG,
+        0,
+        p9ocb::OCB_Q_OUFLOW_NULL,
+        p9ocb::OCB_Q_ITPTYPE_NULL);
 }
 
 static void accessOCBIndirectChannel(
@@ -1116,127 +1096,79 @@ static void accessOCBIndirectChannel(
     size_t i_dataLen)
 {
     TARGETING::Target* l_pChipTarget = nullptr;
-
-    getChipTarget(i_pTarget, l_pChipTarget);
+    getChipTarget(i_pTarget,l_pChipTarget);
     fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarget(l_pChipTarget);
 
-    p9_pm_ocb_init(
+    p9_pm_ocb_indir_setup_linear(
         l_fapiTarget,
-        p9pm::PM_SETUP_PIB,
-        p9ocb::OCB_CHAN0,
-        p9ocb::OCB_TYPE_LINSTR,
-        i_addr,
-        0,
-        p9ocb::OCB_Q_OUFLOW_NULL,
-        p9ocb::OCB_Q_ITPTYPE_NULL);
+        i_addr);
+
     p9_pm_ocb_indir_access(
         l_fapiTarget,
+        p9ocb::OCB_CHAN0,
+        i_cmd == ACCESS_OCB_READ_LINEAR ? p9ocb::OCB_GET : p9ocb::OCB_PUT,
+        i_dataLen / 8,
         i_addr,
-        0,
         io_dataBuf);
 }
 
-fapi2::ReturnCode p9_pm_ocb_indir_access(
+static void p9_pm_ocb_indir_access(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9ocb::PM_OCB_CHAN_NUM  i_ocb_chan,
+    const p9ocb::PM_OCB_ACCESS_OP i_ocb_op,
+    const uint32_t                i_ocb_req_length,
     const uint32_t                i_oci_address,
-    uint32_t&                     o_ocb_act_length = 0,
     uint64_t*                     io_ocb_buffer)
 {
+    uint64_t l_OCBAR_address   = PU_OCB_PIB_OCBAR0;
+    uint64_t l_OCBDR_address   = PU_OCB_PIB_OCBDR0;
+    uint64_t l_OCBCSR_address  = PU_OCB_PIB_OCBCSR0_RO;
+    uint64_t l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS0_SCOM;
 
     fapi2::buffer<uint64_t> l_data64;
     l_data64.insert<0, 32>(i_oci_address);
-    fapi2::putScom(i_target, PU_OCB_PIB_OCBAR1, l_data64);
+    fapi2::putScom(i_target, l_OCBAR_address, l_data64);
 
-    o_ocb_act_length = 0;
-    l_data64 = 0;
-    uint64_t l_data = 0;
-    l_data64.extract(l_data, 0, 64);
-    io_ocb_buffer[0] = l_data;
-    o_ocb_act_length++;
-}
-
-fapi2::ReturnCode pm_ocb_reset(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    fapi2::buffer<uint64_t> l_data64;
-    fapi2::putScom(i_target, OCBARn[1], 0);
-    l_data64.flush<1>();
-    fapi2::putScom(i_target, OCBCSRn_CLEAR[1], l_data64);
-    l_data64.flush<0>().setBit<4>().setBit<5>();
-    fapi2::putScom(i_target, OCBCSRn_OR[1], l_data64);
-    fapi2::putScom(i_target, OCBESRn[1], 0);
-    fapi2::putScom(i_target, OCBSLBRn[1], 0);
-    fapi2::putScom(i_target, OCBSHBRn[1], 0);
-    fapi2::putScom(i_target, OCBSLCSn[1], 0);
-    fapi2::putScom(i_target, OCBSHCSn[1], 0);
-    fapi2::putScom(i_target, OCBSESn[1], 0);
-    fapi2::putScom(i_target, OCBLWCRn[1], 0);
-    l_data64 = 0;
-    l_data64.setBit<3, 7>();
-    fapi2::putScom(i_target, OCBLWSBRn[1], l_data64);
-    fapi2::buffer<uint64_t> l_buf64;
-    l_buf64.flush<0>().insertFromRight<0, 32>(INTERRUPT_SRC_MASK_REG);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIMR0_OR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIMR1_OR, l_buf64);
-    l_buf64.flush<1>();
-    fapi2::putScom(i_target, PU_OCB_OCI_OITR0_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OITR1_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIEPR0_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIEPR1_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OISR0_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OISR1_CLEAR, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR0A_SCOM, 0);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR0B_SCOM, 0);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR0C_SCOM, 0);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR1A_SCOM, 0);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR1B_SCOM, 0);
-    fapi2::putScom(i_target, PU_OCB_OCI_OIRR1C_SCOM, 0);
-    l_buf64.flush<0>().setBit<0, 2>();
-    fapi2::putScom(i_target, PU_OCB_OCI_OTR0_SCOM, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_OCI_OTR1_SCOM, l_buf64);
-    fapi2::getScom(i_target, PU_PBAMODE_SCOM, l_buf64);
-    l_buf64.clearBit<PU_PBAMODE_EN_MARKER_ACK>();
-    fapi2::putScom(i_target, PU_PBAMODE_SCOM, l_buf64);
-    fapi2::putScom(i_target, PU_OCB_PIB_OSTOESR, 0);
-    fapi2::getScom(i_target, PU_OCB_OCI_OCCHBR_SCOM, l_buf64);
-    l_buf64.clearBit<PU_OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN>();
-    fapi2::putScom(i_target, PU_OCB_OCI_OCCHBR_SCOM, l_buf64);
-}
-
-fapi2::ReturnCode p9_pm_ocb_init(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9pm::PM_FLOW_MODE      i_mode,
-    const p9ocb::PM_OCB_CHAN_NUM     i_ocb_chan,
-    const p9ocb::PM_OCB_CHAN_TYPE    i_ocb_type,
-    const uint32_t                   i_ocb_bar,
-    const uint8_t                    i_ocb_q_len,
-    const p9ocb::PM_OCB_CHAN_OUFLOW  i_ocb_ouflow_en,
-    const p9ocb::PM_OCB_ITPTYPE      i_ocb_itp_type)
-{
-    if (i_mode == p9pm::PM_RESET)
+    if(i_ocb_op == p9ocb::OCB_PUT)
     {
-        pm_ocb_reset(i_target);
-    }
-    else if (i_mode == p9pm::PM_SETUP_ALL || i_mode == p9pm::PM_SETUP_PIB)
-    {
-        p9ocb::PM_OCB_CHAN_REG l_upd_reg = p9ocb::OCB_UPD_PIB_REG;
-        if (i_mode == p9pm::PM_SETUP_ALL)
+        fapi2::buffer<uint64_t> l_data64;
+        fapi2::getScom(i_target, l_OCBCSR_address, l_data64);
+
+        if (l_data64.getBit<4>() && l_data64.getBit<5>())
         {
-            l_upd_reg = p9ocb::OCB_UPD_PIB_OCI_REG;
+            fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
+            if (l_data64.getBit<31>())
+            for(uint8_t l_counter = 0; l_counter < 4; l_counter++;)
+            {
+                if (!l_data64.getBit<0>())
+                {
+                    break;
+                }
+                // maybe some delay is needed here if coreboot is too fast?
+                fapi2::delay(0);
+                fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
+            }
         }
-        pm_ocb_setup(
-            i_target,
-            i_ocb_chan,
-            i_ocb_type,
-            i_ocb_bar,
-            l_upd_reg,
-            i_ocb_q_len,
-            i_ocb_ouflow_en,
-            i_ocb_itp_type);
+        for(uint32_t l_index = 0; l_index < i_ocb_req_length; l_index++)
+        {
+            l_data64.insertFromRight(io_ocb_buffer[l_index], 0, 64);
+            fapi2::putScom(i_target, l_OCBDR_address, l_data64);
+        }
+    }
+    else if(i_ocb_op == p9ocb::OCB_GET)
+    {
+        fapi2::buffer<uint64_t> l_data64;
+        uint64_t l_data = 0;
+
+        for(uint32_t l_loopCount = 0; l_loopCount < i_ocb_req_length; l_loopCount++)
+        {
+            l_data64.extract(l_data, 0, 64);
+            io_ocb_buffer[l_loopCount] = l_data;
+        }
     }
 }
 
-fapi2::ReturnCode pm_ocb_setup(
+static void pm_ocb_setup(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     const p9ocb::PM_OCB_CHAN_NUM    i_ocb_chan,
     const p9ocb::PM_OCB_CHAN_TYPE   i_ocb_type,
@@ -1246,10 +1178,8 @@ fapi2::ReturnCode pm_ocb_setup(
     const p9ocb::PM_OCB_CHAN_OUFLOW i_ocb_ouflow_en,
     const p9ocb::PM_OCB_ITPTYPE     i_ocb_itp_type)
 {
-    uint32_t l_ocbase = 0x0;
     fapi2::buffer<uint64_t> l_mask_or(0);
     fapi2::buffer<uint64_t> l_mask_clear(0);
-    fapi2::buffer<uint64_t> l_data64;
 
     if (i_ocb_type == p9ocb::OCB_TYPE_LIN)
     {
@@ -1277,7 +1207,7 @@ fapi2::ReturnCode pm_ocb_setup(
             l_mask_clear.setBit<3>();
         }
     }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_PULLQ) // pull queue
+    else if (i_ocb_type == p9ocb::OCB_TYPE_PULLQ)
     {
         l_mask_or.setBit<4, 2>();
 
@@ -1294,9 +1224,11 @@ fapi2::ReturnCode pm_ocb_setup(
     fapi2::putScom(i_target, OCBCSRn_OR[i_ocb_chan], l_mask_or);
     fapi2::putScom(i_target, OCBCSRn_CLEAR[i_ocb_chan], l_mask_clear);
 
+    fapi2::buffer<uint64_t> l_data64;
     if(!(i_ocb_type == p9ocb::OCB_TYPE_NULL
     || i_ocb_type == p9ocb::OCB_TYPE_CIRC))
     {
+        uint32_t l_ocbase;
         if(i_ocb_type == p9ocb::OCB_TYPE_LIN
         || i_ocb_type == p9ocb::OCB_TYPE_LINSTR)
         {
@@ -1330,4 +1262,56 @@ fapi2::ReturnCode pm_ocb_setup(
         l_data64.setBit<31>();
         fapi2::putScom(i_target, OCBSLCSn[i_ocb_chan], l_data64);
     }
+}
+
+inline uint64_t getMSR()
+{
+    register uint64_t msr = 0;
+    asm volatile("mfmsr %0" : "=r" (msr));
+    return msr;
+}
+
+inline void setMSR(uint64_t _msr)
+{
+    register uint64_t msr = _msr;
+    asm volatile("mtmsr %0; isync" :: "r" (msr));
+}
+
+void setCheckstopData(uint64_t i_xstopAddr, uint64_t i_xstopData)
+{
+    // only used in case a checkstop is forced
+    g_xstopRegPtr = reinterpret_cast<uint64_t*>(i_xstopAddr | VmmManager::FORCE_PHYS_ADDR);
+    g_xstopRegValue = i_xstopData;
+
+    uint64_t l_msr = getMSR();
+    l_msr |= 0x0000000000001000;
+    setMSR(l_msr);
+}
+
+static void writeSRAM(
+    const TARGETING::Target * i_pTarget,
+    const uint32_t i_addr,
+    uint64_t * i_dataBuf,
+    size_t i_dataLen)
+{
+    accessOCBIndirectChannel(
+        ACCESS_OCB_WRITE_LINEAR,
+        i_pTarget,
+        i_addr,
+        i_dataBuf,
+        i_dataLen);
+}
+
+static void readSRAM(
+    const TARGETING::Target * i_pTarget,
+    const uint32_t i_addr,
+    uint64_t * io_dataBuf,
+    size_t i_dataLen)
+{
+    accessOCBIndirectChannel(
+        ACCESS_OCB_READ_LINEAR,
+        i_pTarget,
+        i_addr,
+        io_dataBuf,
+        i_dataLen);
 }
