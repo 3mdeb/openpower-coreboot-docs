@@ -90,43 +90,17 @@ errlHndl_t loadOCCSetup(
     uint64_t i_occImgVaddr,
     uint64_t i_commonPhysAddr)
 {
-    // cast OUR type of target to a FAPI type of target.
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_fapiTarg(i_target);
 
-    // Remove bit 0, may be set for physical addresses
     uint64_t l_occ_addr = i_occImgPaddr & PHYSICAL_ADDR_MASK;
-    p9_pm_pba_bar_config(l_fapiTarg, 0, l_occ_addr);
+    p9_pm_pba_bar_config(l_fapiTarg, 0, l_occ_addr); // analyzed
 
-    // BAR2 is the OCC Common Area
-    // Bar size is in MB
     TARGETING::Target* sys = nullptr;
     TARGETING::targetService().getTopLevelTarget(sys);
     sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(i_commonPhysAddr);
 
-    // Remove bit 0, may be set for physical addresses
     uint64_t l_common_addr = i_commonPhysAddr & PHYSICAL_ADDR_MASK;
-    p9_pm_pba_bar_config(l_fapiTarg, 2, l_common_addr);
-}
-
-fapi2::ReturnCode p9_pm_pba_bar_config (
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const uint32_t i_index,
-    const uint64_t i_pba_bar_addr)
-{
-    fapi2::buffer<uint64_t> l_bar64;
-    uint64_t                l_work_size;
-    uint64_t                l_finalMask;
-
-    l_bar64.set(i_pba_bar_addr);
-    l_bar64.insertFromRight<PU_PBABAR0_CMD_SCOPE, PU_PBABAR0_CMD_SCOPE_LEN>(p9pba::LOCAL_NODAL);
-    fapi2::putScom(i_target, PBA_BARs[i_index], l_bar64);
-
-    l_work_size = 4;
-
-    l_finalMask = (l_work_size - 1) << 20;
-    l_bar64.flush<0>();
-    l_bar64.set(l_finalMask);
-    fapi2::putScom(i_target, PBA_BARMSKs[i_index], l_bar64);
+    p9_pm_pba_bar_config(l_fapiTarg, 2, l_common_addr); // analyzed
 }
 
 static void loadPMComplex(
@@ -1227,4 +1201,15 @@ static void pm_occ_fir_init(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i
     iv_and_mask.clearBit(SRT_FSM_ERR);
     iv_and_mask.clearBit(STOP_RCV_NOTIFY_PRD);
     putScom(iv_proc, iv_fir_address + MASK_WAND_INCR, iv_and_mask);
+}
+
+static void p9_pm_pba_bar_config (
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint32_t i_index,
+    const uint64_t i_pba_bar_addr)
+{
+    uint64_t l_bar64 = i_pba_bar_addr;
+    l_bar64.insertFromRight<0, 3>(0);
+    fapi2::putScom(i_target, PBA_BARs[i_index], l_bar64);
+    fapi2::putScom(i_target, PBA_BARMSKs[i_index], 0x300000);
 }
