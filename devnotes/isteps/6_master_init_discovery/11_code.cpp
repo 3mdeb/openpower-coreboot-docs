@@ -133,64 +133,21 @@ static void loadPMComplex(
         l_homerVAddr,
         HBPM::PM_LOAD);
 #endif
-
-    //If i_useSRAM is true, then we're in istep 6.11. This address needs
-    //to be reset here, so that it's recalculated again in istep 21.1
-    //where this function is called.
-    i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(0);
-    if ((TARGETING::is_phyp_load()) && (nullptr != l_homerVAddr))
-    {
-        int lRc = HBPM_UNMAP(l_homerVAddr);
-        uint64_t lZeroAddr = 0;
-        i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(reinterpret_cast<uint64_t>(lZeroAddr));
-    }
 }
 
-void *convertHomerPhysToVirt(TARGETING::Target* i_proc_target, uint64_t i_phys_addr)
+errlHndl_t loadHostDataToSRAM(TARGETING::Target* i_proc, const PRDF::HwInitialized_t i_curHw)
 {
-    void *l_virt_addr =  i_proc_target->getAttr<ATTR_HOMER_VIRT_ADDR>();
-    if(i_proc_target->getAttr<ATTR_HOMER_PHYS_ADDR>() != i_phys_addr
-    || nullptr == l_virt_addr)
-    {
-        if(nullptr != l_virt_addr)
-        {
-            HBPM_UNMAP(l_virt_addr);
-        }
-
-        if(i_phys_addr)
-        {
-            l_virt_addr = HBPM_MAP(HBPM_PHYS_ADDR, sizeof(Homerlayout_t));
-        }
-        else
-        {
-            l_virt_addr = nullptr;
-        }
-
-        i_proc_target->setAttr<ATTR_HOMER_PHYS_ADDR>(i_phys_addr);
-        i_proc_target->setAttr<ATTR_HOMER_VIRT_ADDR>(l_virt_addr);
-    }
-    return l_virt_addr;
-}
-
-errlHndl_t loadHostDataToSRAM( TARGETING::Target* i_proc,
-                                const PRDF::HwInitialized_t i_curHw)
-{
-    //Treat virtual address as starting pointer
-    //for config struct
     HBPM::occHostConfigDataArea_t * config_data = new HBPM::occHostConfigDataArea_t();
 
-    // Get top level system target
-    TARGETING::TargetService & tS = TARGETING::targetService();
     TARGETING::Target * sysTarget = NULL;
-    tS.getTopLevelTarget(sysTarget);
+    TARGETING::targetService().getTopLevelTarget(sysTarget);
 
     uint32_t nestFreq =  sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
 
     config_data->version = HBOCC::OccHostDataVersion;
     config_data->nestFrequency = nestFreq;
 
-    // Figure out the interrupt type
-    if( INITSERVICE::spBaseServicesEnabled() )
+    if(INITSERVICE::spBaseServicesEnabled() )
     {
         config_data->interruptType = USE_FSI2HOST_MAILBOX;
     }
@@ -200,6 +157,11 @@ errlHndl_t loadHostDataToSRAM( TARGETING::Target* i_proc,
     }
 
     config_data->firMaster = IS_FIR_MASTER;
+    //     @brief  Writes register lists and hardware config in the HOMER data for
+    //  *          the OCC to capture in the event of a system checkstop.
+    //  *  @param  i_hBuf     SRAM pointer to the beginning of the HOMER data buffer.
+    //  *  @param  i_hBufSize Total size of the HOMER data buffer.
+    //  *  @param  i_curHW    enum indicating which HW is currently known
     PRDF::writeHomerFirData(
         config_data->firdataConfig,
         sizeof(config_data->firdataConfig),
@@ -214,356 +176,179 @@ errlHndl_t loadHostDataToSRAM( TARGETING::Target* i_proc,
         config_data->smfMode = SMF_MODE_DISABLED;
     }
 
-
-    HBOCC::writeSRAM(
-        i_proc,
-        OCC_SRAM_FIR_DATA,
-        (uint64_t*)config_data->firdataConfig,
-        sizeof(config_data->firdataConfig));
+    HBOCC::writeSRAM(i_proc, OCC_SRAM_FIR_DATA, (uint64_t*)config_data->firdataConfig, sizeof(config_data->firdataConfig)); // analyzed
     delete(config_data);
 }
 
-errlHndl_t loadOCCImageDuringIpl(TARGETING::Target* i_target,
-                                void* i_occVirtAddr)
+errlHndl_t loadOCCImageDuringIpl(TARGETING::Target* i_target, void* i_occVirtAddr)
 {
-    errlHndl_t l_errl = NULL;
     uint8_t* l_occImage = NULL;
     void* l_modifiedSectionPtr = NULL;
 
-    //The OCC image should always be in the virtual address space
     UtilLidMgr lidMgr(HBOCC::OCC_LIDID);
     void* l_tmpOccImage = const_cast<void*>(lidMgr.getLidVirtAddr());
     l_occImage = (uint8_t*)l_tmpOccImage;
 
-    // Get system target in order to access ATTR_NEST_FREQ_MHZ
     TARGETING::TargetService & l_tS = TARGETING::targetService();
     TARGETING::Target * l_sysTarget = NULL;
     l_tS.getTopLevelTarget(l_sysTarget);
 
-    //Save Nest Frequency:
     ATTR_FREQ_PB_MHZ_type l_nestFreq = l_sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
-    size_t l_length = 0; // length of current section
+    size_t l_length = 0;
 
     uint32_t* l_ptrToLength = (uint32_t*)((char*)l_occImage + OCC_OFFSET_LENGTH);
-    l_length = *l_ptrToLength; // Length of the bootloader
+    l_length = *l_ptrToLength;
 
-    // Write the OCC Bootloader into memory
     memcpy(i_occVirtAddr, l_occImage, l_length);
-
-    // OCC Main Application
     char* l_occMainAppPtr = l_occImage + l_length;
     l_ptrToLength = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_LENGTH);
-    l_length = *l_ptrToLength; // Length of the OCC Main
-
-    // Write 405 Main application to SRAM
-    HBOCC::writeSRAM(
-        i_target,
-        HBOCC::OCC_405_SRAM_ADDRESS,
-        (uint64_t*)l_occMainAppPtr,
-        l_length);
+    l_length = *l_ptrToLength;
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_occMainAppPtr, l_length); // analyzed
 
     l_modifiedSectionPtr = malloc(OCC_OFFSET_FREQ + sizeof(l_nestFreq));
-    // Populate this section with data from PNOR
     memcpy(l_modifiedSectionPtr, l_occMainAppPtr, OCC_OFFSET_FREQ + sizeof(l_nestFreq));
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_modifiedSectionPtr, (uint32_t)OCC_OFFSET_FREQ + sizeof(l_nestFreq)); // analyzed
 
-    // Change the fequency and set the IPL flag
-    uint16_t* l_ptrToIplFlag = (uint16_t*)((char*)l_modifiedSectionPtr + OCC_OFFSET_IPL_FLAG);
-    uint32_t* l_ptrToFreq = (uint32_t*)((char*)l_modifiedSectionPtr + OCC_OFFSET_FREQ);
-
-    *l_ptrToIplFlag |= 0x001;
-    *l_ptrToFreq     = l_nestFreq;
-
-    // Overwrite the part of Main we modified above in SRAM:
-    HBOCC::writeSRAM(
-        i_target,
-        HBOCC::OCC_405_SRAM_ADDRESS,
-        (uint64_t*)l_modifiedSectionPtr,
-        (uint32_t)OCC_OFFSET_FREQ +
-        sizeof(l_nestFreq));
-
-    // GPE0 application is stored right after the 405 main in memory
     char* l_gpe0AppPtr = l_occMainAppPtr + l_length;
     uint32_t* l_ptrToGpe0Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE0_LENGTH);
     l_length = *l_ptrToGpe0Length;
-    HBOCC::writeSRAM(
-        i_target,
-        HBOCC::OCC_GPE0_SRAM_ADDRESS,
-        (uint64_t*)l_gpe0AppPtr,
-        l_length);
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE0_SRAM_ADDRESS, (uint64_t*)l_gpe0AppPtr, l_length); // analyzed
 
     char* l_gpe1AppPtr = l_gpe0AppPtr + l_length;
     uint32_t* l_ptrToGpe1Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE1_LENGTH);
     l_length = *l_ptrToGpe1Length;
-    HBOCC::writeSRAM(
-        i_target,
-        HBOCC::OCC_GPE1_SRAM_ADDRESS,
-        (uint64_t*)l_gpe1AppPtr,
-        l_length);
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE1_SRAM_ADDRESS, (uint64_t*)l_gpe1AppPtr, l_length); // analyzed
     free(l_modifiedSectionPtr);
 }
 
-void readSemiPersistData(semiPersistData_t & o_data)
+static void readSemiPersistData(semiPersistData_t & o_data)
 {
     memset(&o_data, 0x0, sizeof(semiPersistData_t));
-
-    //Lock to prevent concurrent access
-    mutex_lock(&g_PersistMutex);
-
-    auto l_data = getHbVolatile();
+    PNOR::SectionInfo_t l_pnorHbVolatile;
+    Singleton<PnorRP>::instance().getSectionInfo(l_pnorHbVolatile);
+    semiPersistData_t *l_data l_pnorHbVolatile.size == 0 ? 0 : l_pnorHbVolatile.vaddr;
     if(l_data)
     {
         o_data = *l_data;
     }
-
-    mutex_unlock(&g_PersistMutex);
 }
 
-errlHndl_t HbVolatileSensor::getHbVolatile( hbVolatileSetting &o_setting )
+errlHndl_t PnorRP::getSectionInfo(PNOR::SectionInfo_t& o_info)
 {
-    // the HB_VOLATILE sensor is defined as a discrete sensor
-    getSensorReadingData l_data;
+    // inhibit any attempt to getSectionInfo on any attribute override
+    // sections if secureboot is enabled
+    bool l_inhibited = isInhibitedSection(PNOR::HB_VOLATILE);
 
-    readSensorData( l_data );
-
-    // check if in valid range of hbVolatileSetting enums
-    if(l_data.event_status == ENABLE_VOLATILE
-    || l_data.event_status == DISABLE_VOLATILE )
+    if (PNOR::INVALID_SECTION != PNOR::HB_VOLATILE)
     {
-        o_setting = static_cast<hbVolatileSetting>(l_data.event_status);
-    }
-    return l_err;
-}
+        o_info.id = iv_TOC[PNOR::HB_VOLATILE].id;
+        o_info.name = SectionIdToString(PNOR::HB_VOLATILE);
 
-virtual uint32_t getSensorNumber( )
-{
-    return TARGETING::UTIL::getSensorNumber(iv_target, iv_name );
-};
+#ifdef CONFIG_SECUREBOOT
+        o_info.secure = iv_TOC[PNOR::HB_VOLATILE].secure;
+        o_info.size = iv_TOC[PNOR::HB_VOLATILE].size;
+        o_info.secureProtectedPayloadSize = 0; // for non secure sections
+                                                // the protected payload size
+                                                // defaults to zero
+        // If a secure section and has a secure header handle secure
+        // sections in SPnorRP's address space
+        if (o_info.secure)
+        {
+            uint8_t* l_vaddr = reinterpret_cast<uint8_t*>(iv_TOC[PNOR::HB_VOLATILE].virtAddr);
+            // By adding VMM_VADDR_SPNOR_DELTA twice we can translate a pnor
+            // address into a secure pnor address, since pnor, temp, and spnor
+            // spaces are equidistant.
+            // See comments in SPnorRP::verifySections() method in spnorrp.C
+            // and the definition of VMM_VADDR_SPNOR_DELTA in vmmconst.h
+            // for specifics.
+            o_info.vaddr = reinterpret_cast<uint64_t>(l_vaddr)
+                                                        + VMM_VADDR_SPNOR_DELTA
+                                                        + VMM_VADDR_SPNOR_DELTA;
 
-uint32_t getSensorNumber( const TARGETING::Target* i_pTarget,
-                          TARGETING::SENSOR_NAME i_name )
-{
+            // Get size of the secured payload for the secure section
+            // Note: the payloadSize we get back is untrusted because
+            // we are parsing the header in pnor (non secure space).
+            size_t payloadTextSize = 0;
+            // Do an existence check on the container to see if it's non-empty
+            // and has valid beginning bytes. For optional Secure PNOR sections.
 
-#ifdef CONFIG_BMC_IPMI
-    // get the IPMI sensor number from the array, these are unique for each
-    // sensor + sensor owner in an IPMI system
-    return getIPMISensorNumber( i_pTarget, i_name );
-#else
-    // pass back the HUID - this will be the sensor number for non ipmi based
-    // systems
-    return get_huid( i_pTarget );
+            SECUREBOOT::ContainerHeader l_conHdr;
+            l_conHdr.setHeader(l_vaddr);
+            payloadTextSize = l_conHdr.payloadTextSize();
 
+            // skip secure header for secure sections at this point in time
+            o_info.vaddr += PAGESIZE;
+            // now that we've skipped the header we also need to adjust the
+            // size of the section to reflect that.
+            // Note: For unsecured sections, the header skip and size decrement
+            // was done previously in pnor_common.C
+            o_info.size -= PAGESIZE;
+
+            // Need to change size to accommodate for hash table
+            if (l_conHdr.sb_flags()->sw_hash)
+            {
+                o_info.vaddr += payloadTextSize;
+                // Hash page table needs to use containerSize as the base
+                // and subtract off header and hash table size
+                o_info.size = l_conHdr.totalContainerSize() - PAGE_SIZE -
+                                payloadTextSize;
+                o_info.hasHashTable = true;
+            }
+
+            // cache the value in SectionInfo struct so that we can
+            // parse the container header less often
+            o_info.secureProtectedPayloadSize = payloadTextSize;
+        }
+        else
 #endif
+        {
+            o_info.size = iv_TOC[PNOR::HB_VOLATILE].size;
+            o_info.vaddr = iv_TOC[PNOR::HB_VOLATILE].virtAddr;
+        }
 
+        o_info.flashAddr = iv_TOC[PNOR::HB_VOLATILE].flashAddr;
+        o_info.eccProtected = (iv_TOC[PNOR::HB_VOLATILE].integrity & FFS_INTEG_ECC_PROTECT) != 0;
+        o_info.sha512Version = (iv_TOC[PNOR::HB_VOLATILE].version & FFS_VERS_SHA512) != 0;
+        o_info.sha512perEC = (iv_TOC[PNOR::HB_VOLATILE].version & FFS_VERS_SHA512_PER_EC) != 0;
+        o_info.readOnly = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_READ_ONLY) != 0;
+        o_info.reprovision = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_REPROVISION) != 0;
+        o_info.Volatile = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_VOLATILE) != 0;
+        o_info.clearOnEccErr = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_CLR_ECC_ERR) != 0;
+    }
 }
 
-uint32_t getIPMISensorNumber( const TARGETING::Target*& i_targ,
-        TARGETING::SENSOR_NAME i_name )
+uint32_t getIPMISensorNumber(const TARGETING::Target*& i_targ, TARGETING::SENSOR_NAME i_name )
 {
-    // $TODO RTC:123035 investigate pre-populating some info if we end up
-    // doing this multiple times per sensor
-    //
-    // Helper function to search the sensor data for the correct sensor number
-    // based on the sensor name.
-    //
-    uint8_t l_sensor_number = INVALID_IPMI_SENSOR;
-
-    const TARGETING::Target * l_targ = i_targ;
-
-    if( i_targ == NULL )
+    if(i_targ == NULL)
     {
-        TARGETING::Target * sys;
-        // use the system target
-        TARGETING::targetService().getTopLevelTarget(sys);
-
-        // die if there is no system target
-        assert(sys);
-
-        l_targ = sys;
+        TARGETING::targetService().getTopLevelTarget(i_targ);
     }
 
     TARGETING::AttributeTraits<TARGETING::ATTR_IPMI_SENSORS>::Type l_sensors;
-
-    // if there is no sensor attribute, we will return INVALID_IPMI_SENSOR(0xFF)
-    if(  l_targ->tryGetAttr<TARGETING::ATTR_IPMI_SENSORS>(l_sensors) )
+    if(i_targ->tryGetAttr<TARGETING::ATTR_IPMI_SENSORS>(l_sensors))
     {
-        // get the number of rows by dividing the total size by the size of
-        // the first row
         uint16_t array_rows = (sizeof(l_sensors)/sizeof(l_sensors[0]));
-
-        // create an iterator pointing to the first element of the array
-        uint16_t (*begin)[2]  = &l_sensors[0];
-
-        // using the number entries as the index into the array will set the
-        // end iterator to the correct position or one entry past the last
-        // element of the array
+        uint16_t (*begin)[2] = &l_sensors[0];
         uint16_t (*end)[2] = &l_sensors[array_rows];
-
-        uint16_t (*ptr)[2] =
-            std::lower_bound(begin, end, i_name, &name_predicate);
-
-        // we have not reached the end of the array and the iterator
-        // returned from lower_bound is pointing to an entry which equals
-        // the one we are searching for.
-        if( ( ptr != end ) &&
-                ( (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NAME_OFFSET] == i_name ) )
+        uint16_t (*ptr)[2] = std::lower_bound(begin, end, i_name, &name_predicate);
+        if(ptr != end && (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NAME_OFFSET] == i_name)
         {
-            // found it
-            l_sensor_number =
-                (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NUMBER_OFFSET];
-
+            return (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NUMBER_OFFSET];
         }
     }
-    return l_sensor_number;
+    return INVALID_IPMI_SENSOR;
 }
 
-errlHndl_t SensorBase::readSensorData( getSensorReadingData& o_data)
-{
-    // need to allocate some memory to hold the sensor number this will be
-    // deleted by the IPMI transport layer
-    uint8_t * l_data = new uint8_t[1];
-
-    l_data[0] = static_cast<uint8_t>(getSensorNumber());
-    IPMI::completion_code cc = IPMI::CC_UNKBAD;
-    // o_data will hold the response when this returns
-    sendrecv(IPMI::get_sensor_reading(), cc, 1, l_data);
-
-    // if we didn't get an error back from the BT interface, but see a
-    // bad completion code from the BMC, process the CC to see if we
-    // need to create a PEL - if an error occurs sendrcv will clean up
-    // l_data for us
-    processCompletionCode(cc);
-
-    // populate the output structure with the sensor data
-    o_data.completion_code = cc;
-    o_data.sensor_status = l_data[0];
-    o_data.sensor_reading = l_data[1];
-
-    // bytes 3-5 of the reading are optional and will be dependent
-    // on the value of the sensor status byte.
-    if(!(o_data.sensor_status
-    & (SENSOR::SENSOR_DISABLED | SENSOR::SENSOR_SCANNING_DISABLED))
-    || (o_data.sensor_status & SENSOR::READING_UNAVAILABLE))
-    {
-        // sensor reading is available
-        o_data.event_status = (((uint16_t)l_data[3]) << 8  | l_data[2]) & 0x7FFF;
-    }
-    delete[] l_data;
-};
-
-errlHndl_t SensorBase::processCompletionCode( IPMI::completion_code i_rc )
-{
-    errlHndl_t l_err = NULL;
-
-    IPMI::IPMIReasonCode l_reasonCode;
-
-    if( i_rc != IPMI::CC_OK )
-    {
-        switch(i_rc)
-        {
-            case  SENSOR::CC_SENSOR_READING_NOT_SETTABLE:
-            {
-                /*@
-                * @errortype       ERRL_SEV_UNRECOVERABLE
-                * @moduleid        IPMI::MOD_IPMISENSOR
-                * @reasoncode      IPMI::RC_SENSOR_NOT_SETTABLE
-                * @userdata1       BMC IPMI Completion code.
-                * @userdata2       bytes [0-1]sensor name
-                *                  bytes [2-3]sensor number
-                *                  bytes [4-7]HUID of target.
-                * @devdesc         Set sensor reading command failed.
-                */
-                l_reasonCode = IPMI::RC_SENSOR_NOT_SETTABLE;
-                break;
-            }
-
-            case  SENSOR::CC_EVENT_DATA_BYTES_NOT_SETTABLE:
-            {
-                /*@
-                * @errortype       ERRL_SEV_UNRECOVERABLE
-                * @moduleid        IPMI::MOD_IPMISENSOR
-                * @reasoncode      IPMI::RC_EVENT_DATA_NOT_SETTABLE
-                * @userdata1       BMC IPMI Completion code.
-                * @userdata2       bytes[0-3]sensor number
-                *                  bytes[4-7]HUID of target.
-                * @devdesc         Set sensor reading command failed.
-                */
-                l_reasonCode = IPMI::RC_EVENT_DATA_NOT_SETTABLE;
-                break;
-            }
-
-            case IPMI::CC_CMDSENSOR:
-            {
-                /*@
-                * @errortype       ERRL_SEV_UNRECOVERABLE
-                * @moduleid        IPMI::MOD_IPMISENSOR
-                * @reasoncode      IPMI::RC_INVALID_SENSOR_CMD
-                * @userdata1       BMC IPMI Completion code.
-                * @userdata2       bytes [0-1]sensor name
-                *                  bytes [2-3]sensor number
-                *                  bytes [4-7]HUID of target.
-                * @devdesc         Command not valid for this sensor.
-                */
-                l_reasonCode = IPMI::RC_INVALID_SENSOR_CMD;
-                break;
-            }
-
-            case IPMI::CC_BADSENSOR:
-            {
-                /*@
-                * @errortype       ERRL_SEV_UNRECOVERABLE
-                * @moduleid        IPMI::MOD_IPMISENSOR
-                * @reasoncode      IPMI::RC_SENSOR_NOT_PRESENT
-                * @userdata1       BMC IPMI Completion code.
-                * @userdata2       bytes [0-1]sensor name
-                *                  bytes [2-3]sensor number
-                *                  bytes [4-7]HUID of target.
-                * @devdesc         Requested sensor is not present.
-                */
-                l_reasonCode = IPMI::RC_SENSOR_NOT_PRESENT;
-                break;
-            }
-
-            default:
-            {
-                // lump everything else into a general failure for
-                // now.
-                /*@
-                * @errortype       ERRL_SEV_UNRECOVERABLE
-                * @moduleid        IPMI::MOD_IPMISENSOR
-                * @reasoncode      IPMI::RC_SET_SENSOR_FAILURE
-                * @userdata1       BMC IPMI Completion code.
-                * @userdata2       bytes [0-1]sensor name
-                *                  bytes [2-3]sensor number
-                *                  bytes [4-7]HUID of target.
-                * @devdesc         Set sensor reading command failed.
-                */
-                l_reasonCode = IPMI::RC_SET_SENSOR_FAILURE;
-                break;
-            }
-        }
-
-        l_err = new ERRORLOG::ErrlEntry(
-            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
-            IPMI::MOD_IPMISENSOR,
-            l_reasonCode,
-            i_rc,
-            TO_UINT64(((TO_UINT32(iv_name) << 16)
-          | TO_UINT32(getSensorNumber()))) << 32)
-          | TO_UINT64(TARGETING::get_huid(iv_target),
-            true);
-
-        l_err->collectTrace(IPMI_COMP_NAME);
-
-    }
-}
+//////////////////////////
+// Fully analyzed below //
+//////////////////////////
 
 static void startOCCFromSRAM(TARGETING::Target* i_proc)
 {
-    uint64_t l_start405MainInstr = 0;
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>master_proc_target(i_proc);
 
-    pm_pss_init(master_proc_target); // analyzed
-    pm_occ_fir_init(i_target); // analyzed
+    pm_pss_init(master_proc_target);
+    pm_occ_fir_init(i_target);
     clear_occ_special_wakeups(master_proc_target);
     deviceWrite(i_proc, &0x218780f800000000, 8, DEVICE_SCOM_ADDRESS(0x6C040));
     deviceWrite(i_proc, &0x0003d03c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C050));
@@ -571,8 +356,9 @@ static void startOCCFromSRAM(TARGETING::Target* i_proc)
     deviceWrite(i_proc, &0x0003d00c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C054));
     deviceWrite(i_proc, &0x010280ac00000000, 8, DEVICE_SCOM_ADDRESS(0x6C048));
     deviceWrite(i_proc, &0x0001901400000000, 8, DEVICE_SCOM_ADDRESS(0x6C058));
-    makeStart405Instruction(i_proc, &l_start405MainInstr);
 
+    uint64_t l_start405MainInstr = 0;
+    makeStart405Instruction(i_proc, &l_start405MainInstr);
     p9_pm_occ_control(
         master_proc_target,
         p9occ_ctrl::PPC405_START,
@@ -581,39 +367,18 @@ static void startOCCFromSRAM(TARGETING::Target* i_proc)
 
     deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OITR0));
     deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OIEPR0));
-    HBPM::resetPMAll();
 }
 
-fapi2::ReturnCode clear_occ_special_wakeups(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+static void clear_occ_special_wakeups(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
+    // EX targets CHIPLET_IDs [0x10, 0x10, 0x11, 0x11, 0x12, 0x12, 0x13, 0x13, 0x14, 0x14]
     auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
-    // Iterate through the EX chiplets
     for (auto l_ex_chplt : l_exChiplets)
     {
         fapi2::getScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
         fapi2::putScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
     }
 }
-
-errlHndl_t resetPMAll()
-{
-    TargetHandleList l_procChips;
-    getAllChips(l_procChips, TYPE_PROC, true);
-
-    for (const auto & l_procChip: l_procChips)
-    {
-        (void)convertHomerPhysToVirt(l_procChip, 0);
-        l_procChip->setAttr<ATTR_PM_FIRINIT_DONE_ONCE_FLAG>(0);
-    }
-    TARGETING::Target* sys = nullptr;
-    TARGETING::targetService().getTopLevelTarget(sys);
-    sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(0);
-}
-
-//////////////////////////
-// Fully analyzed below //
-//////////////////////////
 
 static void pm_pss_reset(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
@@ -650,8 +415,7 @@ static void pm_pss_reset(
     //  ******************************************************************
 
     l_data64.flush<0>();
-    // Need to write 01
-    l_data64.setBit < PU_SPIPSS_ADC_RESET_REGISTER_HWCTRL + 1 > ();
+    l_data64.setBit<PU_SPIPSS_ADC_RESET_REGISTER_HWCTRL+1>();
 
     fapi2::putScom(i_target, PU_SPIPSS_ADC_RESET_REGISTER, l_data64);
     fapi2::putScom(i_target, PU_SPIPSS_P2S_RESET_REGISTER, l_data64);
