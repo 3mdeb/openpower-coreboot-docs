@@ -442,116 +442,38 @@ uint32_t getIPMISensorNumber( const TARGETING::Target*& i_targ,
     return l_sensor_number;
 }
 
-uint32_t get_huid( const Target* i_target )
-{
-    uint32_t huid = 0;
-    if( i_target == NULL )
-    {
-        huid = 0x0;
-    }
-    else if( i_target == MASTER_PROCESSOR_CHIP_TARGET_SENTINEL )
-    {
-        huid = 0xFFFFFFFF;
-    }
-    else
-    {
-        i_target->tryGetAttr<ATTR_HUID>(huid);
-    }
-    return huid;
-}
-
 errlHndl_t SensorBase::readSensorData( getSensorReadingData& o_data)
 {
-
-    // get sensor reading command only requires one byte of extra data,
-    // which will be the sensor number, the command will return between
-    // 3 and 5 bytes of data.
-    size_t len =  1;
-
     // need to allocate some memory to hold the sensor number this will be
     // deleted by the IPMI transport layer
-    uint8_t * l_data = new uint8_t[len];
+    uint8_t * l_data = new uint8_t[1];
 
     l_data[0] = static_cast<uint8_t>(getSensorNumber());
-
     IPMI::completion_code cc = IPMI::CC_UNKBAD;
-
     // o_data will hold the response when this returns
-    errlHndl_t l_err = sendrecv(IPMI::get_sensor_reading(), cc, len,
-                                l_data);
+    sendrecv(IPMI::get_sensor_reading(), cc, 1, l_data);
 
     // if we didn't get an error back from the BT interface, but see a
     // bad completion code from the BMC, process the CC to see if we
     // need to create a PEL - if an error occurs sendrcv will clean up
     // l_data for us
-    if(  l_err == NULL )
+    processCompletionCode(cc);
+
+    // populate the output structure with the sensor data
+    o_data.completion_code = cc;
+    o_data.sensor_status = l_data[0];
+    o_data.sensor_reading = l_data[1];
+
+    // bytes 3-5 of the reading are optional and will be dependent
+    // on the value of the sensor status byte.
+    if(!(o_data.sensor_status
+    & (SENSOR::SENSOR_DISABLED | SENSOR::SENSOR_SCANNING_DISABLED))
+    || (o_data.sensor_status & SENSOR::READING_UNAVAILABLE))
     {
-        l_err = processCompletionCode( cc );
-
-        if( l_err == NULL )
-        {
-            // populate the output structure with the sensor data
-            o_data.completion_code = cc;
-
-            o_data.sensor_status = l_data[0];
-
-            o_data.sensor_reading = l_data[1];
-
-            // bytes 3-5 of the reading are optional and will be dependent
-            // on the value of the sensor status byte.
-            if( !( o_data.sensor_status &
-                    ( SENSOR::SENSOR_DISABLED |
-                    SENSOR::SENSOR_SCANNING_DISABLED )) ||
-                    ( o_data.sensor_status & SENSOR::READING_UNAVAILABLE ))
-            {
-                // sensor reading is available
-                o_data.event_status =
-                            (( (uint16_t) l_data[3]) << 8  | l_data[2] );
-
-                // spec indicates that the high order bit should be
-                // ignored on a read, so lets mask it off now.
-                o_data.event_status &= 0x7FFF;
-            }
-            else
-            {
-                uint32_t l_sensorNumber = getSensorNumber();
-
-                TRACFCOMP(g_trac_ipmi,"Sensor reading not available: status = 0x%x",o_data.sensor_status);
-                TRACFCOMP(g_trac_ipmi,"sensor number 0x%x, huid 0x%x",l_sensorNumber ,get_huid(iv_target));
-
-                // something happened log an error to indicate the request
-                // failed
-                /*@
-                    * @errortype           ERRL_SEV_UNRECOVERABLE
-                    * @moduleid            IPMI::MOD_IPMISENSOR
-                    * @reasoncode          IPMI::RC_SENSOR_READING_NOT_AVAIL
-                    * @userdata1           sensor status indicating reason for
-                    *                      reading not available
-                    * @userdata2[0:31]     sensor number
-                    * @userdata2[32:64]    HUID of target
-                    *
-                    * @devdesc             Set sensor reading command failed.
-                    * @custdesc            Request to get sensor reading
-                    *                      IPMI completion code can be seen
-                    *                      in userdata1 field of the log.
-                    */
-                l_err = new ERRORLOG::ErrlEntry(
-                        ERRORLOG::ERRL_SEV_UNRECOVERABLE,
-                        IPMI::MOD_IPMISENSOR,
-                        IPMI::RC_SENSOR_READING_NOT_AVAIL,
-                        o_data.sensor_status,
-                        TWO_UINT32_TO_UINT64( l_sensorNumber,
-                            TARGETING::get_huid(iv_target)), true);
-
-                l_err->collectTrace(IPMI_COMP_NAME);
-
-            }
-
-        }
-
-        delete[] l_data;
+        // sensor reading is available
+        o_data.event_status = (((uint16_t)l_data[3]) << 8  | l_data[2]) & 0x7FFF;
     }
-    return l_err;
+    delete[] l_data;
 };
 
 errlHndl_t SensorBase::processCompletionCode( IPMI::completion_code i_rc )
@@ -651,232 +573,23 @@ errlHndl_t SensorBase::processCompletionCode( IPMI::completion_code i_rc )
             IPMI::MOD_IPMISENSOR,
             l_reasonCode,
             i_rc,
-            TWO_UINT32_TO_UINT64(
-                TWO_UINT16_TO_UINT32(
-                    iv_name,
-                    getSensorNumber()),
-                TARGETING::get_huid(iv_target)),
+            TO_UINT64(((TO_UINT32(iv_name) << 16)
+          | TO_UINT32(getSensorNumber()))) << 32)
+          | TO_UINT64(TARGETING::get_huid(iv_target),
             true);
 
         l_err->collectTrace(IPMI_COMP_NAME);
 
     }
-    return l_err;
-}
-
-template <FIRType Ftype>
-fapi2::ReturnCode PMFir<Ftype>::setRecvAttn(const uint32_t i_bit)
-{
-    iv_action0.clearBit(i_bit);
-    iv_action1.setBit(i_bit);
-    iv_and_mask.clearBit(i_bit);
-    iv_mask.clearBit(i_bit);
-    iv_action0_write = true;
-    iv_action1_write = true;
-    iv_mask_write = true;
-    iv_mask_and_write = true;
-}
-
-template <FIRType Ftype>
-fapi2::ReturnCode PMFir<Ftype>::mask(const uint32_t i_bit)
-{
-    FAPI_TRY(iv_or_mask.setBit(i_bit));
-    FAPI_TRY(iv_mask.setBit(i_bit));
-    iv_mask_write = true;
-    iv_mask_or_write = true;
-
-fapi_try_exit:
-    return fapi2::current_err;
-}
-
-template <FIRType Ftype>
-fapi2::ReturnCode PMFir<Ftype>::clearAllRegBits(const regType i_reg)
-{
-    if (i_reg == REG_FIR || i_reg == REG_ALL)
-    {
-        iv_fir.flush<0>();
-        iv_fir_write = true;
-    }
-
-    if(i_reg == REG_ACTION0 || i_reg == REG_ALL)
-    {
-        iv_action0.flush<0>();
-        iv_action0_write = true;
-    }
-
-    if(i_reg == REG_ACTION1 || i_reg == REG_ALL)
-    {
-        iv_action1.flush<0>();
-        iv_action1_write = true;
-    }
-
-    if(i_reg == REG_FIRMASK || i_reg == REG_ERRMASK || i_reg == REG_ALL)
-    {
-        iv_mask.flush<0>();
-        iv_or_mask.flush<0>();
-        iv_and_mask.flush<0>();
-        iv_mask_write = true;
-        iv_mask_or_write = true;
-        iv_mask_and_write = true;
-    }
-
-    return fapi2::current_err;
-}
-
-template <> inline
-fapi2::ReturnCode PMFir<FIRTYPE_OCC_LFIR>::restoreSavedMask()
-{
-    uint64_t l_mask = 0;
-    uint64_t l_tempMask = 0;
-
-    FAPI_ATTR_GET(fapi2::ATTR_OCC_LFIR, iv_proc, l_mask);
-    iv_mask.extract<0, 64>(l_tempMask);
-    l_mask |= l_tempMask;
-    iv_mask.insertFromRight<0, 64>(l_mask);
-    iv_or_mask = iv_mask;
-    iv_and_mask = iv_mask;
-    iv_mask_write = true;
-    iv_mask_and_write = true;
-    iv_mask_or_write = true;
-}
-
-fapi2::ReturnCode pm_occ_fir_init(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    uint8_t firinit_done_flag = 0;
-    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
-
-    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, firinit_done_flag);
-
-    l_occFir.get(p9pmFIR::REG_ALL);
-
-    /* Clear all the FIR and action buffers */
-    l_occFir.clearAllRegBits(p9pmFIR::REG_FIR);
-    l_occFir.clearAllRegBits(p9pmFIR::REG_ACTION0);
-    l_occFir.clearAllRegBits(p9pmFIR::REG_ACTION1);
-
-    /*  Set the action and mask for the OCC LFIR bits */
-    l_occFir.mask(OCC_FW0);
-    l_occFir.mask(OCC_FW1);
-    l_occFir.mask(CME_ERR_NOTIFY);
-    l_occFir.setRecvAttn(STOP_RCV_NOTIFY_PRD);
-    l_occFir.mask(OCC_HB_NOTIFY);
-    l_occFir.mask(GPE0_WD_TIMEOUT);
-    l_occFir.mask(GPE1_WD_TIMEOUT);
-    l_occFir.mask(GPE2_WD_TIMEOUT);
-    l_occFir.mask(GPE3_WD_TIMEOUT);
-    l_occFir.setRecvAttn(GPE0_ERR);
-    l_occFir.setRecvAttn(GPE1_ERR);
-    l_occFir.mask(GPE2_ERR);
-    l_occFir.mask(GPE3_ERR);
-    l_occFir.mask(OCB_ERR);
-    l_occFir.setRecvAttn(SRAM_UE);
-    l_occFir.setRecvAttn(SRAM_CE);
-    l_occFir.setRecvAttn(SRAM_READ_ERR);
-    l_occFir.setRecvAttn(SRAM_WRITE_ERR);
-    l_occFir.setRecvAttn(SRAM_DATAOUT_PERR);
-    l_occFir.setRecvAttn(SRAM_OCI_WDATA_PARITY);
-    l_occFir.setRecvAttn(SRAM_OCI_BE_PARITY_ERR);
-    l_occFir.setRecvAttn(SRAM_OCI_ADDR_PARITY_ERR);
-    l_occFir.mask(GPE0_HALTED);
-    l_occFir.mask(GPE1_HALTED);
-    l_occFir.mask(GPE2_HALTED);
-    l_occFir.mask(GPE3_HALTED);
-    l_occFir.mask(EXT_TRAP);
-    l_occFir.mask(PPC405_CORE_RESET);
-    l_occFir.mask(PPC405_CHIP_RESET);
-    l_occFir.mask(PPC405_SYS_RESET);
-    l_occFir.mask(PPC405_WAIT_STATE);
-    l_occFir.mask(PPC405_DBGSTOPACK);
-    l_occFir.setRecvAttn(OCB_DB_OCI_TIMEOUT);
-    l_occFir.setRecvAttn(OCB_DB_OCI_RDATA_PARITY);
-    l_occFir.setRecvAttn(OCB_DB_OCI_SLVERR);
-    l_occFir.setRecvAttn(OCB_PIB_ADDR_PARITY_ERR);
-    l_occFir.setRecvAttn(OCB_DB_PIB_DATA_PARITY_ERR);
-    l_occFir.setRecvAttn(OCB_IDC0_ERR);
-    l_occFir.setRecvAttn(OCB_IDC1_ERR);
-    l_occFir.setRecvAttn(OCB_IDC2_ERR);
-    l_occFir.setRecvAttn(OCB_IDC3_ERR);
-    l_occFir.setRecvAttn(SRT_FSM_ERR);
-    l_occFir.setRecvAttn(JTAGACC_ERR);
-    l_occFir.mask(SPARE_ERR_38);
-    l_occFir.setRecvIntr(C405_ECC_UE);
-    l_occFir.setRecvAttn(C405_ECC_CE);
-    l_occFir.setRecvAttn(C405_OCI_MC_CHK);
-    l_occFir.setRecvAttn(SRAM_SPARE_DIRERR0);
-    l_occFir.setRecvAttn(SRAM_SPARE_DIRERR1);
-    l_occFir.setRecvAttn(SRAM_SPARE_DIRERR2);
-    l_occFir.setRecvAttn(SRAM_SPARE_DIRERR3);
-    l_occFir.setRecvAttn(GPE0_OCISLV_ERR);
-    l_occFir.setRecvAttn(GPE1_OCISLV_ERR);
-    l_occFir.setRecvAttn(GPE2_OCISLV_ERR);
-    l_occFir.setRecvAttn(GPE3_OCISLV_ERR);
-    l_occFir.mask(C405ICU_M_TIMEOUT);
-    l_occFir.setRecvAttn(C405DCU_M_TIMEOUT);
-    l_occFir.setRecvAttn(OCC_CMPLX_FAULT);
-    l_occFir.setRecvAttn(OCC_CMPLX_NOTIFY);
-    l_occFir.mask(SPARE_59);
-    l_occFir.mask(SPARE_60);
-    l_occFir.mask(SPARE_61);
-    l_occFir.mask(FIR_PARITY_ERR_DUP);
-    l_occFir.mask(FIR_PARITY_ERR);
-
-    if (firinit_done_flag)
-    {
-        l_occFir.restoreSavedMask();
-    }
-    l_occFir.put();
-}
-
-fapi2::ReturnCode pm_occ_fir_reset(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    uint8_t firinit_done_flag = 0;
-    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
-
-    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, firinit_done_flag);
-
-    // Here we need to read all the OCC fir registers (action0/1,mask,fir)
-    // and will be stored in the respective class variable. So that below when
-    // we call put function it will be read modify write.
-    l_occFir.get(p9pmFIR::REG_ALL);
-    if (firinit_done_flag == fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_INITED)
-    {
-        /* Fetch the OCC FIR MASK; Save it to HWP attribute; clear its contents */
-        l_occFir.saveMask();
-    }
-
-    l_occFir.setAllRegBits(p9pmFIR::REG_FIRMASK);
-    l_occFir.setRecvIntr(OCC_HB_NOTIFY);
-    l_occFir.put();
-}
-
-fapi2::ReturnCode p9_pm_occ_firinit(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    fapi2::buffer<uint64_t> l_data64;
-    fapi2::buffer<uint64_t> l_mask64;
-
-    uint64_t l_fir;
-    uint64_t l_mask;
-    uint64_t l_unmaskedErrors;
-
-    fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR, l_data64);
-    fapi2::getScom(i_target, PERV_TP_OCC_SCOM_OCCLFIRMASK, l_mask64);
-    l_data64.extractToRight<0, 64>(l_fir);
-    l_mask64.extractToRight<0, 64>(l_mask);
-    l_unmaskedErrors = l_fir & l_mask;
-    pm_occ_fir_init(i_target);
 }
 
 static void startOCCFromSRAM(TARGETING::Target* i_proc)
 {
     uint64_t l_start405MainInstr = 0;
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>master_proc_target(i_proc);
-    fapi2::ReturnCode l_rc;
 
-    pm_pss_init(master_proc_target);
-    p9_pm_occ_firinit(master_proc_target);
+    pm_pss_init(master_proc_target); // analyzed
+    pm_occ_fir_init(i_target); // analyzed
     clear_occ_special_wakeups(master_proc_target);
     deviceWrite(i_proc, &0x218780f800000000, 8, DEVICE_SCOM_ADDRESS(0x6C040));
     deviceWrite(i_proc, &0x0003d03c00000000, 8, DEVICE_SCOM_ADDRESS(0x6C050));
@@ -1314,4 +1027,204 @@ static void readSRAM(
         i_addr,
         io_dataBuf,
         i_dataLen);
+}
+
+uint32_t get_huid(const Target* i_target)
+{
+    uint32_t huid = 0;
+    if(i_target == NULL)
+    {
+        huid = 0x0;
+    }
+    else if( i_target == MASTER_PROCESSOR_CHIP_TARGET_SENTINEL )
+    {
+        huid = 0xFFFFFFFF;
+    }
+    else
+    {
+        i_target->tryGetAttr<ATTR_HUID>(huid);
+    }
+    return huid;
+}
+
+static void pm_occ_fir_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint64_t iv_mask;
+    fapi2::getScom(iv_proc, iv_mask_address, iv_mask);
+
+    uint64_t iv_or_mask = iv_mask;
+    iv_or_mask.flush<1>();
+    putScom(iv_proc, iv_fir_address + MASK_WOR_INCR, iv_or_mask);
+
+    uint64_t iv_and_mask = iv_mask;
+    iv_and_mask.flush<1>();
+    iv_and_mask.clearBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_fir_address + MASK_WAND_INCR, iv_and_mask);
+
+    uint64_t iv_action0;
+    fapi2::getScom(iv_proc, iv_action0_address, iv_action0);
+    iv_action0.setBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_action0_address, iv_action0);
+
+    uint64_t iv_action1;
+    fapi2::getScom(iv_proc, iv_action1_address, iv_action1);
+    iv_action1.clearBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_action1_address, iv_action1);
+}
+
+static void pm_occ_fir_init(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
+    fapi2::getScom(iv_proc, iv_mask_address, iv_mask);
+
+    putScom(iv_proc, iv_fir_address, 0);
+
+    uint64_t iv_action0 = 0;
+    iv_action0.clearBit(C405_ECC_CE);
+    iv_action0.clearBit(C405_OCI_MC_CHK);
+    iv_action0.clearBit(C405DCU_M_TIMEOUT);
+    iv_action0.clearBit(GPE0_ERR);
+    iv_action0.clearBit(GPE0_OCISLV_ERR);
+    iv_action0.clearBit(GPE1_ERR);
+    iv_action0.clearBit(GPE1_OCISLV_ERR);
+    iv_action0.clearBit(GPE2_OCISLV_ERR);
+    iv_action0.clearBit(GPE3_OCISLV_ERR);
+    iv_action0.clearBit(JTAGACC_ERR);
+    iv_action0.clearBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_action0.clearBit(OCB_DB_OCI_SLVERR);
+    iv_action0.clearBit(OCB_DB_OCI_TIMEOUT);
+    iv_action0.clearBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_action0.clearBit(OCB_IDC0_ERR);
+    iv_action0.clearBit(OCB_IDC1_ERR);
+    iv_action0.clearBit(OCB_IDC2_ERR);
+    iv_action0.clearBit(OCB_IDC3_ERR);
+    iv_action0.clearBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_action0.clearBit(OCC_CMPLX_FAULT);
+    iv_action0.clearBit(OCC_CMPLX_NOTIFY);
+    iv_action0.clearBit(SRAM_CE);
+    iv_action0.clearBit(SRAM_DATAOUT_PERR);
+    iv_action0.clearBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_action0.clearBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_action0.clearBit(SRAM_OCI_WDATA_PARITY);
+    iv_action0.clearBit(SRAM_READ_ERR);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR0);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR1);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR2);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR3);
+    iv_action0.clearBit(SRAM_UE);
+    iv_action0.clearBit(SRAM_WRITE_ERR);
+    iv_action0.clearBit(SRT_FSM_ERR);
+    iv_action0.clearBit(STOP_RCV_NOTIFY_PRD);
+    iv_action0.setBit(C405_ECC_UE);
+    putScom(iv_proc, iv_action0_address, iv_action0);
+
+    uint64_t iv_action1 = 0;
+    iv_action1.clearBit(C405_ECC_UE);
+    iv_action1.setBit(C405_ECC_CE);
+    iv_action1.setBit(C405_OCI_MC_CHK);
+    iv_action1.setBit(C405DCU_M_TIMEOUT);
+    iv_action1.setBit(GPE0_ERR);
+    iv_action1.setBit(GPE0_OCISLV_ERR);
+    iv_action1.setBit(GPE1_ERR);
+    iv_action1.setBit(GPE1_OCISLV_ERR);
+    iv_action1.setBit(GPE2_OCISLV_ERR);
+    iv_action1.setBit(GPE3_OCISLV_ERR);
+    iv_action1.setBit(JTAGACC_ERR);
+    iv_action1.setBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_action1.setBit(OCB_DB_OCI_SLVERR);
+    iv_action1.setBit(OCB_DB_OCI_TIMEOUT);
+    iv_action1.setBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_action1.setBit(OCB_IDC0_ERR);
+    iv_action1.setBit(OCB_IDC1_ERR);
+    iv_action1.setBit(OCB_IDC2_ERR);
+    iv_action1.setBit(OCB_IDC3_ERR);
+    iv_action1.setBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_action1.setBit(OCC_CMPLX_FAULT);
+    iv_action1.setBit(OCC_CMPLX_NOTIFY);
+    iv_action1.setBit(SRAM_CE);
+    iv_action1.setBit(SRAM_DATAOUT_PERR);
+    iv_action1.setBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_action1.setBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_action1.setBit(SRAM_OCI_WDATA_PARITY);
+    iv_action1.setBit(SRAM_READ_ERR);
+    iv_action1.setBit(SRAM_SPARE_DIRERR0);
+    iv_action1.setBit(SRAM_SPARE_DIRERR1);
+    iv_action1.setBit(SRAM_SPARE_DIRERR2);
+    iv_action1.setBit(SRAM_SPARE_DIRERR3);
+    iv_action1.setBit(SRAM_UE);
+    iv_action1.setBit(SRAM_WRITE_ERR);
+    iv_action1.setBit(SRT_FSM_ERR);
+    iv_action1.setBit(STOP_RCV_NOTIFY_PRD);
+    putScom(iv_proc, iv_action1_address, iv_action1);
+
+    uint64_t iv_or_mask = iv_mask;
+    iv_or_mask.setBit(C405ICU_M_TIMEOUT);
+    iv_or_mask.setBit(CME_ERR_NOTIFY);
+    iv_or_mask.setBit(EXT_TRAP);
+    iv_or_mask.setBit(FIR_PARITY_ERR_DUP);
+    iv_or_mask.setBit(FIR_PARITY_ERR);
+    iv_or_mask.setBit(GPE0_HALTED);
+    iv_or_mask.setBit(GPE0_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE1_HALTED);
+    iv_or_mask.setBit(GPE1_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE2_ERR);
+    iv_or_mask.setBit(GPE2_HALTED);
+    iv_or_mask.setBit(GPE2_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE3_ERR);
+    iv_or_mask.setBit(GPE3_HALTED);
+    iv_or_mask.setBit(GPE3_WD_TIMEOUT);
+    iv_or_mask.setBit(OCB_ERR);
+    iv_or_mask.setBit(OCC_FW0);
+    iv_or_mask.setBit(OCC_FW1);
+    iv_or_mask.setBit(OCC_HB_NOTIFY);
+    iv_or_mask.setBit(PPC405_CHIP_RESET);
+    iv_or_mask.setBit(PPC405_CORE_RESET);
+    iv_or_mask.setBit(PPC405_DBGSTOPACK);
+    iv_or_mask.setBit(PPC405_SYS_RESET);
+    iv_or_mask.setBit(PPC405_WAIT_STATE);
+    iv_or_mask.setBit(SPARE_59);
+    iv_or_mask.setBit(SPARE_60);
+    iv_or_mask.setBit(SPARE_61);
+    iv_or_mask.setBit(SPARE_ERR_38);
+    putScom(iv_proc, iv_fir_address + MASK_WOR_INCR, iv_or_mask);
+
+    uint64_t iv_and_mask = iv_mask;
+    iv_and_mask.clearBit(C405_ECC_CE);
+    iv_and_mask.clearBit(C405_ECC_UE);
+    iv_and_mask.clearBit(C405_OCI_MC_CHK);
+    iv_and_mask.clearBit(C405DCU_M_TIMEOUT);
+    iv_and_mask.clearBit(GPE0_ERR);
+    iv_and_mask.clearBit(GPE0_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE1_ERR);
+    iv_and_mask.clearBit(GPE1_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE2_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE3_OCISLV_ERR);
+    iv_and_mask.clearBit(JTAGACC_ERR);
+    iv_and_mask.clearBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_and_mask.clearBit(OCB_DB_OCI_SLVERR);
+    iv_and_mask.clearBit(OCB_DB_OCI_TIMEOUT);
+    iv_and_mask.clearBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_and_mask.clearBit(OCB_IDC0_ERR);
+    iv_and_mask.clearBit(OCB_IDC1_ERR);
+    iv_and_mask.clearBit(OCB_IDC2_ERR);
+    iv_and_mask.clearBit(OCB_IDC3_ERR);
+    iv_and_mask.clearBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_and_mask.clearBit(OCC_CMPLX_FAULT);
+    iv_and_mask.clearBit(OCC_CMPLX_NOTIFY);
+    iv_and_mask.clearBit(SRAM_CE);
+    iv_and_mask.clearBit(SRAM_DATAOUT_PERR);
+    iv_and_mask.clearBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_and_mask.clearBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_and_mask.clearBit(SRAM_OCI_WDATA_PARITY);
+    iv_and_mask.clearBit(SRAM_READ_ERR);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR0);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR1);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR2);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR3);
+    iv_and_mask.clearBit(SRAM_UE);
+    iv_and_mask.clearBit(SRAM_WRITE_ERR);
+    iv_and_mask.clearBit(SRT_FSM_ERR);
+    iv_and_mask.clearBit(STOP_RCV_NOTIFY_PRD);
+    putScom(iv_proc, iv_fir_address + MASK_WAND_INCR, iv_and_mask);
 }
