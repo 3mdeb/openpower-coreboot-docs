@@ -4,8 +4,7 @@
 
 The main goal of this test is to check if `MVPD` partition is modified
 before starting hosboot by e.g. `HBBL` or some other part of software
-started by `Hostboot`. It is already known that `Hostboot` is not
-the one responsible for `MVPD` generation.
+started by `Hostboot`.
 
 ## Testing environement
 
@@ -37,4 +36,5 @@ to download [here](https://cloud.3mdeb.com/index.php/s/DKrqonZDtF7pftA).
 ## Conclusion
 
 When running `coreboot`, `MVPD` is not modified, therefore it must be filled
-after starting `Hostboot`.
+after starting `Hostboot` by `Hostboot` or some other component
+started by `Hostboot`.
