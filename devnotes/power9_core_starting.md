@@ -88,9 +88,160 @@ always at the top of physical memory (OPAL specification). HOMER consists of 4
 regions: OPMR, QPMR, CPMR and PPMR, i.e. OCC, Quad, Core, and Pstate PM region.
 Each region has size of 1M, however except for the first one only a few dozens
 kilobytes are actually used. More information about in-memory layout can be
-found in `import/chips/p9/procedures/hwp/lib/p9_hcode_image_defines.H` and
-`import/chips/p9/procedures/hwp/lib/p9_hcd_memmap_base.H`.
+found in `import/chips/p9/procedures/hwp/lib/p9_hcode_image_defines.H`,
+`import/chips/p9/procedures/hwp/lib/p9_hcd_memmap_base.H` and [HOMER](homer.md).
 
 The contents of HOMER are customized, based on the reference image found in
 HCODE PNOR partition. That partition is a nested XIP Image which structure is
 defined in `import/chips/p9/xip/p9_xip_image.h`.
+
+## Debugging
+
+Debugging by verbose prints performed by coeboot is mostly useless when it comes
+to low-level power management - when a core is stopped, it doesn't execute the
+code, obviously. Most of the steps listed above are performed by different
+chips, which don't have direct access to serial port.
+
+`pdbg` can be used to read SCOM registers through PIB, but anything that has to
+be done by a core (reading SPR, GPR, memory, or even `threadstatus`) uses a
+special wake-up sequence, which, being a wake-up, messes up current sleep state.
+
+### SGPE log
+
+SGPE saves its log in a condensed format in OCC complex's SRAM. It uses 256
+bytes long (by default) circular buffer.
+
+#### Log format
+
+```C
+//This is the data that is updated (in the buffer header) every time we add
+//a new entry to the buffer.
+typedef union
+{
+    struct
+    {
+        uint32_t  tbu32;
+        uint32_t  offset;
+    };
+    uint64_t word64;
+}PkTraceState; //pk_trace_state_t;
+
+#define PK_TRACE_IMG_STR_SZ 16
+
+//Header data for the trace buffer that is used for parsing the data.
+//Note: pk_trace_state_t contains a uint64_t which is required to be
+//placed on an 8-byte boundary according to the EABI Spec.  This also
+//causes cb to start on an 8-byte boundary.
+typedef struct
+{
+    //these values are needed by the parser
+    uint16_t            version;
+    uint16_t            rsvd;
+    char                image_str[PK_TRACE_IMG_STR_SZ];
+    uint16_t            instance_id;
+    uint16_t            partial_trace_hash;
+    uint16_t            hash_prefix;
+    uint16_t            size;
+    uint32_t            max_time_change;
+    uint32_t            hz;
+    uint32_t            pad;
+    uint64_t            time_adj64;
+
+    //updated with each new trace entry
+    PkTraceState        state;
+
+    //circular trace buffer
+    uint8_t             cb[PK_TRACE_SZ];
+}PkTraceBuffer; //pk_trace_buffer_t;
+
+extern PkTraceBuffer g_pk_trace_buf __attribute__((section (".sdata")));
+```
+
+Note that `state.offset` may be bigger than `PK_TRACE_SZ` - it indicates that
+the buffer roller over and some entries were lost. `size` specifies the length
+of the circular buffer, not including the size of header (in other words, `size`
+is set to `PK_TRACE_SZ`). Entries in the buffer come in three different formats:
+tiny, big or binary.
+
+Tiny format always occupies 8 bytes. It consists of 16b string hash (more about
+it later), 16b parameter and 32b timestamp (30 most significant bits) + format
+type (2 bits, `1` defines tiny format). This format is used for strings that
+take no argument or exactly one argument that fits in 2 bytes or less.
+
+Big format is used when trace requires a parameter bigger than 2 bytes, or when
+it has multiple parameters (up to 4). Every parameter is converted to `uint32_t`
+and written in pairs to the buffer, in the order they appear in the trace
+string. Writes are always aligned to 8B, so for odd number of parameters there
+is an empty slot at the end. Entry footer, consisting of 16b hash, 8b `complete`
+flag, 8b number of parameters and 32b of timestamp and type (`2` for big
+format), is written **after** the parameters. This implies that the log has to
+be parsed from end (`state.offset`) to start, with a possible roll over.
+
+Binary format is almost identical to big format, except instead of number of
+parameters, a number of bytes is specified in the footer. Type of binary format
+is `3`.
+
+#### String hashes
+
+Strings are hashed at the compilation time and saved to `trexStringFile`,
+located in `hcode-<revision_hash>/output/obj/stop_gpe_p9n<dd>`. Lines in that
+file have the following format:
+
+```
+<hash>||<string>||<file>
+```
+
+Hashes are written as decimal numbers, for easier handling convert them to
+hexadecimal with `awk -F'|' -vOFS='|' '{printf("%x", $1); $1 = ""; print $0}' trexStringFile`:
+
+```
+...
+d7a3bafa||Initializing External Interrupt Routing Registers||../../import/chips/p9/procedures/ppe/pk/gpe/gpe_init.c
+d7a3c0a1||ERROR: L2 Clock Start Failed. HALT SGPE!||../../import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe//p9_sgpe_stop_exit.c
+d7a3c30b||ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x||../../import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe//p9_sgpe_stop_entry.c
+...
+```
+
+As you can see, every line starts with `d7a3` - this value is saved as
+`hash_prefix` in the log header, and only the last 16 bits are saved in each
+entry. The string itself has a format ready to use with `printf`-like functions.
+
+#### Reading OCC SRAM
+
+OCC memory can be read with OCC Control Bridge (OCB), accessible through SCOM.
+Linear stream mode can be enabled, that way consecutive bytes can be accessed
+without having to manually change the address before every read. To get the
+address of the log buffer, find `g_pk_trace_buf` in
+`hcode/output/images/stop_gpe_p9n<dd>/stop_gpe_p9n<dd>.map` - in this example it
+is `0x00000000fff37e28`. That value has to be shifted left 32 bits.
+
+```
+        # enable stream mode
+root@talos:~# pdbg -P pib putscom 0x0006D013 0x0800000000000000
+        # disable circular mode = enable linear mode
+root@talos:~# pdbg -P pib putscom 0x0006D012 0x0400000000000000
+        # set OCB address - must be 8B aligned
+root@talos:~# pdbg -P pib putscom 0x0006D010 0xfff37e2800000000
+```
+
+From now on, every read from `0x6D015` will read data from address specified
+above and increase that address by 8:
+
+```
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0x0002000073746f70 (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0x5f6770655f70396e (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0x3233000000036341 (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0xd7a30100fe2329af (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0x01bce39a00000000 (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0xffffffffeb1fc78e (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0x00000000000000c8 (/kernelfsi@0/pib@1000)
+root@talos:~# pdbg -P pib getscom 0x0006D015
+p0: 0x000000000006d015 = 0xbafa000014e03675 (/kernelfsi@0/pib@1000)
+```

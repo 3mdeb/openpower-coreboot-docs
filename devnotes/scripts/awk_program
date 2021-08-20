@@ -1,0 +1,28 @@
+{
+	c = "grep " substr($0,28,4) " trexhex";
+	c | getline x;
+	close(c);
+
+	trace_type = and( "0x" substr($0,43,1), 3);
+	#print "Type = " trace_type;
+	switch (trace_type) {
+		case 0:
+			# empty
+			break;
+		case 1:
+			printf (x "\n", "0x" substr($0,32,4));
+			break;
+		case 2:
+			size = int("0x" substr($0,34,2));
+			if (size > 2) {
+				getline parm_34;
+			}
+			getline parm_12;
+
+			printf (x "\n", "0x" substr(parm_12,28,8), "0x" substr(parm_12,36,8),
+                                        "0x" substr(parm_34,28,8), "0x" substr(parm_34,36,8));
+			break;
+		default:
+			print "Unsupported parameter type"
+	}
+}

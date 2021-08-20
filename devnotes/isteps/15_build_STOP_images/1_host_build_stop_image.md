@@ -999,7 +999,7 @@ updateCpmrCmeRegion():
 
 	if CmeHdr->max_spec_ring_len:
 		CpmrHdr->core_spec_ring_offset  = ALIGN_UP(CpmrHdr->img_offset * 32 +
-		                                           CpmrHdr->img_len) +
+		                                           CpmrHdr->img_len +
 		                                           CpmrHdr->cme_pstate_len +
 		                                           CpmrHdr->cme_common_ring_len,
 		                                           32) / 32
