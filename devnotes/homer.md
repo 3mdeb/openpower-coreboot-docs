@@ -22,7 +22,7 @@ To create a memdump of Homer:
 3.
     (Optional) Check if Homer is located it the correct address.
     ```
-    pdbg -p0 -c1 -t0 getmem 0x11fd800000 0x100 2>/dev/null | hexdump -C
+    $ pdbg -p0 -c1 -t0 getmem 0x11fd800000 0x100 2>/dev/null | hexdump -C
     ```
     > Note: If OCC Image is not filled yet, the memory will still be zeroed.
 
@@ -30,7 +30,7 @@ To create a memdump of Homer:
     Dump Homer image. It should take approximately 40-50 minutes.
 
     ```
-    pdbg -p0 -c1 -t0 getmem 0x11fd800000 0x400000 2>/dev/null >/tmp/homer.bin
+    $ pdbg -p0 -c1 -t0 getmem 0x11fd800000 0x400000 2>/dev/null >/tmp/homer.bin
     ```
 
 ## Homer dumped at istep 15.2
