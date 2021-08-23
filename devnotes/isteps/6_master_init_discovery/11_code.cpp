@@ -1,3 +1,5 @@
+#define ATTR_FREQ_PB_MHZ (1866)
+
 void* host_start_occ_xstop_handler( void *io_pArgs )
 {
     ISTEP_ERROR::IStepError l_stepError;
@@ -30,57 +32,28 @@ void* host_start_occ_xstop_handler( void *io_pArgs )
         Util::readSemiPersistData(l_semiData);
         if (l_semiData.mfg_term_reboot == Util::MFG_TERM_REBOOT_ENABLE)
         {
-            /*@
-                * @errortype
-                * @moduleid    ISTEP::MOD_OCC_XSTOP_HANDLER
-                * @reasoncode  ISTEP::RC_PREVENT_REBOOT_IN_MFG_TERM_MODE
-                * @devdesc     System rebooted without xstop in MFG TERM mode.
-                * @custdesc    A problem occurred during the IPL of the system.
-                */
-            l_err = new ERRORLOG::ErrlEntry
-                (ERRORLOG::ERRL_SEV_CRITICAL_SYS_TERM,
-                ISTEP::MOD_OCC_XSTOP_HANDLER,
-                ISTEP::RC_PREVENT_REBOOT_IN_MFG_TERM_MODE,
-                0,
-                0,
-                true /*HB SW error*/ );
-            l_stepError.addErrorDetails(l_err);
-            break;
+            reboot();
         }
 
-        //Put a mark in HB VOLATILE
-        Util::semiPersistData_t l_newSemiData;  //inits to 0s
+        Util::semiPersistData_t l_newSemiData;
         Util::readSemiPersistData(l_newSemiData);
         l_newSemiData.mfg_term_reboot = Util::MFG_TERM_REBOOT_ENABLE;
         Util::writeSemiPersistData(l_newSemiData);
 
-        //Enable reboots so FIRDATA will be analyzed on XSTOP
         SENSOR::RebootControlSensor l_rbotCtl;
         l_rbotCtl.setRebootControl(SENSOR::RebootControlSensor::autoRebootSetting::ENABLE_REBOOTS);
     }
 #endif
 
 #ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
-    void* l_homerVirtAddrBase = reinterpret_cast<void*>(VmmManager::INITIAL_MEM_SIZE);
+    void* l_homerVirtAddrBase = VmmManager::INITIAL_MEM_SIZE;
     uint64_t l_homerPhysAddrBase = mm_virt_to_phys(l_homerVirtAddrBase);
     uint64_t l_commonPhysAddr = l_homerPhysAddrBase + VMM_HOMER_REGION_SIZE;
-
-    // Load the OCC directly into SRAM and start it in a special mode
-    //  that only handles checkstops
-    HBPM::loadPMComplex(
-        masterproc,
-        l_homerPhysAddrBase,
-        l_commonPhysAddr);
+    HBPM::loadPMComplex(masterproc, l_homerPhysAddrBase, l_commonPhysAddr);
     HBOCC::startOCCFromSRAM(masterproc);
 #endif
-    uint64_t l_xstopXscom = XSCOM::generate_mmio_addr(
-        masterproc,
-        Kernel::MachineCheck::MCHK_XSTOP_FIR_SCOM_ADDR );
-
-    Kernel::MachineCheck::setCheckstopData(
-        l_xstopXscom,
-        Kernel::MachineCheck::MCHK_XSTOP_FIR_VALUE);
-
+    uint64_t l_xstopXscom = XSCOM::generate_mmio_addr(masterproc, Kernel::MachineCheck::MCHK_XSTOP_FIR_SCOM_ADDR);
+    Kernel::MachineCheck::setCheckstopData(l_xstopXscom, Kernel::MachineCheck::MCHK_XSTOP_FIR_VALUE);
     return l_stepError.getErrorHandle();
 }
 
@@ -108,11 +81,8 @@ static void loadPMComplex(
     uint64_t i_homerPhysAddr,
     uint64_t i_commonPhysAddr)
 {
-    errlHndl_t l_errl = nullptr;
-    void* l_homerVAddr = nullptr;
     resetPMComplex(i_target);
-
-    l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
+    void* l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
     if(nullptr == l_homerVAddr)
     {
         return;
@@ -121,33 +91,222 @@ static void loadPMComplex(
     uint64_t l_occImgVaddr = l_homerVAddr + HOMER_OFFSET_TO_OCC_IMG;
     loadOCCSetup(i_target, l_occImgPaddr, l_occImgVaddr, i_commonPhysAddr);
 #ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
-    void* l_occVirt = reinterpret_cast<void *>(l_occImgVaddr);
-    HBOCC::loadOCCImageDuringIpl(i_target, l_occVirt);
+    HBOCC::loadOCCImageDuringIpl(i_target, l_occImgVaddr); // analyzed
+#endif
 #if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
-    HBOCC::loadHostDataToSRAM(i_target, PRDF::MASTER_PROC_CORE);
+    HBOCC::loadHostDataToSRAM(i_target);
 #else
-    void* l_occDataVaddr = l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA;
-    loadHostDataToHomer(i_target, l_occDataVaddr);
-    loadHcode(
-        i_target,
-        l_homerVAddr,
-        HBPM::PM_LOAD);
+    loadHostDataToHomer(i_target, l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
+    loadHcode(i_target, l_homerVAddr, HBPM::PM_LOAD);
 #endif
 }
 
-errlHndl_t loadHostDataToSRAM(TARGETING::Target* i_proc, const PRDF::HwInitialized_t i_curHw)
+errlHndl_t resetPMComplex(TARGETING::Target * i_target)
+{
+    uint64_t l_homerPhysAddr;
+    l_homerPhysAddr = i_target->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
+    void* l_homerVAddr = convertHomerPhysToVirt(i_target,l_homerPhysAddr);
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_fapiTarg(i_target);
+    ATTR_HB_INITIATED_PM_RESET_type l_chipResetState = i_target->getAttr<TARGETING::ATTR_HB_INITIATED_PM_RESET>();
+    if (HB_INITIATED_PM_RESET_COMPLETE == l_chipResetState)
+    {
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(HB_INITIATED_PM_RESET_INACTIVE);
+        return;
+    }
+
+#if defined(__HOSTBOOT_RUNTIME) && defined(CONFIG_NVDIMM)
+    NVDIMM::notifyNvdimmProtectionChange(i_target, NVDIMM::OCC_INACTIVE);
+#endif
+    p9_pm_init(l_fapiTarg, p9pm::PM_RESET, l_homerVAddr );
+#ifdef __HOSTBOOT_RUNTIME
+    if(HB_INITIATED_PM_RESET_IN_PROGRESS != l_chipResetState)
+    {
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(HB_INITIATED_PM_RESET_IN_PROGRESS);
+        Singleton<ATTN::Service>::instance().handleAttentions(i_target);
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(l_chipResetState);
+    }
+#endif
+    if ((TARGETING::is_phyp_load()) && (nullptr != l_homerVAddr))
+    {
+        HBPM_UNMAP(l_homerVAddr);
+        i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(0);
+    }
+}
+
+errlHndl_t getPnorInfo( HOMER_Data_t & o_data )
+{
+    PNOR::SectionInfo_t sectionInfo;
+    PNOR::getSectionInfo( PNOR::FIRDATA, sectionInfo );
+    PNOR::PnorInfo_t pnorInfo;
+    PNOR::getPnorInfo( pnorInfo );
+
+    // Saving the flash workarounds in an attribute for when we
+    // call getPnorInfo() in the runtime code.
+    // Using sys target
+    Target* sys = NULL;
+    targetService().getTopLevelTarget( sys );
+    assert(sys != NULL);
+
+    sys->setAttr<ATTR_PNOR_FLASH_WORKAROUNDS>(pnorInfo.norWorkarounds);
+
+    o_data.pnorInfo.pnorOffset      = sectionInfo.flashAddr;
+    o_data.pnorInfo.pnorSize        = sectionInfo.size;
+    o_data.pnorInfo.mmioOffset      = pnorInfo.mmioOffset;
+    o_data.pnorInfo.norWorkarounds  = pnorInfo.norWorkarounds;
+}
+
+void PNOR::getPnorInfo( PnorInfo_t& o_pnorInfo )
+{
+    o_pnorInfo.mmioOffset = LPC_SFC_MMIO_OFFSET | LPC_FW_SPACE;
+
+    TARGETING::Target* sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget(sys);
+    o_pnorInfo.norWorkarounds = sys->getAttr<TARGETING::ATTR_PNOR_FLASH_WORKAROUNDS>();
+    o_pnorInfo.flashSize = 64*MEGABYTE;
+}
+
+errlHndl_t writeData( uint8_t * i_hBuf, size_t i_hBufSize,
+                      const HwInitialized_t i_curHw,
+                      std::vector<HOMER_ChipInfo_t> &i_chipVector,
+                      HOMER_Data_t  &io_homerData )
+{
+    TrgtMap_t  l_targMap;
+    const size_t u32 = sizeof(uint32_t);
+    const size_t u64 = sizeof(uint64_t);
+    size_t sz_hBuf = 0;
+    size_t sz_data = sizeof(io_homerData);
+    sz_hBuf += sz_data;
+    sz_hBuf += (u32 - (sizeof(HOMER_Data_t) % u32)) % u32;
+    getAddresses(l_targMap);
+    for(auto & t : l_targMap)
+    {
+        for(auto & r : t.second)
+        {
+            if((ALL_PROC_MEM_MASTER_CORE == i_curHw)
+            || (ALL_HARDWARE == i_curHw)
+            || ((TRGT_MCBIST  != t.first)
+                && (TRGT_MCS  != t.first)
+                && (TRGT_MCA  != t.first)
+                && (TRGT_MC   != t.first)
+                && (TRGT_MI   != t.first)
+                && (TRGT_MCC  != t.first)
+                && (TRGT_OMIC != t.first)))
+            {
+                io_homerData.regCounts[t.first][r.first] = r.second.size();
+            }
+
+        }
+    }
+    io_homerData.ecDepCounts = sizeof(s_ecDepProcRegisters) / sizeof(HOMER_ChipSpecAddr_t);
+    uint32_t idx = 0;
+    io_homerData.header = HOMER_FIR2;
+    io_homerData.chipCount = i_chipVector.size();
+    memcpy( &i_hBuf[idx], &io_homerData,  sz_data   ); idx += sz_data;
+    idx += padding;
+    if (0 != io_homerData.chipCount)
+    {
+        std::vector<HOMER_ChipInfo_t>::iterator  l_chipItr;
+        uint32_t  l_chipTypeSize = sizeof(HOMER_Chip_t);
+
+        for (l_chipItr = i_chipVector.begin(); l_chipItr < i_chipVector.end(); l_chipItr++ )
+        {
+            sz_hBuf += l_chipTypeSize;
+            errl = homerVerifySizeFits(i_hBufSize, sz_hBuf);
+            if (NULL != errl) { break; }
+
+            memcpy( &i_hBuf[idx], &(l_chipItr->hChipType), l_chipTypeSize );
+            idx += l_chipTypeSize;
+
+            sz_hBuf += sizeof(HOMER_ChipNimbus_t);
+            errl = homerVerifySizeFits(i_hBufSize, sz_hBuf);
+            if (NULL != errl) { break; }
+
+            memcpy( &i_hBuf[idx], &(l_chipItr->hChipN), sizeof(HOMER_ChipNimbus_t) );
+            idx += sizeof(HOMER_ChipNimbus_t);
+
+        }
+
+        uint32_t  l_reg32Count = 0;
+        uint32_t  l_reg64Count = 0;
+
+        for(uint32_t l_regIdx = REG_FIRST; l_regIdx < REG_IDFIR; l_regIdx++)
+        {
+            for(uint32_t l_tgtIndex = TRGT_FIRST; l_tgtIndex < TRGT_MAX; l_tgtIndex++)
+            {
+                l_reg32Count += io_homerData.regCounts[l_tgtIndex][l_regIdx];
+            }
+        }
+        for(uint32_t  l_regIdx = REG_IDFIR; l_regIdx < REG_MAX; l_regIdx++)
+        {
+            for(uint32_t l_tgtIndex = TRGT_FIRST; l_tgtIndex < TRGT_MAX; l_tgtIndex++ )
+            {
+                l_reg64Count +=io_homerData.regCounts[l_tgtIndex][l_regIdx];
+            }
+        }
+
+        sz_hBuf +=
+            l_reg32Count * sizeof(uint32_t)
+            + l_reg64Count * sizeof(uint64_t)
+            + io_homerData.ecDepCounts * sizeof(HOMER_ChipSpecAddr_t);
+
+        errl = homerVerifySizeFits(i_hBufSize, sz_hBuf);
+
+        for ( auto & t : l_targMap )
+        {
+            if((ALL_PROC_MEM_MASTER_CORE == i_curHw)
+            || (ALL_HARDWARE == i_curHw)
+            || ((TRGT_MCBIST != t.first)
+                && (TRGT_MCS    != t.first)
+                && (TRGT_MCA    != t.first)
+                && (TRGT_MC     != t.first)
+                && (TRGT_MI     != t.first)
+                && (TRGT_MCC    != t.first)
+                && (TRGT_OMIC   != t.first)))
+            {
+                for ( auto & r : t.second )
+                {
+                    for ( auto &  rAddr : r.second )
+                    {
+                        if(REG_IDFIR == r.first || REG_IDREG == r.first)
+                        {
+                            memcpy( &i_hBuf[idx], &rAddr, u64 );
+                            idx += u64;
+                        }
+                        else
+                        {
+                            uint32_t  tempAddr = (uint32_t)rAddr;
+                            memcpy( &i_hBuf[idx], &tempAddr, u32);
+                            idx += u32;
+                        }
+                    }
+                }
+
+            }
+        }
+        uint8_t  *l_ecDepSourceRegs = (uint8_t *)(s_ecDepProcRegisters);
+        memcpy( &i_hBuf[idx], l_ecDepSourceRegs, sizeof(s_ecDepProcRegisters) );
+    }
+}
+
+errlHndl_t writeHomerFirData( uint8_t * i_hBuf, size_t i_hBufSize)
+{
+    HOMER_Data_t  l_homerData = HOMER_getData(); // Initializes data
+    l_homerData.iplState = FIRDATA_STATE_IPL;
+
+    getPnorInfo(l_homerData);
+    std::vector<HOMER_ChipInfo_t> l_chipInfVector;
+    getHwConfig(l_chipInfVector, PRDF::MASTER_PROC_CORE);
+    writeData(i_hBuf, i_hBufSize, PRDF::MASTER_PROC_CORE, l_chipInfVector, l_homerData);
+}
+
+errlHndl_t loadHostDataToSRAM(TARGETING::Target* i_proc)
 {
     HBPM::occHostConfigDataArea_t * config_data = new HBPM::occHostConfigDataArea_t();
 
-    TARGETING::Target * sysTarget = NULL;
-    TARGETING::targetService().getTopLevelTarget(sysTarget);
-
-    uint32_t nestFreq =  sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
-
     config_data->version = HBOCC::OccHostDataVersion;
-    config_data->nestFrequency = nestFreq;
+    config_data->nestFrequency = ATTR_FREQ_PB_MHZ;
 
-    if(INITSERVICE::spBaseServicesEnabled() )
+    if(INITSERVICE::spBaseServicesEnabled())
     {
         config_data->interruptType = USE_FSI2HOST_MAILBOX;
     }
@@ -157,15 +316,9 @@ errlHndl_t loadHostDataToSRAM(TARGETING::Target* i_proc, const PRDF::HwInitializ
     }
 
     config_data->firMaster = IS_FIR_MASTER;
-    //     @brief  Writes register lists and hardware config in the HOMER data for
-    //  *          the OCC to capture in the event of a system checkstop.
-    //  *  @param  i_hBuf     SRAM pointer to the beginning of the HOMER data buffer.
-    //  *  @param  i_hBufSize Total size of the HOMER data buffer.
-    //  *  @param  i_curHW    enum indicating which HW is currently known
     PRDF::writeHomerFirData(
         config_data->firdataConfig,
-        sizeof(config_data->firdataConfig),
-        i_curHw);
+        sizeof(config_data->firdataConfig));
 
     if (SECUREBOOT::SMF::isSmfEnabled())
     {
@@ -180,53 +333,12 @@ errlHndl_t loadHostDataToSRAM(TARGETING::Target* i_proc, const PRDF::HwInitializ
     delete(config_data);
 }
 
-errlHndl_t loadOCCImageDuringIpl(TARGETING::Target* i_target, void* i_occVirtAddr)
-{
-    uint8_t* l_occImage = NULL;
-    void* l_modifiedSectionPtr = NULL;
-
-    UtilLidMgr lidMgr(HBOCC::OCC_LIDID);
-    void* l_tmpOccImage = const_cast<void*>(lidMgr.getLidVirtAddr());
-    l_occImage = (uint8_t*)l_tmpOccImage;
-
-    TARGETING::TargetService & l_tS = TARGETING::targetService();
-    TARGETING::Target * l_sysTarget = NULL;
-    l_tS.getTopLevelTarget(l_sysTarget);
-
-    ATTR_FREQ_PB_MHZ_type l_nestFreq = l_sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
-    size_t l_length = 0;
-
-    uint32_t* l_ptrToLength = (uint32_t*)((char*)l_occImage + OCC_OFFSET_LENGTH);
-    l_length = *l_ptrToLength;
-
-    memcpy(i_occVirtAddr, l_occImage, l_length);
-    char* l_occMainAppPtr = l_occImage + l_length;
-    l_ptrToLength = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_LENGTH);
-    l_length = *l_ptrToLength;
-    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_occMainAppPtr, l_length); // analyzed
-
-    l_modifiedSectionPtr = malloc(OCC_OFFSET_FREQ + sizeof(l_nestFreq));
-    memcpy(l_modifiedSectionPtr, l_occMainAppPtr, OCC_OFFSET_FREQ + sizeof(l_nestFreq));
-    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_modifiedSectionPtr, (uint32_t)OCC_OFFSET_FREQ + sizeof(l_nestFreq)); // analyzed
-
-    char* l_gpe0AppPtr = l_occMainAppPtr + l_length;
-    uint32_t* l_ptrToGpe0Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE0_LENGTH);
-    l_length = *l_ptrToGpe0Length;
-    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE0_SRAM_ADDRESS, (uint64_t*)l_gpe0AppPtr, l_length); // analyzed
-
-    char* l_gpe1AppPtr = l_gpe0AppPtr + l_length;
-    uint32_t* l_ptrToGpe1Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE1_LENGTH);
-    l_length = *l_ptrToGpe1Length;
-    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE1_SRAM_ADDRESS, (uint64_t*)l_gpe1AppPtr, l_length); // analyzed
-    free(l_modifiedSectionPtr);
-}
-
 static void readSemiPersistData(semiPersistData_t & o_data)
 {
     memset(&o_data, 0x0, sizeof(semiPersistData_t));
     PNOR::SectionInfo_t l_pnorHbVolatile;
     Singleton<PnorRP>::instance().getSectionInfo(l_pnorHbVolatile);
-    semiPersistData_t *l_data l_pnorHbVolatile.size == 0 ? 0 : l_pnorHbVolatile.vaddr;
+    semiPersistData_t *l_data = (l_pnorHbVolatile.size == 0) ? 0 : l_pnorHbVolatile.vaddr;
     if(l_data)
     {
         o_data = *l_data;
@@ -235,113 +347,56 @@ static void readSemiPersistData(semiPersistData_t & o_data)
 
 errlHndl_t PnorRP::getSectionInfo(PNOR::SectionInfo_t& o_info)
 {
-    // inhibit any attempt to getSectionInfo on any attribute override
-    // sections if secureboot is enabled
-    bool l_inhibited = isInhibitedSection(PNOR::HB_VOLATILE);
-
-    if (PNOR::INVALID_SECTION != PNOR::HB_VOLATILE)
-    {
-        o_info.id = iv_TOC[PNOR::HB_VOLATILE].id;
-        o_info.name = SectionIdToString(PNOR::HB_VOLATILE);
-
 #ifdef CONFIG_SECUREBOOT
-        o_info.secure = iv_TOC[PNOR::HB_VOLATILE].secure;
-        o_info.size = iv_TOC[PNOR::HB_VOLATILE].size;
-        o_info.secureProtectedPayloadSize = 0; // for non secure sections
-                                                // the protected payload size
-                                                // defaults to zero
-        // If a secure section and has a secure header handle secure
-        // sections in SPnorRP's address space
-        if (o_info.secure)
+    if (iv_TOC[PNOR::HB_VOLATILE].secure)
+    {
+        o_info.vaddr = iv_TOC[PNOR::HB_VOLATILE].virtAddr + VMM_VADDR_SPNOR_DELTA + VMM_VADDR_SPNOR_DELTA + PAGESIZE;
+        SECUREBOOT::ContainerHeader l_conHdr;
+        l_conHdr.setHeader(l_vaddr);
+        payloadTextSize = l_conHdr.payloadTextSize();
+        if (l_conHdr.sb_flags()->sw_hash)
         {
-            uint8_t* l_vaddr = reinterpret_cast<uint8_t*>(iv_TOC[PNOR::HB_VOLATILE].virtAddr);
-            // By adding VMM_VADDR_SPNOR_DELTA twice we can translate a pnor
-            // address into a secure pnor address, since pnor, temp, and spnor
-            // spaces are equidistant.
-            // See comments in SPnorRP::verifySections() method in spnorrp.C
-            // and the definition of VMM_VADDR_SPNOR_DELTA in vmmconst.h
-            // for specifics.
-            o_info.vaddr = reinterpret_cast<uint64_t>(l_vaddr)
-                                                        + VMM_VADDR_SPNOR_DELTA
-                                                        + VMM_VADDR_SPNOR_DELTA;
-
-            // Get size of the secured payload for the secure section
-            // Note: the payloadSize we get back is untrusted because
-            // we are parsing the header in pnor (non secure space).
-            size_t payloadTextSize = 0;
-            // Do an existence check on the container to see if it's non-empty
-            // and has valid beginning bytes. For optional Secure PNOR sections.
-
-            SECUREBOOT::ContainerHeader l_conHdr;
-            l_conHdr.setHeader(l_vaddr);
-            payloadTextSize = l_conHdr.payloadTextSize();
-
-            // skip secure header for secure sections at this point in time
-            o_info.vaddr += PAGESIZE;
-            // now that we've skipped the header we also need to adjust the
-            // size of the section to reflect that.
-            // Note: For unsecured sections, the header skip and size decrement
-            // was done previously in pnor_common.C
-            o_info.size -= PAGESIZE;
-
-            // Need to change size to accommodate for hash table
-            if (l_conHdr.sb_flags()->sw_hash)
-            {
-                o_info.vaddr += payloadTextSize;
-                // Hash page table needs to use containerSize as the base
-                // and subtract off header and hash table size
-                o_info.size = l_conHdr.totalContainerSize() - PAGE_SIZE -
-                                payloadTextSize;
-                o_info.hasHashTable = true;
-            }
-
-            // cache the value in SectionInfo struct so that we can
-            // parse the container header less often
-            o_info.secureProtectedPayloadSize = payloadTextSize;
+            o_info.vaddr += payloadTextSize;
         }
-        else
+    }
+    else
 #endif
-        {
-            o_info.size = iv_TOC[PNOR::HB_VOLATILE].size;
-            o_info.vaddr = iv_TOC[PNOR::HB_VOLATILE].virtAddr;
-        }
-
-        o_info.flashAddr = iv_TOC[PNOR::HB_VOLATILE].flashAddr;
-        o_info.eccProtected = (iv_TOC[PNOR::HB_VOLATILE].integrity & FFS_INTEG_ECC_PROTECT) != 0;
-        o_info.sha512Version = (iv_TOC[PNOR::HB_VOLATILE].version & FFS_VERS_SHA512) != 0;
-        o_info.sha512perEC = (iv_TOC[PNOR::HB_VOLATILE].version & FFS_VERS_SHA512_PER_EC) != 0;
-        o_info.readOnly = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_READ_ONLY) != 0;
-        o_info.reprovision = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_REPROVISION) != 0;
-        o_info.Volatile = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_VOLATILE) != 0;
-        o_info.clearOnEccErr = (iv_TOC[PNOR::HB_VOLATILE].misc & FFS_MISC_CLR_ECC_ERR) != 0;
-    }
-}
-
-uint32_t getIPMISensorNumber(const TARGETING::Target*& i_targ, TARGETING::SENSOR_NAME i_name )
-{
-    if(i_targ == NULL)
     {
-        TARGETING::targetService().getTopLevelTarget(i_targ);
+        o_info.vaddr = iv_TOC[PNOR::HB_VOLATILE].virtAddr;
     }
-
-    TARGETING::AttributeTraits<TARGETING::ATTR_IPMI_SENSORS>::Type l_sensors;
-    if(i_targ->tryGetAttr<TARGETING::ATTR_IPMI_SENSORS>(l_sensors))
-    {
-        uint16_t array_rows = (sizeof(l_sensors)/sizeof(l_sensors[0]));
-        uint16_t (*begin)[2] = &l_sensors[0];
-        uint16_t (*end)[2] = &l_sensors[array_rows];
-        uint16_t (*ptr)[2] = std::lower_bound(begin, end, i_name, &name_predicate);
-        if(ptr != end && (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NAME_OFFSET] == i_name)
-        {
-            return (*ptr)[TARGETING::IPMI_SENSOR_ARRAY_NUMBER_OFFSET];
-        }
-    }
-    return INVALID_IPMI_SENSOR;
 }
 
 //////////////////////////
 // Fully analyzed below //
 //////////////////////////
+
+static void loadOCCImageDuringIpl(TARGETING::Target* i_target, void* i_occVirtAddr)
+{
+    UtilLidMgr lidMgr(HBOCC::OCC_LIDID);
+    uint8_t* l_occImage = lidMgr.getLidVirtAddr(); // just get pointer to the OCC section
+    TARGETING::Target * l_sysTarget = NULL;
+    TARGETING::targetService().getTopLevelTarget(l_sysTarget);
+
+    uint32_t* l_ptrToLength = (uint32_t*)((char*)l_occImage + OCC_OFFSET_LENGTH);
+    memcpy(i_occVirtAddr, l_occImage, *l_ptrToLength);
+    char* l_occMainAppPtr = l_occImage + *l_ptrToLength;
+    l_ptrToLength = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_LENGTH);
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_occMainAppPtr, *l_ptrToLength); // analyzed
+
+    void* l_modifiedSectionPtr = malloc(OCC_OFFSET_FREQ + sizeof(ATTR_FREQ_PB_MHZ_type));
+    memcpy(l_modifiedSectionPtr, l_occMainAppPtr, OCC_OFFSET_FREQ + sizeof(ATTR_FREQ_PB_MHZ_type));
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_405_SRAM_ADDRESS, (uint64_t*)l_modifiedSectionPtr, (uint32_t)OCC_OFFSET_FREQ + sizeof(ATTR_FREQ_PB_MHZ_type)); // analyzed
+
+    char* l_gpe0AppPtr = l_occMainAppPtr + *l_ptrToLength;
+    uint32_t* l_ptrToGpe0Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE0_LENGTH);
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE0_SRAM_ADDRESS, (uint64_t*)l_gpe0AppPtr, *l_ptrToGpe0Length); // analyzed
+
+    char* l_gpe1AppPtr = l_gpe0AppPtr + *l_ptrToGpe0Length;
+    uint32_t* l_ptrToGpe1Length = (uint32_t*)(l_occMainAppPtr + OCC_OFFSET_GPE1_LENGTH);
+    HBOCC::writeSRAM(i_target, HBOCC::OCC_GPE1_SRAM_ADDRESS, (uint64_t*)l_gpe1AppPtr, *l_ptrToGpe1Length); // analyzed
+
+    free(l_modifiedSectionPtr);
+}
 
 static void startOCCFromSRAM(TARGETING::Target* i_proc)
 {
