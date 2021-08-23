@@ -245,3 +245,30 @@ p0: 0x000000000006d015 = 0x00000000000000c8 (/kernelfsi@0/pib@1000)
 root@talos:~# pdbg -P pib getscom 0x0006D015
 p0: 0x000000000006d015 = 0xbafa000014e03675 (/kernelfsi@0/pib@1000)
 ```
+
+Reading from `0x6D010` will return address of *next* 8 bytes to read.
+
+### CME log
+
+CME uses the same format as SGPE. Of course, different `trexStringFile` and
+`*.map` has to be used. Contrary to SGPE, CMEs can be powered off during deeper
+STOP states. This destroys the contents of the log and all of CME SRAM.
+
+#### Reading CME SRAM
+
+Each CME has its own SRAM, which can be powered down independently of each other
+CME and OCC complex. Because of that, it has to be read while CME is running,
+which makes debugging less useful. Also, different set of registers has to be
+used for each CME - in the following commands, `q` is quad number (0-5) and `m`
+is either `0` for CME0 or `4` for CME1 for a given quad.
+
+```
+        # enable auto-incrementation of addresses
+root@talos:~# pdbg -P pib putscom 0x1q012m0C 0x8000000000000000
+        # need to subtract 0xffff8000 (SRAM base) from address and shift by 32
+root@talos:~# pdbg -P pib putscom 0x1q012m0D 0x000066d800000000
+```
+
+After that read from `0x1q012m0E` and parse as previously. Contrary to accessing
+from OCC SRAM, `0x1q012m0D` doesn't change its value - it holds the original
+address.
