@@ -2,7 +2,7 @@
 
 # How to use this script to extract strings from PkTraceBuffer:
 # - one time preparation (use appropriate file from hcode/output/obj/*/):
-#	awk -F'|' '{printf("%x   %s\n", $1, $3)}' trexStringFile > trexhex
+#	awk -F'\\|\\|' '{printf("%x   %s\n", $1, $2)}' trexStringFile > trexhex
 #
 # Dump and parse:
 # ./dump_occ_sram.sh <g_pk_trace_buf+0x38> | tac | awk -f awk_program -n | tac
