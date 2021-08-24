@@ -456,7 +456,7 @@ These are the most commonly used methods:
 * flush<0 or 1> - sets buffer to 0 or ~0, respectively
 * invert() - returns ~buffer
 * A.insert<TS, L, SS>(B),\
-flushA.insert(B, TS, L, SS):
+A.insert(B, TS, L, SS):
 
 ```
 M - bit size of A (-1)
