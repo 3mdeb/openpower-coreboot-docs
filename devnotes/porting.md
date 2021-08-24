@@ -446,13 +446,17 @@ These are the most commonly used methods:
 
 * setBit<N> - set bit N (counting from left)
   - setBit<N, C> - set all bits from N to N+C-1, counting from left
+  - setBit(N, C=1)
 * clearBit<N> - clear bit N (counting from left)
   - clearBit<N, C> - as above
+  - clearBit(N, C=1)
 * getBit<N> - get value of bit N (counting from left)
   - getBit<N, C> - returns `true` if _any_ of the bits is set, false otherwise
+  - getBit(N, C=1)
 * flush<0 or 1> - sets buffer to 0 or ~0, respectively
 * invert() - returns ~buffer
-* A.insert<TS, L, SS>(B):
+* A.insert<TS, L, SS>(B),\
+flushA.insert(B, TS, L, SS):
 
 ```
 M - bit size of A (-1)
@@ -475,7 +479,8 @@ N - bit size of B (-1)
     |aaaaaaXYZaaaa|    A after
 ```
 
-* A.insertFromRight<TS, L>(B) = A.insert<TS, L, N-L>(B):
+* A.insertFromRight<TS, L>(B) = A.insert<TS, L, N-L>(B),\
+A.insertFromRight(B, TS, L):
 
 ```
 M - bit size of A (-1)
@@ -501,7 +506,8 @@ N - bit size of B (-1)
     |aaaaaaXYZaaaa|    A after
 ```
 
-* A.extract<SS, L, TS>(B) = B.insert<TS, L, SS>(A):
+* A.extract<SS, L, TS>(B) = B.insert<TS, L, SS>(A):\
+A.extract(B, SS, L) // TS = 0
 
 ```
 M - bit size of A (-1)
@@ -527,7 +533,8 @@ N - bit size of B (-1)
         |bbbbXYZbb|    B after
 ```
 
-* A.extractToRight<SS, L>(B) = A.extract<SS, L, N-L>(B):
+* A.extractToRight<SS, L>(B) = A.extract<SS, L, N-L>(B),\
+A.extractToRight(B, SS, L):
 
 ```
 M - bit size of A (-1)
