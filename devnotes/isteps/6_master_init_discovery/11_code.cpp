@@ -76,31 +76,6 @@ errlHndl_t loadOCCSetup(
     p9_pm_pba_bar_config(l_fapiTarg, 2, l_common_addr); // analyzed
 }
 
-static void loadPMComplex(
-    TARGETING::Target * i_target,
-    uint64_t i_homerPhysAddr,
-    uint64_t i_commonPhysAddr)
-{
-    resetPMComplex(i_target);
-    void* l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
-    if(nullptr == l_homerVAddr)
-    {
-        return;
-    }
-    uint64_t l_occImgPaddr = i_homerPhysAddr + HOMER_OFFSET_TO_OCC_IMG;
-    uint64_t l_occImgVaddr = l_homerVAddr + HOMER_OFFSET_TO_OCC_IMG;
-    loadOCCSetup(i_target, l_occImgPaddr, l_occImgVaddr, i_commonPhysAddr);
-#ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
-    HBOCC::loadOCCImageDuringIpl(i_target, l_occImgVaddr); // analyzed
-#endif
-#if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
-    HBOCC::loadHostDataToSRAM(i_target);
-#else
-    loadHostDataToHomer(i_target, l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
-    loadHcode(i_target, l_homerVAddr, HBPM::PM_LOAD);
-#endif
-}
-
 errlHndl_t resetPMComplex(TARGETING::Target * i_target)
 {
     uint64_t l_homerPhysAddr;
@@ -117,7 +92,7 @@ errlHndl_t resetPMComplex(TARGETING::Target * i_target)
 #if defined(__HOSTBOOT_RUNTIME) && defined(CONFIG_NVDIMM)
     NVDIMM::notifyNvdimmProtectionChange(i_target, NVDIMM::OCC_INACTIVE);
 #endif
-    p9_pm_init(l_fapiTarg, p9pm::PM_RESET, l_homerVAddr );
+    p9_pm_reset(l_fapiTarg, l_homerVAddr );
 #ifdef __HOSTBOOT_RUNTIME
     if(HB_INITIATED_PM_RESET_IN_PROGRESS != l_chipResetState)
     {
@@ -131,6 +106,142 @@ errlHndl_t resetPMComplex(TARGETING::Target * i_target)
         HBPM_UNMAP(l_homerVAddr);
         i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(0);
     }
+}
+
+fapi2::ReturnCode p9_pm_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    void* i_pHomerImage = NULL)
+{
+    using namespace p9_stop_recov_ffdc;
+
+    fapi2::ReturnCode l_rc;
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::ATTR_INITIATED_PM_RESET_Type l_pmResetActive =
+        fapi2::ENUM_ATTR_INITIATED_PM_RESET_ACTIVE;
+    fapi2::ATTR_PM_MALF_ALERT_ENABLE_Type l_malfEnabled =
+        fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE;
+    fapi2::ATTR_SKIP_WAKEUP_Type l_skip_wakeup;
+
+    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+    bool l_malfAlert = false;
+    fapi2::buffer<uint64_t> l_cpmmmrVal;
+    fapi2::buffer<uint64_t> l_qmeScrVal;
+    auto ex_list = i_target.getChildren<fapi2::TARGET_TYPE_EX>();
+
+    fapi2::ATTR_PM_MALF_CYCLE_Type l_pmMalfCycle =
+        fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
+    FAPI_ATTR_GET(fapi2::ATTR_PM_MALF_CYCLE, i_target, l_pmMalfCycle);
+
+    // Avoid another PM Reset before we get through the PM Init
+    // Protect FIR Masks, Special Wakeup States, PM FFDC, etc. from being
+    // trampled.
+    if (l_pmMalfCycle == fapi2::ENUM_ATTR_PM_MALF_CYCLE_ACTIVE)
+    {
+        return fapi2::FAPI2_RC_SUCCESS;
+    }
+
+    FAPI_ATTR_GET(fapi2::ATTR_SKIP_WAKEUP, FAPI_SYSTEM, l_skip_wakeup);
+    FAPI_ATTR_GET(fapi2::ATTR_PM_MALF_ALERT_ENABLE, FAPI_SYSTEM, l_malfEnabled);
+    FAPI_ATTR_SET(fapi2::ATTR_INITIATED_PM_RESET, i_target, l_pmResetActive);
+
+    if (l_malfEnabled == fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_TRUE)
+    {
+        fapi2::getScom(i_target, P9N2_PU_OCB_OCI_OCCFLG2_SCOM, l_data64);
+
+        if (l_data64.getBit<p9hcd::PM_CALLOUT_ACTIVE>())
+        {
+            l_malfAlert = true;
+        }
+        l_data64.flush<0>().setBit<p9hcd::STOP_RECOVERY_TRIGGER_ENABLE>();
+        fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
+    }
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_INIT);
+    p9_pm_occ_firinit(i_target, p9pm::PM_RESET);
+    p9_pm_occ_control(
+        i_target,
+        p9occ_ctrl::PPC405_RESET_SEQUENCE, //Operation on PPC405
+        p9occ_ctrl::PPC405_BOOT_NULL, // Boot instruction location
+        0); //Jump to 405 main instruction - not used here
+    if (!l_skip_wakeup)
+    {
+        if (l_malfAlert == false)
+        {
+            p9_pm_reset_clear_errinj(i_target);
+            l_phase = PM_RESET_SPL_WKUP_EX_ALL;
+            special_wakeup_all(i_target, true);
+
+            std::vector<fapi2::Target<fapi2::TARGET_TYPE_EQ>> l_eqChiplets =
+                        i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+
+            for ( auto l_itr = l_eqChiplets.begin(); l_itr != l_eqChiplets.end(); ++l_itr)
+            {
+                fapi2::putScom(*l_itr, EQ_PPM_GPMMR_SCOM2, l_data64.flush<0>().setBit<0>());
+            }
+        }
+        else
+        {
+            FAPI_ATTR_SET(fapi2::ATTR_PM_MALF_CYCLE, i_target, fapi2::ENUM_ATTR_PM_MALF_CYCLE_ACTIVE);
+        }
+        p9_pm_set_auto_spwkup(i_target);
+    }
+    p9_pm_firinit(i_target, p9pm::PM_RESET);
+    p9_pm_occ_gpe_init(
+        i_target,
+        p9pm::PM_RESET,
+        p9occgpe::GPEALL);
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_OCC);
+
+    p9_pm_pstate_gpe_init(i_target, p9pm::PM_RESET);
+
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
+        l_occFir.get(p9pmFIR::REG_ALL);
+        l_occFir.mask(4);
+        l_occFir.put();
+    }
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_PGPE);
+    p9_pm_stop_gpe_init(i_target, p9pm::PM_RESET);
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_SGPE);
+    l_data64.flush<0>();
+    fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_data64);
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_CPPM);
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_QPPM);
+
+    p9_pm_corequad_init(
+        i_target,
+        p9pm::PM_RESET,
+        CME_FIRMASK, // CME FIR MASK
+        CORE_ERRMASK,// Core Error Mask
+        QUAD_ERRMASK); // Quad Error Mask
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_CME);
+    p9_pm_reset_psafe_update(i_target);
+    p9_pm_occ_sram_init(i_target, p9pm::PM_RESET);
+    p9_pm_ocb_init(
+        i_target,
+        p9pm::PM_RESET,
+        p9ocb::OCB_CHAN0, // Channel
+        p9ocb::OCB_TYPE_NULL, // Channel type
+        0, // Base address
+        0, // Length of circular push/pull queue
+        p9ocb::OCB_Q_OUFLOW_NULL, // Channel flow control
+        p9ocb::OCB_Q_ITPTYPE_NULL); // Channel interrupt control
+    p9_pm_pss_init(i_target, p9pm::PM_RESET);
+
+    if (l_malfAlert == true)
+    {
+        const uint32_t l_OCC_LFIR_BIT_STOP_RCV_NOTIFY_PRD = 3;
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
+        l_occFir.get(p9pmFIR::REG_ALL);
+        l_occFir.setRecvAttn(l_OCC_LFIR_BIT_STOP_RCV_NOTIFY_PRD);
+        l_occFir.put();
+        l_data64.flush<0>();
+        l_data64.setBit(l_OCC_LFIR_BIT_STOP_RCV_NOTIFY_PRD);
+        fapi2::putScom(i_target, PERV_TP_OCC_SCOM_OCCLFIR_OR, l_data64);
+    }
+    p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_MISC);
+    FAPI_ATTR_SET (fapi2::ATTR_INITIATED_PM_RESET, i_target, fapi2::ENUM_ATTR_INITIATED_PM_RESET_INACTIVE);
+    return l_current_err;
 }
 
 errlHndl_t getPnorInfo( HOMER_Data_t & o_data )
