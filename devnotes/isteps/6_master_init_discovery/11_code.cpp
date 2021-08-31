@@ -108,6 +108,732 @@ errlHndl_t resetPMComplex(TARGETING::Target * i_target)
     }
 }
 
+fapi2::ReturnCode p9_pm_recovery_ffdc_misc (
+                    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procChipTarget,
+                    void* i_pHomerImage )
+{
+    PlatPmComplex l_pmFfdc (i_procChipTarget, PLAT_MISC);
+    l_pmFfdc.logPmResetPhase (i_pHomerImage);
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_qppm( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip, void * i_pFfdcBuf )
+{
+    QppmRegs l_qppmFfdc( i_procChip );
+    l_qppmFfdc.collectFfdc( i_pFfdcBuf, SCOM_REG);
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_cppm( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip, void * i_pFfdcBuf )
+{
+    CppmRegs l_cppmFfdc( i_procChip );
+    l_cppmFfdc.collectFfdc( i_pFfdcBuf, SCOM_REG );
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_occ (
+        const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip,
+        void*                                               i_pFfdcBuf )
+{
+    PlatOcc l_occFfdc( i_procChip );
+    l_occFfdc.collectFfdc ( i_pFfdcBuf, (TRACES | SCOM_REG));
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_pgpe( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip,
+                                                void * i_pFfdcBuf )
+{
+    PlatPgpe l_pgpeFfdc( i_procChip );
+    l_pgpeFfdc.collectFfdc( i_pFfdcBuf, (ALL & ~PPE_HALT_STATE) );
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_sgpe( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip,
+                                            void * i_pFfdcBuf )
+{
+    PlatSgpe l_sgpeFfdc( i_procChip );
+    l_sgpeFfdc.collectFfdc( i_pFfdcBuf, (ALL & ~PPE_HALT_STATE) );
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_cme( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP >& i_procChip, void * i_pFfdcBuf )
+{
+    PlatCme l_cmeFfdc( i_procChip );
+    l_cmeFfdc.collectFfdc( i_pFfdcBuf, (ALL & ~(PPE_HALT_STATE | FIR_STATE)));
+}
+
+fapi2::ReturnCode p9_pm_recovery_ffdc_base (
+        const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_procChipTarget,
+        void* i_pHomerImage )
+{
+    std::vector<PlatPmComplex*> l_pPlatList;
+    fapi2::ATTR_PM_RESET_PHASE_Type l_phase = PM_RESET_FFDC_SEC_INIT;
+
+    // init all the platform FFDC headers
+    FAPI_ATTR_SET (fapi2::ATTR_PM_RESET_PHASE, i_procChipTarget, l_phase);
+
+    l_pPlatList.push_back (new PlatPmComplex(i_procChipTarget));
+    l_pPlatList.push_back (new PlatCme(i_procChipTarget));
+    l_pPlatList.push_back (new PlatSgpe(i_procChipTarget));
+    l_pPlatList.push_back (new PlatPgpe(i_procChipTarget));
+    l_pPlatList.push_back (new PlatOcc(i_procChipTarget));
+    l_pPlatList.push_back (new CppmRegs(i_procChipTarget));
+    l_pPlatList.push_back (new QppmRegs(i_procChipTarget));
+
+    for ( auto& it : l_pPlatList )
+    {
+        it->init (i_pHomerImage);
+    }
+    l_phase = PM_RESET_FFDC_GET_FIRS;
+    FAPI_ATTR_SET(fapi2::ATTR_PM_RESET_PHASE, i_procChipTarget, l_phase);
+
+    for ( auto& it : l_pPlatList )
+    {
+        it->collectFfdc (i_pHomerImage, (PPE_HALT_STATE | FIR_STATE));
+    }
+
+fapi_try_exit:
+    for ( auto& it : l_pPlatList )
+        delete it;
+    return  fapi2::current_err;
+}
+
+fapi2::ReturnCode p9_pm_collect_ffdc (
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    void* i_pHomerImage,
+    const uint8_t i_plat )
+{
+    using namespace p9_stop_recov_ffdc;
+
+    fapi2::ReturnCode l_rc;
+    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+    fapi2::ATTR_PM_RESET_FFDC_ENABLE_Type l_ffdcEnable = fapi2::ENUM_ATTR_PM_RESET_FFDC_ENABLE_FALSE;
+    fapi2::ATTR_PM_RESET_PHASE_Type l_phase = PM_RESET_UNKNOWN;
+
+    if( i_pHomerImage == nullptr )
+    {
+        return;
+    }
+
+    FAPI_ATTR_GET(fapi2::ATTR_PM_RESET_PHASE, i_target, l_phase);
+    FAPI_ATTR_GET(fapi2::ATTR_PM_RESET_FFDC_ENABLE, FAPI_SYSTEM, l_ffdcEnable);
+
+    if (l_ffdcEnable == fapi2::ENUM_ATTR_PM_RESET_FFDC_ENABLE_TRUE)
+    {
+        switch (i_plat)
+        {
+            case PLAT_INIT:
+                p9_pm_recovery_ffdc_base(i_target, i_pHomerImage);
+                break;
+            case PLAT_CME:
+                p9_pm_recovery_ffdc_cme(i_target, i_pHomerImage);
+                break;
+            case PLAT_SGPE:
+                p9_pm_recovery_ffdc_sgpe(i_target, i_pHomerImage);
+                break;
+            case PLAT_PGPE:
+                p9_pm_recovery_ffdc_pgpe(i_target, i_pHomerImage);
+                break;
+            case PLAT_OCC:
+                p9_pm_recovery_ffdc_occ(i_target, i_pHomerImage);
+                break;
+            case PLAT_CPPM:
+                p9_pm_recovery_ffdc_cppm(i_target, i_pHomerImage);
+                break;
+            case PLAT_QPPM:
+                p9_pm_recovery_ffdc_qppm(i_target, i_pHomerImage);
+                break;
+            case PLAT_MISC:
+                p9_pm_recovery_ffdc_misc(i_target, i_pHomerImage);
+                break;
+        }
+    }
+}
+
+fapi2::ReturnCode p9_pm_reset_clear_errinj (
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::ATTR_CHIP_UNIT_POS_Type l_chpltNumber = 0;
+
+    auto l_coreChiplets =
+        i_target.getChildren<fapi2::TARGET_TYPE_CORE>
+        (fapi2::TARGET_STATE_FUNCTIONAL);
+    l_data64.flush<0>()
+        .setBit<p9hcd::OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ>()
+        .setBit<p9hcd::OCCFLG2_PGPE_HCODE_FIT_ERR_INJ>()
+        .setBit<p9hcd::OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ>();
+    fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
+    for (auto l_core_chplt : l_coreChiplets)
+    {
+        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_core_chplt, l_chpltNumber);
+        l_data64.flush<0>()
+                .setBit<p9hcd::CPPM_CSAR_FIT_HCODE_ERROR_INJECT>()
+                .setBit<p9hcd::CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK>()
+                .setBit<p9hcd::CPPM_CSAR_PSTATE_HCODE_ERROR_INJECT>()
+                .setBit<p9hcd::CPPM_CSAR_STOP_HCODE_ERROR_INJECT>();
+        fapi2::putScom(l_core_chplt, C_CPPM_CSAR_CLEAR, l_data64);
+    }
+}
+
+fapi2::ReturnCode
+p9_pm_set_auto_spwkup(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer <uint64_t> l_deadCoreVector;
+    fapi2::buffer <uint64_t> l_ccsrData;
+    uint8_t l_malfAlertActive = fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
+    FAPI_ATTR_GET(fapi2::ATTR_PM_MALF_CYCLE, i_target, l_malfAlertActive);
+    getScom(i_target, P9N2_PU_OCB_OCI_CCSR_SCOM, l_ccsrData );
+
+    if (l_malfAlertActive == fapi2::ENUM_ATTR_PM_MALF_CYCLE_ACTIVE)
+    {
+        getScom(i_target, P9N2_PU_OCB_OCI_OCCFLG2_SCOM, l_deadCoreVector);
+    }
+
+    // For each EX target
+    for (auto& l_ex_chplt : i_target.getChildren<fapi2::TARGET_TYPE_EX>
+         (fapi2::TARGET_STATE_FUNCTIONAL))
+    {
+
+        fapi2::buffer<uint64_t> l_gpmmr;
+        fapi2::buffer<uint64_t> l_lmcr;
+        uint32_t l_bit;
+
+        fapi2::ATTR_CHIP_UNIT_POS_Type l_ex_num;
+        FAPI_ATTR_GET( fapi2::ATTR_CHIP_UNIT_POS, l_ex_chplt, l_ex_num);
+
+        for (auto& l_core : l_ex_chplt.getChildren<fapi2::TARGET_TYPE_CORE>
+             (fapi2::TARGET_STATE_FUNCTIONAL))
+        {
+            fapi2::ATTR_CHIP_UNIT_POS_Type l_core_num;
+            FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_core, l_core_num);
+
+            fapi2::getScom(l_core, C_PPM_GPMMR_SCOM,  l_gpmmr);
+
+            if (l_deadCoreVector.getBit(l_core_num))
+            {
+                continue;
+            }
+
+            if (l_gpmmr.getBit<EQ_PPM_GPMMR_SPECIAL_WKUP_DONE>())
+            {
+                l_bit = EQ_CME_SCOM_LMCR_C0_AUTO_SPECIAL_WAKEUP_DISABLE + (l_core_num % 2);
+                l_lmcr.flush<0>().setBit(l_bit);
+                fapi2::putScom(l_ex_chplt, EX_CME_SCOM_LMCR_SCOM1,  l_lmcr);
+            }
+            else
+            {
+                if (!(l_ccsrData.getBit(l_core_num)))
+                {
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+fapi2::ReturnCode
+avsIdleFrame(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+             const uint8_t i_avsBusNum,
+             const uint8_t i_o2sBridgeNum)
+{
+    fapi2::buffer<uint64_t> l_idleframe = 0xFFFFFFFFFFFFFFFFull;
+    fapi2::buffer<uint64_t> l_scomdata;
+    l_scomdata.setBit<1, 1>();
+    putScom(i_target, p9avslib::OCB_O2SCMD[i_avsBusNum][i_o2sBridgeNum], l_scomdata);
+    l_scomdata = l_idleframe;
+    putScom(i_target, p9avslib::OCB_O2SWD[i_avsBusNum][i_o2sBridgeNum], l_scomdata);
+    avsPollVoltageTransDone(i_target, i_avsBusNum, i_o2sBridgeNum);
+}
+
+fapi2::ReturnCode
+avsValidateResponse(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+                    const uint8_t i_avsBusNum,
+                    const uint8_t i_o2sBridgeNum,
+                    const uint8_t i_throw_assert,
+                    uint8_t& o_goodResponse
+                   )
+{
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::buffer<uint32_t> l_rsp_rcvd_crc;
+    fapi2::buffer<uint8_t>  l_data_status_code;
+    fapi2::buffer<uint32_t> l_rsp_data;
+
+    uint32_t l_rsp_computed_crc;
+    o_goodResponse = false;
+
+    getScom(i_target, p9avslib::OCB_O2SRD[i_avsBusNum][i_o2sBridgeNum], l_data64);
+
+    // Status Return Code and Received CRC
+    l_data64.extractToRight(l_data_status_code, 0, 2);
+    l_data64.extractToRight(l_rsp_rcvd_crc, 29, 3);
+    l_data64.extractToRight(l_rsp_data, 0, 32);
+
+    // Compute CRC on Response frame
+    l_rsp_computed_crc = avsCRCcalc(l_rsp_data);
+
+    if ((l_data_status_code == 0) &&                           // no error code
+        (l_rsp_rcvd_crc == l_rsp_computed_crc) &&              // good crc
+        (l_rsp_data != 0) && (l_rsp_data != 0xFFFFFFFF))       // valid response
+    {
+        o_goodResponse = true;
+    }
+
+}
+
+fapi2::ReturnCode
+avsVoltageWrite(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+                const uint8_t i_avsBusNum,
+                const uint8_t i_o2sBridgeNum,
+                const uint32_t i_RailSelect,
+                const uint32_t i_Voltage)
+{
+
+    uint32_t l_CmdType     = 0; // write and commit
+    uint32_t l_CmdGroup    = 0;
+    uint32_t l_CmdDataType = 0;
+
+    // Drive a Write Command
+    avsDriveCommand(
+        i_target,
+        i_avsBusNum,
+        i_o2sBridgeNum,
+        i_RailSelect,
+        l_CmdType,
+        l_CmdGroup,
+        l_CmdDataType,
+        i_Voltage);
+}
+
+fapi2::ReturnCode
+avsIdleFrame(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+             const uint8_t i_avsBusNum,
+             const uint8_t i_o2sBridgeNum)
+{
+    fapi2::buffer<uint64_t> l_idleframe = 0xFFFFFFFFFFFFFFFFull;
+    fapi2::buffer<uint64_t> l_scomdata;
+
+    l_scomdata.setBit<1, 1>();
+    putScom(i_target, p9avslib::OCB_O2SCMD[i_avsBusNum][i_o2sBridgeNum], l_scomdata);
+    l_scomdata = l_idleframe;
+    putScom(i_target, p9avslib::OCB_O2SWD[i_avsBusNum][i_o2sBridgeNum], l_scomdata);
+
+    // Wait on o2s_ongoing = 0
+    avsPollVoltageTransDone(i_target, i_avsBusNum, i_o2sBridgeNum);
+}
+
+fapi2::ReturnCode
+avsPollVoltageTransDone(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint8_t i_avsBusNum,
+    const uint8_t i_o2sBridgeNum)
+{
+    fapi2::ReturnCode l_rc = fapi2::FAPI2_RC_SUCCESS;
+    fapi2::buffer<uint64_t> l_data64;
+
+    uint8_t l_count = 0;
+
+    while (l_count < p9avslib::MAX_POLL_COUNT_AVS)
+    {
+        getScom(i_target, p9avslib::OCB_O2SST[i_avsBusNum][i_o2sBridgeNum], l_data64);
+
+        if (!l_data64.getBit<0>())
+        {
+            break;  // Leave the polling loop as "ongoing" has deasserted
+        }
+
+        l_count++;
+    }
+}
+
+#define AVS_CRC_DATA_MASK 0xFFFFFFF8
+uint32_t avsCRCcalc(const uint32_t i_avs_cmd)
+{
+    //Polynomial = x^3 + x^1 + x^0 = 1*x^3 + 0*x^2 + 1*x^1 + 1*x^0
+    //           = divisor(1011)
+    uint32_t o_crc_value = 0;
+    uint32_t l_polynomial = 0xB0000000;
+    uint32_t l_msb =        0x80000000;
+
+    o_crc_value = i_avs_cmd & AVS_CRC_DATA_MASK;
+
+    while (o_crc_value & AVS_CRC_DATA_MASK)
+    {
+        if (o_crc_value & l_msb)
+        {
+            o_crc_value = o_crc_value ^ l_polynomial;
+            l_polynomial = l_polynomial >> 1;
+        }
+        else
+        {
+            l_polynomial = l_polynomial >> 1;
+        }
+
+        l_msb = l_msb >> 1;
+    }
+    return o_crc_value;
+}
+
+fapi2::ReturnCode
+avsDriveCommand(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+                const uint8_t  i_avsBusNum,
+                const uint8_t  i_o2sBridgeNum,
+                const uint32_t i_RailSelect,
+                const uint32_t i_CmdType,
+                const uint32_t i_CmdGroup,
+                const uint32_t i_CmdDataType,
+                const uint32_t i_CmdData,
+                enum avsBusOpType i_opType)
+{
+
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::buffer<uint32_t> l_data64WithoutCRC;
+    fapi2::ReturnCode l_rc;
+
+    uint32_t l_StartCode = 0b01;
+    uint32_t l_Reserved = 0b000;
+    uint32_t l_crc;
+    l_data64.setBit<1, 1>();
+    putScom(i_target, p9avslib::OCB_O2SCMD[i_avsBusNum][i_o2sBridgeNum], l_data64);
+    l_data64.flush<0>();
+    l_data64.insertFromRight<0, 2>(l_StartCode);
+    l_data64.insertFromRight<2, 2>(i_CmdType);
+    l_data64.insertFromRight<4, 1>(i_CmdGroup);
+    l_data64.insertFromRight<5, 4>(i_CmdDataType);
+    l_data64.insertFromRight<9, 4>(i_RailSelect);
+    l_data64.insertFromRight<13, 16>(i_CmdData);
+    l_data64.insertFromRight<29, 3>(l_Reserved);
+
+    // Generate CRC
+    l_data64.extract(l_data64WithoutCRC, 0, 32);
+    l_crc = avsCRCcalc(l_data64WithoutCRC);
+    l_data64.insertFromRight<29, 3>(l_crc);
+    putScom(i_target, p9avslib::OCB_O2SWD[i_avsBusNum][i_o2sBridgeNum], l_data64);
+    FAPI_TRY(avsPollVoltageTransDone(i_target, i_avsBusNum, i_o2sBridgeNum));
+}
+
+fapi2::ReturnCode
+avsVoltageRead(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+               const uint8_t i_avsBusNum,
+               const uint8_t i_o2sBridgeNum,
+               const uint32_t i_RailSelect,
+               uint32_t& o_Voltage)
+{
+
+    fapi2::buffer<uint64_t> l_data64;
+    uint32_t l_CmdType     = 3; // read
+    uint32_t l_CmdGroup    = 0;
+    uint32_t l_CmdDataType = 0;
+    uint32_t l_outboundCmdData = 0xFFFF;
+
+    // Drive a Read Command
+    avsDriveCommand(
+        i_target,
+        i_avsBusNum,
+        i_o2sBridgeNum,
+        i_RailSelect,
+        l_CmdType,
+        l_CmdGroup,
+        l_CmdDataType,
+        l_outboundCmdData);
+
+    getScom(i_target, p9avslib::OCB_O2SRD[i_avsBusNum][i_o2sBridgeNum], l_data64);
+    o_Voltage = (l_data64 & 0x00FFFF0000000000) >> 40;
+}
+
+fapi2::ReturnCode
+avsInitExtVoltageControl(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint8_t i_avsBusNum,
+    const uint8_t i_o2sBridgeNum)
+{
+
+    fapi2::buffer<uint64_t> l_data64;
+    uint32_t l_avsbus_frequency, l_value, l_nest_frequency;
+    uint16_t l_divider;
+
+    ocb_o2sctrlf0a_t O2SCTRLF_value;
+    O2SCTRLF_value.fields.o2s_frame_size_an = p9avslib::O2S_FRAME_SIZE;
+    O2SCTRLF_value.fields.o2s_out_count1_an = p9avslib::O2S_FRAME_SIZE;
+    O2SCTRLF_value.fields.o2s_in_delay1_an = p9avslib::O2S_IN_DELAY1;
+
+    l_data64.insertFromRight<0, 6>(O2SCTRLF_value.fields.o2s_frame_size_an);
+    l_data64.insertFromRight<6, 6>(O2SCTRLF_value.fields.o2s_out_count1_an);
+    l_data64.insertFromRight<12, 6>(O2SCTRLF_value.fields.o2s_in_delay1_an);
+    putScom(i_target, p9avslib::OCB_O2SCTRLF[i_avsBusNum][i_o2sBridgeNum], l_data64);
+
+    ocb_o2sctrls0a_t O2SCTRLS_value;
+    O2SCTRLS_value.fields.o2s_in_count2_an = p9avslib::O2S_FRAME_SIZE;
+
+    l_data64.flush<0>();
+    l_data64.insertFromRight<12, 6>(O2SCTRLS_value.fields.o2s_in_count2_an);
+    putScom(i_target, p9avslib::OCB_O2SCTRLS[i_avsBusNum][i_o2sBridgeNum], l_data64);
+
+    ocb_o2sctrl10a_t O2SCTRL1_value;
+    O2SCTRL1_value.fields.o2s_bridge_enable_an = 1;
+
+    //Nest frequency attribute in MHz
+    FAPI_ATTR_GET(fapi2::ATTR_FREQ_PB_MHZ, fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>(), l_nest_frequency);
+
+    // AVSBus frequency attribute in KHz
+    FAPI_ATTR_GET(fapi2::ATTR_AVSBUS_FREQUENCY, fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>(), l_value);
+
+    if (l_value == 0)
+    {
+        l_avsbus_frequency = p9avslib::AVSBUS_FREQUENCY / 1000;
+    }
+    else
+    {
+        l_avsbus_frequency = l_value / 1000;
+    }
+
+    // Divider = Nest Frequency / (AVSBus Frequency * 8) - 1
+    l_divider = (l_nest_frequency / (l_avsbus_frequency * 8)) - 1;
+
+    O2SCTRL1_value.fields.o2s_clock_divider_an = l_divider;
+    O2SCTRL1_value.fields.o2s_nr_of_frames_an = 1;
+    O2SCTRL1_value.fields.o2s_cpol_an = 0;
+    O2SCTRL1_value.fields.o2s_cpha_an = 1;
+
+    l_data64.flush<0>();
+    l_data64.insertFromRight<0, 1>(O2SCTRL1_value.fields.o2s_bridge_enable_an);
+    l_data64.insertFromRight<2, 1>(O2SCTRL1_value.fields.o2s_cpol_an);
+    l_data64.insertFromRight<3, 1>(O2SCTRL1_value.fields.o2s_cpha_an);
+    l_data64.insertFromRight<4, 10>(O2SCTRL1_value.fields.o2s_clock_divider_an);
+    l_data64.insertFromRight<17, 1>(O2SCTRL1_value.fields.o2s_nr_of_frames_an);
+    putScom(i_target, p9avslib::OCB_O2SCTRL1[i_avsBusNum][i_o2sBridgeNum], l_data64);
+
+    // O2SCTRL1
+    // OCC O2S Control2
+    // [ 0:16] o2s_inter_frame_delay = filled in with ATTR l_data64
+    // Needs to be 10us or greater for SPIVID part operation
+    // Set to ~16us for conservatism using a 100ns hang pulse
+    // 16us = 16000ns -> 16000/100 = 160 = 0xA0;  aligned to 0:16 -> 0x005
+    ocb_o2sctrl20a_t O2SCTRL2_value;
+    O2SCTRL2_value.fields.o2s_inter_frame_delay_an = 0x0;
+
+    l_data64.flush<0>();
+    l_data64.insertFromRight<0, 17>(O2SCTRL2_value.fields.o2s_inter_frame_delay_an);
+    putScom(i_target, p9avslib::OCB_O2SCTRL2[i_avsBusNum][i_o2sBridgeNum], l_data64);
+}
+
+fapi2::ReturnCode
+p9_setup_evid_voltageWrite(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+                           const uint8_t i_bus_num,
+                           const uint8_t i_rail_select,
+                           const uint32_t i_voltage_mv,
+                           const uint32_t i_ext_vrm_step_size_mv,
+                           const P9_SETUP_EVID_CONSTANTS i_evid_value)
+
+{
+
+    uint8_t     l_goodResponse = 0;
+    uint8_t     l_throwAssert = true;
+    uint32_t    l_present_voltage_mv;
+    uint32_t    l_target_mv;
+    uint32_t    l_count;
+    int32_t     l_delta_mv = 0;
+
+    if (i_evid_value != VCS_SETUP)
+    {
+        avsInitExtVoltageControl(i_target, i_bus_num, BRIDGE_NUMBER);
+    }
+
+    avsIdleFrame(i_target, i_bus_num, BRIDGE_NUMBER);
+    l_count = 0;
+
+    do
+    {
+
+        avsVoltageRead(i_target, i_bus_num, BRIDGE_NUMBER, i_rail_select, l_present_voltage_mv);
+        l_throwAssert =  (l_count >= AVSBUS_RETRY_COUNT);
+        avsValidateResponse(i_target,  i_bus_num, BRIDGE_NUMBER, l_throwAssert, l_goodResponse);
+
+        if (!l_goodResponse)
+        {
+            avsIdleFrame(i_target, i_bus_num, BRIDGE_NUMBER);
+        }
+
+        l_count++;
+    }
+    while (!l_goodResponse);
+    l_delta_mv = (int32_t)l_present_voltage_mv - (int32_t)i_voltage_mv;
+
+    while (l_delta_mv)
+    {
+        uint32_t l_abs_delta_mv = l_delta_mv < 0 ? -l_delta_mv : l_delta_mv;
+
+        if (i_ext_vrm_step_size_mv > 0 && l_abs_delta_mv > i_ext_vrm_step_size_mv )
+        {
+            if (l_delta_mv > 0)
+            {
+                l_target_mv = l_present_voltage_mv - i_ext_vrm_step_size_mv;
+            }
+            else
+            {
+                l_target_mv = l_present_voltage_mv + i_ext_vrm_step_size_mv;
+            }
+        }
+        else
+        {
+            l_target_mv = i_voltage_mv;
+        }
+
+        l_count = 0;
+
+        do
+        {
+            avsVoltageWrite(
+                i_target,
+                i_bus_num,
+                BRIDGE_NUMBER,
+                i_rail_select,
+                l_target_mv);
+
+            // Throw an assertion if we don't get a good response.
+            l_throwAssert =  l_count >= AVSBUS_RETRY_COUNT;
+            avsValidateResponse(
+                i_target,
+                i_bus_num,
+                BRIDGE_NUMBER,
+                l_throwAssert,
+                l_goodResponse);
+
+            if (!l_goodResponse)
+            {
+                avsIdleFrame(i_target, i_bus_num, BRIDGE_NUMBER);
+            }
+
+            l_count++;
+        }
+        while (!l_goodResponse);
+        l_delta_mv = (int32_t)l_target_mv - (int32_t)i_voltage_mv;
+    }
+
+}
+
+fapi2::ReturnCode p9_pm_occ_gpe_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9pm::PM_FLOW_MODE i_mode,
+    const p9occgpe::GPE_ENGINES i_engine)
+{
+    if (i_mode == p9pm::PM_INIT)
+    {
+        // no-op
+    }
+    else if (i_mode == p9pm::PM_RESET)
+    {
+        if (i_engine == p9occgpe::GPE0 || i_engine == p9occgpe::GPEALL)
+        {
+            pm_occ_gpe_reset(i_target, p9occgpe::GPE0);
+        }
+        if (i_engine == p9occgpe::GPE1 || i_engine == p9occgpe::GPEALL)
+        {
+            pm_occ_gpe_reset(i_target, p9occgpe::GPE1);
+        }
+    }
+
+}
+
+fapi2::ReturnCode
+p9_pm_reset_psafe_update(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint32_t l_safe_mode_freq_dpll = 0;
+    bool l_external_voltage_update = true;
+    std::vector<fapi2::Target<fapi2::TARGET_TYPE_EQ>> l_eqChiplets;
+    fapi2::Target<fapi2::TARGET_TYPE_EQ> l_firstEqChiplet;
+    fapi2::buffer<uint64_t> l_dpll_data64;
+    fapi2::buffer<uint64_t> l_vdm_data64;
+    fapi2::buffer<uint64_t> l_dpll_fmult;
+    uint32_t l_dpll_mhz;
+    fapi2::buffer<uint64_t> l_occflg_data(0);
+    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+    uint8_t l_chipNum = 0xFF;
+    fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ_Type l_attr_safe_mode_freq_mhz;
+    fapi2::ATTR_SAFE_MODE_VOLTAGE_MV_Type l_attr_safe_mode_mv;
+    fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ_Type l_attr_reset_safe_mode_freq_mhz = 0;
+    fapi2::ATTR_SAFE_MODE_VOLTAGE_MV_Type l_attr_reset_safe_mode_mv = 0;
+    fapi2::ATTR_VDD_AVSBUS_BUSNUM_Type l_vdd_bus_num;
+    fapi2::ATTR_VDD_AVSBUS_RAIL_Type   l_vdd_bus_rail;
+    fapi2::ATTR_VDD_BOOT_VOLTAGE_Type       l_vdd_voltage_mv;
+    fapi2::ATTR_FREQ_DPLL_REFCLOCK_KHZ_Type l_freq_proc_refclock_khz;
+    fapi2::ATTR_PROC_DPLL_DIVIDER_Type      l_proc_dpll_divider;
+    fapi2::ATTR_SAFE_MODE_NOVDM_UPLIFT_MV_Type l_uplift_mv;
+    fapi2::ATTR_EXTERNAL_VRM_STEPSIZE_Type l_ext_vrm_step_size_mv;
+
+    FAPI_ATTR_GET(fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ, i_target, l_attr_safe_mode_freq_mhz);
+    FAPI_ATTR_GET(fapi2::ATTR_SAFE_MODE_VOLTAGE_MV, i_target, l_attr_safe_mode_mv);
+    FAPI_ATTR_GET(fapi2::ATTR_VDD_AVSBUS_BUSNUM, i_target, l_vdd_bus_num);
+    FAPI_ATTR_GET(fapi2::ATTR_VDD_AVSBUS_RAIL, i_target, l_vdd_bus_rail);
+    FAPI_ATTR_GET(fapi2::ATTR_VDD_BOOT_VOLTAGE, i_target, l_vdd_voltage_mv);
+    FAPI_ATTR_GET(fapi2::ATTR_PROC_DPLL_DIVIDER, i_target, l_proc_dpll_divider);
+    FAPI_ATTR_GET(fapi2::ATTR_FREQ_DPLL_REFCLOCK_KHZ, FAPI_SYSTEM, l_freq_proc_refclock_khz);
+    FAPI_ATTR_GET(fapi2::ATTR_SAFE_MODE_NOVDM_UPLIFT_MV, i_target, l_uplift_mv);
+    FAPI_ATTR_GET(fapi2::ATTR_EXTERNAL_VRM_STEPSIZE, FAPI_SYSTEM, l_ext_vrm_step_size_mv);
+    l_attr_safe_mode_mv += l_uplift_mv;
+    //Reset safe mode attributes
+    FAPI_ATTR_SET(fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ, i_target, l_attr_reset_safe_mode_freq_mhz);
+    FAPI_ATTR_SET(fapi2::ATTR_SAFE_MODE_VOLTAGE_MV, i_target, l_attr_reset_safe_mode_mv);
+
+    fapi2::getScom(i_target, PU_OCB_OCI_OCCFLG_SCOM2, l_occflg_data);
+
+    if (l_occflg_data.getBit<p9hcd::PGPE_SAFE_MODE_ACTIVE>() || !l_attr_safe_mode_freq_mhz || !l_attr_safe_mode_mv)
+    {
+        return;
+    }
+
+    l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+
+    for ( auto l_itr = l_eqChiplets.begin(); l_itr != l_eqChiplets.end(); ++l_itr)
+    {
+        l_dpll_fmult.flush<0>();
+        fapi2::getScom(*l_itr, EQ_QPPM_DPLL_FREQ , l_dpll_data64);
+
+        l_dpll_data64.extractToRight<EQ_QPPM_DPLL_FREQ_FMULT, EQ_QPPM_DPLL_FREQ_FMULT_LEN>(l_dpll_fmult);
+
+        // Convert frequency value to a format that needs to be written to the
+        // register
+        l_safe_mode_freq_dpll = ((l_attr_safe_mode_freq_mhz * 1000) * l_proc_dpll_divider) / l_freq_proc_refclock_khz;
+
+        // Convert back to the complete frequency value
+        l_dpll_mhz = ((l_dpll_fmult * l_freq_proc_refclock_khz ) / l_proc_dpll_divider ) / 1000;
+
+
+        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, *l_itr, l_chipNum);
+        if (l_dpll_mhz < l_attr_safe_mode_freq_mhz)
+        {
+            //Here we need to update VDD only once.. because we are in EQ
+            //target loop.VDD is updated for the whole proc once.
+            if (l_external_voltage_update)
+            {
+                p9_setup_evid_voltageWrite(
+                    i_target,
+                    l_vdd_bus_num,
+                    l_vdd_bus_rail,
+                    l_attr_safe_mode_mv,
+                    l_ext_vrm_step_size_mv,
+                    VDD_SETUP);
+                l_external_voltage_update = false;
+            }
+        }
+
+        l_dpll_data64.insertFromRight<EQ_QPPM_DPLL_FREQ_FMAX,EQ_QPPM_DPLL_FREQ_FMAX_LEN>(l_safe_mode_freq_dpll);
+        l_dpll_data64.insertFromRight<EQ_QPPM_DPLL_FREQ_FMIN,EQ_QPPM_DPLL_FREQ_FMIN_LEN>(l_safe_mode_freq_dpll);
+        l_dpll_data64.insertFromRight<EQ_QPPM_DPLL_FREQ_FMULT,EQ_QPPM_DPLL_FREQ_FMULT_LEN>(l_safe_mode_freq_dpll);
+
+        fapi2::putScom(*l_itr, EQ_QPPM_DPLL_FREQ, l_dpll_data64);
+    }
+
+    //Update Avs Bus voltage
+    //Here this condition will be true, when DPLL is greater than safe mode
+    //freq.
+    if (l_external_voltage_update)
+    {
+        p9_setup_evid_voltageWrite(
+            i_target,
+            l_vdd_bus_num,
+            l_vdd_bus_rail,
+            l_attr_safe_mode_mv,
+            l_ext_vrm_step_size_mv,
+            VDD_SETUP);
+    }
+
+}
+
 fapi2::ReturnCode p9_pm_reset(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     void* i_pHomerImage = NULL)
@@ -116,10 +842,8 @@ fapi2::ReturnCode p9_pm_reset(
 
     fapi2::ReturnCode l_rc;
     fapi2::buffer<uint64_t> l_data64;
-    fapi2::ATTR_INITIATED_PM_RESET_Type l_pmResetActive =
-        fapi2::ENUM_ATTR_INITIATED_PM_RESET_ACTIVE;
-    fapi2::ATTR_PM_MALF_ALERT_ENABLE_Type l_malfEnabled =
-        fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE;
+    fapi2::ATTR_INITIATED_PM_RESET_Type l_pmResetActive = fapi2::ENUM_ATTR_INITIATED_PM_RESET_ACTIVE;
+    fapi2::ATTR_PM_MALF_ALERT_ENABLE_Type l_malfEnabled = fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE;
     fapi2::ATTR_SKIP_WAKEUP_Type l_skip_wakeup;
 
     const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
@@ -128,8 +852,7 @@ fapi2::ReturnCode p9_pm_reset(
     fapi2::buffer<uint64_t> l_qmeScrVal;
     auto ex_list = i_target.getChildren<fapi2::TARGET_TYPE_EX>();
 
-    fapi2::ATTR_PM_MALF_CYCLE_Type l_pmMalfCycle =
-        fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
+    fapi2::ATTR_PM_MALF_CYCLE_Type l_pmMalfCycle = fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
     FAPI_ATTR_GET(fapi2::ATTR_PM_MALF_CYCLE, i_target, l_pmMalfCycle);
 
     // Avoid another PM Reset before we get through the PM Init
@@ -216,7 +939,6 @@ fapi2::ReturnCode p9_pm_reset(
         QUAD_ERRMASK); // Quad Error Mask
     p9_pm_collect_ffdc(i_target, i_pHomerImage, PLAT_CME);
     p9_pm_reset_psafe_update(i_target);
-    p9_pm_occ_sram_init(i_target, p9pm::PM_RESET);
     p9_pm_ocb_init(
         i_target,
         p9pm::PM_RESET,
@@ -535,17 +1257,6 @@ static void startOCCFromSRAM(TARGETING::Target* i_proc)
     deviceWrite(i_proc, &0xffffffffffffffff, 8, DEVICE_SCOM_ADDRESS(OCB_OIEPR0));
 }
 
-static void clear_occ_special_wakeups(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
-{
-    // EX targets CHIPLET_IDs [0x10, 0x10, 0x11, 0x11, 0x12, 0x12, 0x13, 0x13, 0x14, 0x14]
-    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
-    for (auto l_ex_chplt : l_exChiplets)
-    {
-        fapi2::getScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
-        fapi2::putScom(l_ex_chplt, EX_PPM_SPWKUP_OCC, 0);
-    }
-}
-
 static void pm_pss_reset(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
 {
@@ -690,21 +1401,6 @@ fapi2::ReturnCode p9_pm_ocb_indir_setup_linear(
         i_ocb_bar);
 }
 
-fapi2::ReturnCode p9_pm_ocb_init(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const uint32_t                   i_ocb_bar)
-{
-    pm_ocb_setup(
-        i_target,
-        p9ocb::OCB_CHAN0,
-        p9ocb::OCB_TYPE_LINSTR,
-        i_ocb_bar,
-        p9ocb::OCB_UPD_PIB_REG,
-        0,
-        p9ocb::OCB_Q_OUFLOW_NULL,
-        p9ocb::OCB_Q_ITPTYPE_NULL);
-}
-
 static void accessOCBIndirectChannel(
     accessOCBIndirectCmd i_cmd,
     const TARGETING::Target * i_pTarget,
@@ -782,102 +1478,6 @@ static void p9_pm_ocb_indir_access(
             l_data64.extract(l_data, 0, 64);
             io_ocb_buffer[l_loopCount] = l_data;
         }
-    }
-}
-
-static void pm_ocb_setup(
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-    const p9ocb::PM_OCB_CHAN_NUM    i_ocb_chan,
-    const p9ocb::PM_OCB_CHAN_TYPE   i_ocb_type,
-    const uint32_t                  i_ocb_bar,
-    const p9ocb::PM_OCB_CHAN_REG    i_ocb_upd_reg,
-    const uint8_t                   i_ocb_q_len,
-    const p9ocb::PM_OCB_CHAN_OUFLOW i_ocb_ouflow_en,
-    const p9ocb::PM_OCB_ITPTYPE     i_ocb_itp_type)
-{
-    fapi2::buffer<uint64_t> l_mask_or(0);
-    fapi2::buffer<uint64_t> l_mask_clear(0);
-
-    if (i_ocb_type == p9ocb::OCB_TYPE_LIN)
-    {
-        l_mask_clear.setBit<4, 2>();
-    }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_LINSTR)
-    {
-        l_mask_or.setBit<4>();
-        l_mask_clear.setBit<5>();
-    }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_CIRC)
-    {
-        l_mask_or.setBit<4, 2>();
-    }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_PUSHQ)
-    {
-        l_mask_or.setBit<4, 2>();
-
-        if (i_ocb_ouflow_en == p9ocb::OCB_Q_OUFLOW_EN)
-        {
-            l_mask_or.setBit<3>();
-        }
-        else if (i_ocb_ouflow_en == p9ocb::OCB_Q_OUFLOW_DIS)
-        {
-            l_mask_clear.setBit<3>();
-        }
-    }
-    else if (i_ocb_type == p9ocb::OCB_TYPE_PULLQ)
-    {
-        l_mask_or.setBit<4, 2>();
-
-        if (i_ocb_ouflow_en == p9ocb::OCB_Q_OUFLOW_EN)
-        {
-            l_mask_or.setBit<2>();
-        }
-        else if (i_ocb_ouflow_en == p9ocb::OCB_Q_OUFLOW_DIS)
-        {
-            l_mask_clear.setBit<2>();
-        }
-    }
-
-    fapi2::putScom(i_target, OCBCSRn_OR[i_ocb_chan], l_mask_or);
-    fapi2::putScom(i_target, OCBCSRn_CLEAR[i_ocb_chan], l_mask_clear);
-
-    fapi2::buffer<uint64_t> l_data64;
-    if(!(i_ocb_type == p9ocb::OCB_TYPE_NULL
-    || i_ocb_type == p9ocb::OCB_TYPE_CIRC))
-    {
-        uint32_t l_ocbase;
-        if(i_ocb_type == p9ocb::OCB_TYPE_LIN
-        || i_ocb_type == p9ocb::OCB_TYPE_LINSTR)
-        {
-            l_ocbase = OCBARn[i_ocb_chan];
-        }
-        else if (i_ocb_type == p9ocb::OCB_TYPE_PUSHQ)
-        {
-            l_ocbase = OCBSHBRn[i_ocb_chan];
-        }
-        else
-        {
-            l_ocbase = OCBSLBRn[i_ocb_chan];
-        }
-
-        l_data64.flush<0>().insertFromRight<0, 32>(i_ocb_bar);
-        fapi2::putScom(i_target, l_ocbase, l_data64);
-    }
-    if(i_ocb_type == p9ocb::OCB_TYPE_PUSHQ
-    && i_ocb_upd_reg == p9ocb::OCB_UPD_PIB_OCI_REG)
-    {
-        l_data64.flush<0>().insertFromRight<6, 5>(i_ocb_q_len);
-        l_data64.insertFromRight<4, 2>(i_ocb_itp_type);
-        l_data64.setBit<31>();
-        fapi2::putScom(i_target, OCBSHCSn[i_ocb_chan], l_data64);
-    }
-    if ((i_ocb_type == p9ocb::OCB_TYPE_PULLQ) &&
-        (i_ocb_upd_reg == p9ocb::OCB_UPD_PIB_OCI_REG))
-    {
-        l_data64.flush<0>().insertFromRight<6, 5>(i_ocb_q_len);
-        l_data64.insertFromRight<4, 2>(i_ocb_itp_type);
-        l_data64.setBit<31>();
-        fapi2::putScom(i_target, OCBSLCSn[i_ocb_chan], l_data64);
     }
 }
 
