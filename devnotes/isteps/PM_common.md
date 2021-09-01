@@ -207,7 +207,7 @@ fapi2::ReturnCode pm_occ_gpe_reset(
             break;
         }
 
-        fapi2::delay(1000); // In microseconds
+        fapi2::delay(1000ns);
     }
     while(--l_pollCount != 0);
 
@@ -220,6 +220,189 @@ fapi2::ReturnCode pm_occ_gpe_reset(
     l_data64.flush<0>();
     fapi2::putScom(i_target, l_instrAddrReg, l_data64);
     putScom(i_target, l_intVecReg, l_data64);
+}
+
+static void pm_occ_fir_init(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_OCC_LFIR> l_occFir(i_target);
+    fapi2::getScom(iv_proc, iv_mask_address, iv_mask);
+
+    putScom(iv_proc, iv_fir_address, 0);
+
+    uint64_t iv_action0 = 0;
+    iv_action0.clearBit(C405_ECC_CE);
+    iv_action0.clearBit(C405_OCI_MC_CHK);
+    iv_action0.clearBit(C405DCU_M_TIMEOUT);
+    iv_action0.clearBit(GPE0_ERR);
+    iv_action0.clearBit(GPE0_OCISLV_ERR);
+    iv_action0.clearBit(GPE1_ERR);
+    iv_action0.clearBit(GPE1_OCISLV_ERR);
+    iv_action0.clearBit(GPE2_OCISLV_ERR);
+    iv_action0.clearBit(GPE3_OCISLV_ERR);
+    iv_action0.clearBit(JTAGACC_ERR);
+    iv_action0.clearBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_action0.clearBit(OCB_DB_OCI_SLVERR);
+    iv_action0.clearBit(OCB_DB_OCI_TIMEOUT);
+    iv_action0.clearBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_action0.clearBit(OCB_IDC0_ERR);
+    iv_action0.clearBit(OCB_IDC1_ERR);
+    iv_action0.clearBit(OCB_IDC2_ERR);
+    iv_action0.clearBit(OCB_IDC3_ERR);
+    iv_action0.clearBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_action0.clearBit(OCC_CMPLX_FAULT);
+    iv_action0.clearBit(OCC_CMPLX_NOTIFY);
+    iv_action0.clearBit(SRAM_CE);
+    iv_action0.clearBit(SRAM_DATAOUT_PERR);
+    iv_action0.clearBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_action0.clearBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_action0.clearBit(SRAM_OCI_WDATA_PARITY);
+    iv_action0.clearBit(SRAM_READ_ERR);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR0);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR1);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR2);
+    iv_action0.clearBit(SRAM_SPARE_DIRERR3);
+    iv_action0.clearBit(SRAM_UE);
+    iv_action0.clearBit(SRAM_WRITE_ERR);
+    iv_action0.clearBit(SRT_FSM_ERR);
+    iv_action0.clearBit(STOP_RCV_NOTIFY_PRD);
+    iv_action0.setBit(C405_ECC_UE);
+    putScom(iv_proc, iv_action0_address, iv_action0);
+
+    uint64_t iv_action1 = 0;
+    iv_action1.clearBit(C405_ECC_UE);
+    iv_action1.setBit(C405_ECC_CE);
+    iv_action1.setBit(C405_OCI_MC_CHK);
+    iv_action1.setBit(C405DCU_M_TIMEOUT);
+    iv_action1.setBit(GPE0_ERR);
+    iv_action1.setBit(GPE0_OCISLV_ERR);
+    iv_action1.setBit(GPE1_ERR);
+    iv_action1.setBit(GPE1_OCISLV_ERR);
+    iv_action1.setBit(GPE2_OCISLV_ERR);
+    iv_action1.setBit(GPE3_OCISLV_ERR);
+    iv_action1.setBit(JTAGACC_ERR);
+    iv_action1.setBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_action1.setBit(OCB_DB_OCI_SLVERR);
+    iv_action1.setBit(OCB_DB_OCI_TIMEOUT);
+    iv_action1.setBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_action1.setBit(OCB_IDC0_ERR);
+    iv_action1.setBit(OCB_IDC1_ERR);
+    iv_action1.setBit(OCB_IDC2_ERR);
+    iv_action1.setBit(OCB_IDC3_ERR);
+    iv_action1.setBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_action1.setBit(OCC_CMPLX_FAULT);
+    iv_action1.setBit(OCC_CMPLX_NOTIFY);
+    iv_action1.setBit(SRAM_CE);
+    iv_action1.setBit(SRAM_DATAOUT_PERR);
+    iv_action1.setBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_action1.setBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_action1.setBit(SRAM_OCI_WDATA_PARITY);
+    iv_action1.setBit(SRAM_READ_ERR);
+    iv_action1.setBit(SRAM_SPARE_DIRERR0);
+    iv_action1.setBit(SRAM_SPARE_DIRERR1);
+    iv_action1.setBit(SRAM_SPARE_DIRERR2);
+    iv_action1.setBit(SRAM_SPARE_DIRERR3);
+    iv_action1.setBit(SRAM_UE);
+    iv_action1.setBit(SRAM_WRITE_ERR);
+    iv_action1.setBit(SRT_FSM_ERR);
+    iv_action1.setBit(STOP_RCV_NOTIFY_PRD);
+    putScom(iv_proc, iv_action1_address, iv_action1);
+
+    uint64_t iv_or_mask = iv_mask;
+    iv_or_mask.setBit(C405ICU_M_TIMEOUT);
+    iv_or_mask.setBit(CME_ERR_NOTIFY);
+    iv_or_mask.setBit(EXT_TRAP);
+    iv_or_mask.setBit(FIR_PARITY_ERR_DUP);
+    iv_or_mask.setBit(FIR_PARITY_ERR);
+    iv_or_mask.setBit(GPE0_HALTED);
+    iv_or_mask.setBit(GPE0_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE1_HALTED);
+    iv_or_mask.setBit(GPE1_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE2_ERR);
+    iv_or_mask.setBit(GPE2_HALTED);
+    iv_or_mask.setBit(GPE2_WD_TIMEOUT);
+    iv_or_mask.setBit(GPE3_ERR);
+    iv_or_mask.setBit(GPE3_HALTED);
+    iv_or_mask.setBit(GPE3_WD_TIMEOUT);
+    iv_or_mask.setBit(OCB_ERR);
+    iv_or_mask.setBit(OCC_FW0);
+    iv_or_mask.setBit(OCC_FW1);
+    iv_or_mask.setBit(OCC_HB_NOTIFY);
+    iv_or_mask.setBit(PPC405_CHIP_RESET);
+    iv_or_mask.setBit(PPC405_CORE_RESET);
+    iv_or_mask.setBit(PPC405_DBGSTOPACK);
+    iv_or_mask.setBit(PPC405_SYS_RESET);
+    iv_or_mask.setBit(PPC405_WAIT_STATE);
+    iv_or_mask.setBit(SPARE_59);
+    iv_or_mask.setBit(SPARE_60);
+    iv_or_mask.setBit(SPARE_61);
+    iv_or_mask.setBit(SPARE_ERR_38);
+    putScom(iv_proc, iv_fir_address + MASK_WOR_INCR, iv_or_mask);
+
+    uint64_t iv_and_mask = iv_mask;
+    iv_and_mask.clearBit(C405_ECC_CE);
+    iv_and_mask.clearBit(C405_ECC_UE);
+    iv_and_mask.clearBit(C405_OCI_MC_CHK);
+    iv_and_mask.clearBit(C405DCU_M_TIMEOUT);
+    iv_and_mask.clearBit(GPE0_ERR);
+    iv_and_mask.clearBit(GPE0_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE1_ERR);
+    iv_and_mask.clearBit(GPE1_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE2_OCISLV_ERR);
+    iv_and_mask.clearBit(GPE3_OCISLV_ERR);
+    iv_and_mask.clearBit(JTAGACC_ERR);
+    iv_and_mask.clearBit(OCB_DB_OCI_RDATA_PARITY);
+    iv_and_mask.clearBit(OCB_DB_OCI_SLVERR);
+    iv_and_mask.clearBit(OCB_DB_OCI_TIMEOUT);
+    iv_and_mask.clearBit(OCB_DB_PIB_DATA_PARITY_ERR);
+    iv_and_mask.clearBit(OCB_IDC0_ERR);
+    iv_and_mask.clearBit(OCB_IDC1_ERR);
+    iv_and_mask.clearBit(OCB_IDC2_ERR);
+    iv_and_mask.clearBit(OCB_IDC3_ERR);
+    iv_and_mask.clearBit(OCB_PIB_ADDR_PARITY_ERR);
+    iv_and_mask.clearBit(OCC_CMPLX_FAULT);
+    iv_and_mask.clearBit(OCC_CMPLX_NOTIFY);
+    iv_and_mask.clearBit(SRAM_CE);
+    iv_and_mask.clearBit(SRAM_DATAOUT_PERR);
+    iv_and_mask.clearBit(SRAM_OCI_ADDR_PARITY_ERR);
+    iv_and_mask.clearBit(SRAM_OCI_BE_PARITY_ERR);
+    iv_and_mask.clearBit(SRAM_OCI_WDATA_PARITY);
+    iv_and_mask.clearBit(SRAM_READ_ERR);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR0);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR1);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR2);
+    iv_and_mask.clearBit(SRAM_SPARE_DIRERR3);
+    iv_and_mask.clearBit(SRAM_UE);
+    iv_and_mask.clearBit(SRAM_WRITE_ERR);
+    iv_and_mask.clearBit(SRT_FSM_ERR);
+    iv_and_mask.clearBit(STOP_RCV_NOTIFY_PRD);
+    putScom(iv_proc, iv_fir_address + MASK_WAND_INCR, iv_and_mask);
+}
+
+
+static void pm_occ_fir_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint64_t iv_mask;
+    fapi2::getScom(iv_proc, iv_mask_address, iv_mask);
+
+    uint64_t iv_or_mask = iv_mask;
+    iv_or_mask.flush<1>();
+    putScom(iv_proc, iv_fir_address + MASK_WOR_INCR, iv_or_mask);
+
+    uint64_t iv_and_mask = iv_mask;
+    iv_and_mask.flush<1>();
+    iv_and_mask.clearBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_fir_address + MASK_WAND_INCR, iv_and_mask);
+
+    uint64_t iv_action0;
+    fapi2::getScom(iv_proc, iv_action0_address, iv_action0);
+    iv_action0.setBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_action0_address, iv_action0);
+
+    uint64_t iv_action1;
+    fapi2::getScom(iv_proc, iv_action1_address, iv_action1);
+    iv_action1.clearBit(OCC_HB_NOTIFY);
+    putScom(iv_proc, iv_action1_address, iv_action1);
 }
 
 fapi2::ReturnCode p9_pm_occ_firinit(
@@ -248,6 +431,401 @@ fapi2::ReturnCode p9_pm_occ_firinit(
     }
 }
 
+fapi2::ReturnCode pm_cme_fir_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
+    for (auto l_ex_chplt : l_exChiplets)
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_CME_LFIR> l_cmeFir(l_ex_chplt);
+        l_cmeFir.clearAllRegBits(p9pmFIR::REG_FIR);
+        l_cmeFir.restoreSavedMask();
+        l_cmeFir.put();
+    }
+}
+
+fapi2::ReturnCode
+p9_query_cache_clock_state(
+    const fapi2::Target<fapi2::TARGET_TYPE_EQ>& i_target,
+    bool o_l2_is_scomable[MAX_L2_PER_QUAD],
+    bool o_l3_is_scomable[MAX_L3_PER_QUAD])
+{
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::getScom(i_target, EQ_CLOCK_STAT_SL, l_data64);
+    for (auto l_l2Pos = 0; l_l2Pos < MAX_L2_PER_QUAD; l_l2Pos++)
+    {
+        o_l2_is_scomable[l_l2Pos] = !l_data64.getBit(eq_clk_l2_pos[l_l2Pos]);
+    }
+
+    for (auto l_l3Pos = 0; l_l3Pos < MAX_L3_PER_QUAD; l_l3Pos++)
+    {
+        o_l3_is_scomable[l_l3Pos] = !l_data64.getBit(eq_clk_l3_pos[l_l3Pos]);
+    }
+}
+
+fapi2::ReturnCode
+p9_query_cache_access_state(
+    const fapi2::Target<fapi2::TARGET_TYPE_EQ>& i_target,
+    bool o_l2_is_scomable[MAX_L2_PER_QUAD],
+    bool o_l2_is_scannable[MAX_L2_PER_QUAD],
+    bool o_l3_is_scomable[MAX_L3_PER_QUAD],
+    bool o_l3_is_scannable[MAX_L3_PER_QUAD])
+{
+    fapi2::buffer<uint64_t> l_qsshsrc;
+    uint32_t l_quadStopLevel = 0;
+    fapi2::buffer<uint64_t> l_data64;
+    uint8_t l_execution_platform = 0;
+    uint32_t l_stop_state_reg = 0;
+    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+
+    fapi2::getScom(i_target, EQ_PPM_PFSNS, l_data64);
+
+    if (l_data64.getBit<EQ_PPM_PFSNS_VDD_PFETS_DISABLED_SENSE>())
+    {
+        for (auto cnt = 0; cnt < MAX_L2_PER_QUAD; ++cnt)
+        {
+            o_l2_is_scomable[cnt]  = 0;
+            o_l2_is_scannable[cnt] = 0;
+        }
+
+        for (auto cnt = 0; cnt < MAX_L3_PER_QUAD; ++cnt)
+        {
+            o_l3_is_scomable[cnt]  = 0;
+            o_l3_is_scannable[cnt] = 0;
+        }
+
+        return fapi2::current_err;
+    }
+    FAPI_ATTR_GET(fapi2::ATTR_EXECUTION_PLATFORM, FAPI_SYSTEM, l_execution_platform);
+
+    if (l_execution_platform == fapi2::ENUM_ATTR_EXECUTION_PLATFORM_FSP)
+    {
+        l_stop_state_reg =  EQ_PPM_SSHFSP;
+    }
+    else
+    {
+        l_stop_state_reg = EQ_PPM_SSHHYP;
+    }
+
+    fapi2::getScom(i_target, l_stop_state_reg, l_qsshsrc);
+    if (l_qsshsrc.getBit(SSH_REG_STOP_GATED))
+    {
+        l_qsshsrc.extractToRight<uint32_t>(l_quadStopLevel, SSH_REG_STOP_LEVEL, SSH_REG_STOP_LEVEL_LEN);
+    }
+    for (auto cnt = 0; cnt < MAX_L2_PER_QUAD; ++cnt)
+    {
+        o_l2_is_scomable[cnt] = 1;
+        o_l2_is_scannable[cnt] = 1;
+    }
+
+    for (auto cnt = 0; cnt < MAX_L3_PER_QUAD; ++cnt)
+    {
+        o_l3_is_scomable[cnt] = 1;
+        o_l3_is_scannable[cnt] = 1;
+    }
+    if (l_qsshsrc.getBit(SSH_REG_STOP_GATED))
+    {
+        if (l_quadStopLevel >= 11)
+        {
+            for (auto cnt = 0; cnt < MAX_L2_PER_QUAD; ++cnt)
+            {
+                o_l2_is_scomable[cnt]  = 0;
+                o_l2_is_scannable[cnt] = 0;
+            }
+
+            for (auto cnt = 0; cnt < MAX_L3_PER_QUAD; ++cnt)
+            {
+                o_l3_is_scomable[cnt]  = 0;
+                o_l3_is_scannable[cnt] = 0;
+            }
+        }
+        else
+        {
+            p9_query_cache_clock_state(i_target, o_l2_is_scomable, o_l3_is_scomable);
+        }
+    }
+    else
+    {
+        p9_query_cache_clock_state(i_target, o_l2_is_scomable, o_l3_is_scomable);
+    }
+    return fapi2::current_err;
+}
+
+fapi2::ReturnCode pm_cme_fir_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+    uint8_t firinit_done_flag;
+
+    FAPI_ATTR_GET(
+        fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG,
+        i_target,
+        firinit_done_flag);
+
+    for (auto l_eq_chplt : l_eqChiplets)
+    {
+        fapi2::ReturnCode l_rc;
+        bool l_l2_is_scanable[MAX_L2_PER_QUAD];
+        bool l_l2_is_scomable[MAX_L2_PER_QUAD];
+        bool l_l3_is_scanable[MAX_L3_PER_QUAD];
+        bool l_l3_is_scomable[MAX_L3_PER_QUAD];
+
+        for (auto cnt = 0; cnt < MAX_L2_PER_QUAD; ++cnt)
+        {
+            l_l2_is_scomable[cnt] = false;
+            l_l2_is_scanable[cnt] = false;
+        }
+
+        for (auto cnt = 0; cnt < MAX_L3_PER_QUAD; ++cnt)
+        {
+            l_l3_is_scanable[cnt] = false;
+            l_l3_is_scomable[cnt] = false;
+        }
+
+        uint8_t l_chip_unit_pos;
+
+        FAPI_ATTR_GET(
+            fapi2::ATTR_CHIP_UNIT_POS,
+            l_eq_chplt,
+            l_chip_unit_pos);
+
+        p9_query_cache_access_state(
+            l_eq_chplt,
+            l_l2_is_scomable,
+            l_l2_is_scanable,
+            l_l3_is_scomable,
+            l_l3_is_scanable);
+
+
+        auto l_exChiplets = l_eq_chplt.getChildren<fapi2::TARGET_TYPE_EX>
+                            (fapi2::TARGET_STATE_FUNCTIONAL);
+
+        for(auto l_ex_chplt : l_exChiplets)
+        {
+            FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ex_chplt, l_chip_unit_pos);
+            //look ex is scommable
+            l_chip_unit_pos = l_chip_unit_pos % 2;
+
+            if(!l_l2_is_scomable[l_chip_unit_pos]
+            && !l_l3_is_scomable[l_chip_unit_pos])
+            {
+                continue;
+            }
+            p9pmFIR::PMFir <p9pmFIR::FIRTYPE_CME_LFIR> l_cmeFir(l_ex_chplt);
+            if ( firinit_done_flag != fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_RESET_IN_HB )
+            {
+                l_cmeFir.get(p9pmFIR::REG_FIRMASK);
+                l_cmeFir.saveMask();
+                l_cmeFir.setAllRegBits(p9pmFIR::REG_FI;
+                l_cmeFir.put();
+            }
+        }
+    }
+
+    if (firinit_done_flag == fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_NO_INIT)
+    {
+        firinit_done_flag = fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_RESET_IN_HB;
+        FAPI_ATTR_SET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, firinit_done_flag);
+    }
+}
+
+fapi2::ReturnCode p9_pm_cme_firinit(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9pm::PM_FLOW_MODE i_mode)
+{
+    if(i_mode == p9pm::PM_RESET)
+    {
+        pm_cme_fir_reset(i_target);
+    }
+    else if(i_mode == p9pm::PM_INIT)
+    {
+        pm_cme_fir_init(i_target);
+    }
+}
+
+fapi2::ReturnCode pm_ppm_fir_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint8_t l_firinit_done_flag;
+    auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+    auto l_coreChiplets = i_target.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);
+    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, l_firinit_done_flag);
+
+    for (auto l_eq_chplt : l_eqChiplets)
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PPM_LFIR> l_qppmFir(l_eq_chplt);
+        l_qppmFir.setAllRegBits(p9pmFIR::REG_ERRMASK);
+        if (l_firinit_done_flag)
+        {
+            l_qppmFir.restoreSavedMask();
+        }
+        l_qppmFir.put();
+    }
+
+    for (auto l_core_chplt : l_coreChiplets)
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PPM_LFIR> l_cppmFir(l_core_chplt);
+        l_cppmFir.setAllRegBits(p9pmFIR::REG_ERRMASK);
+        if (l_firinit_done_flag)
+        {
+            l_cppmFir.restoreSavedMask();
+        }
+        l_cppmFir.put();
+    }
+}
+
+fapi2::ReturnCode pm_ppm_fir_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint8_t l_firinit_done_flag;
+    auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+    auto l_coreChiplets = i_target.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);
+
+    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, l_firinit_done_flag);
+
+    for (auto l_eq_chplt : l_eqChiplets)
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PPM_LFIR> l_ppmFir(l_eq_chplt);
+
+        if (l_firinit_done_flag
+            == fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_INITED)
+        {
+            l_ppmFir.get(p9pmFIR::REG_ERRMASK);
+            l_ppmFir.saveMask();
+        }
+        l_ppmFir.setAllRegBits(p9pmFIR::REG_ERRMASK);
+        l_ppmFir.put();
+    }
+    for (auto l_c_chplt : l_coreChiplets)
+    {
+        p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PPM_LFIR> l_cppmFir(l_c_chplt);
+
+        if (l_firinit_done_flag
+            == fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_INITED)
+        {
+            l_cppmFir.get(p9pmFIR::REG_ERRMASK);
+            l_cppmFir.saveMask();
+        }
+
+        l_cppmFir.setAllRegBits(p9pmFIR::REG_ERRMASK);
+        l_cppmFir.put();
+    }
+}
+
+fapi2::ReturnCode p9_pm_ppm_firinit(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9pm::PM_FLOW_MODE i_mode)
+{
+    if(i_mode == p9pm::PM_RESET)
+    {
+        pm_ppm_fir_reset(i_target);
+    }
+    else if(i_mode == p9pm::PM_INIT)
+    {
+        pm_ppm_fir_init(i_target);
+    }
+}
+
+fapi2::ReturnCode pm_pba_fir_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint8_t firinit_done_flag;
+    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PBA_LFIR> l_pbaFir(i_target);
+
+    l_pbaFir.get(p9pmFIR::REG_ALL);
+
+    l_pbaFir.clearAllRegBits(p9pmFIR::REG_FIR);
+    l_pbaFir.clearAllRegBits(p9pmFIR::REG_ACTION0);
+    l_pbaFir.clearAllRegBits(p9pmFIR::REG_ACTION1);
+    l_pbaFir.setAllRegBits(p9pmFIR::REG_FIRMASK);
+
+    l_pbaFir.setRecvAttn(PBAFIR_OCI_APAR_ERR);
+    l_pbaFir.mask(PBAFIR_PB_RDADRERR_FW);
+    l_pbaFir.mask(PBAFIR_PB_RDDATATO_FW);
+    l_pbaFir.mask(PBAFIR_PB_SUE_FW);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_UE_FW);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_CE_FW);
+    l_pbaFir.setRecvAttn(PBAFIR_OCI_SLAVE_INIT);
+    l_pbaFir.setRecvAttn(PBAFIR_OCI_WRPAR_ERR);
+    l_pbaFir.mask(PBAFIR_SPARE);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_UNEXPCRESP);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_UNEXPDATA);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_PARITY_ERR);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_WRADRERR_FW);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_BADCRESP);
+    l_pbaFir.mask(PBAFIR_PB_ACKDEAD_FW_RD);
+    l_pbaFir.setRecvAttn(PBAFIR_PB_CRESPTO);
+    l_pbaFir.mask(PBAFIR_BCUE_SETUP_ERR);
+    l_pbaFir.mask(PBAFIR_BCUE_PB_ACK_DEAD);
+    l_pbaFir.mask(PBAFIR_BCUE_PB_ADRERR);
+    l_pbaFir.mask(PBAFIR_BCUE_OCI_DATERR);
+    l_pbaFir.mask(PBAFIR_BCDE_SETUP_ERR);
+    l_pbaFir.mask(PBAFIR_BCDE_PB_ACK_DEAD);
+    l_pbaFir.mask(PBAFIR_BCDE_PB_ADRERR);
+    l_pbaFir.mask(PBAFIR_BCDE_RDDATATO_ERR);
+    l_pbaFir.mask(PBAFIR_BCDE_SUE_ERR);
+    l_pbaFir.mask(PBAFIR_BCDE_UE_ERR);
+    l_pbaFir.mask(PBAFIR_BCDE_CE);
+    l_pbaFir.mask(PBAFIR_BCDE_OCI_DATERR);
+    l_pbaFir.setRecvAttn(PBAFIR_INTERNAL_ERR);
+    l_pbaFir.setRecvAttn(PBAFIR_ILLEGAL_CACHE_OP);
+    l_pbaFir.setRecvAttn(PBAFIR_OCI_BAD_REG_ADDR);
+    l_pbaFir.mask(PBAFIR_AXPUSH_WRERR);
+    l_pbaFir.mask(PBAFIR_AXRCV_DLO_ERR);
+    l_pbaFir.mask(PBAFIR_AXRCV_DLO_TO);
+    l_pbaFir.mask(PBAFIR_AXRCV_RSVDATA_TO);
+    l_pbaFir.mask(PBAFIR_AXFLOW_ERR);
+    l_pbaFir.mask(PBAFIR_AXSND_DHI_RTYTO);
+    l_pbaFir.mask(PBAFIR_AXSND_DLO_RTYTO);
+    l_pbaFir.mask(PBAFIR_AXSND_RSVTO);
+    l_pbaFir.mask(PBAFIR_AXSND_RSVERR);
+    l_pbaFir.mask(PBAFIR_PB_ACKDEAD_FW_WR);
+    l_pbaFir.mask(PBAFIR_RESERVED_41);
+    l_pbaFir.mask(PBAFIR_RESERVED_42);
+    l_pbaFir.mask(PBAFIR_RESERVED_43);
+    l_pbaFir.mask(PBAFIR_FIR_PARITY_ERR2);
+    l_pbaFir.mask(PBAFIR_FIR_PARITY_ERR);
+
+    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, firinit_done_flag);
+    if (firinit_done_flag)
+    {
+        l_pbaFir.restoreSavedMask();
+    }
+    l_pbaFir.put();
+}
+
+fapi2::ReturnCode pm_pba_fir_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    uint8_t firinit_done_flag;
+    p9pmFIR::PMFir <p9pmFIR::FIRTYPE_PBA_LFIR> l_pbaFir(i_target);
+
+    FAPI_ATTR_GET(fapi2::ATTR_PM_FIRINIT_DONE_ONCE_FLAG, i_target, firinit_done_flag);
+
+    if (firinit_done_flag == fapi2::ENUM_ATTR_PM_FIRINIT_DONE_ONCE_FLAG_FIRS_INITED)
+    {
+        l_pbaFir.get(p9pmFIR::REG_FIRMASK);
+        l_pbaFir.saveMask();
+    }
+
+    l_pbaFir.setAllRegBits(p9pmFIR::REG_FIRMASK);
+    l_pbaFir.put();
+}
+
+fapi2::ReturnCode p9_pm_pba_firinit(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9pm::PM_FLOW_MODE i_mode)
+{
+    if(i_mode == p9pm::PM_RESET)
+    {
+        pm_pba_fir_reset(i_target);
+    }
+    else if(i_mode == p9pm::PM_INIT)
+    {
+        pm_pba_fir_init(i_target);
+    }
+}
+
 fapi2::ReturnCode p9_pm_firinit(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     const p9pm::PM_FLOW_MODE i_mode)
@@ -270,6 +848,117 @@ fapi2::ReturnCode p9_pm_firinit(
         }
     }
 
+}
+
+fapi2::ReturnCode stop_gpe_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    uint32_t                l_timeout_in_MS = 100;
+    std::vector<uint64_t> l_ppe_base_addr_list;
+    std::vector< fapi2::Target<fapi2::TARGET_TYPE_EQ> > l_eq_list;
+
+    get_functional_chiplet_info( i_target, l_ppe_base_addr_list, l_eq_list);
+    l_data64.flush<0>().insertFromRight(p9hcd::HALT, 1, 3);
+    putScom(i_target, PU_GPE3_PPE_XIXCR, l_data64);
+    do
+    {
+        getScom(i_target, PU_GPE3_GPEXIXSR_SCOM, l_data64);
+        fapi2::delay(SGPE_POLLTIME_MS * 1000, SGPE_POLLTIME_MCYCLES * 1000 * 1000);
+    }
+    while((l_data64.getBit<p9hcd::HALTED_STATE>() == 0) && (--l_timeout_in_MS != 0));
+    l_data64.flush<0>().setBit<p9hcd::SGPE_ACTIVE>();
+    putScom(i_target, PU_OCB_OCI_OCCFLG_CLEAR, l_data64);
+}
+
+fapi2::ReturnCode get_functional_chiplet_info(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    std::vector<uint64_t>& o_ppe_addr_list,
+    std::vector< fapi2::Target<fapi2::TARGET_TYPE_EQ > >& o_eq_target_list )
+{
+    fapi2::buffer<uint64_t> l_qcsrBuf;
+    uint8_t l_exPos = 0;
+    auto l_ex_vector = i_target.getChildren<fapi2::TARGET_TYPE_EX>( fapi2::TARGET_STATE_PRESENT );
+    getScom(i_target, PU_OCB_OCI_QCSR_SCOM, l_qcsrBuf);
+
+    o_ppe_addr_list.push_back( SGPE_BASE_ADDRESS );
+
+    for ( auto ex : l_ex_vector )
+    {
+        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, ex, l_exPos );
+
+        if(l_qcsrBuf.getBit( l_exPos ))
+        {
+            o_ppe_addr_list.push_back( getCmeBaseAddress( l_exPos ) );
+            fapi2::Target< fapi2::TARGET_TYPE_EQ > l_parentEq = ex.getParent<fapi2::TARGET_TYPE_EQ>();
+            std::vector< fapi2::Target< fapi2::TARGET_TYPE_EQ > >::iterator l_eq;
+            l_eq = std::find ( o_eq_target_list.begin(), o_eq_target_list.end(), l_parentEq );
+
+            if ( l_eq != o_eq_target_list.end() )
+            {
+                continue;
+            }
+            o_eq_target_list.push_back( l_parentEq );
+        }
+    }
+}
+
+fapi2::ReturnCode stop_gpe_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_occ_flag;
+    fapi2::buffer<uint64_t> l_xcr;
+    fapi2::buffer<uint64_t> l_xsr;
+    fapi2::buffer<uint64_t> l_iar;
+    fapi2::buffer<uint64_t> l_ir;
+    fapi2::buffer<uint64_t> l_ivpr;
+    fapi2::buffer<uint64_t> l_slave_cfg;
+    uint32_t                l_ivpr_offset;
+    uint32_t                l_timeout_in_MS = TIMEOUT_COUNT;
+    std::vector<uint64_t> l_ppe_base_addr_list;
+    std::vector< fapi2::Target<fapi2::TARGET_TYPE_EQ> > l_eq_list;
+
+    get_functional_chiplet_info( i_target, l_ppe_base_addr_list, l_eq_list );
+    getScom(i_target, PU_OCB_OCI_OCCFLG_SCOM, l_occ_flag);
+
+    if (l_occ_flag.getBit<p9hcd::SGPE_ACTIVE>() == 1)
+    {
+        l_occ_flag.flush<0>();
+        l_occ_flag.setBit<p9hcd::SGPE_ACTIVE>();
+        putScom(i_target, PU_OCB_OCI_OCCFLG_CLEAR, l_occ_flag);
+    }
+
+    FAPI_ATTR_GET(fapi2::ATTR_STOPGPE_BOOT_COPIER_IVPR_OFFSET, i_target, l_ivpr_offset)
+
+    l_ivpr.flush<0>().insertFromRight<0, 32>(l_ivpr_offset);
+    putScom(i_target, PU_GPE3_GPEIVPR_SCOM, l_ivpr);
+
+    l_xcr.flush<0>().insertFromRight(p9hcd::HARD_RESET, 1 , 3);
+    putScom(i_target, PU_GPE3_PPE_XIXCR, l_xcr);
+    l_xcr.flush<0>().insertFromRight(p9hcd::TOGGLE_XSR_TRH, 1 , 3);
+    putScom(i_target, PU_GPE3_PPE_XIXCR, l_xcr);
+    l_xcr.flush<0>().insertFromRight(p9hcd::RESUME, 1 , 3);
+    putScom(i_target, PU_GPE3_PPE_XIXCR, l_xcr);
+
+    l_occ_flag.flush<0>();
+    l_xsr.flush<0>();
+
+    do
+    {
+        getScom(i_target, PU_OCB_OCI_OCCFLG_SCOM, l_occ_flag);
+        getScom(i_target, PU_GPE3_GPEXIXSR_SCOM, l_xsr);
+        getScom(i_target, PU_GPE3_GPEXIIAR_SCOM, l_iar);
+        getScom(i_target, PU_GPE3_GPEXIIR_SCOM, l_ir);
+        fapi2::delay(20000ns);
+    }
+    while((!((l_occ_flag.getBit<p9hcd::SGPE_ACTIVE>() == 1)
+    && (l_xsr.getBit<p9hcd::HALTED_STATE>() == 0)))
+    && (--l_timeout_in_MS != 0));
+
+    if(l_occ_flag.getBit<p9hcd::SGPE_ACTIVE>() == 1)
+    {
+        FAPI_INF("SGPE was activated successfully!!!!");
+    }
 }
 
 fapi2::ReturnCode p9_pm_stop_gpe_init(
@@ -296,10 +985,7 @@ fapi2::ReturnCode p9_pm_stop_gpe_init(
 
         if (fusedModeState == 1)
         {
-            auto l_functional_core_vector =
-                i_target.getChildren<fapi2::TARGET_TYPE_CORE>
-                (fapi2::TARGET_STATE_FUNCTIONAL);
-
+            auto l_functional_core_vector = i_target.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);
             for(auto l_chplt_trgt : l_functional_core_vector)
             {
                 FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_chplt_trgt, l_core_number);
@@ -315,14 +1001,10 @@ fapi2::ReturnCode p9_pm_stop_gpe_init(
         }
         if (coreQuiesceDis == 1)
         {
-            auto l_functional_core_vector =
-                i_target.getChildren<fapi2::TARGET_TYPE_CORE>
-                (fapi2::TARGET_STATE_FUNCTIONAL);
-
+            auto l_functional_core_vector = i_target.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);
             for(auto l_chplt_trgt : l_functional_core_vector)
             {
                 FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_chplt_trgt, l_core_number);
-
                 l_data64.flush<0>().setBit<p9hcd::CPPM_CPMMR_DISABLE_PERIODIC_CORE_QUIESCE>();
                 fapi2::putScom(l_chplt_trgt, C_CPPM_CPMMR_OR, l_data64);
             }
@@ -330,12 +1012,10 @@ fapi2::ReturnCode p9_pm_stop_gpe_init(
         p9_pm_pfet_init(i_target, i_mode);
         p9_pm_pba_init(i_target, p9pm::PM_RESET);
 
-
         uint8_t l_ivrm_attrval = 0;
         uint8_t l_vdm_attrval = 0;
 
         FAPI_ATTR_GET(fapi2::ATTR_IVRM_ENABLED, i_target, l_ivrm_attrval);
-
         FAPI_ATTR_GET(fapi2::ATTR_VDM_ENABLED, i_target, l_vdm_attrval);
 
         if((l_vdm_attrval || l_ivrm_attrval))
@@ -358,6 +1038,403 @@ fapi2::ReturnCode p9_pm_stop_gpe_init(
     else if (i_mode == p9pm::PM_RESET)
     {
         stop_gpe_reset(i_target);
+    }
+}
+
+fapi2::ReturnCode pstate_gpe_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    uint32_t                l_timeout_in_MS = 100;
+    std::vector<uint64_t> l_pgpe_base_addr;
+    l_pgpe_base_addr.push_back( PGPE_BASE_ADDRESS );
+
+    auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+    for (auto l_quad_chplt : l_eqChiplets)
+    {
+        l_data64.flush<0>()
+            .setBit<EQ_QPPM_QPMMR_ENABLE_PCB_INTR_UPON_HEARTBEAT_LOSS>();
+        fapi2::putScom(l_quad_chplt, EQ_QPPM_QPMMR_CLEAR, l_data64);
+    }
+    l_data64.flush<0>().insertFromRight(p9hcd::HALT, 1, 3);
+    putScom(i_target, PU_GPE2_PPE_XIXCR, l_data64);
+
+    do
+    {
+        getScom(i_target, PU_GPE2_GPEXIXSR_SCOM, l_data64);
+        fapi2::delay(20000000ns);
+    }
+    while((l_data64.getBit<p9hcd::HALTED_STATE>() == 0)
+    && (--l_timeout_in_MS != 0));
+
+    getScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_data64);
+    l_data64.flush<0>().clearBit<p9hcd::PGPE_ACTIVE>();
+    putScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_data64);
+}
+
+fapi2::ReturnCode pba_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64 = 0;
+    uint8_t l_attr_pbax_groupid;
+    uint8_t l_attr_pbax_chipid;
+    uint8_t l_attr_pbax_broadcast_vector;
+    uint8_t l_hw423589_option1;
+
+    FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_HW423589_OPTION1, i_target, l_hw423589_option1);
+    l_data64.flush<0>();
+
+    if (l_hw423589_option1)
+    {
+        l_data64.setBit<PU_PBACFG_CHSW_DIS_GROUP_SCOPE>();
+    }
+    fapi2::putScom(i_target, PU_PBACFG, l_data64);
+
+    l_data64.flush<0>();
+    fapi2::putScom(i_target, PU_PBAFIR, l_data64);
+    FAPI_ATTR_GET(fapi2::ATTR_PBAX_GROUPID, i_target, l_attr_pbax_groupid);
+    FAPI_ATTR_GET(fapi2::ATTR_PBAX_CHIPID, i_target, l_attr_pbax_chipid);
+    FAPI_ATTR_GET(fapi2::ATTR_PBAX_BRDCST_ID_VECTOR, i_target, l_attr_pbax_broadcast_vector);
+
+    l_data64.insertFromRight<PU_PBAXCFG_RCV_GROUPID, PU_PBAXCFG_RCV_GROUPID_LEN>(l_attr_pbax_groupid);
+    l_data64.insertFromRight<PU_PBAXCFG_RCV_CHIPID, PU_PBAXCFG_RCV_CHIPID_LEN>(l_attr_pbax_chipid);
+    l_data64.insertFromRight<PU_PBAXCFG_RCV_BRDCST_GROUP, PU_PBAXCFG_RCV_BRDCST_GROUP_LEN>(l_attr_pbax_broadcast_vector);
+    l_data64.insertFromRight<PU_PBAXCFG_RCV_DATATO_DIV, PU_PBAXCFG_RCV_DATATO_DIV_LEN>(PBAX_DATA_TIMEOUT);
+    l_data64.insertFromRight<PU_PBAXCFG_SND_RETRY_COUNT_OVERCOM, 1>(PBAX_SND_RETRY_COMMIT_OVERCOMMIT);
+    l_data64.insertFromRight<PU_PBAXCFG_SND_RETRY_THRESH, PU_PBAXCFG_SND_RETRY_THRESH_LEN>(PBAX_SND_RETRY_THRESHOLD);
+    l_data64.insertFromRight<PU_PBAXCFG_SND_RSVTO_DIV, PU_PBAXCFG_SND_RSVTO_DIV_LEN>(PBAX_SND_TIMEOUT);
+
+    fapi2::putScom(i_target, PU_PBAXCFG_SCOM, l_data64);
+    pba_slave_setup_runtime_phase(i_target);
+}
+
+fapi2::ReturnCode
+pba_slave_setup_boot_phase(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    pba_mode_t          pm;
+    pba_slvctln_t       ps;
+
+    fapi2::buffer<uint64_t>  l_data64(64);
+
+    pm.value = 0;
+    pm.fields.pba_region = PBA_OCI_REGION;
+    pm.fields.bcde_ocitrans = PBA_BCE_OCI_TRANSACTION_64_BYTES;
+    pm.fields.bcue_ocitrans = PBA_BCE_OCI_TRANSACTION_64_BYTES;
+    pm.fields.en_marker_ack = 1;
+    pm.fields.oci_marker_space = (PBA_OCI_MARKER_BASE >> 16) & 0x7;
+    pm.fields.en_slv_fairness = 1;
+    pm.fields.en_second_wrbuf = 1;
+
+    l_data64 = pm.value;
+
+    fapi2::putScom(i_target, PU_PBAMODE_SCOM, l_data64);
+    ps.value = 0;
+    ps.fields.enable = 1;
+    ps.fields.mid_match_value = OCI_MASTER_ID_SGPE;
+    ps.fields.mid_care_mask   = OCI_MASTER_ID_MASK_ALL;
+
+    ps.fields.read_ttype = PBA_READ_TTYPE_CL_RD_NC;
+    ps.fields.read_prefetch_ctl = PBA_READ_PREFETCH_NONE;
+    ps.fields.buf_alloc_a = 1;
+    ps.fields.buf_alloc_b = 1;
+    ps.fields.buf_alloc_c = 1;
+    ps.fields.buf_alloc_w = 1;
+
+    l_data64 = ps.value;
+
+    fapi2::putScom(i_target, PU_PBASLVCTL0_SCOM, l_data64);
+
+    ps.value = 0;
+    ps.fields.enable = 1;
+    ps.fields.mid_match_value = OCI_MASTER_ID_ICU & OCI_MASTER_ID_DCU;
+    ps.fields.mid_care_mask   = OCI_MASTER_ID_ICU & OCI_MASTER_ID_DCU;
+
+    ps.fields.read_ttype = PBA_READ_TTYPE_CL_RD_NC;
+    ps.fields.read_prefetch_ctl = PBA_READ_PREFETCH_NONE;
+    ps.fields.write_ttype = PBA_WRITE_TTYPE_DMA_PR_WR;
+    ps.fields.wr_gather_timeout = PBA_WRITE_GATHER_TIMEOUT_2_PULSES;
+    ps.fields.buf_alloc_a = 1;
+    ps.fields.buf_alloc_b = 1;
+    ps.fields.buf_alloc_c = 1;
+    ps.fields.buf_alloc_w = 1;
+
+    l_data64 = ps.value;
+
+    fapi2::putScom(i_target, PU_PBASLVCTL1_SCOM, l_data64);
+
+    ps.value = 0;
+    ps.fields.enable = 1;
+    ps.fields.mid_match_value = OCI_MASTER_ID_PGPE;
+    ps.fields.mid_care_mask   = OCI_MASTER_ID_MASK_ALL;
+
+    ps.fields.read_ttype = PBA_READ_TTYPE_CL_RD_NC;
+    ps.fields.read_prefetch_ctl = PBA_READ_PREFETCH_NONE;
+    ps.fields.write_ttype = PBA_WRITE_TTYPE_DMA_PR_WR;
+    ps.fields.wr_gather_timeout = PBA_WRITE_GATHER_TIMEOUT_2_PULSES;
+    ps.fields.buf_alloc_a = 1;
+    ps.fields.buf_alloc_b = 1;
+    ps.fields.buf_alloc_c = 1;
+    ps.fields.buf_alloc_w = 1;
+    l_data64 = ps.value;
+    fapi2::putScom(i_target, PU_PBASLVCTL2_SCOM, l_data64);
+}
+
+fapi2::ReturnCode pba_slave_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    bool                    l_poll_failure = false;
+    uint32_t                l_pollCount;
+
+    // Slave to be reset. Note: Slave 3 is not reset as it is owned by SBE
+    std::vector<uint32_t> v_slave_resets = {0, 1, 2};
+
+    for (auto sl : v_slave_resets)
+    {
+        l_poll_failure = true;
+
+        for (l_pollCount = 0; l_pollCount < p9pba::MAX_PBA_RESET_POLLS;
+             l_pollCount++)
+        {
+            l_data64.insert<0, 64>(p9pba::PBA_SLVRESETs[sl] );
+            fapi2::putScom(i_target, PU_PBASLVRST_SCOM, l_data64);
+            fapi2::getScom(i_target, PU_PBASLVRST_SCOM, l_data64);
+
+            if (l_data64 & 0x0000000000000001 << (63 - ( 4 + sl)) )
+            {
+                fapi2::delay(1000ns);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
+fapi2::ReturnCode pba_bc_stop(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    bool                l_bcde_stop_complete = false;
+    bool                l_bcue_stop_complete = false;
+    uint32_t            l_pollCount;
+
+    l_data64.setBit<0>();
+    fapi2::putScom(i_target, PU_BCDE_CTL_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_BCUE_CTL_SCOM, l_data64);
+
+    for (l_pollCount = 0;
+         l_pollCount < p9pba::MAX_PBA_BC_STOP_POLLS;
+         l_pollCount++)
+    {
+        FAPI_TRY(fapi2::getScom(i_target, PU_BCDE_STAT_SCOM, l_data64));
+        if (!l_data64.getBit<p9pba::PBA_BC_STAT_RUNNING>() )
+        {
+            l_bcde_stop_complete = true;
+        }
+
+        fapi2::getScom(i_target, PU_BCUE_STAT_SCOM, l_data64);
+        if(! l_data64.getBit<p9pba::PBA_BC_STAT_RUNNING>())
+        {
+            l_bcue_stop_complete = true;
+        }
+
+        if (l_bcde_stop_complete && l_bcue_stop_complete)
+        {
+            break;
+        }
+        fapi2::delay(256000ns);
+    }
+
+    l_data64.flush<0>();
+    fapi2::putScom(i_target, PU_BCDE_CTL_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_BCUE_CTL_SCOM, l_data64);
+}
+
+fapi2::ReturnCode pba_reset(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+
+    std::vector<uint64_t> v_pba_reset_regs =
+    {
+        PU_BCDE_PBADR_SCOM,
+        PU_BCDE_OCIBAR_SCOM,
+        PU_BCUE_CTL_SCOM,
+        PU_BCUE_SET_SCOM,
+        PU_BCUE_PBADR_SCOM,
+        PU_BCUE_OCIBAR_SCOM,
+        PU_PBAXSHBR0_SCOM,
+        PU_PBAXSHBR1_SCOM,
+        PU_PBAXSHCS0_SCOM,
+        PU_PBAXSHCS1_SCOM,
+        PU_PBASLVCTL0_SCOM,
+        PU_PBASLVCTL1_SCOM,
+        PU_PBASLVCTL2_SCOM,
+        PU_PBAFIR,
+        PU_PBAERRRPT0
+    };
+    fapi2::buffer<uint64_t> l_data64;
+    uint8_t l_hw423589_option1;
+
+    pba_bc_stop(i_target);
+    pba_slave_reset(i_target);
+
+    for (auto it : v_pba_reset_regs)
+    {
+        fapi2::putScom(i_target, it, 0);
+    }
+    FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_HW423589_OPTION1, i_target, l_hw423589_option1);
+    l_data64.flush<0>();
+
+    if (l_hw423589_option1)
+    {
+        l_data64.setBit<PU_PBACFG_CHSW_DIS_GROUP_SCOPE>();
+    }
+    fapi2::putScom(i_target, PU_PBACFG, l_data64);
+    l_data64.flush<0>().setBit<2, 2>();
+    fapi2::putScom(i_target, PU_PBAXCFG_SCOM, l_data64);
+    pba_slave_setup_boot_phase(i_target);
+}
+
+fapi2::ReturnCode p9_pm_pba_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9pm::PM_FLOW_MODE i_mode)
+{
+    if (i_mode == p9pm::PM_INIT)
+    {
+        pba_init(i_target);
+    }
+    else if (i_mode == p9pm::PM_RESET)
+    {
+        pba_reset(i_target);
+    }
+}
+
+fapi2::ReturnCode pstate_gpe_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+    fapi2::buffer<uint64_t> l_occ_scratch2;
+    fapi2::buffer<uint64_t> l_xcr;
+    fapi2::buffer<uint64_t> l_xsr_iar;
+    fapi2::buffer<uint64_t> l_ivpr;
+    uint32_t                l_xsr_halt_condition = 0;
+    uint32_t                l_timeout_counter = TIMEOUT_COUNT;
+    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>      FAPI_SYSTEM;
+    fapi2::ATTR_PSTATEGPE_BOOT_COPIER_IVPR_OFFSET_Type  l_ivpr_offset = 0;
+    fapi2::ATTR_VDD_AVSBUS_BUSNUM_Type                  l_avsbus_number = 0;
+    fapi2::ATTR_VDD_AVSBUS_RAIL_Type                    l_avsbus_rail = 0;
+    fapi2::ATTR_SYSTEM_PSTATES_MODE_Type                l_pstates_mode = 0;
+
+    FAPI_ATTR_GET(fapi2::ATTR_PSTATEGPE_BOOT_COPIER_IVPR_OFFSET, i_target, l_ivpr_offset);
+
+    l_ivpr.flush<0>().insertFromRight<0, 32>(l_ivpr_offset);
+    putScom(i_target, PU_GPE2_GPEIVPR_SCOM, l_ivpr);
+    getScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_occ_scratch2);
+
+    l_occ_scratch2.clearBit<p9hcd::PGPE_ACTIVE>();
+
+    FAPI_ATTR_GET(fapi2::ATTR_VDD_AVSBUS_BUSNUM, i_target, l_avsbus_number);
+    FAPI_ATTR_GET(fapi2::ATTR_VDD_AVSBUS_RAIL, i_target, l_avsbus_rail);
+
+    l_occ_scratch2
+        .insertFromRight<27, 1>(l_avsbus_number)
+        .insertFromRight<28, 4>(l_avsbus_rail);
+
+    putScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_occ_scratch2);
+
+    FAPI_ATTR_GET(fapi2::ATTR_SYSTEM_PSTATES_MODE, FAPI_SYSTEM, l_pstates_mode);
+
+    fapi2::ATTR_PSTATES_ENABLED_Type l_ps_enabled;
+    FAPI_ATTR_GET(fapi2::ATTR_PSTATES_ENABLED, i_target, l_ps_enabled);
+
+    if (l_pstates_mode != fapi2::ENUM_ATTR_SYSTEM_PSTATES_MODE_OFF
+    && l_ps_enabled == fapi2::ENUM_ATTR_PSTATES_ENABLED_TRUE)
+    {
+        if (l_pstates_mode == fapi2::ENUM_ATTR_SYSTEM_PSTATES_MODE_AUTO)
+        {
+            putScom(i_target, PU_OCB_OCI_OCCFLG_SCOM2, BIT(p9hcd::PGPE_PSTATE_PROTOCOL_AUTO_ACTIVATE));
+        }
+
+        l_data64.flush<0>()
+            .insertFromRight<0, 4>(0x1)
+            .insertFromRight<4, 4>(0xA);
+        fapi2::putScom(i_target, PU_GPE2_GPETSEL_SCOM, l_data64);
+
+        l_data64.flush<0>()
+            .setBit<p9hcd::OCCFLG2_PGPE_HCODE_FIT_ERR_INJ>()
+            .setBit<p9hcd::OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ>();
+        fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
+
+        l_xcr.flush<0>().insertFromRight(p9hcd::HARD_RESET, 1, 3);
+        putScom(i_target, PU_GPE2_PPE_XIXCR, l_xcr);
+        l_xcr.flush<0>().insertFromRight(p9hcd::TOGGLE_XSR_TRH, 1 , 3);
+        putScom(i_target, PU_GPE2_PPE_XIXCR, l_xcr);
+        l_xcr.flush<0>().insertFromRight(p9hcd::RESUME, 1, 3);
+        putScom(i_target, PU_GPE2_PPE_XIXCR, l_xcr);
+        l_occ_scratch2.flush<0>();
+        l_xsr_iar.flush<0>();
+
+        do
+        {
+            getScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_occ_scratch2);
+            getScom(i_target, PU_GPE2_PPE_XIDBGPRO, l_xsr_iar);
+            // does this need to be such a lone time?
+            fapi2::delay(20000000ns);
+        }
+        while((l_occ_scratch2.getBit<p9hcd::PGPE_ACTIVE>() != 1) &&
+              (l_xsr_iar.getBit<p9hcd::HALTED_STATE>() != 1) &&
+              (--l_timeout_counter != 0));
+
+        l_xsr_iar.extractToRight<uint32_t>(l_xsr_halt_condition,
+                                           p9hcd::HALT_CONDITION_START,
+                                           p9hcd::HALT_CONDITION_LEN);
+
+        if (l_pstates_mode == fapi2::ENUM_ATTR_SYSTEM_PSTATES_MODE_AUTO)
+        {
+            do
+            {
+                getScom(i_target, PU_OCB_OCI_OCCS2_SCOM, l_occ_scratch2);
+                getScom(i_target, PU_GPE3_PPE_XIDBGPRO, l_xsr_iar);
+                // does this need to be such a lone time?
+                fapi2::delay(20000000ns);
+            }
+            while((l_occ_scratch2.getBit<p9hcd::PGPE_PSTATE_PROTOCOL_ACTIVE>() != 1) &&
+                  (l_xsr_iar.getBit<p9hcd::HALTED_STATE>() != 1) &&
+                  (--l_timeout_counter != 0));
+
+            if (l_timeout_counter != 0
+            && l_occ_scratch2.getBit<p9hcd::PGPE_PSTATE_PROTOCOL_ACTIVE>() == 1
+            && l_xsr_iar.getBit<p9hcd::HALTED_STATE>() != 1)
+            {
+                FAPI_INF("Pstate Auto Start Mode Complete!!!!");
+            }
+            else
+            {
+                FAPI_INF("Pstate GPE Protocol Auto Start timeout");
+            }
+        }
+
+        const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+        auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);
+        fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ_Type l_attr_safe_mode_freq_mhz;
+        fapi2::ATTR_FREQ_DPLL_REFCLOCK_KHZ_Type l_ref_clock_freq_khz;
+        fapi2::ATTR_PROC_DPLL_DIVIDER_Type l_proc_dpll_divider;
+        FAPI_ATTR_GET(fapi2::ATTR_SAFE_MODE_FREQUENCY_MHZ, i_target, l_attr_safe_mode_freq_mhz);
+        FAPI_ATTR_GET(fapi2::ATTR_FREQ_DPLL_REFCLOCK_KHZ, FAPI_SYSTEM, l_ref_clock_freq_khz);
+        FAPI_ATTR_GET(fapi2::ATTR_PROC_DPLL_DIVIDER, i_target, l_proc_dpll_divider);
+
+        uint32_t l_safe_mode_freq = ((l_attr_safe_mode_freq_mhz * 1000) * l_proc_dpll_divider) / l_ref_clock_freq_khz;
+
+        for (auto l_eq_chplt : l_eqChiplets)
+        {
+            getScom(l_eq_chplt, EQ_QPPM_QPMMR, l_data64);
+            l_data64.insertFromRight<EQ_QPPM_QPMMR_FSAFE, EQ_QPPM_QPMMR_FSAFE_LEN>(l_safe_mode_freq);
+
+            fapi2::putScom(l_eq_chplt, EQ_QPPM_QPMMR, l_data64);
+        }
     }
 }
 
@@ -466,25 +1543,19 @@ errlHndl_t callWakeupHwp(TARGETING::Target* i_target,
         }
     }
 
-    // Update the counter
-    if(!l_errl)
+    if(i_enable == WAKEUP::ENABLE)
     {
-        if(i_enable == WAKEUP::ENABLE)
-        {
-            l_count++;
-        }
-        else if(i_enable == WAKEUP::DISABLE)
-        {
-            l_count--;
-        }
-        else if(i_enable == WAKEUP::FORCE_DISABLE)
-        {
-            l_count = 0;
-        }
-        i_target->setAttr<ATTR_SPCWKUP_COUNT>(l_count);
+        l_count++;
     }
-
-    return l_errl;
+    else if(i_enable == WAKEUP::DISABLE)
+    {
+        l_count--;
+    }
+    else if(i_enable == WAKEUP::FORCE_DISABLE)
+    {
+        l_count = 0;
+    }
+    i_target->setAttr<ATTR_SPCWKUP_COUNT>(l_count);
 }
 
 errlHndl_t callWakeupHyp(TARGETING::Target* i_target,
@@ -527,7 +1598,7 @@ errlHndl_t callWakeupHyp(TARGETING::Target* i_target,
             && !TARGETING::is_phyp_load()
             && !(g_hostInterfaces->get_interface_capabilities(HBRT_CAPS_SET1_OPAL) & HBRT_CAPS_OPAL_HAS_WAKEUP_CLEAR) )
         {
-            break;
+            return;
         }
         g_hostInterfaces->wakeup(rtTargetId, mode);
     }
@@ -592,7 +1663,7 @@ fapi2::ReturnCode special_wakeup_all(
 {
     auto l_exChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EX>(fapi2::TARGET_STATE_FUNCTIONAL);
 
-    // For each EX target
+    // For each EX ciplet
     for (auto l_ex_chplt : l_exChiplets)
     {
         fapi2::ATTR_CHIP_UNIT_POS_Type l_ex_num;
