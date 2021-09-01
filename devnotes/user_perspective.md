@@ -1,3 +1,5 @@
+## Boot statistics
+
 ### Hostboot first boot
 
 -
@@ -11,6 +13,8 @@
 
 [![asciicast](https://asciinema.org/a/vcNPPv4dR6OtWqW52NjzggvQS.svg)](https://asciinema.org/a/vcNPPv4dR6OtWqW52NjzggvQS)
 
+This boot path is executed only the first time Hostboot is running.
+
 ### Hostboot normal boot
 
 -
@@ -23,6 +27,10 @@
     Repository: [https://scm.raptorcs.com/scm/git/talos-op-build](https://scm.raptorcs.com/scm/git/talos-op-build)
 
 [![asciicast](https://asciinema.org/a/mLuoffJDK3Z1hqIUkMAF9Y3Jf.svg)](https://asciinema.org/a/mLuoffJDK3Z1hqIUkMAF9Y3Jf)
+
+This boot path is executed at every boot except the first one.
+Changing system configuration (like the amount of RAM) would probably
+make it longer, but not as long as the first boot.
 
 ### coreboot first and normal boot
 
@@ -41,3 +49,15 @@
 > may affect the boot time in the future.
 
 [![asciicast](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW.svg)](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW)
+
+## Boot video recording vs the real situation
+
+Before coreboot or Hostboot can be started, the BMC must be already running.
+The recordings show only the process of starting Hostboot or coreboot.
+This means that BMC had to be started before
+(it does automatically after plugging in the power),
+and it takes a few moments too.
+
+When the BMC is running, then the main system
+can be started through the web browser,
+command over ssh or the power button on the computer case
