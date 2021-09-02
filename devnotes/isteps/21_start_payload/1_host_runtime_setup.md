@@ -10,69 +10,1451 @@ in istep 21.1
 * loadOCCImageToHomer is called instead loadOCCImageDuringIpl
 
 ```cpp
+errlHndl_t utilDisableTces(void)
+{
+    return Singleton<UtilTceMgr>::instance().disableTces();
+};
+
+errlHndl_t VPD::goldenCacheInvalidate(void)
+{
+    errlHndl_t err = NULL;
+
+    do
+    {
+        bool l_invalidateCaches = false;
+
+        // In manufacturing mode the VPD PNOR cache needs to be cleared
+        // And the VPD ATTR switch and flags need to be reset
+        // Note: this code should do nothing when not in PNOR caching mode
+        TARGETING::Target* l_pTopLevel = NULL;
+        TARGETING::targetService().getTopLevelTarget(l_pTopLevel);
+        TARGETING::ATTR_MNFG_FLAGS_type l_mnfgFlags =
+                    l_pTopLevel->getAttr<TARGETING::ATTR_MNFG_FLAGS>();
+        // @todo RTC 118752 Use generic mfg-mode attr when available
+        if (l_mnfgFlags & TARGETING::MNFG_FLAG_SRC_TERM)
+        {
+            l_invalidateCaches = true;
+        }
+
+#ifdef CONFIG_PNOR_TWO_SIDE_SUPPORT
+        // We also need to wipe the cache out after booting from the
+        //  golden side of pnor
+        if( !l_invalidateCaches )
+        {
+            PNOR::SideInfo_t l_pnorInfo;
+            err = PNOR::getSideInfo( PNOR::WORKING, l_pnorInfo );
+            if( err )
+            {
+                // commit the error but keep going
+                errlCommit(err, VPD_COMP_ID);
+                // force the caches to get wiped out just in case
+                l_invalidateCaches = true;
+            }
+            else if( l_pnorInfo.isGolden )
+            {
+                l_invalidateCaches = true;
+            }
+        }
+#endif
+
+        if( l_invalidateCaches )
+        {
+            // Invalidate the VPD Caches for all targets
+            err = invalidateAllPnorCaches(true);
+            if (err)
+            {
+                break;
+            }
+        }
+
+    } while( 0 );
+
+    return err;
+}
+
+inline bool spBaseServicesEnabled()
+{
+    bool spBaseServicesEnabled = false;
+    TARGETING::Target * sys = NULL;
+    TARGETING::targetService().getTopLevelTarget( sys );
+    TARGETING::SpFunctions spfuncs;
+    if( sys &&
+        sys->tryGetAttr<TARGETING::ATTR_SP_FUNCTIONS>(spfuncs) &&
+        spfuncs.baseServices )
+    {
+        spBaseServicesEnabled = true;
+    }
+
+    return spBaseServicesEnabled;
+}
+
+errlHndl_t populate_hbRuntimeData( void )
+{
+    errlHndl_t  l_elog = nullptr;
+
+    do {
+        TRACFCOMP(g_trac_runtime, "Running populate_hbRuntimeData");
+
+        // Figure out which node we are running on
+        TARGETING::Target* mproc = nullptr;
+        TARGETING::targetService().masterProcChipTargetHandle(mproc);
+
+        TARGETING::EntityPath epath =
+            mproc->getAttr<TARGETING::ATTR_PHYS_PATH>();
+
+        const TARGETING::EntityPath::PathElement pe =
+            epath.pathElementOfType(TARGETING::TYPE_NODE);
+
+        uint64_t l_masterNodeId = pe.instance;
+
+        TRACFCOMP( g_trac_runtime, "Master node nodeid = %x",
+                   l_masterNodeId);
+
+        // ATTR_HB_EXISTING_IMAGE only gets set on a multi-drawer system.
+        // Currently set up in host_sys_fab_iovalid_processing() which only
+        // gets called if there are multiple physical nodes.   It eventually
+        // needs to be setup by a hb routine that snoops for multiple nodes.
+        TARGETING::Target * sys = nullptr;
+        TARGETING::targetService().getTopLevelTarget( sys );
+        assert(sys != nullptr);
+
+        TARGETING::ATTR_HB_EXISTING_IMAGE_type hb_images =
+            sys->getAttr<TARGETING::ATTR_HB_EXISTING_IMAGE>();
+
+        TRACFCOMP( g_trac_runtime, "ATTR_HB_EXISTING_IMAGE (hb_images) = %x",
+                hb_images);
+
+        if (0 == hb_images)  //Single-node
+        {
+            if( !TARGETING::is_no_load() )
+            {
+                l_elog = populate_HbRsvMem(l_masterNodeId,true);
+                if(l_elog != nullptr)
+                {
+                    TRACFCOMP( g_trac_runtime, "populate_HbRsvMem failed" );
+                }
+            }
+            else
+            {
+                // still fill in HB DATA for testing
+                uint64_t l_startAddr = cpu_spr_value(CPU_SPR_HRMOR) +
+                            VMM_HB_DATA_TOC_START_OFFSET;
+
+                uint64_t l_endAddr = 0;
+                uint64_t l_totalSizeAligned = 0;
+                bool startAddressValid = true;
+
+                l_elog = fill_RsvMem_hbData(l_startAddr, l_endAddr,
+                                startAddressValid, l_totalSizeAligned,true);
+                if(l_elog != nullptr)
+                {
+                    TRACFCOMP( g_trac_runtime, "fill_RsvMem_hbData failed" );
+                    break;
+                }
+
+                // Get list of processor chips
+                TARGETING::TargetHandleList l_procChips;
+                getAllChips( l_procChips,
+                            TARGETING::TYPE_PROC,
+                            true);
+                //Pass start address down to SBE via chipop
+                // Loop through all functional Procs
+                for (const auto & l_procChip: l_procChips)
+                {
+                    //Pass start address down to SBE via chip-op
+                    l_elog = SBEIO::sendPsuStashKeyAddrRequest(SBEIO::RSV_MEM_ATTR_ADDR,
+                                                               l_startAddr,
+                                                               l_procChip);
+                    if (l_elog)
+                    {
+                        TRACFCOMP( g_trac_runtime, "sendPsuStashKeyAddrRequest failed for target: %x",
+                                   TARGETING::get_huid(l_procChip) );
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // multi-node system
+            uint64_t payloadBase = sys->getAttr<TARGETING::ATTR_PAYLOAD_BASE>();
+
+            // populate our own node specific data + the common stuff
+            l_elog = populate_HbRsvMem(l_masterNodeId,true);
+
+            if(l_elog != nullptr)
+            {
+                TRACFCOMP( g_trac_runtime, "populate_HbRsvMem failed" );
+                break;
+            }
+
+            // This msgQ catches the node responses from the commands
+            msg_q_t msgQ = msg_q_create();
+            l_elog = MBOX::msgq_register(MBOX::HB_POP_ATTR_MSGQ,msgQ);
+
+            if(l_elog)
+            {
+                TRACFCOMP( g_trac_runtime, "MBOX::msgq_register failed!" );
+                break;
+            }
+
+            // keep track of the number of messages we send so we
+            // know how many responses to expect
+            uint64_t msg_count = 0;
+
+            // loop thru rest all nodes -- sending msg to each
+            TARGETING::ATTR_HB_EXISTING_IMAGE_type mask = 0x1 <<
+                ((sizeof(TARGETING::ATTR_HB_EXISTING_IMAGE_type) * 8) -1);
+
+            TRACFCOMP( g_trac_runtime, "HB_EXISTING_IMAGE (mask) = %x",
+                    mask);
+
+            for (uint64_t l_node=0; (l_node < MAX_NODES_PER_SYS); l_node++ )
+            {
+                // skip sending to ourselves, we did our construction above
+                if(l_node == l_masterNodeId)
+                    continue;
+
+                if( 0 != ((mask >> l_node) & hb_images ) )
+                {
+                    TRACFCOMP( g_trac_runtime, "send IPC_POPULATE_ATTRIBUTES "
+                            "message to node %d",
+                            l_node );
+
+                    msg_t * msg = msg_allocate();
+                    msg->type = IPC::IPC_POPULATE_ATTRIBUTES;
+                    msg->data[0] = l_node;      // destination node
+                    msg->data[1] = l_masterNodeId; // respond to this node
+                    msg->extra_data = reinterpret_cast<uint64_t*>(payloadBase);
+
+                    // send the message to the slave hb instance
+                    l_elog = MBOX::send(MBOX::HB_IPC_MSGQ, msg, l_node);
+
+                    if( l_elog )
+                    {
+                        TRACFCOMP( g_trac_runtime, "MBOX::send to node %d"
+                                " failed", l_node);
+                        break;
+                    }
+
+                    ++msg_count;
+
+                } // end if node to process
+            } // end for loop on nodes
+
+            // wait for a response to each message we sent
+            if( l_elog == nullptr )
+            {
+                //$TODO RTC:189356 - need timeout here
+                while(msg_count)
+                {
+                    msg_t * response = msg_wait(msgQ);
+                    TRACFCOMP(g_trac_runtime,
+                            "IPC_POPULATE_ATTRIBUTES : drawer %d completed",
+                            response->data[0]);
+                    msg_free(response);
+                    --msg_count;
+                }
+            }
+
+            MBOX::msgq_unregister(MBOX::HB_POP_ATTR_MSGQ);
+            msg_q_destroy(msgQ);
+        }
+
+    } while(0);
+
+    return(l_elog);
+
+}
+
+errlHndl_t writeActualCount( SectionId i_id )
+{
+    return Singleton<hdatService>::instance().writeActualCount(i_id);
+}
+
+errlHndl_t hdatService::getAndCheckTuple(const SectionId i_section,
+                                         hdat5Tuple_t*& o_tuple)
+{
+    errlHndl_t errhdl = nullptr;
+    o_tuple = nullptr;
+
+    do
+    {
+        hdatSpiraSDataAreas l_spiraS = SPIRAS_INVALID;
+        hdatSpiraLegacyDataAreas l_spiraL = SPIRAL_INVALID;
+        hdatSpiraHDataAreas l_spiraH = SPIRAH_INVALID;
+
+        switch(i_section)
+        {
+        case RUNTIME::RESERVED_MEM:
+            l_spiraS = SPIRAS_MDT;
+            l_spiraL = SPIRAL_MDT;
+            break;
+        case RUNTIME::HBRT:
+        case RUNTIME::HBRT_DATA:
+            l_spiraS = SPIRAS_HBRT_DATA;
+            l_spiraL = SPIRAL_HBRT_DATA;
+            break;
+        case RUNTIME::IPLPARMS_SYSTEM:
+            l_spiraS = SPIRAS_IPL_PARMS;
+            l_spiraL = SPIRAL_IPL_PARMS;
+            break;
+        case RUNTIME::NODE_TPM_RELATED:
+            l_spiraS = SPIRAS_TPM_DATA;
+            l_spiraL = SPIRAL_TPM_DATA;
+            break;
+        case RUNTIME::PCRD:
+            l_spiraS = SPIRAS_PCRD;
+            l_spiraL = SPIRAL_PCRD;
+            break;
+        case RUNTIME::MS_DUMP_SRC_TBL:
+            l_spiraH = SPIRAH_MS_DUMP_SRC_TBL;
+            l_spiraL = SPIRAL_MS_DUMP_SRC_TBL;
+            break;
+        case RUNTIME::MS_DUMP_DST_TBL:
+            l_spiraH = SPIRAH_MS_DUMP_DST_TBL;
+            l_spiraL = SPIRAL_MS_DUMP_DST_TBL;
+            break;
+        case RUNTIME::MS_DUMP_RESULTS_TBL:
+            l_spiraH = SPIRAH_MS_DUMP_RSLT_TBL;
+            l_spiraL = SPIRAL_MS_DUMP_RSLT_TBL;
+            break;
+        case RUNTIME::PROC_DUMP_AREA_TBL:
+            l_spiraH = SPIRAH_PROC_DUMP_TBL;
+            l_spiraL = SPIRAL_INVALID;
+            break;
+        case RUNTIME::HSVC_SYSTEM_DATA:
+        case RUNTIME::HSVC_NODE_DATA:
+            l_spiraS = SPIRAS_HSVC_DATA;
+            l_spiraL = SPIRAL_HSVC_DATA;
+            break;
+        case RUNTIME::HRMOR_STASH:
+            l_spiraS = SPIRAS_MDT;
+            l_spiraL = SPIRAL_MDT;
+            break;
+        case RUNTIME::CPU_CTRL:
+            l_spiraH = SPIRAH_CPU_CTRL;
+            l_spiraL = SPIRAL_CPU_CTRL;
+            break;
+        default:
+            TRACFCOMP(g_trac_runtime, ERR_MRK"getAndCheckTuple> section %d not supported",
+                      i_section );
+            /*@
+             * @errortype
+             * @moduleid     RUNTIME::MOD_HDATSERVICE_GETANDCHECKTUPLE
+             * @reasoncode   RUNTIME::RC_GETTUPLE_UNSUPPORTED
+             * @userdata1    Section Id
+             * @userdata2    <unused>
+             * @devdesc      Unsupported section requested
+             * @custdesc     Unexpected boot firmware error.
+             */
+            errhdl = new ERRORLOG::ErrlEntry(
+                           ERRORLOG::ERRL_SEV_UNRECOVERABLE,
+                           RUNTIME::MOD_HDATSERVICE_GETANDCHECKTUPLE,
+                           RUNTIME::RC_GETTUPLE_UNSUPPORTED,
+                           i_section,
+                           0,
+                           true /*Add HB Software Callout*/);
+            errhdl->collectTrace(RUNTIME_COMP_NAME,KILOBYTE);;
+            break;
+        }
+
+        if( iv_spiraS && l_spiraS != SPIRAS_INVALID )
+        {
+            o_tuple = &(iv_spiraS->hdatDataArea[l_spiraS]);
+        }
+        else if( iv_spiraH && l_spiraH != SPIRAH_INVALID )
+        {
+            o_tuple = &(iv_spiraH->hdatDataArea[l_spiraH]);
+        }
+        else if( unlikely(iv_spiraL != nullptr && l_spiraL != SPIRAL_INVALID) )
+        {
+            o_tuple = &(iv_spiraL->hdatDataArea[l_spiraL]);
+        }
+        errhdl = check_tuple( i_section, o_tuple );
+        if( errhdl )
+        {
+            break;
+        }
+
+    } while (0);
+
+    return errhdl;
+}
+
+errlHndl_t hdatService::verify_hdat_address( const void* i_addr,
+                                             size_t i_size )
+{
+    errlHndl_t errhdl = NULL;
+    bool found = false;
+    uint64_t l_end =  reinterpret_cast<uint64_t>(i_addr)
+                       + i_size;
+
+    // Make sure that the entire range is within the memory
+    //  space that we allocated
+    for(cmemRegionItr region = iv_mem_regions.begin();
+        (region != iv_mem_regions.end()) && !found; ++region)
+    {
+        hdatMemRegion_t memR = *region;
+
+        uint64_t l_range_end = reinterpret_cast<uint64_t>(memR.virt_addr)
+                               +  memR.size;
+        if ((i_addr >= memR.virt_addr) &&
+            (l_end <= l_range_end))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if(!found)
+    {
+        TRACFCOMP( g_trac_runtime, "Invalid HDAT Address : i_addr=%p, i_size=0x%X", i_addr, i_size );
+        for(cmemRegionItr region = iv_mem_regions.begin();
+            (region != iv_mem_regions.end()) && !found; ++region)
+        {
+            hdatMemRegion_t memR = *region;
+            TRACFCOMP( g_trac_runtime, "  Region : virt_addr=0x%X, size=0x%X",
+                       memR.virt_addr, memR.size );
+        }
+        /*@
+         * @errortype
+         * @moduleid     RUNTIME::MOD_HDATSERVICE_VERIFY_HDAT_ADDRESS
+         * @reasoncode   RUNTIME::RC_INVALID_ADDRESS
+         * @userdata1    Start of address range under test
+         * @userdata2    Size of address range under test
+         * @devdesc      HDAT data block falls outside valid range
+         */
+        errhdl = new ERRORLOG::ErrlEntry(
+                            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
+                            RUNTIME::MOD_HDATSERVICE_VERIFY_HDAT_ADDRESS,
+                            RUNTIME::RC_INVALID_ADDRESS,
+                            reinterpret_cast<uint64_t>(i_addr),
+                            reinterpret_cast<uint64_t>(i_size));
+        errhdl->collectTrace(RUNTIME_COMP_NAME,KILOBYTE);
+
+        // most likely this is a HB code bug
+        errhdl->addProcedureCallout(HWAS::EPUB_PRC_HB_CODE,
+                                    HWAS::SRCI_PRIORITY_HIGH);
+        // but it could also be a FSP bug in setting up the HDAT data
+        errhdl->addProcedureCallout(HWAS::EPUB_PRC_SP_CODE,
+                                    HWAS::SRCI_PRIORITY_MED);
+    }
+
+    return errhdl;
+}
+
+errlHndl_t hdatService::getSpiraTupleVA(hdat5Tuple_t* i_tuple,
+                                     uint64_t & o_vaddr)
+{
+    errlHndl_t errhdl = NULL;
+    bool found = false;
+    o_vaddr = 0x0;
+    uint64_t l_phys_addr, l_size;
+
+    //PHYP and Sapphire have different philsophies about how they
+    //lay the HDAT memory out.  PHYP puts it all within a 128MB
+    //area.  Sapphire puts the NACA in one area and then all of the
+    //SPIRA data sections in another (way up in memory).  This
+    //function checks to see if the requested region is already
+    //mapped, and if not it will map it.
+    //
+    //It then returns the "base" virtual pointer for the requested
+    //tuple
+
+    //Note that if Sapphire/PHYP change how they do things this
+    //code will break (and the various address checking is expected
+    //to catch it)
+
+    do
+    {
+        // Get the absolute address = tuple addr + HRMOR (payload base)
+        l_phys_addr = i_tuple->hdatAbsAddr + iv_mem_regions[0].phys_addr;
+        l_size = i_tuple->hdatActualCnt * i_tuple->hdatActualSize;
+
+        TRACUCOMP( g_trac_runtime, "SPIRA Data ptr 0x%X, size 0x%X",
+                   l_phys_addr, l_size);
+
+        //Check to see if the requested data fully falls within
+        //an existing mapping if so do nothing
+        for(memRegionItr region = iv_mem_regions.begin();
+            (region != iv_mem_regions.end()) && !found; ++region)
+        {
+            hdatMemRegion_t memR = *region;
+
+            if ((l_phys_addr >= memR.phys_addr) &&
+                ((l_phys_addr + l_size) < (memR.phys_addr + memR.size)))
+            {
+                found = true;
+                o_vaddr = reinterpret_cast<uint64_t>(memR.virt_addr);
+                o_vaddr = o_vaddr + (l_phys_addr-memR.phys_addr);
+                break;
+            }
+        }
+
+        //if not found, then map it in
+        if(!found)
+        {
+            TRACFCOMP( g_trac_runtime, "SPIRA Data @ 0x%X not mapped, mapping",
+                       l_phys_addr);
+            errhdl = mapRegion(l_phys_addr, l_size, o_vaddr);
+            if(errhdl)
+            {
+                break;
+            }
+        }
+    }while(0);
+
+    TRACUCOMP( g_trac_runtime, "SPIRA Data Base Data ptr 0x%X", o_vaddr);
+
+
+    return errhdl;
+}
+
+errlHndl_t hdatService::findSpira( void )
+{
+    errlHndl_t errhdl = NULL;
+    errlHndl_t errhdl_s = NULL; //SPIRA-S error
+    errlHndl_t errhdl_l = NULL; //Legacy SPIRA error
+
+    do {
+        // Only do this once
+        if( iv_spiraL || iv_spiraH || iv_spiraS )
+        {
+            break;
+        }
+
+        // Go fetch the relative zero address that PHYP uses
+        // This is always the first entry in the vector
+        uint64_t payload_base =
+          reinterpret_cast<uint64_t>(iv_mem_regions[0].virt_addr);
+
+        // Everything starts at the NACA
+        //   The NACA is part of the platform dependent LID which
+        //   is loaded at relative memory address 0x0
+        hdatNaca_t* naca = reinterpret_cast<hdatNaca_t*>
+          (HDAT_NACA_OFFSET + payload_base);
+        TRACFCOMP( g_trac_runtime, "NACA=%.X->%p", HDAT_NACA_OFFSET, naca );
+
+        // Do some sanity checks on the NACA
+        if( naca->nacaPhypPciaSupport != 1 )
+        {
+            TRACFCOMP( g_trac_runtime, "findSpira> nacaPhypPciaSupport=%.8X", naca->nacaPhypPciaSupport );
+
+            // Figure out what kind of payload we have
+            TARGETING::Target * sys = NULL;
+            TARGETING::targetService().getTopLevelTarget( sys );
+            TARGETING::PAYLOAD_KIND payload_kind
+              = sys->getAttr<TARGETING::ATTR_PAYLOAD_KIND>();
+
+            // Go get the physical address we mapped in
+            uint64_t phys_addr =
+              mm_virt_to_phys(reinterpret_cast<void*>(naca));
+
+            /*@
+             * @errortype
+             * @moduleid     RUNTIME::MOD_HDATSERVICE_FINDSPIRA
+             * @reasoncode   RUNTIME::RC_BAD_NACA
+             * @userdata1    Mainstore address of NACA
+             * @userdata2[0:31]    Payload Base Address
+             * @userdata2[32:63]   Payload Kind
+             * @devdesc      NACA data doesn't seem right
+             */
+            errhdl = new ERRORLOG::ErrlEntry(
+                            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
+                            RUNTIME::MOD_HDATSERVICE_FINDSPIRA,
+                            RUNTIME::RC_BAD_NACA,
+                            reinterpret_cast<uint64_t>(phys_addr),
+                            TWO_UINT32_TO_UINT64(payload_base,
+                                                 payload_kind));
+            errhdl->addProcedureCallout( HWAS::EPUB_PRC_HB_CODE,
+                                         HWAS::SRCI_PRIORITY_MED );
+            errhdl->addProcedureCallout( HWAS::EPUB_PRC_SP_CODE,
+                                         HWAS::SRCI_PRIORITY_MED );
+            errhdl->collectTrace(RUNTIME_COMP_NAME,KILOBYTE);
+            RUNTIME::UdNaca(naca).addToLog(errhdl);
+            break;
+        }
+
+
+        // Are we using the SPIRA-H/S or Legacy format
+        if( naca->spiraH != 0 )
+        {
+            // pointer is also relative to PHYP's zero
+            iv_spiraH = reinterpret_cast<hdatSpira_t*>
+              (naca->spiraH + payload_base);
+            TRACFCOMP( g_trac_runtime, "SPIRA-H=%X->%p", naca->spiraH, iv_spiraH );
+
+            // Check the headers and version info
+            errhdl = check_header( &(iv_spiraH->hdatHDIF),
+                                   SPIRAH_HEADER );
+            if( errhdl )
+            {
+                RUNTIME::UdNaca(naca).addToLog(errhdl);
+                break;
+            }
+
+            // SPIRA-S is at the beginning of the Host Data Area Tuple
+            uint64_t tuple_addr = reinterpret_cast<uint64_t>
+              (&(iv_spiraH->hdatDataArea[SPIRAH_HOST_DATA_AREAS]));
+            TRACUCOMP( g_trac_runtime, "SPIRA-S tuple offset=%.8X", tuple_addr );
+            // need to offset from virtual zero
+            //tuple_addr += payload_base;
+            hdat5Tuple_t* tuple = reinterpret_cast<hdat5Tuple_t*>(tuple_addr);
+            TRACUCOMP( g_trac_runtime, "SPIRA-S tuple=%p", tuple );
+
+            errlHndl_t errhdl_s = check_tuple( SPIRA_S,
+                                               tuple );
+            if( errhdl_s )
+            {
+                TRACFCOMP( g_trac_runtime, "SPIRA-S is invalid, will try legacy SPIRA" );
+                RUNTIME::UdNaca(naca).addToLog(errhdl_s);
+                iv_spiraS = NULL;
+            }
+            else
+            {
+                uint64_t tmp_addr = 0;
+                errhdl_s = getSpiraTupleVA( tuple, tmp_addr );
+                if( errhdl_s )
+                {
+                    TRACFCOMP( g_trac_runtime, "Couldn't map SPIRA-S, will try legacy SPIRA" );
+                    iv_spiraS = NULL;
+                }
+                else
+                {
+                    iv_spiraS = reinterpret_cast<hdatSpira_t*>(tmp_addr);
+                    TRACFCOMP( g_trac_runtime, "SPIRA-S=%p", iv_spiraS );
+
+                    // Check the headers and version info
+                    errhdl_s = check_header( &(iv_spiraS->hdatHDIF),
+                                             SPIRAS_HEADER );
+                    if( errhdl_s )
+                    {
+                        TRACFCOMP( g_trac_runtime, "SPIRA-S is invalid, will try legacy SPIRA" );
+                        RUNTIME::UdNaca(naca).addToLog(errhdl_s);
+                        RUNTIME::UdSpira(iv_spiraS).addToLog(errhdl_s);
+                        iv_spiraS = NULL;
+                    }
+                }
+            }
+        }
+
+        //Legacy SPIRA
+        // pointer is also relative to PHYP's zero
+        iv_spiraL = reinterpret_cast<hdatSpira_t*>
+          (naca->spiraOld + payload_base);
+        TRACFCOMP( g_trac_runtime, "Legacy SPIRA=%X->%p", naca->spiraOld, iv_spiraL );
+
+        // Make sure the SPIRA is valid
+        errhdl_l = verify_hdat_address( iv_spiraL,
+                                        sizeof(hdatSpira_t) );
+        if( errhdl_l )
+        {
+            TRACFCOMP( g_trac_runtime, "Legacy Spira is at a wacky offset!!! %.16X", naca->spiraOld );
+            iv_spiraL = NULL;
+            RUNTIME::UdNaca(naca).addToLog(errhdl_l);
+        }
+        else
+        {
+            // Look for a filled in HEAP section to see if FSP is using the
+            //  new or old format
+            // (Note: this is the logic PHYP is using)
+            hdat5Tuple_t* heap_tuple = &(iv_spiraL->hdatDataArea[SPIRAL_HEAP]);
+            TRACUCOMP( g_trac_runtime, "HEAP tuple=%p", heap_tuple );
+            if( heap_tuple->hdatActualSize == 0 )
+            {
+                TRACFCOMP( g_trac_runtime, "Legacy SPIRA is not filled in, using SPIRA-H/S" );
+                iv_spiraL = NULL;
+            }
+            else
+            {
+                TRACFCOMP( g_trac_runtime, "Legacy SPIRA is filled in so we'll use it" );
+                iv_spiraS = NULL;
+            }
+        }
+
+        // Make sure we have a good SPIRA somewhere
+        if( (iv_spiraL == NULL) && (iv_spiraS == NULL) )
+        {
+            TRACFCOMP( g_trac_runtime, "Could not find a valid SPIRA of any type" );
+            /*@
+             * @errortype
+             * @moduleid     RUNTIME::MOD_HDATSERVICE_FINDSPIRA
+             * @reasoncode   RUNTIME::RC_NO_SPIRA
+             * @userdata1[0:31]    RC for Legacy SPIRA fail
+             * @userdata1[32:64]   EID for Legacy SPIRA fail
+             * @userdata2[0:31]    RC for SPIRA-S fail
+             * @userdata2[32:64]   EID for SPIRA-S fail
+             * @devdesc      Could not find a valid SPIRA of any type
+             */
+            errhdl = new ERRORLOG::ErrlEntry(
+                           ERRORLOG::ERRL_SEV_UNRECOVERABLE,
+                           RUNTIME::MOD_HDATSERVICE_FINDSPIRA,
+                           RUNTIME::RC_NO_SPIRA,
+                           TWO_UINT32_TO_UINT64(ERRL_GETRC_SAFE(errhdl_l),
+                                                ERRL_GETEID_SAFE(errhdl_l)),
+                           TWO_UINT32_TO_UINT64(ERRL_GETRC_SAFE(errhdl_s),
+                                                ERRL_GETEID_SAFE(errhdl_s)));
+            errhdl->addProcedureCallout( HWAS::EPUB_PRC_HB_CODE,
+                                         HWAS::SRCI_PRIORITY_MED );
+            errhdl->addProcedureCallout( HWAS::EPUB_PRC_SP_CODE,
+                                         HWAS::SRCI_PRIORITY_MED );
+            errhdl->collectTrace(RUNTIME_COMP_NAME,KILOBYTE);
+
+            // commit the errors related to each SPIRA
+            if( errhdl_s )
+            {
+                errhdl_s->plid(errhdl->plid());
+                errlCommit(errhdl_s,RUNTIME_COMP_ID);
+            }
+            if( errhdl_l )
+            {
+                errhdl_l->plid(errhdl->plid());
+                errlCommit(errhdl_l,RUNTIME_COMP_ID);
+            }
+
+            // return the summary log
+            break;
+        }
+    } while(0);
+
+    if( errhdl_s ) { delete errhdl_s; errhdl_s = nullptr;}
+    if( errhdl_l ) { delete errhdl_l; errhdl_l = nullptr; }
+
+    return errhdl;
+}
+
+errlHndl_t hdatService::getHostDataSection( SectionId i_section = PROC_DUMP_AREA_TBL,
+                                            uint64_t i_instance,
+                                            uint64_t& o_dataAddr,
+                                            size_t& o_dataSize)
+{
+    o_dataAddr = 0;
+
+    loadHostData();
+
+    size_t record_size = 0;
+
+    TARGETING::Target * sys = NULL;
+    TARGETING::targetService().getTopLevelTarget( sys );
+
+    TARGETING::PAYLOAD_KIND payload_kind = sys->getAttr<TARGETING::ATTR_PAYLOAD_KIND>();
+
+#ifdef REAL_HDAT_TEST
+    payload_kind = TARGETING::PAYLOAD_KIND_PHYP;
+#endif
+
+    hdat5Tuple_t* tuple = nullptr;
+
+    if( TARGETING::PAYLOAD_KIND_NONE == payload_kind )
+    {
+        get_standalone_section(
+            i_section,
+            i_instance,
+            o_dataAddr,
+            o_dataSize );
+        break;
+    }
+    uint64_t payload_base = (uint64_t)(iv_mem_regions[0].virt_addr);
+
+    findSpira();
+    if( RUNTIME::PROC_DUMP_AREA_TBL == i_section )
+    {
+        getAndCheckTuple(i_section, tuple);
+        o_dataSize = tuple->hdatAllocSize * tuple->hdatAllocCnt;
+        record_size = tuple->hdatAllocSize;
+        getSpiraTupleVA(tuple, o_dataAddr);
+    }
+
+    verify_hdat_address( (void*)o_dataAddr, o_dataSize );
+
+    if( iv_actuals[i_section] != ACTUAL_NOT_SET )
+    {
+        o_dataSize = iv_actuals[i_section] * record_size;
+    }
+
+    return errhdl;
+}
+
+
+errlHndl_t hdatService::updateHostProcDumpActual( SectionId i_section,
+                                                  uint32_t threadRegSize,
+                                                  uint8_t threadRegVersion,
+                                                  uint64_t capArrayAddr,
+                                                  uint32_t capArraySize)
+{
+    uint64_t l_hostDataAddr = 0;
+    uint64_t l_hostDataSize = 0;
+    DUMP::procDumpAreaEntry *procDumpTable = nullptr;
+
+    getHostDataSection(i_section, 0, l_hostDataAddr, l_hostDataSize);
+
+    procDumpTable = reinterpret_cast<DUMP::procDumpAreaEntry *>(l_hostDataAddr);
+    procDumpTable->threadRegSize    = threadRegSize;
+    procDumpTable->threadRegVersion = threadRegVersion;
+    procDumpTable->capArrayAddr     = capArrayAddr;
+    procDumpTable->capArraySize     = capArraySize;
+}
+
+void saveActualCount( SectionId i_id,
+                        uint16_t i_count )
+{
+    iv_actuals[i_id] = i_count;
+}
+
+errlHndl_t PnorRP::getSideInfo( PNOR::SideId i_side,
+                              PNOR::SideInfo_t& o_info)
+{
+    if(i_side != PNOR::INVALID_SIDE)
+    {
+        memcpy (&o_info, &iv_side[i_side], sizeof(SideInfo_t));
+    }
+}
+
+errlHndl_t VPD::goldenSwitchUpdate(void)
+{
+#ifdef CONFIG_PNOR_TWO_SIDE_SUPPORT
+    // Do not write to the PNOR at runtime after booting from the
+    //  golden side of pnor
+    PNOR::SideInfo_t l_pnorInfo;
+    PNOR::getSideInfo( PNOR::WORKING, l_pnorInfo );
+    if( l_pnorInfo.isGolden )
+    {
+        TARGETING::ATTR_VPD_SWITCHES_type l_switch;
+        for(TARGETING::TargetIterator target = TARGETING::targetService().begin();
+            target != TARGETING::targetService().end();
+            ++target)
+        {
+            if(target->tryGetAttr<TARGETING::ATTR_VPD_SWITCHES>(l_switch))
+            {
+                l_switch.disableWriteToPnorRT = 1;
+                target->setAttr<TARGETING::ATTR_VPD_SWITCHES>( l_switch );
+            }
+        }
+    }
+#endif
+}
+
+errlHndl_t sendSBESystemConfig( void )
+{
+    errlHndl_t  l_elog = nullptr;
+    uint64_t l_systemFabricConfigurationMap = 0;
+
+    TARGETING::Target * sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget( sys );
+    TARGETING::Target* mproc = nullptr;
+    TARGETING::targetService().masterProcChipTargetHandle(mproc);
+    TARGETING::EntityPath epath = mproc->getAttr<TARGETING::ATTR_PHYS_PATH>();
+    const TARGETING::EntityPath::PathElement pe = epath.pathElementOfType(TARGETING::TYPE_NODE);
+    uint64_t nodeid = pe.instance;
+
+    TARGETING::TargetHandleList l_procChips;
+    getAllChips( l_procChips, TARGETING::TYPE_PROC , true);
+    for(auto l_proc : l_procChips)
+    {
+        uint8_t l_fabricChipId = l_proc->getAttr<TARGETING::ATTR_FABRIC_CHIP_ID>();
+        uint8_t l_fabricGroupId = l_proc->getAttr<TARGETING::ATTR_FABRIC_GROUP_ID>();
+        uint8_t l_bitPos = l_fabricChipId + (MAX_PROCS_PER_NODE * l_fabricGroupId);
+        l_systemFabricConfigurationMap |= (0x8000000000000000 >> l_bitPos);
+    }
+
+    // ATTR_HB_EXISTING_IMAGE only gets set on a multi-drawer system.
+    // Currently set up in host_sys_fab_iovalid_processing() which only
+    // gets called if there are multiple physical nodes.   It eventually
+    // needs to be setup by a hb routine that snoops for multiple nodes.
+    TARGETING::ATTR_HB_EXISTING_IMAGE_type hb_images =
+        sys->getAttr<TARGETING::ATTR_HB_EXISTING_IMAGE>();
+    if (0 != hb_images)
+    {
+        msg_q_t msgQ = msg_q_create();
+        MBOX::msgq_register(MBOX::HB_SBE_SYSCONFIG_MSGQ,msgQ);
+        uint64_t msg_count = 0;
+
+        TARGETING::ATTR_HB_EXISTING_IMAGE_type mask = 0x1 << ((sizeof(TARGETING::ATTR_HB_EXISTING_IMAGE_type) * 8) -1);
+        for (uint64_t l_node=0; (l_node < MAX_NODES_PER_SYS); l_node++ )
+        {
+            // skip sending to ourselves, we did our construction above
+            if(l_node == nodeid)
+                continue;
+
+            if( 0 != ((mask >> l_node) & hb_images ) )
+            {
+                msg_t * msg = msg_allocate();
+                msg->type = IPC::IPC_QUERY_CHIPINFO;
+                msg->data[0] = l_node;
+                msg->data[1] = nodeid;
+                MBOX::send(MBOX::HB_IPC_MSGQ, msg, l_node);
+                ++msg_count;
+            }
+        }
+
+        collectRespFromAllDrawers( &msgQ, msg_count, IPC::IPC_QUERY_CHIPINFO, l_systemFabricConfigurationMap);
+        msg_count = 0;
+        for (uint64_t l_node=0; (l_node < MAX_NODES_PER_SYS); l_node++ )
+        {
+            // skip sending to ourselves, we will do our set below
+            if(l_node == nodeid)
+                continue;
+
+            if( 0 != ((mask >> l_node) & hb_images ) )
+            {
+                msg_t * msg = msg_allocate();
+                msg->type = IPC::IPC_SET_SBE_CHIPINFO;
+                msg->data[0] = l_node;
+                msg->data[1] = nodeid;
+                msg->extra_data = (uint64_t*)(l_systemFabricConfigurationMap);
+                MBOX::send(MBOX::HB_IPC_MSGQ, msg, l_node);
+                ++msg_count;
+            }
+        }
+
+        collectRespFromAllDrawers( &msgQ, msg_count, IPC::IPC_SET_SBE_CHIPINFO, l_systemFabricConfigurationMap);
+        MBOX::msgq_unregister(MBOX::HB_SBE_SYSCONFIG_MSGQ);
+        msg_q_destroy(msgQ);
+    }
+    for(auto l_proc : l_procChips)
+    {
+        SBEIO::sendSystemConfig(l_systemFabricConfigurationMap, l_proc);
+    }
+
+}
+
+VfsSystemModule * vfs_find_module(VfsSystemModule * i_table, const char * i_name)
+{
+    VfsSystemModule* module = i_table;
+    VfsSystemModule* ret = NULL;
+    while ('\0' != module->module[0])
+    {
+        if (0 == strcmp(i_name,module->module))
+        {
+            ret = module;
+            break;
+        }
+        module++;
+    }
+    return ret;
+}
+
+const VfsSystemModule * VfsRp::get_vfs_info(const char * i_name) const
+{
+    return vfs_find_module((VfsSystemModule *)(iv_pnor_vaddr + VFS_EXTENDED_MODULE_TABLE_OFFSET), i_name);
+}
+
+
+bool VfsRp::is_module_loaded(const char * i_name)
+{
+    bool result = false;
+    const VfsSystemModule * module = get_vfs_info(i_name);
+    if(module)
+    {
+        mutex_lock(&iv_mutex);
+        ModuleList_t::const_iterator i = std::find(iv_loaded.begin(),iv_loaded.end(), module);
+        if(i != iv_loaded.end())
+        {
+            result = true;
+        }
+        mutex_unlock(&iv_mutex);
+    }
+    if(!result)  // look in the base
+    {
+        module = vfs_find_module(VFS_MODULES,i_name);
+        if(module)
+        {
+            // all base modules are always loaded
+            result = true;
+        }
+    }
+
+    return result;
+}
+
+bool VFS::module_is_loaded(const char * i_name)
+{
+    return Singleton<VfsRp>::instance().is_module_loaded(i_name);
+}
+
+errlHndl_t VFS::module_load_unload(const char * i_module, VfsMessages i_msgtype)
+{
+    errlHndl_t err = NULL;
+    msg_q_t vfsQ = msg_q_resolve(VFS_ROOT_MSG_VFS);
+    msg_t* msg = msg_allocate();
+    msg->type = i_msgtype;
+    msg->data[0] = (uint64_t) i_module;
+    int rc = msg_sendrecv(vfsQ, msg);
+
+    if (0 == rc)
+    {
+        err = (errlHndl_t) msg->data[0];
+    }
+
+    msg_free(msg);
+    return err;
+}
+
+inline errlHndl_t module_load(const char * i_module)
+{
+    return VFS::module_load_unload(i_module,VFS_MSG_LOAD);
+}
+
+errlHndl_t closeNonMasterTces(void)
+{
+    errlHndl_t l_err = nullptr;
+    uint64_t nodeid = TARGETING::UTIL::getCurrentNodePhysId();
+    uint64_t msg_count = 0;
+    TARGETING::Target * sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget( sys );
+
+    TARGETING::ATTR_HB_EXISTING_IMAGE_type hb_images = sys->getAttr<TARGETING::ATTR_HB_EXISTING_IMAGE>();
+    msg_q_t msgQ = msg_q_create();
+    MBOX::msgq_register(MBOX::HB_CLOSE_TCES_MSGQ,msgQ);
+
+    TARGETING::ATTR_HB_EXISTING_IMAGE_type mask = 0x1 <<
+        ((sizeof(TARGETING::ATTR_HB_EXISTING_IMAGE_type) * 8) -1);
+
+    for (uint64_t l_node = 0; (l_node < MAX_NODES_PER_SYS); l_node++ )
+    {
+        if (l_node == nodeid)
+        {
+            continue;
+        }
+
+        if(0 != ((mask >> l_node) & hb_images))
+        {
+            msg_t * msg = msg_allocate();
+            msg->type = IPC::IPC_CLOSE_TCES;
+            msg->data[0] = l_node;
+            msg->data[1] = nodeid;
+
+            MBOX::send(MBOX::HB_IPC_MSGQ, msg, l_node);
+            ++msg_count;
+        }
+    }
+    while(msg_count)
+    {
+        msg_t * response = msg_wait(msgQ);
+        msg_free(response);
+        --msg_count;
+    }
+    MBOX::msgq_unregister(MBOX::HB_CLOSE_TCES_MSGQ);
+    msg_q_destroy(msgQ);
+    return l_err;
+}
+
+errlHndl_t UtilTceMgr::deallocateTces(const uint32_t i_startingToken)
+{
+
+    errlHndl_t errl = nullptr;
+    uint32_t startingIndex = 0;
+    uint64_t startingAddress = 0;
+    size_t size = 0;
+
+    TceEntry_t *tablePtr = nullptr;
+
+    std::map<uint32_t, TceEntryInfo_t>::iterator map_itr = iv_allocatedAddrs.find(i_startingToken);
+    if( map_itr == iv_allocatedAddrs.end() )
+    {
+        return;
+    }
+    else
+    {
+        startingIndex = (map_itr->first) / PAGESIZE;
+        startingAddress = map_itr->second.start_addr;
+        size = map_itr->second.size;
+    }
+
+    uint32_t numTcesNeeded = ALIGN_PAGE(size)/PAGESIZE;
+    uint64_t previousAddress = 0;
+
+    tablePtr = reinterpret_cast<TceEntry_t*>(iv_tceTableVaAddr);
+
+    for(uint32_t tceIndex = startingIndex;
+        tceIndex < (startingIndex + numTcesNeeded);
+        tceIndex++)
+        previousAddress = tablePtr[tceIndex].realPageNumber;
+        tablePtr[tceIndex].WholeTceEntry = 0;
+    }
+    iv_allocatedAddrs.erase(i_startingToken);
+}
+
+errlHndl_t utilDeallocateTces(const uint32_t i_startingToken)
+{
+    return Singleton<UtilTceMgr>::instance().deallocateTces(i_startingToken);
+};
+
+uint32_t UtilTceMgr::getToken(const tokenLabels i_tokenLabel)
+{
+    return (i_tokenLabel==UtilTceMgr::PAYLOAD_TOKEN)
+            ? iv_payloadToken
+            : iv_hdatToken;
+
+}
+
+errlHndl_t MemRegionMgr::closeUnsecureMemRegion(
+    const uint64_t    i_start_addr,
+    TARGETING::Target* i_target)
+{
+
+    bool region_found = false;
+    regionData l_region;
+
+    auto l_memRegions = getTargetRegionList(i_target);
+
+    auto itr = l_memRegions->begin();
+    while (itr != l_memRegions->end())
+    {
+        if (itr->start_addr == i_start_addr)
+        {
+            region_found = true;
+
+            l_region.start_addr = itr->start_addr;
+            l_region.size = itr->size;
+            l_region.flags = SbePsu::SBE_MEM_REGION_CLOSE;
+            l_region.tgt = itr->tgt;
+
+            doUnsecureMemRegionOp(l_region);
+            itr = l_memRegions->erase(itr);
+            break;
+        }
+        ++itr;
+    }
+}
+
+inline uint64_t getHRMOR()
+{
+    register uint64_t hrmor = 0;
+    asm volatile("mfspr %0, 313" : "=r" (hrmor));
+    return hrmor;
+}
+
+void CpuSprValue(void *t)
+{
+    uint64_t spr = t;
+    uint64_t l_smf_bit = 0x0;
+
+    switch (spr)
+    {
+        case CPU_SPR_MSR:
+            l_smf_bit = getMSR() & MSR_SMF_MASK;
+            TASK_SETRTN(t, WAKEUP_MSR_VALUE | l_smf_bit);
+            break;
+
+        case CPU_SPR_LPCR:
+            TASK_SETRTN(t, WAKEUP_LPCR_VALUE);
+            break;
+
+        case CPU_SPR_HRMOR:
+            TASK_SETRTN(t, getHRMOR());
+            break;
+
+        case CPU_SPR_HID:
+            TASK_SETRTN(t, getHID());
+            break;
+
+        default:
+            TASK_SETRTN(t, -1);
+            break;
+    }
+};
+
+uint64_t cpu_spr_value(CpuSprNames spr)
+{
+    return (uint64_t)(CpuSprValue((void*)(spr)));
+}
+
+void getClassResources( TARGETING::TargetHandleList & o_vector,
+                     CLASS i_class, TYPE  i_type, ResourceState i_state )
+{
+    switch(i_state)
+    {
+        case UTIL_FILTER_ALL:
+            TARGETING::PredicateCTM l_CtmFilter(i_class, i_type);
+            TARGETING::TargetRangeFilter l_targetList(
+                TARGETING::targetService().begin(),
+                TARGETING::targetService().end(),
+                &l_CtmFilter);
+            o_vector.clear();
+            for (; l_targetList; ++l_targetList)
+            {
+                o_vector.push_back(*l_targetList);
+            }
+            break;
+        case UTIL_FILTER_PRESENT:
+            PredicateHwas l_predPres;
+            l_predPres.present(true);
+            TARGETING::PredicateCTM l_CtmFilter(i_class, i_type);
+            TARGETING::PredicatePostfixExpr l_present;
+            l_present.push(&l_CtmFilter).push(&l_predPres).And();
+            TARGETING::TargetRangeFilter l_presTargetList(
+                TARGETING::targetService().begin(),
+                TARGETING::targetService().end(),
+                &l_present);
+            o_vector.clear();
+            for (; l_presTargetList; ++l_presTargetList)
+            {
+                o_vector.push_back(*l_presTargetList);
+            }
+            break;
+        case UTIL_FILTER_FUNCTIONAL:
+            TARGETING::PredicateIsFunctional l_isFunctional;
+            TARGETING::PredicateCTM l_CtmFilter(i_class, i_type);
+            TARGETING::PredicatePostfixExpr l_functional;
+            l_functional.push(&l_CtmFilter).push(&l_isFunctional).And();
+            TARGETING::TargetRangeFilter l_funcTargetList(
+                TARGETING::targetService().begin(),
+                TARGETING::targetService().end(),
+                &l_functional);
+            o_vector.clear();
+            for (; l_funcTargetList; ++l_funcTargetList)
+            {
+                o_vector.push_back(*l_funcTargetList);
+            }
+            break;
+        case UTIL_FILTER_NON_FUNCTIONAL:
+            TARGETING::PredicateIsNonFunctional l_isNonFunctional(false);
+            TARGETING::PredicateCTM l_CtmFilter(i_class, i_type);
+            TARGETING::PredicatePostfixExpr l_nonFunctional;
+            l_nonFunctional.push(&l_CtmFilter).push(&l_isNonFunctional).And();
+            TARGETING::TargetRangeFilter l_nonFuncTargetList(
+                TARGETING::targetService().begin(),
+                TARGETING::targetService().end(),
+                &l_nonFunctional);
+            o_vector.clear();
+            for (; l_nonFuncTargetList; ++l_nonFuncTargetList)
+            {
+                o_vector.push_back(*l_nonFuncTargetList);
+            }
+            break;
+        case UTIL_FILTER_PRESENT_NON_FUNCTIONAL:
+            TARGETING::PredicateIsNonFunctional l_isPresNonFunctional;
+            TARGETING::PredicateCTM l_CtmFilter(i_class, i_type);
+            TARGETING::PredicatePostfixExpr l_presNonFunctional;
+            l_presNonFunctional.push(&l_CtmFilter).push(&l_isPresNonFunctional).And();
+            TARGETING::TargetRangeFilter l_presNonFuncTargetList(
+                TARGETING::targetService().begin(),
+                TARGETING::targetService().end(),
+                &l_presNonFunctional);
+            o_vector.clear();
+            for (; l_presNonFuncTargetList; ++l_presNonFuncTargetList)
+            {
+                o_vector.push_back(*l_presNonFuncTargetList);
+            }
+            break;
+    }
+    if (o_vector.size() > 1)
+    {
+        std::sort(o_vector.begin(),o_vector.end(),compareTargetHuid);
+    }
+}
+
+void getEncResources( TARGETING::TargetHandleList & o_vector,
+                      TYPE i_type, ResourceState i_state )
+{
+    getClassResources(o_vector, CLASS_ENC, i_type, i_state);
+}
+
+Target* getCurrentNodeTarget(void)
+{
+    TargetHandleList l_nodelist;
+    getEncResources(l_nodelist, TARGETING::TYPE_NODE, TARGETING::UTIL_FILTER_FUNCTIONAL);
+    Target* pTgt = l_nodelist[0];
+    return pTgt;
+}
+
+uint8_t getCurrentNodePhysId(void)
+{
+    Target* pNodeTgt = getCurrentNodeTarget();
+    EntityPath epath = pNodeTgt->getAttr<TARGETING::ATTR_PHYS_PATH>();
+    const TARGETING::EntityPath::PathElement pe = epath.pathElementOfType(TARGETING::TYPE_NODE);
+    return pe.instance;
+}
+
+errlHndl_t utilClosePayloadTces(void)
+{
+    errlHndl_t errl = nullptr;
+
+    uint32_t token=0;
+    uint8_t  nodeId = TARGETING::UTIL::getCurrentNodePhysId();
+
+    token = Singleton<UtilTceMgr>::instance().getToken(UtilTceMgr::PAYLOAD_TOKEN);
+    utilDeallocateTces(token);
+
+    uint64_t hrmorVal = cpu_spr_value(CPU_SPR_HRMOR);
+    uint64_t addr = hrmorVal - VMM_HRMOR_OFFSET + MCL_TMP_ADDR;
+
+    SBEIO::closeUnsecureMemRegion(addr, nullptr); //Master Processor
+
+    token = Singleton<UtilTceMgr>::instance().getToken(UtilTceMgr::HDAT_TOKEN);
+    utilDeallocateTces(token);
+}
+
+bool utilUseTcesForDmas(void)
+{
+    if(INITSERVICE::spBaseServicesEnabled())
+    {
+        TARGETING::TargetService& tS = TARGETING::targetService();
+        TARGETING::Target* sys = nullptr;
+        (void) tS.getTopLevelTarget( sys );
+        return sys->getAttr<TARGETING::ATTR_USE_TCES_FOR_DMAS>();
+    }
+    return false;
+}
+
+errlHndl_t sendFreqAttrData()
+{
+    tid_t l_progTid = 0;
+    TARGETING::Target * sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget( sys );
+    TARGETING::Target* mproc = nullptr;
+    TARGETING::targetService().masterProcChipTargetHandle(mproc);
+    TARGETING::EntityPath epath = mproc->getAttr<TARGETING::ATTR_PHYS_PATH>();
+    const TARGETING::EntityPath::PathElement pe = epath.pathElementOfType(TARGETING::TYPE_NODE);
+    uint32_t nodeid = pe.instance;
+
+    // ATTR_HB_EXISTING_IMAGE only gets set on a multi-drawer system.
+    // Currently set up in host_sys_fab_iovalid_processing() which only
+    // gets called if there are multiple physical nodes. It eventually
+    // needs to be setup by a hb routine that snoops for multiple nodes.
+    TARGETING::ATTR_HB_EXISTING_IMAGE_type hb_images = sys->getAttr<TARGETING::ATTR_HB_EXISTING_IMAGE>();
+
+    if(0 == hb_images)
+    {
+        // Single node system
+        return;
+    }
+
+    msg_q_t msgQ = msg_q_create();
+    MBOX::msgq_register(MBOX::HB_FREQ_ATTR_DATA_MSGQ,msgQ);
+
+    uint64_t msg_count = 0;
+    freq_data freq_data_obj{0};
+
+    freq_data_obj.nominalFreq = sys->getAttr<ATTR_NOMINAL_FREQ_MHZ>();
+    freq_data_obj.floorFreq = sys->getAttr<ATTR_MIN_FREQ_MHZ>();
+    freq_data_obj.ceilingFreq = sys->getAttr<ATTR_FREQ_CORE_CEILING_MHZ>();
+    freq_data_obj.ultraTurboFreq = sys->getAttr<ATTR_ULTRA_TURBO_FREQ_MHZ>();
+    freq_data_obj.turboFreq = sys->getAttr<ATTR_FREQ_CORE_MAX>();
+    freq_data_obj.nestFreq = sys->getAttr<ATTR_FREQ_PB_MHZ>();
+    freq_data_obj.powerModeNom = sys->getAttr<ATTR_SOCKET_POWER_NOMINAL>();
+    freq_data_obj.powerModeTurbo = sys->getAttr<ATTR_SOCKET_POWER_TURBO>();
+
+    TARGETING::ATTR_HB_EXISTING_IMAGE_type mask = 0x1 << ((sizeof(TARGETING::ATTR_HB_EXISTING_IMAGE_type) * 8) - 1);
+
+    for (uint32_t l_node=0; l_node < MAX_NODES_PER_SYS; l_node++)
+    {
+        if(l_node == nodeid)
+        {
+            continue;
+        }
+
+        if(0 != ((mask >> l_node) & hb_images))
+        {
+            msg_t * msg = msg_allocate();
+            msg->type = IPC::IPC_FREQ_ATTR_DATA;
+            msg->data[0] = ((uint64_t)(l_node) << 32) | (uint64_t)(nodeid);
+            msg->data[1] = freq_data_obj.freqData1;
+            msg->extra_data = reinterpret_cast<uint64_t*>(freq_data_obj.freqData2);
+            MBOX::send(MBOX::HB_IPC_MSGQ, msg, l_node);
+            ++msg_count;
+        }
+    }
+    l_progTid = task_create(sendFreqAttrData_timer,&msgQ);
+
+    while(msg_count)
+    {
+        msg_t* response = msg_wait(msgQ);
+
+        if(response->type == HB_FREQ_ATTR_DATA_TIMER_MSG
+        && response->data[1] == CONTINUE_WAIT_FOR_MSGS)
+        {
+            response->data[1] = HB_FREQ_ATTR_DATA_WAITING_FOR_MSG;
+            msg_respond(msgQ,response);
+        }
+        if (response->type == IPC::IPC_FREQ_ATTR_DATA)
+        {
+            --msg_count;
+            msg_free(response);
+        }
+    }
+
+    if (msg_count == 0)
+    {
+        msg_t* response = msg_wait(msgQ);
+        if (response->type == HB_FREQ_ATTR_DATA_TIMER_MSG)
+        {
+            response->data[1] = HB_FREQ_ATTR_DATA_MSG_DONE;
+            msg_respond(msgQ,response);
+        }
+    }
+
+    int l_childsts = 0;
+    void* l_childrc = NULL;
+    tid_t l_tidretrc = task_wait_tid(l_progTid, &l_childsts, &l_childrc);
+    MBOX::msgq_unregister(MBOX::HB_FREQ_ATTR_DATA_MSGQ);
+    msg_q_destroy(msgQ);
+    return;
+}
+
+void IStepDispatcher::waitForSyncPoint()
+{
+    if(!iv_istepMode && iv_spBaseServicesEnabled)
+    {
+        // Tell Simics we are waiting for the FSP to do something
+        MAGIC_WAITING_FOR_FSP();
+        while(!iv_syncPointReached && !iv_shutdown)
+        {
+            sync_cond_wait(&iv_cond, &iv_mutex);
+        }
+        if (iv_shutdown)
+        {
+            shutdownDuringIpl();
+        }
+        else
+        {
+            iv_syncPointReached = false;
+        }
+        // Tell Simics we are done waiting
+        MAGIC_DONE_WAITING_FOR_FSP();
+    }
+}
+
 void* call_host_runtime_setup (void *io_pArgs)
 {
-    // Need to wait here until Fsp tells us go
     INITSERVICE::waitForSyncPoint();
-
-    // Enable PM Complex Reset FFDC to HOMER
     TARGETING::Target * sys = nullptr;
     TARGETING::targetService().getTopLevelTarget (sys);
     sys->trySetAttr<ATTR_PM_RESET_FFDC_ENABLE> (0x01);
 
-    // Send the master node frequency attribute info
-    // to slave nodes
     sendFreqAttrData();
-
-    // Close PAYLOAD TCEs
     if (TCE::utilUseTcesForDmas())
     {
         TCE::utilClosePayloadTces();
-        // Close TCEs on non-master nodes
         closeNonMasterTces();
     }
-
-    // Need to load up the runtime module if it isn't already loaded
-    if (!VFS::module_is_loaded( "libruntime.so" ) )
+    if (!VFS::module_is_loaded("libruntime.so"))
     {
-        VFS::module_load( "libruntime.so" );
+        VFS::module_load("libruntime.so");
     }
-
-    //Need to send System Configuration down to SBE for all HB
-    //instances
     RUNTIME::sendSBESystemConfig();
 
 #ifdef CONFIG_PLDM
-    // On eBMC systems, the PHYP lids were loaded and verified earlier, so
-    // need to re-verify/move here.
     if(INITSERVICE::spBaseServicesEnabled())
     {
 #endif
-        // Verify PAYLOAD and Move PAYLOAD+HDAT from Temporary TCE-related
-        // memory region to the proper location
         RUNTIME::verifyAndMovePayload();
 #ifdef CONFIG_PLDM
     }
 #endif
-    // Map the Host Data into the VMM if applicable
     RUNTIME::load_host_data();
 #ifdef CONFIG_UCD_FLASH_UPDATES
     POWER_SEQUENCER::TI::UCD::call_update_ucd_flash();
 #endif
-
-    // Fill in Hostboot runtime data if there is a PAYLOAD
-    if( !(TARGETING::is_no_load()) )
+    if(!TARGETING::is_no_load())
     {
-        // API call to fix up the secureboot fields
         RUNTIME::populate_hbSecurebootData();
-        // API call to populate the TPM Info fields
         RUNTIME::populate_hbTpmInfo();
     }
-
     RUNTIME::persistent_rwAttrRuntimeCheck();
 #ifdef CONFIG_NVDIMM
-    // Update the NVDIMM controller code, if necessary
-    // Need to do this after LIDs are accessible
     NVDIMM_UPDATE::call_nvdimm_update();
 #endif
 
@@ -85,17 +1467,12 @@ void* call_host_runtime_setup (void *io_pArgs)
     {
         TARGETING::Target* l_failTarget = NULL;
         bool pmStartSuccess = true;
-
         loadAndStartPMAll(HBPM::PM_LOAD, l_failTarget);
 #ifdef CONFIG_NVDIMM
-        // Arm the nvdimms
-        // Only get here if is_sapphire_load
-        // and PM started and have NVDIMMs
         TARGETING::TargetHandleList l_nvdimmTargetList;
         TARGETING::TargetHandleList l_procList;
         TARGETING::getAllChips(l_procList, TARGETING::TYPE_PROC, true);
 
-        // Arm nvdimms by proc
         for (auto l_proc : l_procList)
         {
             l_nvdimmTargetList = TARGETING::getProcNVDIMMs(l_proc);
@@ -105,29 +1482,18 @@ void* call_host_runtime_setup (void *io_pArgs)
             }
         }
 #endif
-
 #ifdef CONFIG_HTMGT
-        // Report PM status to HTMGT
         HTMGT::processOccStartStatus(pmStartSuccess,l_failTarget);
 #else
-        // Verify all OCCs have reached the checkpoint
-        if (pmStartSuccess)
+        if(pmStartSuccess)
         {
             HBPM::verifyOccChkptAll();
         }
 #endif
     }
-    // No support for OCC
-    else if( !Util::isSimicsRunning() )
+    else if(!Util::isSimicsRunning())
     {
-        //Shouldnt clear this ATTR_PM_FIRINIT_DONE_ONCE_FLAG
-        //when we reset pm complex  from here.
-        //Reason is this executes during istpe 21.3 then in runtime we do pm
-        //reset again so to avoid saving cme fir mask value we shouldn't
-        //reset the above attribute
         uint8_t l_skip_fir_attr_reset = 1;
-        // Since we are not leaving the PM complex alive, we will
-        //  explicitly put it into reset and clean up any memory
         HBPM::resetPMAll(
             HBPM::RESET_AND_CLEAR_ATTRIBUTES,
             l_skip_fir_attr_reset);
@@ -136,16 +1502,9 @@ void* call_host_runtime_setup (void *io_pArgs)
 #ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
     if(TARGETING::is_phyp_load() )
     {
-        //Explicity clearing the SRAM flag before starting Payload.
-        //This tells the OCC bootloader where to pull the OCC image from
-        //0: mainstore, 1: SRAM. We want to use mainstore after this point
-
-        //Get master proc
         TARGETING::TargetService & tS = TARGETING::targetService();
         TARGETING::Target* masterproc = NULL;
-        tS.masterProcChipTargetHandle( masterproc );
-
-        //Clear (up to and including the IPL flag)
+        tS.masterProcChipTargetHandle(masterproc);
         size_t sz_data = HBOCC::OCC_OFFSET_IPL_FLAG + 6;
         size_t sz_dw   = sizeof(uint64_t);
         uint64_t l_occAppData[(sz_data+(sz_dw-1))/sz_dw];
@@ -159,24 +1518,18 @@ void* call_host_runtime_setup (void *io_pArgs)
     }
 #endif
 
-    if( TARGETING::is_sapphire_load()
-    && (!INITSERVICE::spBaseServicesEnabled()) )
+    if(TARGETING::is_sapphire_load()
+    && !INITSERVICE::spBaseServicesEnabled())
     {
-        //@fixme-RTC:172836-broken for HDAT mode?
-        // Update the VPD switches for golden side boot
-        // Must do this before building the devtree
         VPD::goldenSwitchUpdate();
     }
-
-    // Update the MDRT Count and PDA Table Entries from Attribute
     TargetService& l_targetService = targetService();
     Target* l_sys = nullptr;
     l_targetService.getTopLevelTarget(l_sys);
 
-    // Default captured data to 0s -- MPIPL if check fills in if
-    // valid
-    uint32_t threadRegSize = sizeof(DUMP::hostArchRegDataHdr)+
-                            (95 * sizeof(DUMP::hostArchRegDataEntry));
+    uint32_t threadRegSize =
+        sizeof(DUMP::hostArchRegDataHdr)
+      + 95 * sizeof(DUMP::hostArchRegDataEntry);
     uint8_t threadRegFormat = REG_DUMP_SBE_HB_STRUCT_VER;
     uint64_t capThreadArrayAddr = 0;
     uint64_t capThreadArraySize = 0;
@@ -184,44 +1537,32 @@ void* call_host_runtime_setup (void *io_pArgs)
     if(l_sys->getAttr<ATTR_IS_MPIPL_HB>())
     {
         uint32_t l_mdrtCount = l_sys->getAttr<TARGETING::ATTR_MPIPL_HB_MDRT_COUNT>();
-        //Update actual count in RUNTIME
         if(l_mdrtCount)
         {
             RUNTIME::saveActualCount( RUNTIME::MS_DUMP_RESULTS_TBL, l_mdrtCount);
         }
-
-
         threadRegSize = l_sys->getAttr<TARGETING::ATTR_PDA_THREAD_REG_ENTRY_SIZE>();
         threadRegFormat = l_sys->getAttr<TARGETING::ATTR_PDA_THREAD_REG_STATE_ENTRY_FORMAT>();
         capThreadArrayAddr = l_sys->getAttr<TARGETING::ATTR_PDA_CAPTURED_THREAD_REG_ARRAY_ADDR>();
         capThreadArraySize = l_sys->getAttr<TARGETING::ATTR_PDA_CAPTURED_THREAD_REG_ARRAY_SIZE>();
     }
 
-    // Ignore return value
-    RUNTIME::updateHostProcDumpActual( RUNTIME::PROC_DUMP_AREA_TBL,
-                                        threadRegSize, threadRegFormat,
-                                        capThreadArrayAddr, capThreadArraySize);
-
-
-    //Update the MDRT value (for MS Dump)
+    RUNTIME::updateHostProcDumpActual(
+        RUNTIME::PROC_DUMP_AREA_TBL,
+        threadRegSize,
+        threadRegFormat,
+        capThreadArrayAddr,
+        capThreadArraySize);
     RUNTIME::writeActualCount(RUNTIME::MS_DUMP_RESULTS_TBL);
-    // Fill in Hostboot runtime data for all nodes
-    // (adjunct partition)
-    // Write the HB runtime data into mainstore
     RUNTIME::populate_hbRuntimeData();
 
     if( !INITSERVICE::spBaseServicesEnabled() )
     {
-        // Invalidate the VPD cache for golden side boot
-        // Also invalidate in manufacturing mode
-        // Must do this after saving away the VPD cache into mainstore,
-        //  i.e. after RUNTIME::populate_hbRuntimeData()
         VPD::goldenCacheInvalidate();
     }
 
     if (TCE::utilUseTcesForDmas())
     {
-        // Disable all TCEs
         TCE::utilDisableTces();
     }
 }
@@ -232,8 +1573,7 @@ StopReturnCode_t p9_stop_save_scom( void* const   i_pImage,
                                     const ScomOperation_t i_operation,
                                     const ScomSection_t i_section )
 {
-    return proc_stop_save_scom( i_pImage, i_scomAddress,
-                                i_scomData, i_operation, i_section );
+    return proc_stop_save_scom(i_pImage, i_scomAddress, i_scomData, i_operation, i_section);
 }
 
 uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const uint8_t i_chipUnitNum,
@@ -249,16 +1589,14 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
     {
         switch (i_p9CU)
         {
-
             case PU_EX_CHIPUNIT:
-                if (PPE_EP05_CHIPLET_ID >= l_scom.get_chiplet_id() &&
-                    l_scom.get_chiplet_id() >= PPE_EP00_CHIPLET_ID)
+                if(PPE_EP05_CHIPLET_ID >= l_scom.get_chiplet_id()
+                && l_scom.get_chiplet_id() >= PPE_EP00_CHIPLET_ID)
                 {
                     l_scom.set_chiplet_id(PPE_EP00_CHIPLET_ID + (i_chipUnitNum / 2));
                     l_scom.set_port( ( i_chipUnitNum % 2 ) + 1 );
                 }
                 break;
-
             default:
                 l_scom.set_addr(FAILED_TRANSLATION);
                 break;
@@ -271,67 +1609,59 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
             case PU_PERV_CHIPUNIT:
                 l_scom.set_chiplet_id(i_chipUnitNum);
                 break;
-
             case PU_C_CHIPUNIT:
                 l_scom.set_chiplet_id(EC00_CHIPLET_ID + i_chipUnitNum);
                 break;
-
             case PU_EX_CHIPUNIT:
-                if (EP05_CHIPLET_ID >= l_scom.get_chiplet_id() &&
-                    l_scom.get_chiplet_id() >= EP00_CHIPLET_ID)
+                if(EP05_CHIPLET_ID >= l_scom.get_chiplet_id()
+                && l_scom.get_chiplet_id() >= EP00_CHIPLET_ID)
                 {
                     l_scom.set_chiplet_id(EP00_CHIPLET_ID + (i_chipUnitNum / 2));
-                    uint8_t l_ringId = (l_scom.get_ring() & 0xF); // Clear bits 16:17
-                    l_ringId = ( l_ringId - ( l_ringId % 2 ) ) + ( i_chipUnitNum % 2 );
-                    l_scom.set_ring( l_ringId & 0xF );
+                    uint8_t l_ringId = (l_scom.get_ring() & 0xF);
+                    l_ringId = l_ringId - l_ringId % 2 + i_chipUnitNum % 2;
+                    l_scom.set_ring(l_ringId & 0xF);
                 }
-                else if (EC23_CHIPLET_ID >= l_scom.get_chiplet_id() &&
-                            l_scom.get_chiplet_id() >= EC00_CHIPLET_ID)
+                else if (EC23_CHIPLET_ID >= l_scom.get_chiplet_id()
+                && l_scom.get_chiplet_id() >= EC00_CHIPLET_ID)
                 {
-                    l_scom.set_chiplet_id( EC00_CHIPLET_ID +
-                                            (l_scom.get_chiplet_id() % 2) +
-                                            (i_chipUnitNum * 2));
+                    l_scom.set_chiplet_id(
+                        EC00_CHIPLET_ID
+                      + l_scom.get_chiplet_id() % 2
+                      + i_chipUnitNum * 2);
                 }
-
                 break;
-
             case PU_EQ_CHIPUNIT:
                 l_scom.set_chiplet_id(EP00_CHIPLET_ID + i_chipUnitNum);
                 break;
-
             case PU_CAPP_CHIPUNIT:
                 l_scom.set_chiplet_id(N0_CHIPLET_ID + (i_chipUnitNum * 2));
                 break;
-
             case PU_MCS_CHIPUNIT:
                 l_scom.set_chiplet_id(N3_CHIPLET_ID - (2 * (i_chipUnitNum / 2)));
                 l_scom.set_sat_id(2 * (i_chipUnitNum % 2));
                 break;
-
             case PU_MCBIST_CHIPUNIT:
                 l_scom.set_chiplet_id(MC01_CHIPLET_ID + i_chipUnitNum);
                 break;
-
             case PU_MCA_CHIPUNIT:
                 if (l_scom.get_chiplet_id() == MC01_CHIPLET_ID || l_scom.get_chiplet_id() ==  MC23_CHIPLET_ID)
                 {
                     l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 4));
 
-                    if ( (l_scom.get_ring() & 0xF) == MC_MC01_0_RING_ID)
+                    if((l_scom.get_ring() & 0xF) == MC_MC01_0_RING_ID)
                     {
-                        // mc
-                        l_scom.set_sat_id( ( l_scom.get_sat_id() - ( l_scom.get_sat_id() % 4 ) ) +
-                                            ( i_chipUnitNum % 4 ));
+                        l_scom.set_sat_id(
+                            l_scom.get_sat_id()
+                          - l_scom.get_sat_id() % 4
+                          + i_chipUnitNum % 4);
                     }
                     else
                     {
-                        // iomc
                         l_scom.set_ring( (MC_IOM01_0_RING_ID + (i_chipUnitNum % 4)) & 0xF );
                     }
                 }
                 else
                 {
-                    //mcs->mca regisers
                     uint8_t i_mcs_unitnum = ( i_chipUnitNum / 2 );
                     l_scom.set_chiplet_id(N3_CHIPLET_ID - (2 * (i_mcs_unitnum / 2)));
                     l_scom.set_sat_id(2 * (i_mcs_unitnum % 2));
@@ -339,58 +1669,25 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                     i_mcs_sat_offset |= ((i_chipUnitNum % 2) << 4);
                     l_scom.set_sat_offset(i_mcs_sat_offset);
                 }
-
                 break;
-
             case PU_MC_CHIPUNIT:
                 l_scom.set_chiplet_id(MC01_CHIPLET_ID + i_chipUnitNum);
                 break;
-
             case PU_MI_CHIPUNIT:
-                //-------------------------------------------
-                // MI
-                //-------------------------------------------
-                //          Chiplet   Ring   Satid   Off
-                //MCS0           05     02       0   !SCOM3
-                //MCS1           05     02       2   !SCOM3
-                //MCS2           03     02       0   !SCOM3
-                //MCS3           03     02       2   !SCOM3
                 l_scom.set_chiplet_id(N3_CHIPLET_ID - (2 * (i_chipUnitNum / 2)));
                 l_scom.set_sat_id(2 * (i_chipUnitNum % 2));
                 break;
-
             case PU_DMI_CHIPUNIT:
-                if (((l_chiplet_id == N3_CHIPLET_ID) || (l_chiplet_id == N1_CHIPLET_ID)))
+                if(l_chiplet_id == N3_CHIPLET_ID || l_chiplet_id == N1_CHIPLET_ID)
                 {
-                    //SCOM3   (See mc_clscom_rlm.fig <= 0xB vs mc_scomfir_rlm.fig > 0xB)
-                    //DMI0           05     02       0   0x2X (X <= 0xB)
-                    //DMI1           05     02       0   0x3X (X <= 0xB)
-                    //DMI2           05     02       2   0x2X (X <= 0xB)
-                    //DMI3           05     02       2   0x3X (X <= 0xB)
-                    //DMI4           03     02       0   0x2X (X <= 0xB)
-                    //DMI5           03     02       0   0x3X (X <= 0xB)
-                    //DMI6           03     02       2   0x2X (X <= 0xB)
-                    //DMI7           03     02       2   0x3X (X <= 0xB)
                     l_scom.set_chiplet_id(N3_CHIPLET_ID - (2 * (i_chipUnitNum / 4)));
                     l_scom.set_sat_id(2 * ((i_chipUnitNum / 2) % 2));
                     l_sat_offset = (l_sat_offset & 0xF) + ((2 + (i_chipUnitNum % 2)) << 4);
                     l_scom.set_sat_offset(l_sat_offset);
                 }
 
-                if (((l_chiplet_id == MC01_CHIPLET_ID) || (l_chiplet_id == MC23_CHIPLET_ID)))
+                if (l_chiplet_id == MC01_CHIPLET_ID || l_chiplet_id == MC23_CHIPLET_ID)
                 {
-                    //-------------------------------------------
-                    // DMI
-                    //-------------------------------------------
-                    //SCOM1,2
-                    //DMI0           07     02       0
-                    //DMI1           07     02       1
-                    //DMI2           07     02       2
-                    //DMI3           07     02       3
-                    //DMI4           08     02       0
-                    //DMI5           08     02       1
-                    //DMI6           08     02       2
-                    //DMI7           08     02       3
                     if (l_ring == P9C_MC_CHAN_RING_ID)
                     {
                         l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 4));
@@ -398,114 +1695,48 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                         l_msat = l_msat & 0xC;
                         l_scom.set_sat_id(l_msat + i_chipUnitNum % 4);
                     }
-
-                    //SCOM4
-                    //DMI0           07     08     0xD   0x0X
-                    //DMI1           07     08     0xD   0x1X
-                    //DMI2           07     08     0xD   0x2X
-                    //DMI3           07     08     0xD   0x3X
-                    //DMI4           08     08     0xD   0x0X
-                    //DMI5           08     08     0xD   0x1X
-                    //DMI6           08     08     0xD   0x2X
-                    //DMI7           08     08     0xD   0x3X
                     if (l_ring == P9C_MC_BIST_RING_ID)
                     {
                         l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 4));
                         l_sat_offset = (l_sat_offset & 0xF) + ((i_chipUnitNum % 4) << 4);
                         l_scom.set_sat_offset(l_sat_offset);
                     }
-
-                    //-------------------------------------------
-                    // DMI IO
-                    //-------------------------------------------
-                    //          Chiplet   Ring   Satid    Off    RXTXGrp
-                    //DMI0           07     04       0   0x3F       0x00
-                    //DMI1           07     04       0   0x3F       0x01
-                    //DMI2           07     04       0   0x3F       0x02
-                    //DMI3           07     04       0   0x3F       0x03
-                    //DMI4           08     04       0   0x3F       0x00
-                    //DMI5           08     04       0   0x3F       0x01
-                    //DMI6           08     04       0   0x3F       0x02
-                    //DMI7           08     04       0   0x3F       0x03
-
-                    //DMI0           07     04       0   0x3F       0x20
-                    //DMI1           07     04       0   0x3F       0x21
-                    //DMI2           07     04       0   0x3F       0x22
-                    //DMI3           07     04       0   0x3F       0x23
-                    //DMI4           08     04       0   0x3F       0x20
-                    //DMI5           08     04       0   0x3F       0x21
-                    //DMI6           08     04       0   0x3F       0x22
-                    //DMI7           08     04       0   0x3F       0x23
-                    //
-                    //0 MC01.CHAN0  IOM01.TX_WRAP.TX3
-                    //1 MC01.CHAN1  IOM01.TX_WRAP.TX2
-                    //2 MC01.CHAN2  IOM01.TX_WRAP.TX0
-                    //3 MC01.CHAN3  IOM01.TX_WRAP.TX1
-                    //4 MC23.CHAN0  IOM23.TX_WRAP.TX3
-                    //5 MC23.CHAN1  IOM23.TX_WRAP.TX2
-                    //6 MC23.CHAN2  IOM23.TX_WRAP.TX0
-                    //7 MC23.CHAN3  IOM23.TX_WRAP.TX1
-                    // 3, 2, 0, 1
                     if (l_ring == P9C_MC_IO_RING_ID)
                     {
                         l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 4));
                         uint8_t l_rxtx_grp = l_scom.get_rxtx_group_id();
                         l_rxtx_grp = l_rxtx_grp & 0xF0;
 
-                        switch ((i_chipUnitNum % 4))
+                        switch(i_chipUnitNum % 4)
                         {
                             case  0:
                                 l_rxtx_grp += 3;
                                 break;
-
                             case  1:
                                 l_rxtx_grp += 2;
                                 break;
-
                             case  2:
                                 l_rxtx_grp += 0;
                                 break;
-
                             case  3:
                                 l_rxtx_grp += 1;
                                 break;
-
-                            default:
-                                //escape to bunker - math broke
-                                break;
                         }
-
-                        l_scom.set_rxtx_group_id(l_rxtx_grp); // 3,2,0,1
+                        l_scom.set_rxtx_group_id(l_rxtx_grp);
                     }
-
                 }
-
                 break;
-
             case PU_MCC_CHIPUNIT:
-                if (((l_chiplet_id == N3_CHIPLET_ID) || (l_chiplet_id == N1_CHIPLET_ID)))
+                if (l_chiplet_id == N3_CHIPLET_ID || l_chiplet_id == N1_CHIPLET_ID)
                 {
-                    //SCOM3   (See mc_clscom_rlm.fig <= 0xB vs mc_scomfir_rlm.fig > 0xB)
-                    //DMI0           05     02       0   0x2X (X <= 0xB)
-                    //DMI1           05     02       0   0x3X (X <= 0xB)
-                    //DMI2           05     02       2   0x2X (X <= 0xB)
-                    //DMI3           05     02       2   0x3X (X <= 0xB)
-                    //DMI4           03     02       0   0x2X (X <= 0xB)
-                    //DMI5           03     02       0   0x3X (X <= 0xB)
-                    //DMI6           03     02       2   0x2X (X <= 0xB)
-                    //DMI7           03     02       2   0x3X (X <= 0xB)
                     l_scom.set_chiplet_id(N3_CHIPLET_ID - (2 * (i_chipUnitNum / 4)));
                     l_scom.set_sat_id(2 * ((i_chipUnitNum / 2) % 2));
                     uint8_t l_satoff = (l_sat_offset & 0xF) + ((2 + (i_chipUnitNum % 2)) << 4);
                     l_scom.set_sat_offset(l_satoff);
                 }
-
-                if (((l_chiplet_id == MC01_CHIPLET_ID) || (l_chiplet_id == MC23_CHIPLET_ID)))
+                if(l_chiplet_id == MC01_CHIPLET_ID || l_chiplet_id == MC23_CHIPLET_ID)
                 {
-                    //CHANX.USTL.  Sat_id: 10 + port_id (8,9,10,11)
-                    //CHANX.DSTL.  Sat_id: 01 + port_id (4,5,6,7)
                     l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 4));
-
                     if (l_ring == P9A_MC_CHAN_RING_ID)
                     {
 
@@ -519,114 +1750,72 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                             l_scom.set_sat_id(P9A_MC_USTL_CHAN0_SAT_ID + (i_chipUnitNum % 4));
                         }
                     }
-
                     if (l_ring == P9A_MC_MC01_RING_ID && l_sat_id == P9A_MC_CHAN_SAT_ID)
                     {
                         l_scom.set_sat_offset((i_chipUnitNum * 16) + (l_sat_offset % 16));
                     }
                 }
-
                 break;
-
             case PU_OMIC_CHIPUNIT:
                 l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum / 3));
-
                 if (P9A_MC_OMIC0_RING_ID <= l_ring && l_ring <= P9A_MC_OMIC2_RING_ID)
                 {
                     l_scom.set_ring(P9A_MC_OMIC0_RING_ID + (i_chipUnitNum % 3));
                 }
-
                 if (P9A_MC_OMIC0_PPE_RING_ID <= l_ring && l_ring <= P9A_MC_OMIC2_PPE_RING_ID)
                 {
                     l_scom.set_ring(P9A_MC_OMIC0_PPE_RING_ID + (i_chipUnitNum % 3));
                 }
-
                 if (P9A_MC_OMI_DL_RING_ID == l_ring)
                 {
                     l_scom.set_sat_id(P9A_MC_DL_REG0_SAT_ID + (i_chipUnitNum % 3));
                 }
-
                 break;
-
             case PU_OMI_CHIPUNIT:
+                uint8_t l_chipUnitNum = P9_SCOMINFO_OMI_UNSWIZZLE[i_chipUnitNum];
+                l_scom.set_chiplet_id(MC01_CHIPLET_ID + (l_chipUnitNum / 8));
+                if (P9A_MC_OMIC0_RING_ID <= l_ring && l_ring <= P9A_MC_OMIC2_RING_ID)
                 {
-                    //Unswizzle the OMI chip unit number
-                    uint8_t l_chipUnitNum = P9_SCOMINFO_OMI_UNSWIZZLE[i_chipUnitNum];
+                    l_scom.set_ring(P9A_MC_OMIC0_RING_ID + ((l_chipUnitNum % 8) / 3));
+                    uint8_t l_lane = l_scom.get_lane_id();
+                    l_lane = l_lane % 8;
+                    uint8_t l_chipnum = l_chipUnitNum;
 
-                    l_scom.set_chiplet_id(MC01_CHIPLET_ID + (l_chipUnitNum / 8));
-
-                    if (P9A_MC_OMIC0_RING_ID <= l_ring && l_ring <= P9A_MC_OMIC2_RING_ID)
+                    if (l_chipnum >= 8)
                     {
-                        // IO Ind regsiters  (Ring 4,5,6) reg == 63
-                        // 0701103F MCP_OMI0. Lanes 0-7    omi0
-                        // 0701103F MCP_OMI0. Lanes 8-15   omi1
-                        // 0701103F MCP_OMI0. Lanes 16-23  omi2
-                        // 0701143F MCP_OMI1. Lanes 0-7    omi3
-                        // 0701143F MCP_OMI1. Lanes 8-15   omi4
-                        // 0701143F MCP_OMI1. Lanes 16-23  omi5
-                        // 0701183F MCP_OMI2. Lanes 0-7    omi6
-                        // 0701183F MCP_OMI2. Lanes 8-15   omi7
-                        l_scom.set_ring(P9A_MC_OMIC0_RING_ID + ((l_chipUnitNum % 8) / 3));
-                        uint8_t l_lane = l_scom.get_lane_id();
-                        l_lane = l_lane % 8;
-                        uint8_t l_chipnum = l_chipUnitNum;
-
-                        if (l_chipnum >= 8)
-                        {
-                            l_chipnum++;
-                        }
-
-                        l_scom.set_lane_id(((l_chipnum % 3) * 8) + l_lane);
+                        l_chipnum++;
                     }
 
-                    if (l_ring == P9A_MC_OMI_DL_RING_ID)
+                    l_scom.set_lane_id((l_chipnum % 3) * 8 + l_lane);
+                }
+                if (l_ring == P9A_MC_OMI_DL_RING_ID)
+                {
+                    l_scom.set_sat_id(P9A_MC_DL_REG0_SAT_ID + ((l_chipUnitNum % 8) / 3));
+                    uint8_t l_satoff = l_sat_offset % 16;
+                    uint8_t l_chipnum = l_chipUnitNum;
+
+                    if (l_chipnum >= 8)
                     {
-                        // DL Registers
-                        // reg0 dl0 -> omi0  ring: 12  sat_id: 13  regs 16..31
-                        // reg0 dl1 -> omi1  ring: 12  sat_id: 13  regs 32..47
-                        // reg0 dl2 -> omi2  ring: 12  sat_id: 13  regs 48..63
-                        // reg1 dl0 -> omi3  ring: 12  sat_id: 14  regs 16..31
-                        // reg1 dl1 -> omi4  ring: 12  sat_id: 14  regs 32..47
-                        // reg1 dl2 -> omi5  ring: 12  sat_id: 14  regs 48..63
-                        // reg2 dl0 -> omi6  ring: 12  sat_id: 15  regs 16..31
-                        // reg2 dl1 -> omi7  ring: 12  sat_id: 15  regs 32..47
-                        l_scom.set_sat_id(P9A_MC_DL_REG0_SAT_ID + ((l_chipUnitNum % 8) / 3));
-                        uint8_t l_satoff = l_sat_offset % 16;
-                        uint8_t l_chipnum = l_chipUnitNum;
-
-                        if (l_chipnum >= 8)
-                        {
-                            l_chipnum++;
-                        }
-
-                        l_scom.set_sat_offset((((l_chipnum % 3) * 16) + P9A_MC_DL_OMI0_FRST_REG) +
-                                                l_satoff);
+                        l_chipnum++;
                     }
+
+                    l_scom.set_sat_offset(
+                        (l_chipnum % 3) * 16
+                        + P9A_MC_DL_OMI0_FRST_REG
+                        + l_satoff);
                 }
                 break;
-
             case PU_NV_CHIPUNIT:
                 if (i_mode == P9N_DD1_SI_MODE)
                 {
-                    l_scom.set_sat_id((l_scom.get_sat_id() % 4) + ((i_chipUnitNum / 2) * 4));
-                    l_scom.set_sat_offset( (l_scom.get_sat_offset() % 32) +
-                                            (32 * (i_chipUnitNum % 2)));
+                    l_scom.set_sat_id(l_scom.get_sat_id() % 4 + (i_chipUnitNum / 2) * 4);
+                    l_scom.set_sat_offset(
+                        l_scom.get_sat_offset() % 32
+                        + 32 * (i_chipUnitNum % 2));
                 }
                 else if (i_mode != P9A_DD1_SI_MODE && i_mode != P9A_DD2_SI_MODE)
                 {
                     uint64_t l_sa = i_scomAddr;
-
-                    //                       rrrrrrSTIDxxx---
-                    //                       000100       yyy
-                    //       x"4900" & "00" when "00100010", -- stk0, ntl0, 00-07, hyp-only
-                    //       x"0b00" & "11" when "00101001", -- stk0, ntl1, 24-31, user-acc
-                    //                             STID
-                    //       x"5900" & "00" when "01100010", -- stk1, ntl0, 00-07, hyp-only
-                    //       x"1b00" & "11" when "01101001", -- stk1, ntl1, 24-31, user-acc
-                    //                             STID
-                    //       x"6900" & "00" when "10100010", -- stk2, ntl0, 00-07, hyp-only
-                    //       x"2b00" & "11" when "10101001", -- stk2, ntl1, 24-31, user-acc
-
                     if ((i_chipUnitNum / 2) == 0)
                     {
                         l_sa = (l_sa & 0xFFFFFFFFFFFF007FULL) | 0x0000000000001100ULL ;
@@ -644,71 +1833,63 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
 
                     uint64_t l_eo = (l_sa & 0x71) >> 3;
 
-                    if (l_eo > 5 && (i_chipUnitNum % 2 == 0))
+                    if (l_eo > 5 && i_chipUnitNum % 2 == 0)
                     {
-                        l_sa -= 0x20ULL; // 0b100 000
+                        l_sa -= 0x20ULL;
                     }
 
-                    if (l_eo <= 5 && (i_chipUnitNum % 2 == 1))
+                    if (l_eo <= 5 && i_chipUnitNum % 2 == 1)
                     {
-                        l_sa += 0x20ULL; // 0b100 000
+                        l_sa += 0x20ULL;
                     }
-
                     l_scom.set_addr(l_sa);
                 }
                 else
                 {
-                    //NV not supported on Axone - unused
                     l_scom.set_addr(FAILED_TRANSLATION);
                 }
-
                 break;
-
             case PU_PEC_CHIPUNIT:
                 if (l_scom.get_chiplet_id() == N2_CHIPLET_ID)
                 {
-                    // nest
                     l_scom.set_ring( (N2_PCIS0_0_RING_ID + i_chipUnitNum) & 0xF);
                 }
                 else
                 {
-                    // iopci / pci
                     l_scom.set_chiplet_id(PCI0_CHIPLET_ID + i_chipUnitNum);
                 }
-
                 break;
-
             case PU_PHB_CHIPUNIT:
                 if (l_scom.get_chiplet_id() == N2_CHIPLET_ID)
                 {
-                    // nest
                     if (i_chipUnitNum == 0)
                     {
                         l_scom.set_ring(N2_PCIS0_0_RING_ID & 0xF);
-                        l_scom.set_sat_id(((l_scom.get_sat_id() < 4) ? (1) : (4)));
+                        l_scom.set_sat_id((l_scom.get_sat_id() < 4) ? 1 : 4);
                     }
                     else
                     {
                         l_scom.set_ring( (N2_PCIS0_0_RING_ID + (i_chipUnitNum / 3) + 1) & 0xF);
-                        l_scom.set_sat_id( ((l_scom.get_sat_id() < 4) ? (1) : (4)) +
-                                            ((i_chipUnitNum % 2) ? (0) : (1)) +
-                                            (2 * (i_chipUnitNum / 5)));
+                        l_scom.set_sat_id(
+                            (l_scom.get_sat_id() < 4) ? 1 : 4
+                            + (i_chipUnitNum % 2) ? 0 : 1
+                            + 2 * (i_chipUnitNum / 5));
                     }
                 }
                 else
                 {
-                    // pci
                     if (i_chipUnitNum == 0)
                     {
                         l_scom.set_chiplet_id(PCI0_CHIPLET_ID);
-                        l_scom.set_sat_id(((l_scom.get_sat_id() < 4) ? (1) : (4)));
+                        l_scom.set_sat_id((l_scom.get_sat_id() < 4) ? 1 : 4);
                     }
                     else
                     {
                         l_scom.set_chiplet_id(PCI0_CHIPLET_ID + (i_chipUnitNum / 3) + 1);
-                        l_scom.set_sat_id(((l_scom.get_sat_id() < 4) ? (1) : (4)) +
-                                            ((i_chipUnitNum % 2) ? (0) : (1)) +
-                                            (2 * (i_chipUnitNum / 5)));
+                        l_scom.set_sat_id(
+                            (l_scom.get_sat_id() < 4) ? 1 : 4
+                            + (i_chipUnitNum % 2) ? 0 : 1
+                            + 2 * (i_chipUnitNum / 5));
                     }
                 }
 
@@ -719,21 +1900,18 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                 break;
 
             case PU_XBUS_CHIPUNIT:
-
                 l_ring &= 0xF;
-
-                if (XB_IOX_2_RING_ID >= l_ring &&
-                    l_ring >= XB_IOX_0_RING_ID)
+                if (XB_IOX_2_RING_ID >= l_ring
+                && l_ring >= XB_IOX_0_RING_ID)
                 {
                     l_scom.set_ring( (XB_IOX_0_RING_ID + i_chipUnitNum) & 0xF);
                 }
 
-                else if (XB_PBIOX_2_RING_ID >= l_ring &&
-                            l_ring >= XB_PBIOX_0_RING_ID)
+                else if(XB_PBIOX_2_RING_ID >= l_ring
+                && l_ring >= XB_PBIOX_0_RING_ID)
                 {
                     l_scom.set_ring( (XB_PBIOX_0_RING_ID + i_chipUnitNum) & 0xF);
                 }
-
                 break;
 
             case PU_SBE_CHIPUNIT:
@@ -741,9 +1919,7 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                 break;
 
             case PU_PPE_CHIPUNIT:
-
-                // PPE SBE
-                if (i_chipUnitNum == PPE_SBE_CHIPUNIT_NUM)
+                if(i_chipUnitNum == PPE_SBE_CHIPUNIT_NUM)
                 {
                     l_scom.set_chiplet_id(PIB_CHIPLET_ID);
                     l_scom.set_port(SBE_PORT_ID);
@@ -753,51 +1929,45 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                     break;
                 }
 
-                // Need to set SAT offset if address is that of PPE SBE
                 if (l_scom.get_port() == SBE_PORT_ID)
                 {
-                    // Adjust offset if input address is of SBE
-                    // (ex: 000E0005 --> GPE: xxxxxx1x)
                     l_scom.set_sat_offset(l_scom.get_sat_offset() | 0x10);
                 }
 
-                // PPE GPE
-                if ( (i_chipUnitNum >= PPE_GPE0_CHIPUNIT_NUM) && (i_chipUnitNum <= PPE_GPE3_CHIPUNIT_NUM) )
+                if(i_chipUnitNum >= PPE_GPE0_CHIPUNIT_NUM
+                && i_chipUnitNum <= PPE_GPE3_CHIPUNIT_NUM)
                 {
                     l_scom.set_chiplet_id(PIB_CHIPLET_ID);
                     l_scom.set_port(GPE_PORT_ID);
-                    l_scom.set_ring( (i_chipUnitNum - PPE_GPE0_CHIPUNIT_NUM) * 8 );
+                    l_scom.set_ring((i_chipUnitNum - PPE_GPE0_CHIPUNIT_NUM) * 8);
                     l_scom.set_sat_id(PPE_GPE_SAT_ID);
                 }
-
-                // PPE CME
-                else if ( (i_chipUnitNum >= PPE_EQ0_CME0_CHIPUNIT_NUM) && (i_chipUnitNum <= PPE_EQ5_CME1_CHIPUNIT_NUM) )
+                else if(i_chipUnitNum >= PPE_EQ0_CME0_CHIPUNIT_NUM
+                && i_chipUnitNum <= PPE_EQ5_CME1_CHIPUNIT_NUM)
                 {
                     if (i_chipUnitNum >= PPE_EQ0_CME1_CHIPUNIT_NUM)
                     {
-                        l_scom.set_chiplet_id(EP00_CHIPLET_ID +
-                                                (i_chipUnitNum % PPE_EQ0_CME1_CHIPUNIT_NUM));
+                        l_scom.set_chiplet_id(EP00_CHIPLET_ID + (i_chipUnitNum % PPE_EQ0_CME1_CHIPUNIT_NUM));
                     }
                     else
                     {
-                        l_scom.set_chiplet_id(EP00_CHIPLET_ID +
-                                                (i_chipUnitNum % PPE_EQ0_CME0_CHIPUNIT_NUM));
+                        l_scom.set_chiplet_id(EP00_CHIPLET_ID + (i_chipUnitNum % PPE_EQ0_CME0_CHIPUNIT_NUM));
                     }
 
                     l_scom.set_port(UNIT_PORT_ID);
-                    l_scom.set_ring( ((i_chipUnitNum / PPE_EQ0_CME1_CHIPUNIT_NUM) + 8) & 0xF );
+                    l_scom.set_ring(((i_chipUnitNum / PPE_EQ0_CME1_CHIPUNIT_NUM) + 8) & 0xF);
                     l_scom.set_sat_id(PPE_CME_SAT_ID);
                 }
-
-                // PPE IO (XBUS/OBUS)
-                else if ( (i_chipUnitNum >= PPE_IO_XBUS_CHIPUNIT_NUM) && (i_chipUnitNum <= PPE_IO_OB3_CHIPUNIT_NUM) )
+                else if(i_chipUnitNum >= PPE_IO_XBUS_CHIPUNIT_NUM
+                && i_chipUnitNum <= PPE_IO_OB3_CHIPUNIT_NUM)
                 {
-                    l_scom.set_chiplet_id( XB_CHIPLET_ID +
-                                            (i_chipUnitNum % PPE_IO_XBUS_CHIPUNIT_NUM) +
-                                            ((i_chipUnitNum / PPE_IO_OB0_CHIPUNIT_NUM) * 2) );
+                    l_scom.set_chiplet_id(
+                        XB_CHIPLET_ID
+                        + i_chipUnitNum % PPE_IO_XBUS_CHIPUNIT_NUM
+                        + (i_chipUnitNum / PPE_IO_OB0_CHIPUNIT_NUM) * 2);
                     l_scom.set_port(UNIT_PORT_ID);
 
-                    if (i_chipUnitNum == PPE_IO_XBUS_CHIPUNIT_NUM)
+                    if(i_chipUnitNum == PPE_IO_XBUS_CHIPUNIT_NUM)
                     {
                         l_scom.set_ring(XB_IOPPE_0_RING_ID & 0xF);
                     }
@@ -805,102 +1975,79 @@ uint64_t p9_scominfo_createChipUnitScomAddr(const p9ChipUnits_t i_p9CU, const ui
                     {
                         l_scom.set_ring(OB_PPE_RING_ID & 0xF);
                     }
-
-                    l_scom.set_sat_id(OB_PPE_SAT_ID); // Same SAT_ID value for XBUS
+                    l_scom.set_sat_id(OB_PPE_SAT_ID);
                 }
-
-                // PPE IO (DMI)
-                else if ( (i_chipUnitNum >= PPE_IO_DMI0_CHIPUNIT_NUM) && (i_chipUnitNum <= PPE_IO_DMI1_CHIPUNIT_NUM))
+                else if(i_chipUnitNum >= PPE_IO_DMI0_CHIPUNIT_NUM
+                && i_chipUnitNum <= PPE_IO_DMI1_CHIPUNIT_NUM)
                 {
                     l_scom.set_chiplet_id(MC01_CHIPLET_ID + (i_chipUnitNum - PPE_IO_DMI0_CHIPUNIT_NUM));
                     l_scom.set_ring(MC_IOM01_1_RING_ID);
                     l_scom.set_port(UNIT_PORT_ID);
                     l_scom.set_sat_id(P9C_MC_PPE_SAT_ID);
                 }
-
-                // PPE PB
-                else if ( (i_chipUnitNum >= PPE_PB0_CHIPUNIT_NUM) && (i_chipUnitNum <= PPE_PB2_CHIPUNIT_NUM) )
+                else if(i_chipUnitNum >= PPE_PB0_CHIPUNIT_NUM
+                && i_chipUnitNum <= PPE_PB2_CHIPUNIT_NUM)
                 {
-                    l_scom.set_chiplet_id(N3_CHIPLET_ID); // TODO: Need to set ChipID for PB1 and PB2 in Cummulus
+                    l_scom.set_chiplet_id(N3_CHIPLET_ID);
                     l_scom.set_port(UNIT_PORT_ID);
                     l_scom.set_ring(N3_PB_3_RING_ID & 0xF);
                     l_scom.set_sat_id(PPE_PB_SAT_ID);
                 }
-
-                // Invalid i_chipUnitNum
                 else
                 {
                     l_scom.set_addr(FAILED_TRANSLATION);
                 }
-
                 break;
 
             case PU_NPU_CHIPUNIT:
-
-                // NPU0 and NPU1 exist on the N3 chiplet, NPU2 exists on the N1 chiplet instead
-                l_chiplet_id = ( 2 == i_chipUnitNum ) ? N1_CHIPLET_ID : N3_CHIPLET_ID ;
+                l_chiplet_id = (2 == i_chipUnitNum) ? N1_CHIPLET_ID : N3_CHIPLET_ID;
                 l_scom.set_chiplet_id( l_chiplet_id );
 
-                // Covers the following addresses:
-                // NPU0: 05011000 to 050113FF
-                // NPU1: 05011400 to 050117FF
-                // NPU2: 03011C00 to 03011FFF
-                if ( N3_NPU_0_RING_ID  == l_ring ||
-                        N3_NPU_1_RING_ID  == l_ring ||
-                        P9A_NPU_2_RING_ID == l_ring )
+                if(N3_NPU_0_RING_ID  == l_ring
+                || N3_NPU_1_RING_ID  == l_ring
+                || P9A_NPU_2_RING_ID == l_ring)
                 {
-                    // NPU0/NPU1
-                    if ( N3_CHIPLET_ID == l_chiplet_id )
+                    if(N3_CHIPLET_ID == l_chiplet_id)
                     {
-                        l_scom.set_ring( N3_NPU_0_RING_ID + i_chipUnitNum );
+                        l_scom.set_ring(N3_NPU_0_RING_ID + i_chipUnitNum);
                     }
-                    // NPU2
-                    else if ( N1_CHIPLET_ID == l_chiplet_id )
+                    else if (N1_CHIPLET_ID == l_chiplet_id)
                     {
-                        l_scom.set_ring( P9A_NPU_2_RING_ID );
+                        l_scom.set_ring(P9A_NPU_2_RING_ID);
                     }
                     else
                     {
-                        l_scom.set_addr( FAILED_TRANSLATION );
+                        l_scom.set_addr(FAILED_TRANSLATION);
                     }
                 }
-                // Covers the following addresses:
-                // NPU0: 05013C00 to 05013C8F
-                // NPU1: 05013CC0 to 05013D4F
-                // NPU2: 03012000 to 0301208F
-                else if ( P9A_NPU_0_FIR_RING_ID == l_ring ||
-                            P9A_NPU_2_FIR_RING_ID == l_ring )
+                else if(P9A_NPU_0_FIR_RING_ID == l_ring
+                || P9A_NPU_2_FIR_RING_ID == l_ring)
                 {
-                    // NPU0/NPU1
-                    if ( N3_CHIPLET_ID == l_chiplet_id )
+                    if(N3_CHIPLET_ID == l_chiplet_id)
                     {
-                        l_scom.set_ring( P9A_NPU_0_FIR_RING_ID );
-                        l_scom.set_sat_id( (l_sat_id % 3) + (3 * i_chipUnitNum) );
+                        l_scom.set_ring(P9A_NPU_0_FIR_RING_ID);
+                        l_scom.set_sat_id((l_sat_id % 3) + (3 * i_chipUnitNum));
                     }
-                    // NPU2
-                    else if ( N1_CHIPLET_ID == l_chiplet_id )
+                    else if(N1_CHIPLET_ID == l_chiplet_id)
                     {
                         l_scom.set_ring( P9A_NPU_2_FIR_RING_ID );
-                        l_scom.set_sat_id( l_sat_id % 3 );
+                        l_scom.set_sat_id( l_sat_id % 3);
                     }
                     else
                     {
-                        l_scom.set_addr( FAILED_TRANSLATION );
+                        l_scom.set_addr(FAILED_TRANSLATION);
                     }
                 }
                 else
                 {
-                    l_scom.set_addr( FAILED_TRANSLATION );
+                    l_scom.set_addr(FAILED_TRANSLATION);
                 }
-
                 break;
-
             default:
                 l_scom.set_addr(FAILED_TRANSLATION);
                 break;
         }
     }
-
     return l_scom.get_addr();
 }
 
@@ -913,51 +2060,31 @@ uint32_t p9_scominfo_xlate_mi(bool& o_chipUnitRelated, std::vector<p9_chipUnitPa
     uint8_t l_sat_id = i_scom.get_sat_id();
     uint8_t l_sat_offset = i_scom.get_sat_offset();
 
-    //==== AXONE MC/MI/OMIC/OMI  ============================================================================
-    //==== MI target ===============================================
-    if (((l_chiplet_id == N3_CHIPLET_ID) || (l_chiplet_id == N1_CHIPLET_ID)) &&
-        (l_port == UNIT_PORT_ID) &&
-        (l_ring == N3_MC01_0_RING_ID) &&
-        (l_sat_id == P9_N3_MCS01_SAT_ID || l_sat_id == P9_N3_MCS23_SAT_ID))
+    if((l_chiplet_id == N3_CHIPLET_ID || l_chiplet_id == N1_CHIPLET_ID)
+    && l_port == UNIT_PORT_ID
+    && l_ring == N3_MC01_0_RING_ID
+    && (l_sat_id == P9_N3_MCS01_SAT_ID || l_sat_id == P9_N3_MCS23_SAT_ID))
     {
-        //-------------------------------------------
-        // DMI/MCC
-        //-------------------------------------------
-        //SCOM3   (See mc_clscom_rlm.fig <= 0xB vs mc_scomfir_rlm.fig > 0xB)
-        //DMI0           05     02       0   0x2X (X <= 0xB)
-        //DMI1           05     02       0   0x3X (X <= 0xB)
-        //DMI2           05     02       2   0x2X (X <= 0xB)
-        //DMI3           05     02       2   0x3X (X <= 0xB)
-        //DMI4           03     02       0   0x2X (X <= 0xB)
-        //DMI5           03     02       0   0x3X (X <= 0xB)
-        //DMI6           03     02       2   0x2X (X <= 0xB)
-        //DMI7           03     02       2   0x3X (X <= 0xB)
-        if ((i_low0 <= l_sat_offset && l_sat_offset <= 0x2B) ||
-            (i_low1 <= l_sat_offset && l_sat_offset <= 0x3B))
+        if((i_low0 <= l_sat_offset && l_sat_offset <= 0x2B)
+        || (i_low1 <= l_sat_offset && l_sat_offset <= 0x3B))
         {
-            uint8_t l_off_nib0 = (l_sat_offset >> 4);
+            uint8_t l_off_nib0 = l_sat_offset >> 4;
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(mcc_dmi,
-                                        ((l_chiplet_id == N3_CHIPLET_ID) ? (0) : (4)) +
-                                        (l_off_nib0 - 2) + l_sat_id));
+            o_chipUnitPairing.push_back(
+                p9_chipUnitPairing_t(
+                    mcc_dmi,
+                    ((l_chiplet_id == N3_CHIPLET_ID) ? 0 : 4)
+                    + l_off_nib0 - 2 + l_sat_id));
         }
-        //-------------------------------------------
-        // MI
-        //-------------------------------------------
-        //          Chiplet   Ring   Satid   Off
-        //MCS0           05     02       0   !SCOM3
-        //MCS1           05     02       2   !SCOM3
-        //MCS2           03     02       0   !SCOM3
-        //MCS3           03     02       2   !SCOM3
         else
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_MI_CHIPUNIT,
-                                        (l_sat_id / 2) +
-                                        ((l_chiplet_id == N3_CHIPLET_ID) ? (0) : (2))));
+            o_chipUnitPairing.push_back(
+                p9_chipUnitPairing_t(
+                    PU_MI_CHIPUNIT,
+                    (l_sat_id / 2) + ((l_chiplet_id == N3_CHIPLET_ID) ? 0 : 2)));
         }
     }
-
     return 0;
 }
 
@@ -984,21 +2111,18 @@ uint32_t p9_scominfo_isChipUnitScom(const uint64_t i_scomAddr, bool& o_chipUnitR
             o_chipUnitPairing.push_back(
                 p9_chipUnitPairing_t(
                     PU_EX_CHIPUNIT,
-                    ((l_chiplet_id - PPE_EP00_CHIPLET_ID) * 2)
-                    + (l_port - 1)));
+                    ((l_chiplet_id - PPE_EP00_CHIPLET_ID) * 2) + (l_port - 1)));
 
         }
 
     }
     else if (l_scom.is_unicast())
     {
-        if (((l_port == GPREG_PORT_ID)
-        || ((l_port >= CME_PORT_ID)
-          && (l_port <= CPM_PORT_ID))
-        || (l_port == PCBSLV_PORT_ID)
+        if (l_port == GPREG_PORT_ID
+        || (l_port >= CME_PORT_ID && l_port <= CPM_PORT_ID)
+        || l_port == PCBSLV_PORT_ID
         || (l_port == UNIT_PORT_ID && l_ring == EC_PSCM_RING_ID)
-        || (l_port == UNIT_PORT_ID && l_ring == EC_PERV_RING_ID
-          && l_sat_id == PERV_DBG_SAT_ID)))
+        || (l_port == UNIT_PORT_ID && l_ring == EC_PERV_RING_ID && l_sat_id == PERV_DBG_SAT_ID))
         {
             o_chipUnitRelated = true;
             o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PERV_CHIPUNIT, l_chiplet_id));
@@ -1244,7 +2368,7 @@ uint32_t p9_scominfo_isChipUnitScom(const uint64_t i_scomAddr, bool& o_chipUnitR
                     if (l_sat_id == P9A_MC_IND_SAT_ID && l_sat_offset == P9A_MC_IND_REG)
                     {
                         uint32_t l_ind_reg = l_scom.get_ind_addr();
-                        if ((l_ind_reg & 0x100) == 0x000)
+                        if ((l_ind_reg & 0x100) == 0)
                         {
                             uint32_t l_ind_lane = l_scom.get_lane_id();
                             o_chipUnitRelated = true;
@@ -1258,7 +2382,9 @@ uint32_t p9_scominfo_isChipUnitScom(const uint64_t i_scomAddr, bool& o_chipUnitR
                     }
                 }
 
-                if (P9A_MC_OMIC0_PPE_RING_ID <= l_ring && l_ring <= P9A_MC_OMIC2_PPE_RING_ID  && l_port == UNIT_PORT_ID)
+                if(P9A_MC_OMIC0_PPE_RING_ID <= l_ring
+                && l_ring <= P9A_MC_OMIC2_PPE_RING_ID
+                && l_port == UNIT_PORT_ID)
                 {
                     o_chipUnitRelated = true;
                     o_chipUnitPairing.push_back(
@@ -1388,176 +2514,127 @@ uint32_t p9_scominfo_isChipUnitScom(const uint64_t i_scomAddr, bool& o_chipUnitR
                     + l_sat_id - 1));
         }
 
-/////////////// CLEANME
-        if (((l_chiplet_id >= PCI0_CHIPLET_ID) && (l_chiplet_id <= PCI2_CHIPLET_ID)) &&
-            (l_port == UNIT_PORT_ID) &&
-            (l_ring == PCI_PE_0_RING_ID) &&
-            (((l_sat_id >= 1) && (l_sat_id <= (l_chiplet_id - PCI0_CHIPLET_ID + 1))) || // aib_stack
-                ((l_sat_id >= 4) && (l_sat_id <= (l_chiplet_id - PCI0_CHIPLET_ID + 4)))))  // pbcq_etu
+        if(l_chiplet_id >= PCI0_CHIPLET_ID
+        && l_chiplet_id <= PCI2_CHIPLET_ID
+        && l_port == UNIT_PORT_ID
+        && l_ring == PCI_PE_0_RING_ID
+        && ((l_sat_id >= 1 && l_sat_id <= (l_chiplet_id - PCI0_CHIPLET_ID + 1))
+          || (l_sat_id >= 4 && l_sat_id <= (l_chiplet_id - PCI0_CHIPLET_ID + 4))))
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PHB_CHIPUNIT,
-                                        ((l_chiplet_id - PCI0_CHIPLET_ID) ?
-                                            (((l_chiplet_id - PCI0_CHIPLET_ID) * 2) - 1) :
-                                            (0)) +
-                                        l_sat_id -
-                                        ((l_sat_id >= 4) ? (4) : (1))));
+            o_chipUnitPairing.push_back(
+                p9_chipUnitPairing_t(
+                    PU_PHB_CHIPUNIT,
+                    ((l_chiplet_id != PCI0_CHIPLET_ID)
+                    ? ((l_chiplet_id - PCI0_CHIPLET_ID) * 2) - 1
+                    : 0)
+                    + l_sat_id
+                    - ((l_sat_id >= 4) ? 4 : 1)));
         }
 
-        // PU_OBUS_CHIPUNIT
-        // obus: 0..3
         if (((l_chiplet_id >= OB0_CHIPLET_ID) && (l_chiplet_id <= OB3_CHIPLET_ID)))
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_OBUS_CHIPUNIT,
-                                        (l_chiplet_id - OB0_CHIPLET_ID)));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_OBUS_CHIPUNIT, (l_chiplet_id - OB0_CHIPLET_ID)));
         }
 
-        // PU_XBUS_CHIPUNIT
-        // xbus: 0..2
-        if ((l_chiplet_id == XB_CHIPLET_ID) &&
-            (l_port == UNIT_PORT_ID) &&
-            (((l_ring >= XB_IOX_0_RING_ID) && (l_ring <= XB_IOX_2_RING_ID) && (l_sat_id == XB_IOF_SAT_ID)) ||
-                ((l_ring >= XB_PBIOX_0_RING_ID) && (l_ring <= XB_PBIOX_2_RING_ID) && (l_sat_id == XB_PB_SAT_ID))))
+        if(l_chiplet_id == XB_CHIPLET_ID
+        && l_port == UNIT_PORT_ID
+        && ((l_ring >= XB_IOX_0_RING_ID && l_ring <= XB_IOX_2_RING_ID && l_sat_id == XB_IOF_SAT_ID)
+        || (l_ring >= XB_PBIOX_0_RING_ID && l_ring <= XB_PBIOX_2_RING_ID && l_sat_id == XB_PB_SAT_ID)))
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_XBUS_CHIPUNIT,
-                                        l_ring % 3));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_XBUS_CHIPUNIT, l_ring % 3));
         }
 
-        // -----------------------------------------------------------------------------
-        // Common 'ppe' registers associated with each pervasive chiplet type
-        // Permit addressing by PPE target type (for all ppe chiplet instances)
-        // -----------------------------------------------------------------------------
-
-        // SBE PM registers
-        //    Port ID = 14
-        if ( (l_port == SBE_PORT_ID) &&
-                (l_chiplet_id == PIB_CHIPLET_ID) &&
-                (l_ring == PPE_SBE_RING_ID) &&
-                (l_sat_id == PPE_SBE_SAT_ID) )
+        if(l_port == SBE_PORT_ID
+        && l_chiplet_id == PIB_CHIPLET_ID
+        && l_ring == PPE_SBE_RING_ID
+        && l_sat_id == PPE_SBE_SAT_ID)
         {
             o_chipUnitRelated = true;
-            // PU_SBE_CHIPUNIT
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_SBE_CHIPUNIT,
-                                        l_chiplet_id));
-            // PU_PPE_CHIPUNIT
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT,
-                                        l_chiplet_id));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_SBE_CHIPUNIT, l_chiplet_id));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT, l_chiplet_id));
         }
 
-        // GPE registers
-        //    Port ID = 1
-        if ( (l_port == GPE_PORT_ID) &&
-                (l_chiplet_id == PIB_CHIPLET_ID) &&
-                ( (l_ring == PPE_GPE0_RING_ID) ||
-                (l_ring == PPE_GPE1_RING_ID) ||
-                (l_ring == PPE_GPE2_RING_ID) ||
-                (l_ring == PPE_GPE3_RING_ID) ) &&
-                (l_sat_id == PPE_GPE_SAT_ID) )
+        if(l_port == GPE_PORT_ID
+        && l_chiplet_id == PIB_CHIPLET_ID
+        && l_sat_id == PPE_GPE_SAT_ID
+        && (l_ring == PPE_GPE0_RING_ID
+          || l_ring == PPE_GPE1_RING_ID
+          || l_ring == PPE_GPE2_RING_ID
+          || l_ring == PPE_GPE3_RING_ID))
         {
             o_chipUnitRelated = true;
-            // PU_PPE_CHIPUNIT
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(
-                                            PU_PPE_CHIPUNIT,
-                                            PPE_GPE0_CHIPUNIT_NUM + (l_ring / 8)));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT, PPE_GPE0_CHIPUNIT_NUM + (l_ring / 8)));
         }
 
-        // CME registers which can be addressed by PPE target type
-        //    Port ID = 1
-        //    0x10 <= Chiplet ID <= 0x15
-        //    Ring_ID = 0x8 or Ring_ID = 0x9
-        //    SAT_ID = 0
-        if ( (l_port == UNIT_PORT_ID) &&
-                ((l_chiplet_id >= EP00_CHIPLET_ID) && (l_chiplet_id <= EP05_CHIPLET_ID)) &&
-                ( (l_ring == EQ_CME_0_RING_ID) || (l_ring == EQ_CME_1_RING_ID) ) &&
-                (l_sat_id == PPE_CME_SAT_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id >= EP00_CHIPLET_ID
+        && l_chiplet_id <= EP05_CHIPLET_ID
+        && (l_ring == EQ_CME_0_RING_ID || l_ring == EQ_CME_1_RING_ID)
+        && l_sat_id == PPE_CME_SAT_ID)
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT,
-                                        (l_chiplet_id - EP00_CHIPLET_ID) +
-                                        PPE_EQ0_CME0_CHIPUNIT_NUM +
-                                        ((l_ring % 8) * 10)));
+            o_chipUnitPairing.push_back(
+                p9_chipUnitPairing_t(
+                    PU_PPE_CHIPUNIT,
+                    (l_chiplet_id - EP00_CHIPLET_ID) + PPE_EQ0_CME0_CHIPUNIT_NUM + ((l_ring % 8) * 10)));
         }
 
-        // PB registers which can be addressed by PPE target type
-        //    Port ID = 1
-        //    Chiplet ID = 0x05
-        //    Ring_ID = 0x9
-        //    SAT_ID = 0
-        if ( (l_port == UNIT_PORT_ID) &&
-                (l_chiplet_id == N3_CHIPLET_ID) &&
-                (l_ring == N3_PB_3_RING_ID) &&
-                (l_sat_id == PPE_PB_SAT_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id == N3_CHIPLET_ID
+        && l_ring == N3_PB_3_RING_ID
+        && l_sat_id == PPE_PB_SAT_ID)
         {
             o_chipUnitRelated = true;
-            // TODO: Need to update for PB1/PB2 of Cummulus whenever address
-            //       values are available.
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT,
-                                        PPE_PB0_CHIPUNIT_NUM));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT, PPE_PB0_CHIPUNIT_NUM));
         }
 
-        // XBUS registers which can be addressed by PPE target type (IOPPE)
-        //    Port ID = 1
-        //    Chiplet ID = 0x06
-        //    Ring_ID = 0x2
-        //    SAT_ID = 1
-        if ( (l_port == UNIT_PORT_ID) &&
-                (l_chiplet_id == XB_CHIPLET_ID) &&
-                (l_ring == XB_IOPPE_0_RING_ID) &&
-                (l_sat_id == XB_PPE_SAT_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id == XB_CHIPLET_ID
+        && l_ring == XB_IOPPE_0_RING_ID
+        && l_sat_id == XB_PPE_SAT_ID)
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT,
-                                        PPE_IO_XBUS_CHIPUNIT_NUM));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT, PPE_IO_XBUS_CHIPUNIT_NUM));
         }
 
-        // OBUS registers which can be addressed by PPE target type (IOPPE)
-        //    Port ID = 1
-        //    Chiplet ID = 0x09, 0x0A, 0x0B, or 0x0C
-        //    Ring_ID = 0x4
-        //    SAT_ID = 1
         if ( (l_port == UNIT_PORT_ID) &&
                 ((l_chiplet_id >= OB0_CHIPLET_ID) && (l_chiplet_id <= OB3_CHIPLET_ID)) &&
                 (l_ring == OB_PPE_RING_ID) &&
                 (l_sat_id == OB_PPE_SAT_ID) )
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT,
-                                        (l_chiplet_id - OB0_CHIPLET_ID) + PPE_IO_OB0_CHIPUNIT_NUM));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_PPE_CHIPUNIT, (l_chiplet_id - OB0_CHIPLET_ID) + PPE_IO_OB0_CHIPUNIT_NUM));
         }
 
-        // PU_NPU_CHIPUNIT
-        // npu: 0..1
-        if ( (l_port == UNIT_PORT_ID) &&
-                (l_chiplet_id == N3_CHIPLET_ID) &&
-                (N3_NPU_0_RING_ID <= l_ring && l_ring <= N3_NPU_1_RING_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id == N3_CHIPLET_ID
+        && N3_NPU_0_RING_ID <= l_ring
+        && l_ring <= N3_NPU_1_RING_ID)
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_NPU_CHIPUNIT,
-                                        (l_ring - N3_NPU_0_RING_ID)));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_NPU_CHIPUNIT, l_ring - N3_NPU_0_RING_ID));
         }
 
-        if ( (l_port == UNIT_PORT_ID) &&
-                (l_chiplet_id == N3_CHIPLET_ID) &&
-                (l_ring == P9A_NPU_0_FIR_RING_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id == N3_CHIPLET_ID
+        && l_ring == P9A_NPU_0_FIR_RING_ID)
         {
             o_chipUnitRelated = true;
-            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_NPU_CHIPUNIT,
-                                        (l_sat_id / 3)));
+            o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_NPU_CHIPUNIT, l_sat_id / 3));
         }
 
-        if ( (l_port == UNIT_PORT_ID) &&
-                (l_chiplet_id == N1_CHIPLET_ID) &&
-                (l_ring == P9A_NPU_2_RING_ID || l_ring == P9A_NPU_2_FIR_RING_ID) )
+        if(l_port == UNIT_PORT_ID
+        && l_chiplet_id == N1_CHIPLET_ID
+        && (l_ring == P9A_NPU_2_RING_ID || l_ring == P9A_NPU_2_FIR_RING_ID))
         {
             o_chipUnitRelated = true;
             o_chipUnitPairing.push_back(p9_chipUnitPairing_t(PU_NPU_CHIPUNIT, 2));
         }
-
     }
-
-    return (!l_scom.is_valid());
+    return !l_scom.is_valid();
 }
 
 const Target * getParentChip( const Target * i_pChiplet )
