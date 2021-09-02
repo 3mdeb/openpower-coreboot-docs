@@ -1,76 +1,43 @@
-in istep 21.1
+In istep 21.1:
 
-* loadPMComplex
-- called for all processors, not only for master
-- useSRAM is false
+* `call_host_runtime_setup` is the entry point
 
-* p9_pm_init
-- called with PM_INIT instead PM_RESET
+* `loadPMComplex`
+   - called for all processors, not only for master
+   - `useSRAM` parameter is `false`
 
-* loadOCCImageToHomer is called instead loadOCCImageDuringIpl
+* `p9_pm_init`
+   - called with `PM_INIT` instead `PM_RESET`
+
+* `loadOCCImageToHomer` is called instead of `loadOCCImageDuringIpl`
+
+Analisys assumptions:
+
+* `#define CONFIG_START_OCC_DURING_BOOT`
+* `#define __HOSTBOOT_MODULE`
+* `#undef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS`
+* `#undef CONFIG_PNOR_TWO_SIDE_SUPPORT`
+* Not in MPIPL mode (`ATTR_IS_MPIPL_HB == false`).
+* Simics is not running (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`).
+* Payload isn't PHYP (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_PHYP`).
+* Payload is sapphire (`ATTR_PAYLOAD_KIND == PAYLOAD_KIND_SAPPHIRE`).
+* Loading a payload (`TARGETING::is_no_load() == false`, `ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`)
+* Homer address is never `NULL`.
+* Homer's virtual address equals its physical address.
+* Not in manufacturing mode or golden-side boot.
+
+HDAT -- Host data area. Collection of attributes, device information, and other
+derived information used by the payload to manage the computer system.
+
+Data (stored in HDAT):
+* NACA
+* SPIRA
 
 ```cpp
 errlHndl_t utilDisableTces(void)
 {
     return Singleton<UtilTceMgr>::instance().disableTces();
 };
-
-errlHndl_t VPD::goldenCacheInvalidate(void)
-{
-    errlHndl_t err = NULL;
-
-    do
-    {
-        bool l_invalidateCaches = false;
-
-        // In manufacturing mode the VPD PNOR cache needs to be cleared
-        // And the VPD ATTR switch and flags need to be reset
-        // Note: this code should do nothing when not in PNOR caching mode
-        TARGETING::Target* l_pTopLevel = NULL;
-        TARGETING::targetService().getTopLevelTarget(l_pTopLevel);
-        TARGETING::ATTR_MNFG_FLAGS_type l_mnfgFlags =
-                    l_pTopLevel->getAttr<TARGETING::ATTR_MNFG_FLAGS>();
-        // @todo RTC 118752 Use generic mfg-mode attr when available
-        if (l_mnfgFlags & TARGETING::MNFG_FLAG_SRC_TERM)
-        {
-            l_invalidateCaches = true;
-        }
-
-#ifdef CONFIG_PNOR_TWO_SIDE_SUPPORT
-        // We also need to wipe the cache out after booting from the
-        //  golden side of pnor
-        if( !l_invalidateCaches )
-        {
-            PNOR::SideInfo_t l_pnorInfo;
-            err = PNOR::getSideInfo( PNOR::WORKING, l_pnorInfo );
-            if( err )
-            {
-                // commit the error but keep going
-                errlCommit(err, VPD_COMP_ID);
-                // force the caches to get wiped out just in case
-                l_invalidateCaches = true;
-            }
-            else if( l_pnorInfo.isGolden )
-            {
-                l_invalidateCaches = true;
-            }
-        }
-#endif
-
-        if( l_invalidateCaches )
-        {
-            // Invalidate the VPD Caches for all targets
-            err = invalidateAllPnorCaches(true);
-            if (err)
-            {
-                break;
-            }
-        }
-
-    } while( 0 );
-
-    return err;
-}
 
 inline bool spBaseServicesEnabled()
 {
@@ -88,6 +55,11 @@ inline bool spBaseServicesEnabled()
     return spBaseServicesEnabled;
 }
 
+/**
+ * @brief Populate HB runtime data in mainstore
+ *
+ * @return errlHndl_t NULL on Success
+ */
 errlHndl_t populate_hbRuntimeData( void )
 {
     errlHndl_t  l_elog = nullptr;
@@ -126,52 +98,10 @@ errlHndl_t populate_hbRuntimeData( void )
 
         if (0 == hb_images)  //Single-node
         {
-            if( !TARGETING::is_no_load() )
+            l_elog = populate_HbRsvMem(l_masterNodeId,true);
+            if(l_elog != nullptr)
             {
-                l_elog = populate_HbRsvMem(l_masterNodeId,true);
-                if(l_elog != nullptr)
-                {
-                    TRACFCOMP( g_trac_runtime, "populate_HbRsvMem failed" );
-                }
-            }
-            else
-            {
-                // still fill in HB DATA for testing
-                uint64_t l_startAddr = cpu_spr_value(CPU_SPR_HRMOR) +
-                            VMM_HB_DATA_TOC_START_OFFSET;
-
-                uint64_t l_endAddr = 0;
-                uint64_t l_totalSizeAligned = 0;
-                bool startAddressValid = true;
-
-                l_elog = fill_RsvMem_hbData(l_startAddr, l_endAddr,
-                                startAddressValid, l_totalSizeAligned,true);
-                if(l_elog != nullptr)
-                {
-                    TRACFCOMP( g_trac_runtime, "fill_RsvMem_hbData failed" );
-                    break;
-                }
-
-                // Get list of processor chips
-                TARGETING::TargetHandleList l_procChips;
-                getAllChips( l_procChips,
-                            TARGETING::TYPE_PROC,
-                            true);
-                //Pass start address down to SBE via chipop
-                // Loop through all functional Procs
-                for (const auto & l_procChip: l_procChips)
-                {
-                    //Pass start address down to SBE via chip-op
-                    l_elog = SBEIO::sendPsuStashKeyAddrRequest(SBEIO::RSV_MEM_ATTR_ADDR,
-                                                               l_startAddr,
-                                                               l_procChip);
-                    if (l_elog)
-                    {
-                        TRACFCOMP( g_trac_runtime, "sendPsuStashKeyAddrRequest failed for target: %x",
-                                   TARGETING::get_huid(l_procChip) );
-                        break;
-                    }
-                }
+                TRACFCOMP( g_trac_runtime, "populate_HbRsvMem failed" );
             }
         }
         else
@@ -264,7 +194,6 @@ errlHndl_t populate_hbRuntimeData( void )
     } while(0);
 
     return(l_elog);
-
 }
 
 errlHndl_t writeActualCount( SectionId i_id )
@@ -382,25 +311,21 @@ errlHndl_t hdatService::getAndCheckTuple(const SectionId i_section,
     return errhdl;
 }
 
-errlHndl_t hdatService::verify_hdat_address( const void* i_addr,
-                                             size_t i_size )
+void hdatService::verify_hdat_address( const void* i_addr, size_t i_size )
 {
-    errlHndl_t errhdl = NULL;
     bool found = false;
-    uint64_t l_end =  reinterpret_cast<uint64_t>(i_addr)
-                       + i_size;
+    uint64_t l_end =  reinterpret_cast<uint64_t>(i_addr) + i_size;
 
     // Make sure that the entire range is within the memory
     //  space that we allocated
     for(cmemRegionItr region = iv_mem_regions.begin();
-        (region != iv_mem_regions.end()) && !found; ++region)
+        region != iv_mem_regions.end() && !found; ++region)
     {
         hdatMemRegion_t memR = *region;
 
         uint64_t l_range_end = reinterpret_cast<uint64_t>(memR.virt_addr)
-                               +  memR.size;
-        if ((i_addr >= memR.virt_addr) &&
-            (l_end <= l_range_end))
+                             +  memR.size;
+        if (i_addr >= memR.virt_addr && l_end <= l_range_end)
         {
             found = true;
             break;
@@ -408,44 +333,10 @@ errlHndl_t hdatService::verify_hdat_address( const void* i_addr,
     }
 
     if(!found)
-    {
         TRACFCOMP( g_trac_runtime, "Invalid HDAT Address : i_addr=%p, i_size=0x%X", i_addr, i_size );
-        for(cmemRegionItr region = iv_mem_regions.begin();
-            (region != iv_mem_regions.end()) && !found; ++region)
-        {
-            hdatMemRegion_t memR = *region;
-            TRACFCOMP( g_trac_runtime, "  Region : virt_addr=0x%X, size=0x%X",
-                       memR.virt_addr, memR.size );
-        }
-        /*@
-         * @errortype
-         * @moduleid     RUNTIME::MOD_HDATSERVICE_VERIFY_HDAT_ADDRESS
-         * @reasoncode   RUNTIME::RC_INVALID_ADDRESS
-         * @userdata1    Start of address range under test
-         * @userdata2    Size of address range under test
-         * @devdesc      HDAT data block falls outside valid range
-         */
-        errhdl = new ERRORLOG::ErrlEntry(
-                            ERRORLOG::ERRL_SEV_UNRECOVERABLE,
-                            RUNTIME::MOD_HDATSERVICE_VERIFY_HDAT_ADDRESS,
-                            RUNTIME::RC_INVALID_ADDRESS,
-                            reinterpret_cast<uint64_t>(i_addr),
-                            reinterpret_cast<uint64_t>(i_size));
-        errhdl->collectTrace(RUNTIME_COMP_NAME,KILOBYTE);
-
-        // most likely this is a HB code bug
-        errhdl->addProcedureCallout(HWAS::EPUB_PRC_HB_CODE,
-                                    HWAS::SRCI_PRIORITY_HIGH);
-        // but it could also be a FSP bug in setting up the HDAT data
-        errhdl->addProcedureCallout(HWAS::EPUB_PRC_SP_CODE,
-                                    HWAS::SRCI_PRIORITY_MED);
-    }
-
-    return errhdl;
 }
 
-errlHndl_t hdatService::getSpiraTupleVA(hdat5Tuple_t* i_tuple,
-                                     uint64_t & o_vaddr)
+errlHndl_t hdatService::getSpiraTupleVA(hdat5Tuple_t* i_tuple, uint64_t & o_vaddr)
 {
     errlHndl_t errhdl = NULL;
     bool found = false;
@@ -511,6 +402,14 @@ errlHndl_t hdatService::getSpiraTupleVA(hdat5Tuple_t* i_tuple,
     return errhdl;
 }
 
+/**
+ * @brief Locates the proper SPIRA structure and sets instance vars
+ *
+ * Walks the NACA and interrogates structures to determine which
+ * kind of SPIRA is available (if any).
+ *
+ * @return errlHndl_t  NULL on success
+ */
 errlHndl_t hdatService::findSpira( void )
 {
     errlHndl_t errhdl = NULL;
@@ -724,8 +623,31 @@ errlHndl_t hdatService::findSpira( void )
     return errhdl;
 }
 
+/**
+ * Save the actual count value for sections
+ * -Used to keep track of things across HDAT writes
+ *  from FSP
+ */
+uint16_t iv_actuals[RUNTIME::LAST_SECTION+1];
+
+/**
+ * @brief  Get a pointer to the beginning of a particular section of
+ *         the host data memory.
+ *
+ * @description  The returned pointer will not include any hdat header
+ *     information.
+ *
+ * @param[in] i_section  Chunk of data to find
+ * @param[in] i_instance  Instance of section when there are multiple
+ *                        entries
+ * @param[out] o_dataAddr  Virtual memory address of data
+ * @param[out] o_dataSize  Size of data in bytes, 0 on error,
+ *                         DATA_SIZE_UNKNOWN if unknown
+ *
+ * @return errlHndl_t  NULL on success
+ */
 errlHndl_t hdatService::getHostDataSection( SectionId i_section = PROC_DUMP_AREA_TBL,
-                                            uint64_t i_instance,
+                                            uint64_t i_instance = 0,
                                             uint64_t& o_dataAddr,
                                             size_t& o_dataSize)
 {
@@ -735,31 +657,10 @@ errlHndl_t hdatService::getHostDataSection( SectionId i_section = PROC_DUMP_AREA
 
     size_t record_size = 0;
 
-    TARGETING::Target * sys = NULL;
-    TARGETING::targetService().getTopLevelTarget( sys );
-
-    TARGETING::PAYLOAD_KIND payload_kind = sys->getAttr<TARGETING::ATTR_PAYLOAD_KIND>();
-
-#ifdef REAL_HDAT_TEST
-    payload_kind = TARGETING::PAYLOAD_KIND_PHYP;
-#endif
-
-    hdat5Tuple_t* tuple = nullptr;
-
-    if( TARGETING::PAYLOAD_KIND_NONE == payload_kind )
-    {
-        get_standalone_section(
-            i_section,
-            i_instance,
-            o_dataAddr,
-            o_dataSize );
-        break;
-    }
-    uint64_t payload_base = (uint64_t)(iv_mem_regions[0].virt_addr);
-
     findSpira();
     if( RUNTIME::PROC_DUMP_AREA_TBL == i_section )
     {
+        hdat5Tuple_t* tuple = nullptr;
         getAndCheckTuple(i_section, tuple);
         o_dataSize = tuple->hdatAllocSize * tuple->hdatAllocCnt;
         record_size = tuple->hdatAllocSize;
@@ -776,7 +677,17 @@ errlHndl_t hdatService::getHostDataSection( SectionId i_section = PROC_DUMP_AREA
     return errhdl;
 }
 
-
+/**
+ * @brief  Update Processor Dump area section.
+ *
+ * @param[in] i_section        Chunk of data to find
+ * @param[in] threadRegSize    Size of each thread register data
+ * @param[in] threadRegVersion Register data format version
+ * @param[in] capArrayAddr     Destination memory address
+ * @param[in] capArraySize     Destination memory size
+ *
+ * @return errlHndl_t          NULL on success
+ */
 errlHndl_t hdatService::updateHostProcDumpActual( SectionId i_section,
                                                   uint32_t threadRegSize,
                                                   uint8_t threadRegVersion,
@@ -796,43 +707,16 @@ errlHndl_t hdatService::updateHostProcDumpActual( SectionId i_section,
     procDumpTable->capArraySize     = capArraySize;
 }
 
-void saveActualCount( SectionId i_id,
-                        uint16_t i_count )
+/**
+ * @brief  Store the actual count of a section.
+ *
+ * @param[in] i_section  Chunk of data to update
+ * @param[in] i_count   Actual count for MDRT entries
+ *
+ */
+void hdatService::saveActualCount( SectionId i_id, uint16_t i_count )
 {
     iv_actuals[i_id] = i_count;
-}
-
-errlHndl_t PnorRP::getSideInfo( PNOR::SideId i_side,
-                              PNOR::SideInfo_t& o_info)
-{
-    if(i_side != PNOR::INVALID_SIDE)
-    {
-        memcpy (&o_info, &iv_side[i_side], sizeof(SideInfo_t));
-    }
-}
-
-errlHndl_t VPD::goldenSwitchUpdate(void)
-{
-#ifdef CONFIG_PNOR_TWO_SIDE_SUPPORT
-    // Do not write to the PNOR at runtime after booting from the
-    //  golden side of pnor
-    PNOR::SideInfo_t l_pnorInfo;
-    PNOR::getSideInfo( PNOR::WORKING, l_pnorInfo );
-    if( l_pnorInfo.isGolden )
-    {
-        TARGETING::ATTR_VPD_SWITCHES_type l_switch;
-        for(TARGETING::TargetIterator target = TARGETING::targetService().begin();
-            target != TARGETING::targetService().end();
-            ++target)
-        {
-            if(target->tryGetAttr<TARGETING::ATTR_VPD_SWITCHES>(l_switch))
-            {
-                l_switch.disableWriteToPnorRT = 1;
-                target->setAttr<TARGETING::ATTR_VPD_SWITCHES>( l_switch );
-            }
-        }
-    }
-#endif
 }
 
 errlHndl_t sendSBESystemConfig( void )
@@ -1394,32 +1278,8 @@ errlHndl_t sendFreqAttrData()
     return;
 }
 
-void IStepDispatcher::waitForSyncPoint()
-{
-    if(!iv_istepMode && iv_spBaseServicesEnabled)
-    {
-        // Tell Simics we are waiting for the FSP to do something
-        MAGIC_WAITING_FOR_FSP();
-        while(!iv_syncPointReached && !iv_shutdown)
-        {
-            sync_cond_wait(&iv_cond, &iv_mutex);
-        }
-        if (iv_shutdown)
-        {
-            shutdownDuringIpl();
-        }
-        else
-        {
-            iv_syncPointReached = false;
-        }
-        // Tell Simics we are done waiting
-        MAGIC_DONE_WAITING_FOR_FSP();
-    }
-}
-
 void* call_host_runtime_setup (void *io_pArgs)
 {
-    INITSERVICE::waitForSyncPoint();
     TARGETING::Target * sys = nullptr;
     TARGETING::targetService().getTopLevelTarget (sys);
     sys->trySetAttr<ATTR_PM_RESET_FFDC_ENABLE> (0x01);
@@ -1429,10 +1289,6 @@ void* call_host_runtime_setup (void *io_pArgs)
     {
         TCE::utilClosePayloadTces();
         closeNonMasterTces();
-    }
-    if (!VFS::module_is_loaded("libruntime.so"))
-    {
-        VFS::module_load("libruntime.so");
     }
     RUNTIME::sendSBESystemConfig();
 
@@ -1448,23 +1304,13 @@ void* call_host_runtime_setup (void *io_pArgs)
 #ifdef CONFIG_UCD_FLASH_UPDATES
     POWER_SEQUENCER::TI::UCD::call_update_ucd_flash();
 #endif
-    if(!TARGETING::is_no_load())
-    {
-        RUNTIME::populate_hbSecurebootData();
-        RUNTIME::populate_hbTpmInfo();
-    }
+    RUNTIME::populate_hbSecurebootData();
+    RUNTIME::populate_hbTpmInfo();
     RUNTIME::persistent_rwAttrRuntimeCheck();
 #ifdef CONFIG_NVDIMM
     NVDIMM_UPDATE::call_nvdimm_update();
 #endif
 
-#ifdef CONFIG_START_OCC_DURING_BOOT
-    bool l_activatePM = TARGETING::is_sapphire_load();
-#else
-    bool l_activatePM = false;
-#endif
-    if(l_activatePM)
-    {
         TARGETING::Target* l_failTarget = NULL;
         bool pmStartSuccess = true;
         loadAndStartPMAll(HBPM::PM_LOAD, l_failTarget);
@@ -1490,62 +1336,12 @@ void* call_host_runtime_setup (void *io_pArgs)
             HBPM::verifyOccChkptAll();
         }
 #endif
-    }
-    else if(!Util::isSimicsRunning())
-    {
-        uint8_t l_skip_fir_attr_reset = 1;
-        HBPM::resetPMAll(
-            HBPM::RESET_AND_CLEAR_ATTRIBUTES,
-            l_skip_fir_attr_reset);
-    }
 
-#ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
-    if(TARGETING::is_phyp_load() )
-    {
-        TARGETING::TargetService & tS = TARGETING::targetService();
-        TARGETING::Target* masterproc = NULL;
-        tS.masterProcChipTargetHandle(masterproc);
-        size_t sz_data = HBOCC::OCC_OFFSET_IPL_FLAG + 6;
-        size_t sz_dw   = sizeof(uint64_t);
-        uint64_t l_occAppData[(sz_data+(sz_dw-1))/sz_dw];
-        memset(l_occAppData, 0x00, sizeof(l_occAppData) );
-        const uint32_t l_SramAddrApp = HBOCC::OCC_405_SRAM_ADDRESS;
-        HBOCC::writeSRAM(
-            masterproc,
-            l_SramAddrApp,
-            l_occAppData,
-            sz_data);
-    }
-#endif
-
-    if(TARGETING::is_sapphire_load()
-    && !INITSERVICE::spBaseServicesEnabled())
-    {
-        VPD::goldenSwitchUpdate();
-    }
-    TargetService& l_targetService = targetService();
-    Target* l_sys = nullptr;
-    l_targetService.getTopLevelTarget(l_sys);
-
-    uint32_t threadRegSize =
-        sizeof(DUMP::hostArchRegDataHdr)
-      + 95 * sizeof(DUMP::hostArchRegDataEntry);
+    uint32_t threadRegSize = sizeof(DUMP::hostArchRegDataHdr)
+                           + 95 * sizeof(DUMP::hostArchRegDataEntry);
     uint8_t threadRegFormat = REG_DUMP_SBE_HB_STRUCT_VER;
     uint64_t capThreadArrayAddr = 0;
     uint64_t capThreadArraySize = 0;
-
-    if(l_sys->getAttr<ATTR_IS_MPIPL_HB>())
-    {
-        uint32_t l_mdrtCount = l_sys->getAttr<TARGETING::ATTR_MPIPL_HB_MDRT_COUNT>();
-        if(l_mdrtCount)
-        {
-            RUNTIME::saveActualCount( RUNTIME::MS_DUMP_RESULTS_TBL, l_mdrtCount);
-        }
-        threadRegSize = l_sys->getAttr<TARGETING::ATTR_PDA_THREAD_REG_ENTRY_SIZE>();
-        threadRegFormat = l_sys->getAttr<TARGETING::ATTR_PDA_THREAD_REG_STATE_ENTRY_FORMAT>();
-        capThreadArrayAddr = l_sys->getAttr<TARGETING::ATTR_PDA_CAPTURED_THREAD_REG_ARRAY_ADDR>();
-        capThreadArraySize = l_sys->getAttr<TARGETING::ATTR_PDA_CAPTURED_THREAD_REG_ARRAY_SIZE>();
-    }
 
     RUNTIME::updateHostProcDumpActual(
         RUNTIME::PROC_DUMP_AREA_TBL,
@@ -1555,11 +1351,6 @@ void* call_host_runtime_setup (void *io_pArgs)
         capThreadArraySize);
     RUNTIME::writeActualCount(RUNTIME::MS_DUMP_RESULTS_TBL);
     RUNTIME::populate_hbRuntimeData();
-
-    if( !INITSERVICE::spBaseServicesEnabled() )
-    {
-        VPD::goldenCacheInvalidate();
-    }
 
     if (TCE::utilUseTcesForDmas())
     {
@@ -2839,51 +2630,37 @@ errlHndl_t core_checkstop_helper_homer()
     {
         const TARGETING::Target* l_procChip = TARGETING::getParentChip(l_core);
         const uint64_t l_homerAddr = l_procChip->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
-        void* l_homerVAddr = HBPM::convertHomerPhysToVirt((TARGETING::Target*) l_procChip, l_homerAddr);
         uint64_t l_scomAddr = C_CORE_ACTION0;
         bool l_needsWakeup = false;
 
-        l_errl = SCOM::scomTranslate( l_core, l_scomAddr,
-                                        l_needsWakeup );
+        l_errl = SCOM::scomTranslate( l_core, l_scomAddr, l_needsWakeup );
         if( l_errl )
         {
             break;
         }
 
         stopImageSection::StopReturnCode_t l_srErrl =
-            p9_stop_save_scom( l_homerVAddr,
+            p9_stop_save_scom( (void *)l_homerAddr,
             l_scomAddr, l_action0,
             stopImageSection::P9_STOP_SCOM_REPLACE,
             stopImageSection::P9_STOP_SECTION_CORE_SCOM );
 
-        if( l_srErrl != stopImageSection::StopReturnCode_t::
-                            STOP_SAVE_SUCCESS )
-        {
+        if( l_srErrl != stopImageSection::StopReturnCode_t::STOP_SAVE_SUCCESS )
             break;
-        }
+
         l_scomAddr = C_CORE_ACTION1;
 
-        l_errl = SCOM::scomTranslate(l_core, l_scomAddr,
-                            l_needsWakeup);
-
+        l_errl = SCOM::scomTranslate(l_core, l_scomAddr, l_needsWakeup);
         if( l_errl )
-        {
             break;
-        }
 
-        l_srErrl = p9_stop_save_scom( l_homerVAddr,
+        l_srErrl = p9_stop_save_scom( (void *)l_homerAddr,
                             l_scomAddr, l_action1,
                             stopImageSection::P9_STOP_SCOM_REPLACE,
                             stopImageSection::P9_STOP_SECTION_CORE_SCOM );
-
-        if( l_srErrl != stopImageSection::StopReturnCode_t::
-                            STOP_SAVE_SUCCESS )
-        {
-            return;
-        }
-
+        if( l_srErrl != stopImageSection::StopReturnCode_t::STOP_SAVE_SUCCESS )
+            break;
     }
-
 }
 
 fapi2::ReturnCode p9_core_checkstop_handler(
@@ -2925,8 +2702,8 @@ errlHndl_t core_checkstop_helper_hwp( const TARGETING::Target* i_core_target,
     p9_core_checkstop_handler(l_fapi2_coreTarget, i_override_restore);
 }
 
-errlHndl_t loadAndStartPMAll(loadPmMode i_mode,
-                                TARGETING::Target* & o_failTarget)
+errlHndl_t loadAndStartPMAll(loadPmMode i_mode = HBPM::PM_LOAD,
+                             TARGETING::Target* & o_failTarget)
 {
     errlHndl_t l_errl = nullptr;
 
@@ -2944,12 +2721,9 @@ errlHndl_t loadAndStartPMAll(loadPmMode i_mode,
     TARGETING::TargetHandleList l_coreTargetList;
     getAllChips(l_coreTargetList, TYPE_CORE);
 
-    if(is_sapphire_load())
+    for( auto l_core_target : l_coreTargetList )
     {
-        for( auto l_core_target : l_coreTargetList )
-        {
-            core_checkstop_helper_hwp(l_core_target, true);
-        }
+        core_checkstop_helper_hwp(l_core_target, true);
     }
 
     for (const auto & l_procChip: l_procChips)
@@ -2966,47 +2740,73 @@ errlHndl_t loadAndStartPMAll(loadPmMode i_mode,
         startPMComplex(l_procChip);
     }
 
-    if(is_sapphire_load())
-    {
-        core_checkstop_helper_homer();
-    }
+    core_checkstop_helper_homer();
 }
 
-errlHndl_t startPMComplex(Target* i_target)
+void startPMComplex(Target* i_target)
 {
     TARGETING::Target * l_sys = nullptr;
     TARGETING::targetService().getTopLevelTarget(l_sys);
     assert(l_sys != nullptr);
-    uint64_t l_homerPhysAddr = 0x0;
-    l_homerPhysAddr = i_target->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
-    void* l_homerVAddr = convertHomerPhysToVirt(i_target,l_homerPhysAddr);
 
+    uint64_t l_homerPhysAddr = i_target->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
 
-    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>
-        l_fapiTarg(i_target);
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarg(i_target);
 
-    if (TARGETING::is_phyp_load())
+    pm_init(l_fapiTarg, (void *)l_homerPhysAddr);
+}
+
+static void loadPMComplex(
+    TARGETING::Target * i_target,
+    uint64_t i_homerPhysAddr,
+    uint64_t i_commonPhysAddr)
+{
+    resetPMComplex(i_target);
+    void* l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
+    if(nullptr == l_homerVAddr)
     {
-        l_sys->setAttr <TARGETING::ATTR_PM_MALF_ALERT_ENABLE> (0x1);
+        return;
     }
+    uint64_t l_occImgPaddr = i_homerPhysAddr + HOMER_OFFSET_TO_OCC_IMG;
+    uint64_t l_occImgVaddr = l_homerVAddr + HOMER_OFFSET_TO_OCC_IMG;
+    loadOCCSetup(i_target, l_occImgPaddr, l_occImgVaddr, i_commonPhysAddr);
+#ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
+    HBOCC::loadOCCImageDuringIpl(i_target, l_occImgVaddr); // analyzed
+#endif
+    loadOCCImageToHomer(
+        i_target,
+        l_occImgPaddr,
+        l_occImgVaddr);
+#if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
+    HBOCC::loadHostDataToSRAM(i_target);
+#else
+    loadHostDataToHomer(i_target, l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
+    loadHcode(i_target, l_homerVAddr, HBPM::PM_LOAD);
+#endif
+}
 
-    pm_init(
-        l_fapiTarg,
-        l_homerVAddr);
-
-    if (TARGETING::is_phyp_load() && nullptr != l_homerVAddr)
+errlHndl_t loadOCCImageToHomer(TARGETING::Target* i_target,
+                                uint64_t i_occImgPaddr,
+                                uint64_t i_occImgVaddr // dest)
+{
+    if(g_pOccLidMgr.get() == nullptr)
     {
-            int lRc = HBPM_UNMAP(l_homerVAddr);
-            uint64_t lZeroAddr = 0;
-            i_target->setAttr<ATTR_HOMER_VIRT_ADDR>(reinterpret_cast<uint64_t>(lZeroAddr));
+        g_pOccLidMgr = std::shared_ptr<UtilLidMgr>
+                        (new UtilLidMgr(Util::OCC_LIDID));
     }
+    void* l_pLidImage = nullptr;
+    size_t l_lidImageSize = 0;
+
+    g_pOccLidMgr->getStoredLidImage(l_pLidImage, l_lidImageSize);
+
+    void* l_occVirt = reinterpret_cast<void *>(i_occImgVaddr);
+    memcpy(l_occVirt, l_pLidImage, l_lidImageSize);
 }
 
 fapi2::ReturnCode pm_init(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     void* i_pHomerImage)
 {
-    fapi2::ReturnCode l_rc;
     fapi2::ATTR_PM_MALF_CYCLE_Type l_malfCycle =
         fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
     fapi2::ATTR_PM_MALF_ALERT_ENABLE_Type malfAlertEnable =
@@ -3034,10 +2834,7 @@ fapi2::ReturnCode pm_init(
     p9_pm_firinit(i_target, p9pm::PM_INIT);
     p9_pm_stop_gpe_init(i_target, p9pm::PM_INIT);
     p9_pm_pstate_gpe_init(i_target, p9pm::PM_INIT);
-    if (i_pHomerImage != NULL)
-    {
-        p9_check_proc_config(i_target, i_pHomerImage);
-    }
+    p9_check_proc_config(i_target, i_pHomerImage);
     clear_occ_special_wakeups(i_target);
     FAPI_ATTR_GET (fapi2::ATTR_PM_MALF_CYCLE, i_target, l_malfCycle));
     if (l_malfCycle == fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE)
@@ -3092,61 +2889,6 @@ fapi2::ReturnCode checkChiplet( CONST_FAPI2_PROC& i_procTgt, fapi2::TargetType  
     }
 }
 
-fapi2::ReturnCode checkMemConfig( CONST_FAPI2_PROC& i_procTgt, uint64_t& io_configVector )
-{
-    auto l_dmiChiplets = i_procTgt.getChildren<fapi2::TARGET_TYPE_DMI>( fapi2::TARGET_STATE_PRESENT );
-    for( auto l_dmi : l_dmiChiplets )
-    {
-        auto l_cenChips = l_dmi.getChildren<fapi2::TARGET_TYPE_MEMBUF_CHIP>( fapi2::TARGET_STATE_PRESENT );
-        for( auto l_cent : l_cenChips )
-        {
-            auto l_mbaChiplets = l_cent.getChildren<fapi2::TARGET_TYPE_MBA>( fapi2::TARGET_STATE_PRESENT );
-            uint8_t l_memBufPos = 0;
-            uint8_t l_memBufBitPos = 0;
-            FAPI_ATTR_GET( fapi2::ATTR_CHIP_UNIT_POS, l_dmi, l_memBufPos );
-
-            if( l_cent.isFunctional( ) )
-            {
-                l_memBufBitPos = l_memBufPos + MEM_BUF_POS;
-                io_configVector |= (0x8000000000000000ull >> l_memBufBitPos);
-            }
-
-            for( auto l_mba : l_mbaChiplets )
-            {
-                if( l_mba.isFunctional( ) )
-                {
-                    uint8_t l_mbaPos = 0;
-                    uint8_t l_mbaBitPos = 0;
-                    FAPI_ATTR_GET( fapi2::ATTR_CHIP_UNIT_POS, l_mba, l_mbaPos );
-
-                    l_mbaBitPos = ( l_mbaChiplets.size() * l_memBufPos ) + l_mbaPos + MBA_POS;
-                    io_configVector |= (0x8000000000000000ull >> l_mbaBitPos);
-                }
-            }
-        }
-    }
-}
-
-fapi2::ReturnCode checkAbusConfig( CONST_FAPI2_PROC& i_procTgt, uint64_t& io_configVector )
-{
-    auto l_obusList         = i_procTgt.getChildren<fapi2::TARGET_TYPE_OBUS>(  );
-    uint8_t l_obusPos       = 0;
-    uint8_t l_configMode    = 0;
-    uint64_t l_tempVector   = 0;
-
-    for( auto l_obus : l_obusList )
-    {
-        FAPI_ATTR_GET( fapi2::ATTR_OPTICS_CONFIG_MODE, l_obus, l_configMode );
-        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_obus, l_obusPos );
-
-        if( fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_SMP == l_configMode )
-        {
-            l_tempVector |= ((0x8000000000000000ull) >> ( ABUS_POS + l_obusPos));
-        }
-    }
-    io_configVector |= l_tempVector;
-}
-
 fapi2::ReturnCode checkObusChipletHierarchy( CONST_FAPI2_PROC& i_procTgt,
         uint64_t& io_configVector, uint8_t i_oBusStartPos, uint8_t i_nvLinkPos )
 {
@@ -3170,7 +2912,6 @@ fapi2::ReturnCode checkObusChipletHierarchy( CONST_FAPI2_PROC& i_procTgt,
             {
                 uint8_t l_brickPos   = 0;
                 uint8_t l_brickBitPos = 0;
-
 
                 if( fapi2::ENUM_ATTR_OPTICS_CONFIG_MODE_NV == l_configMode )
                 {
@@ -3200,22 +2941,16 @@ fapi2::ReturnCode checkObusChipletHierarchy( CONST_FAPI2_PROC& i_procTgt,
     }
 }
 
+/// @brief    builds a STOP image using a reference image as input.
+/// @param[in]   i_procTgt        fapi2 target for processor chip.
+/// @param[in]   i_pHomerImage    pointer to the beginning of the HOMER image buffer
+/// @return   fapi2 return code
+//
 fapi2::ReturnCode p9_check_proc_config ( CONST_FAPI2_PROC& i_procTgt, void* i_pHomerImage )
 {
     uint64_t l_configVectVal = INIT_CONFIG_VALUE;
     uint8_t* pHomer = (uint8_t*)i_pHomerImage + QPMR_HOMER_OFFSET + QPMR_PROC_CONFIG_POS;
     uint8_t l_chipName = 0;
-#ifndef __HOSTBOOT_MODULE
-    g_targetTypeMap[fapi2::TARGET_TYPE_MCS]         =   "MCS";
-    g_targetTypeMap[fapi2::TARGET_TYPE_MCA]         =   "MCA";
-    g_targetTypeMap[fapi2::TARGET_TYPE_XBUS]        =   "XBUS";
-    g_targetTypeMap[fapi2::TARGET_TYPE_OBUS]        =   "OBUS";
-    g_targetTypeMap[fapi2::TARGET_TYPE_CAPP]        =   "CAPP";
-    g_targetTypeMap[fapi2::TARGET_TYPE_PHB]         =   "PHB";
-    g_targetTypeMap[fapi2::TARGET_TYPE_MEMBUF_CHIP] =   "MEM BUF";
-    g_targetTypeMap[fapi2::TARGET_TYPE_MBA]         =   "MBA";
-    g_targetTypeMap[fapi2::TARGET_TYPE_OBUS_BRICK]  =   "OBUS_BRICK";
-#endif
 
     checkChiplet< fapi2::TARGET_TYPE_MCS >( i_procTgt, fapi2::TARGET_TYPE_MCS, l_configVectVal, MCS_POS );
     checkChiplet< fapi2::TARGET_TYPE_XBUS>( i_procTgt, fapi2::TARGET_TYPE_XBUS, l_configVectVal, XBUS_POS );
@@ -3224,23 +2959,9 @@ fapi2::ReturnCode p9_check_proc_config ( CONST_FAPI2_PROC& i_procTgt, void* i_pH
 
     FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_NAME, i_procTgt, l_chipName );
 
-    if( fapi2::ENUM_ATTR_NAME_NIMBUS == l_chipName )
-    {
-        checkObusChipletHierarchy ( i_procTgt, l_configVectVal, OBUS_POS, NVLINK_POS );
-    }
-    else
-    {
-        checkAbusConfig( i_procTgt, l_configVectVal );
-    }
+    checkObusChipletHierarchy ( i_procTgt, l_configVectVal, OBUS_POS, NVLINK_POS );
 
-    if( fapi2::ENUM_ATTR_NAME_CUMULUS == l_chipName )
-    {
-        checkMemConfig( i_procTgt, l_configVectVal );
-    }
-    else
-    {
-        checkChiplet<fapi2::TARGET_TYPE_MCA>(i_procTgt, fapi2::TARGET_TYPE_MCA, l_configVectVal, MBA_POS);
-    }
+    checkChiplet<fapi2::TARGET_TYPE_MCA>(i_procTgt, fapi2::TARGET_TYPE_MCA, l_configVectVal, MBA_POS);
     *(uint64_t*)pHomer = htobe64( l_configVectVal );
 }
 ```
