@@ -1465,6 +1465,22 @@ static void clear_occ_special_wakeups(const fapi2::Target<fapi2::TARGET_TYPE_PRO
     }
 }
 
+inline bool spBaseServicesEnabled()
+{
+    bool spBaseServicesEnabled = false;
+    TARGETING::Target * sys = NULL;
+    TARGETING::targetService().getTopLevelTarget( sys );
+    TARGETING::SpFunctions spfuncs;
+    if( sys &&
+        sys->tryGetAttr<TARGETING::ATTR_SP_FUNCTIONS>(spfuncs) &&
+        spfuncs.baseServices )
+    {
+        spBaseServicesEnabled = true;
+    }
+
+    return spBaseServicesEnabled;
+}
+
 errlHndl_t callWakeupHwp(TARGETING::Target* i_target,
                          HandleOptions_t i_enable)
 {
