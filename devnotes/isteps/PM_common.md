@@ -18,12 +18,173 @@ static void loadPMComplex(
 #ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
     HBOCC::loadOCCImageDuringIpl(i_target, l_occImgVaddr); // analyzed
 #endif
+    loadOCCImageToHomer(
+        i_target,
+        l_occImgPaddr,
+        l_occImgVaddr,
+        i_mode);
 #if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
     HBOCC::loadHostDataToSRAM(i_target);
 #else
     loadHostDataToHomer(i_target, l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
     loadHcode(i_target, l_homerVAddr, HBPM::PM_LOAD);
 #endif
+}
+
+ static int rt_lid_load(uint32_t lid, void** buffer, size_t* size)
+{
+    errlHndl_t l_errl = NULL;
+    UtilLidMgr* lidmgr = new UtilLidMgr(lid);
+
+    do
+    {
+        l_errl = lidmgr->getLidSize(*size);
+        if (l_errl) break;
+
+        *buffer = malloc(*size);
+        l_errl = lidmgr->getLid(*buffer, *size);
+        if (l_errl) break;
+
+    } while(0);
+
+    if (l_errl)
+    {
+        free(*buffer);
+        *buffer = NULL;
+        *size = 0;
+
+        delete l_errl;
+        delete lidmgr;
+        return -1;
+    }
+    else
+    {
+        cv_loadedLids[*buffer] = lidmgr;
+        return 0;
+    }
+}
+
+errlHndl_t UtilLidMgr::loadLid()
+{
+    if (nullptr != iv_lidBuffer) return nullptr;
+
+
+    const char* l_addr = nullptr;
+    size_t l_size = 0;
+
+    if(iv_isLidInHbResvMem)
+    {
+        const auto pnorSectionId = Util::getLidPnorSection(
+            static_cast<Util::LidId>(iv_lidId));
+
+        iv_lidBuffer = reinterpret_cast<void*>(g_hostInterfaces->
+            get_reserved_mem(
+                PNOR::SectionIdToString(pnorSectionId),
+                0));
+
+        // If nullptr returned, set size to 0 to indicate we could not find
+        // the lid in HB resv memory
+        if (iv_lidBuffer == nullptr)
+        {
+            iv_lidSize = 0;
+        }
+        else
+        {
+            // Build a container header object to parse protected size
+            SECUREBOOT::ContainerHeader l_conHdr;
+            l_conHdr.setHeader(iv_lidBuffer);
+            if (l_conHdr.sb_flags()->sw_hash)
+            {
+                // Size of lid has to be size of unprotected data. So we
+                // need to take out header and hash table sizes
+                iv_lidSize = l_conHdr.totalContainerSize() - PAGESIZE -
+                    l_conHdr.payloadTextSize();
+                iv_lidBuffer = static_cast<uint8_t*>(iv_lidBuffer) +
+                                PAGESIZE + l_conHdr.payloadTextSize();
+            }
+            else
+            {
+                iv_lidSize = l_conHdr.payloadTextSize();
+                iv_lidBuffer = static_cast<uint8_t*>(iv_lidBuffer)+
+                                PAGESIZE;
+            }
+        }
+    }
+    else if(iv_isLidInVFS)
+    {
+        VFS::module_address(iv_lidFileName, l_addr, l_size);
+        iv_lidBuffer = const_cast<void*>(reinterpret_cast<const void*>(l_addr));
+        iv_lidSize = l_size;
+    }
+    else if (iv_isLidInPnor)
+    {
+        iv_lidSize = iv_lidPnorInfo.size;
+        iv_lidBuffer = reinterpret_cast<char *>(iv_lidPnorInfo.vaddr);
+    }
+    else if( g_hostInterfaces->lid_load
+                && iv_spBaseServicesEnabled  )
+    {
+        // pointer to rt_lid_load
+        g_hostInterfaces->lid_load(iv_lidId, &iv_lidBuffer, &iv_lidSize);
+    }
+}
+
+errlHndl_t UtilLidMgr::getStoredLidImage(void*& o_pLidImage,
+                                         size_t& o_lidImageSize)
+{
+    if((nullptr == iv_lidBuffer) || (0 == iv_lidSize))
+    {
+        loadLid();
+    }
+
+    if(l_err)
+    {
+        o_lidImageSize = 0;
+        o_pLidImage = nullptr;
+    }
+    else
+    {
+        o_lidImageSize = iv_lidSize;
+        o_pLidImage = iv_lidBuffer;
+    }
+}
+
+
+errlHndl_t UtilLidMgr::releaseLidImage(void)
+{
+    bool l_inPnor = iv_isLidInPnor;
+    bool l_inVFS = iv_isLidInVFS;
+    bool l_inHbResvMem = iv_isLidInHbResvMem;
+
+    cleanup();
+
+    iv_isLidInPnor = l_inPnor;
+    iv_isLidInVFS = l_inVFS;
+    iv_isLidInHbResvMem = l_inHbResvMem;
+}
+
+errlHndl_t loadOCCImageToHomer(TARGETING::Target* i_target,
+                                uint64_t i_occImgPaddr,
+                                uint64_t i_occImgVaddr, // dest
+                                loadPmMode i_mode)
+{
+    if(g_pOccLidMgr.get() == nullptr)
+    {
+        g_pOccLidMgr = std::shared_ptr<UtilLidMgr>
+                        (new UtilLidMgr(Util::OCC_LIDID));
+    }
+    void* l_pLidImage = nullptr;
+    size_t l_lidImageSize = 0;
+
+    if(PM_RELOAD == i_mode)
+    {
+        g_pOccLidMgr->releaseLidImage();
+    }
+
+    g_pOccLidMgr->getStoredLidImage(l_pLidImage, l_lidImageSize);
+
+    void* l_occVirt = reinterpret_cast<void *>(i_occImgVaddr);
+    memcpy(l_occVirt, l_pLidImage, l_lidImageSize);
 }
 
 fapi2::ReturnCode p9_pm_corequad_init(
