@@ -9,7 +9,20 @@ In istep 21.1:
 * `p9_pm_init`
    - called with `PM_INIT` instead `PM_RESET`
 
+* `loadOCCSetup()`
+   - called by `loadPMComplex()`
+
 * `loadOCCImageToHomer` is called instead of `loadOCCImageDuringIpl`
+   - called by `loadPMComplex()`
+   - LID image for OCC is loaded from "OCC" partion of PNOR (whole partition)
+
+* `pm_init`
+   - called by `startPMComplex()`
+
+* `p9_pm_occ_control()`
+   - called by `pm_init()`
+
+***
 
 Analisys assumptions:
 
@@ -17,21 +30,54 @@ Analisys assumptions:
 * `#define __HOSTBOOT_MODULE`
 * `#undef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS`
 * `#undef CONFIG_PNOR_TWO_SIDE_SUPPORT`
+* `#undef CONFIG_ENABLE_CHECKSTOP_ANALYSIS`
 * Not in MPIPL mode (`ATTR_IS_MPIPL_HB == false`).
 * Simics is not running (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`).
 * Payload isn't PHYP (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_PHYP`).
 * Payload is sapphire (`ATTR_PAYLOAD_KIND == PAYLOAD_KIND_SAPPHIRE`).
 * Loading a payload (`TARGETING::is_no_load() == false`, `ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`)
+* `ATTR_PM_MALF_ALERT_ENABLE == ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE`.
+* `ATTR_PM_MALF_CYCLE == ENUM_ATTR_PM_MALF_CYCLE_INACTIVE`.
 * Homer address is never `NULL`.
-* Homer's virtual address equals its physical address.
+* Virtual addresses equal physical addresses.
 * Not in manufacturing mode or golden-side boot.
+* SMF is not enabled.
+
+***
 
 HDAT -- Host data area. Collection of attributes, device information, and other
 derived information used by the payload to manage the computer system.
 
 Data (stored in HDAT):
+
 * NACA
 * SPIRA
+
+***
+
+Control flow of OCC start process:
+
+1. `loadAndStartPMAll(HBPM::PM_LOAD)`
+   1. `loadPMComplex()` (for each processor get OCC ready for work)
+      1. `loadOCCSetup()` (write addresses of OCC image and OCC area through SCOM)
+         - address is `homer + HOMER_OFFSET_TO_OCC_IMG`
+      2. `loadOCCImageToHomer()` (actually copy OCC image to that address)
+      3. `loadHostDataToHomer()` (just a couple of fields are set)
+      4. `loadHcode()` (builds HOMER image, which we already have at this point)
+   2. `startPMComplex()` -> `pm_init()`
+      1. Various inits, probably not directly related.
+      2. `p9_check_proc_config()` (generates a bit vector corresponding to P9 chip config and stores in HOMER)
+      3. `clear_occ_special_wakeups()` (resets previous state? might be needed)
+      4. `special_wakeup_all(false)` (might be needed for synchronization)
+      5. `p9_pm_occ_control()` (setups boot code in SRAM and starts OCC)
+         1. Setup boot vector registers in SRAM
+         2. `bootMemory()`
+            - composes boot code by calling `bootMemory()`
+            - uses OCB to write 128 bytes to SRAM
+         3. Starts OCC
+      6. `putScom(PU_OCB_OCI_OCCFLG2_CLEAR, STOP_RECOVERY_TRIGGER_ENABLE)` (needed?)
+
+***
 
 ```cpp
 errlHndl_t utilDisableTces(void)
@@ -1311,9 +1357,7 @@ void* call_host_runtime_setup (void *io_pArgs)
     NVDIMM_UPDATE::call_nvdimm_update();
 #endif
 
-        TARGETING::Target* l_failTarget = NULL;
-        bool pmStartSuccess = true;
-        loadAndStartPMAll(HBPM::PM_LOAD, l_failTarget);
+        loadAndStartPMAll(HBPM::PM_LOAD);
 #ifdef CONFIG_NVDIMM
         TARGETING::TargetHandleList l_nvdimmTargetList;
         TARGETING::TargetHandleList l_procList;
@@ -1329,12 +1373,9 @@ void* call_host_runtime_setup (void *io_pArgs)
         }
 #endif
 #ifdef CONFIG_HTMGT
-        HTMGT::processOccStartStatus(pmStartSuccess,l_failTarget);
+        HTMGT::processOccStartStatus(/*i_startCompleted=*/true, NULL);
 #else
-        if(pmStartSuccess)
-        {
-            HBPM::verifyOccChkptAll();
-        }
+	HBPM::verifyOccChkptAll();
 #endif
 
     uint32_t threadRegSize = sizeof(DUMP::hostArchRegDataHdr)
@@ -2689,21 +2730,7 @@ fapi2::ReturnCode p9_core_checkstop_handler(
     fapi2::putScom(i_target_core, C_CORE_ACTION1, l_action1);
 }
 
-errlHndl_t core_checkstop_helper_hwp( const TARGETING::Target* i_core_target,
-                            bool i_override_restore)
-{
-    errlHndl_t l_errl = NULL;
-    TARGETING::Target* l_sys = NULL;
-    TARGETING::targetService().getTopLevelTarget(l_sys);
-
-    const fapi2::Target<fapi2::TARGET_TYPE_CORE> l_fapi2_coreTarget(
-            const_cast<TARGETING::Target*> ( i_core_target ));
-
-    p9_core_checkstop_handler(l_fapi2_coreTarget, i_override_restore);
-}
-
-errlHndl_t loadAndStartPMAll(loadPmMode i_mode = HBPM::PM_LOAD,
-                             TARGETING::Target* & o_failTarget)
+errlHndl_t loadAndStartPMAll(loadPmMode i_mode = HBPM::PM_LOAD)
 {
     errlHndl_t l_errl = nullptr;
 
@@ -2717,22 +2744,13 @@ errlHndl_t loadAndStartPMAll(loadPmMode i_mode = HBPM::PM_LOAD,
     uint64_t l_homerPhysAddr = 0x0;
     uint64_t l_commonPhysAddr = 0x0;
 
-    // Switching core checkstops from unit to system
-    TARGETING::TargetHandleList l_coreTargetList;
-    getAllChips(l_coreTargetList, TYPE_CORE);
-
-    for( auto l_core_target : l_coreTargetList )
-    {
-        core_checkstop_helper_hwp(l_core_target, true);
-    }
-
     for (const auto & l_procChip: l_procChips)
     {
         // This attr was set during istep15 HCODE build
         l_homerPhysAddr = l_procChip->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
         l_commonPhysAddr = l_sys->getAttr<TARGETING::ATTR_OCC_COMMON_AREA_PHYS_ADDR>();
 
-        loadPMComplex( // common
+        loadPMComplex( // common, but control flow differs
             l_procChip,
             l_homerPhysAddr,
             l_commonPhysAddr,
@@ -2745,14 +2763,8 @@ errlHndl_t loadAndStartPMAll(loadPmMode i_mode = HBPM::PM_LOAD,
 
 void startPMComplex(Target* i_target)
 {
-    TARGETING::Target * l_sys = nullptr;
-    TARGETING::targetService().getTopLevelTarget(l_sys);
-    assert(l_sys != nullptr);
-
     uint64_t l_homerPhysAddr = i_target->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
-
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarg(i_target);
-
     pm_init(l_fapiTarg, (void *)l_homerPhysAddr);
 }
 
@@ -2762,31 +2774,224 @@ static void loadPMComplex(
     uint64_t i_commonPhysAddr)
 {
     resetPMComplex(i_target);
-    void* l_homerVAddr = convertHomerPhysToVirt(i_target, i_homerPhysAddr);
-    if(nullptr == l_homerVAddr)
+
+    uint64_t l_occImgPaddr = i_homerPhysAddr + HOMER_OFFSET_TO_OCC_IMG;
+    loadOCCSetup(i_target, l_occImgPaddr, i_commonPhysAddr);
+    loadOCCImageToHomer(i_target, l_occImgPaddr);
+    loadHostDataToHomer(i_target, l_occImgPaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
+    loadHcode(i_target, (void *)i_homerPhysAddr, HBPM::PM_LOAD);
+}
+
+/**
+ * @brief Sets up OCC Host data in Homer
+ */
+void loadHostDataToHomer(TARGETING::Target* i_proc,
+                         void* i_occHostDataVirtAddr /*destination*/)
+{
+    //Treat virtual address as starting pointer
+    //for config struct
+    occHostConfigDataArea_t * l_config_data =
+        reinterpret_cast<occHostConfigDataArea_t *>
+        (i_occHostDataVirtAddr);
+
+    // Get top level system target
+    TARGETING::TargetService & tS = TARGETING::targetService();
+    TARGETING::Target * sysTarget = nullptr;
+    tS.getTopLevelTarget( sysTarget );
+    assert( sysTarget != nullptr );
+
+    l_config_data->version = OccHostDataVersion;
+    l_config_data->nestFrequency = sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
+
+    // Figure out the interrupt type
+    if( INITSERVICE::spBaseServicesEnabled() )
     {
+        l_config_data->interruptType = USE_FSI2HOST_MAILBOX;
+    }
+    else
+    {
+        l_config_data->interruptType = USE_PSIHB_COMPLEX;
+    }
+
+    l_config_data->firMaster = 0;
+    l_config_data->smfMode = SMF_MODE_DISABLED;
+}
+
+/**
+ * @brief Sets up Hcode in Homer
+ */
+errlHndl_t loadHcode( TARGETING::Target* i_target,
+                      void* i_pImageOut,
+                      loadPmMode i_mode = PM_LOAD)
+{
+    errlHndl_t l_errl = nullptr;
+
+    // cast OUR type of target to a FAPI type of target.
+    // figure out homer offsets
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarg(i_target);
+
+    void *l_buffer1 = (void*)malloc(HW_IMG_RING_SIZE);
+    void *l_buffer2 = (void*)malloc(MAX_RING_BUF_SIZE);
+    void *l_buffer3 = (void*)malloc(MAX_RING_BUF_SIZE);
+    void *l_buffer4 = (void*)malloc(MAX_RING_BUF_SIZE);
+
+    do
+    {
+        if(g_pHcodeLidMgr.get() == nullptr)
+        {
+            g_pHcodeLidMgr = std::shared_ptr<UtilLidMgr>
+                             (new UtilLidMgr(Util::NIMBUS_HCODE_LIDID));
+        }
+        void* l_pImageIn = nullptr;
+        size_t l_lidImageSize = 0;
+
+        l_errl = g_pHcodeLidMgr->getStoredLidImage(l_pImageIn,
+                                                   l_lidImageSize);
+        if (l_errl)
+            break;
+
+        // The ref image may still include the 4K header which the HWP is
+        // not expecting, so move the image pointer past the header
+        if( *(reinterpret_cast<uint64_t*>(l_pImageIn)) == VER_EYECATCH)
+        {
+             l_pImageIn = reinterpret_cast<void*>
+                (reinterpret_cast<uint8_t*>(l_pImageIn) + PAGESIZE);
+        }
+
+        // Pull build information from XIP header and trace it
+        Util::imageBuild_t l_imageBuild;
+        Util::pullTraceBuildInfo(l_pImageIn,
+                                 l_imageBuild,
+                                 ISTEPS_TRACE::g_trac_isteps_trace);
+
+        ImageType_t l_imgType;
+
+        // Check if we have a valid ring override section and include it in if so
+        void* l_ringOverrides = nullptr;
+        l_errl = HBPM::getRingOvd(l_ringOverrides);
+        if (l_errl)
+        {
+		// this isn't a fatal error
+        }
+
+	l_errl = p9_hcode_image_build( l_fapiTarg,
+                         l_pImageIn, //reference image
+                         i_pImageOut, //homer image buffer
+                         l_ringOverrides,
+                         PHASE_IPL,
+                         l_imgType,
+                         l_buffer1,
+                         HW_IMG_RING_SIZE,
+                         l_buffer2,
+                         MAX_RING_BUF_SIZE,
+                         l_buffer3,
+                         MAX_RING_BUF_SIZE,
+                         l_buffer4,
+                         MAX_RING_BUF_SIZE);
+
+        if (l_errl)
+            break;
+    } while(0);
+
+    free(l_buffer1);
+    free(l_buffer2);
+    free(l_buffer3);
+    free(l_buffer4);
+
+    return l_errl;
+} // loadHcode
+
+errlHndl_t resetPMComplex(TARGETING::Target * i_target)
+{
+    uint64_t l_homerPhysAddr = i_target->getAttr<TARGETING::ATTR_HOMER_PHYS_ADDR>();
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>l_fapiTarg(i_target);
+    ATTR_HB_INITIATED_PM_RESET_type l_chipResetState = i_target->getAttr<TARGETING::ATTR_HB_INITIATED_PM_RESET>();
+    if (HB_INITIATED_PM_RESET_COMPLETE == l_chipResetState)
+    {
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(HB_INITIATED_PM_RESET_INACTIVE);
         return;
     }
-    uint64_t l_occImgPaddr = i_homerPhysAddr + HOMER_OFFSET_TO_OCC_IMG;
-    uint64_t l_occImgVaddr = l_homerVAddr + HOMER_OFFSET_TO_OCC_IMG;
-    loadOCCSetup(i_target, l_occImgPaddr, l_occImgVaddr, i_commonPhysAddr);
-#ifdef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS
-    HBOCC::loadOCCImageDuringIpl(i_target, l_occImgVaddr); // analyzed
+
+#if defined(__HOSTBOOT_RUNTIME) && defined(CONFIG_NVDIMM)
+    NVDIMM::notifyNvdimmProtectionChange(i_target, NVDIMM::OCC_INACTIVE);
 #endif
-    loadOCCImageToHomer(
-        i_target,
-        l_occImgPaddr,
-        l_occImgVaddr);
-#if defined(CONFIG_IPLTIME_CHECKSTOP_ANALYSIS) && !defined(__HOSTBOOT_RUNTIME)
-    HBOCC::loadHostDataToSRAM(i_target);
-#else
-    loadHostDataToHomer(i_target, l_occImgVaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
-    loadHcode(i_target, l_homerVAddr, HBPM::PM_LOAD);
+
+    p9_pm_reset(l_fapiTarg, (void*)l_homerPhysAddr);
+
+#ifdef __HOSTBOOT_RUNTIME
+    if(HB_INITIATED_PM_RESET_IN_PROGRESS != l_chipResetState)
+    {
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(HB_INITIATED_PM_RESET_IN_PROGRESS);
+        Singleton<ATTN::Service>::instance().handleAttentions(i_target);
+        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(l_chipResetState);
+    }
 #endif
 }
 
+/**
+ * @brief Execute procedures and steps required to setup for loading
+ *        the OCC image in a specified processor
+ */
+errlHndl_t loadOCCSetup(
+    TARGETING::Target* i_target,
+    uint64_t i_occImgPaddr,
+    uint64_t i_commonPhysAddr)
+{
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarg(i_target);
+
+    uint64_t l_occ_addr = i_occImgPaddr & PHYSICAL_ADDR_MASK;
+    p9_pm_pba_bar_config(l_fapiTarg, 0, l_occ_addr); // analyzed
+
+    TARGETING::Target* sys = nullptr;
+    TARGETING::targetService().getTopLevelTarget(sys);
+    sys->setAttr<ATTR_OCC_COMMON_AREA_PHYS_ADDR>(i_commonPhysAddr);
+
+    uint64_t l_common_addr = i_commonPhysAddr & PHYSICAL_ADDR_MASK;
+    p9_pm_pba_bar_config(l_fapiTarg, 2, l_common_addr); // analyzed
+}
+
+REG64(PU_PBABAR0   , RULL(0x05012B00), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABAR1   , RULL(0x05012B01), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABAR2   , RULL(0x05012B02), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABAR3   , RULL(0x05012B03), SH_UNT, SH_ACS_SCOM_RW);
+
+REG64(PU_PBABARMSK0, RULL(0x05012B04), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABARMSK1, RULL(0x05012B05), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABARMSK2, RULL(0x05012B06), SH_UNT, SH_ACS_SCOM_RW);
+REG64(PU_PBABARMSK3, RULL(0x05012B07), SH_UNT, SH_ACS_SCOM_RW);
+
+const uint64_t PBA_BARs[4] =
+{
+    PU_PBABAR0,
+    PU_PBABAR1,
+    PU_PBABAR2,
+    PU_PBABAR3
+};
+
+const uint64_t PBA_BARMSKs[4] =
+{
+    PU_PBABARMSK0,
+    PU_PBABARMSK1,
+    PU_PBABARMSK2,
+    PU_PBABARMSK3
+};
+
+static void p9_pm_pba_bar_config (
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const uint32_t i_index,
+    const uint64_t i_pba_bar_addr)
+{
+    uint64_t l_bar64 = i_pba_bar_addr;
+    l_bar64.insertFromRight<0, 3>(0);
+    fapi2::putScom(i_target, PBA_BARs[i_index], l_bar64);
+    fapi2::putScom(i_target, PBA_BARMSKs[i_index], 0x300000);
+}
+
+/**
+ * @brief Execute procedures and steps required to load
+ *        OCC image in a specified processor
+ */
 errlHndl_t loadOCCImageToHomer(TARGETING::Target* i_target,
-                                uint64_t i_occImgPaddr,
                                 uint64_t i_occImgVaddr // dest)
 {
     if(g_pOccLidMgr.get() == nullptr)
@@ -2797,6 +3002,7 @@ errlHndl_t loadOCCImageToHomer(TARGETING::Target* i_target,
     void* l_pLidImage = nullptr;
     size_t l_lidImageSize = 0;
 
+    // Image is "OCC" partition of PNOR
     g_pOccLidMgr->getStoredLidImage(l_pLidImage, l_lidImageSize);
 
     void* l_occVirt = reinterpret_cast<void *>(i_occImgVaddr);
@@ -2807,19 +3013,10 @@ fapi2::ReturnCode pm_init(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     void* i_pHomerImage)
 {
-    fapi2::ATTR_PM_MALF_CYCLE_Type l_malfCycle =
-        fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE;
-    fapi2::ATTR_PM_MALF_ALERT_ENABLE_Type malfAlertEnable =
-        fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE;
     fapi2::buffer<uint64_t> l_data64       = 0;
     const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
 
-    p9_pm_corequad_init(
-        i_target,
-        p9pm::PM_INIT,
-        0,//CME FIR MASK for reset
-        0,//Core Error Mask for reset
-        0); //Quad Error Mask for reset
+    pm_corequad_init(i_target);
     p9_pm_ocb_init(
         i_target,
         p9pm::PM_INIT,// Channel setup type
@@ -2834,40 +3031,254 @@ fapi2::ReturnCode pm_init(
     p9_pm_firinit(i_target, p9pm::PM_INIT);
     p9_pm_stop_gpe_init(i_target, p9pm::PM_INIT);
     p9_pm_pstate_gpe_init(i_target, p9pm::PM_INIT);
+
     p9_check_proc_config(i_target, i_pHomerImage);
     clear_occ_special_wakeups(i_target);
-    FAPI_ATTR_GET (fapi2::ATTR_PM_MALF_CYCLE, i_target, l_malfCycle));
-    if (l_malfCycle == fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE)
-    {
-        special_wakeup_all(i_target, false);
-    }
-    else
-    {
-        FAPI_ATTR_SET(
-            fapi2::ATTR_PM_MALF_CYCLE,
-            i_target,
-            fapi2::ENUM_ATTR_PM_MALF_CYCLE_INACTIVE));
-    }
+    special_wakeup_all(i_target, false);
     p9_pm_occ_control(
         i_target,
         p9occ_ctrl::PPC405_START,// Operation on PPC405
         p9occ_ctrl::PPC405_BOOT_MEM, // PPC405 boot location
         0); //Jump to 405 main instruction - not used here
 
-    FAPI_ATTR_GET(
-        fapi2::ATTR_PM_MALF_ALERT_ENABLE,
-        FAPI_SYSTEM,
-        malfAlertEnable);
     l_data64.flush<0>().setBit<p9hcd::STOP_RECOVERY_TRIGGER_ENABLE>();
+    fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
+}
 
-    if (malfAlertEnable == fapi2::ENUM_ATTR_PM_MALF_ALERT_ENABLE_TRUE)
+fapi2::ReturnCode pm_corequad_init(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
+{
+    fapi2::buffer<uint64_t> l_data64;
+
+    uint64_t l_address = 0;
+    uint32_t l_errMask = 0;
+
+    auto l_eqChiplets = i_target.getChildren<fapi2::TARGET_TYPE_EQ>
+                        (fapi2::TARGET_STATE_FUNCTIONAL);
+
+    // For each functional EQ chiplet
+    for (auto l_quad_chplt : l_eqChiplets)
     {
-        fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_SET, l_data64);
+        // Fetch the position of the EQ target
+        fapi2::ATTR_CHIP_UNIT_POS_Type l_chpltNumber = 0;
+        FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_quad_chplt, l_chpltNumber);
+
+        // Setup the Quad PPM Mode Register
+        // Clear the following bits:
+        // 0          : Force FSAFE
+        // 1  - 11    : FSAFE
+        // 12         : Enable FSAFE on heartbeat loss
+        // 13         : Enable DROOP protect upon heartbeat loss
+        // 14         : Enable PFETs upon iVRMs dropout
+        // 18 - 19    : PCB interrupt
+        // 20,22,24,26: InterPPM Ivrm/Aclk/Vdata/Dpll enable
+        FAPI_INF("Clear Quad PPM Mode register");
+
+        l_data64.flush<0>()
+                .setBit<EQ_QPPM_QPMMR_FORCE_FSAFE>()
+                .setBit<EQ_QPPM_QPMMR_FSAFE, EQ_QPPM_QPMMR_FSAFE_LEN>()
+                .setBit<EQ_QPPM_QPMMR_ENABLE_FSAFE_UPON_HEARTBEAT_LOSS>()
+                .setBit<EQ_QPPM_QPMMR_ENABLE_DROOP_PROTECT_UPON_HEARTBEAT_LOSS>()
+                .setBit< EQ_QPPM_QPMMR_ENABLE_PFETS_UPON_IVRM_DROPOUT>()
+                .setBit< EQ_QPPM_QPMMR_ENABLE_PCB_INTR_UPON_HEARTBEAT_LOSS>()
+                .setBit< EQ_QPPM_QPMMR_ENABLE_PCB_INTR_UPON_IVRM_DROPOUT>()
+                .setBit< EQ_QPPM_QPMMR_ENABLE_PCB_INTR_UPON_LARGE_DROOP>()
+                .setBit< EQ_QPPM_QPMMR_ENABLE_PCB_INTR_UPON_EXTREME_DROOP>()
+        // @todo RTC 179958 IVRM enablement - only based on ATTR_SYSTEM_IVRM_DISABLE
+        //      .setBit<EQ_QPPM_QPMMR_CME_INTERPPM_IVRM_ENABLE>()
+                .setBit<EQ_QPPM_QPMMR_CME_INTERPPM_ACLK_ENABLE>()
+                .setBit<EQ_QPPM_QPMMR_CME_INTERPPM_VDATA_ENABLE>()
+                .setBit<EQ_QPPM_QPMMR_CME_INTERPPM_DPLL_ENABLE>();
+
+        l_address = EQ_QPPM_QPMMR_CLEAR;
+        fapi2::putScom(l_quad_chplt, l_address, l_data64));
+
+        // "Clear QUAD PPM ERROR Register");
+        l_data64.flush<0>();
+        l_address = EQ_QPPM_ERR;
+        fapi2::putScom(l_quad_chplt, l_address, l_data64);
+
+        // Restore Quad PPM Error Mask
+        FAPI_ATTR_GET(fapi2::ATTR_QUAD_PPM_ERRMASK, l_quad_chplt, l_errMask));
+        l_data64.flush<0>().insertFromRight<0, 32>(l_errMask);
+        l_address = EQ_QPPM_ERRMSK;
+        fapi2::putScom(l_quad_chplt, l_address, l_data64);
+
+        auto l_coreChiplets =
+            l_quad_chplt.getChildren<fapi2::TARGET_TYPE_CORE>
+            (fapi2::TARGET_STATE_FUNCTIONAL);
+
+        // For each core target
+        for (auto l_core_chplt : l_coreChiplets)
+        {
+            // Fetch the position of the Core target
+            FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_core_chplt, l_chpltNumber));
+
+            // Clear the Core PPM CME DoorBells
+            l_data64.flush<1>();
+
+            for (uint8_t l_dbLoop = 0; l_dbLoop < DOORBELLS_COUNT; l_dbLoop++)
+            {
+                l_address = CME_DOORBELL_CLEAR[l_dbLoop];
+                fapi2::putScom(l_core_chplt, l_address, l_data64);
+            }
+
+            // Setup Core PPM Mode register
+            // Clear the following bits:
+            // 1      : PPM Write control override
+            // 11     : Block interrupts
+            // 12     : PPM response for CME error
+            // 14     : enable pece
+            // 15     : cme spwu done dis
+
+            // Other bits are Init or Reset by STOP Hcode and, thus, not touched
+            // here
+            // 0      : PPM Write control
+            // 9      : FUSED_CORE_MODE
+            // 10     : STOP_EXIT_TYPE_SEL
+            // 13     : WKUP_NOTIFY_SELECT
+
+            // Clearing Core PPM Mode register ...");
+            l_data64.flush<0>()
+                    .setBit<EX_CPPM_CPMMR_PPM_WRITE_OVERRIDE>()
+                    .setBit<EX_CPPM_CPMMR_BLOCK_INTR_INPUTS>()
+                    .setBit<EX_CPPM_CPMMR_CME_ERR_NOTIFY_DIS>()
+                    .setBit<EX_CPPM_CPMMR_ENABLE_PECE>()
+                    .setBit<EX_CPPM_CPMMR_CME_SPECIAL_WKUP_DONE_DIS>();
+            l_address = C_CPPM_CPMMR_CLEAR;
+            fapi2::putScom(l_core_chplt, l_address, l_data64);
+
+            // Clear Core PPM Errors
+            l_data64.flush<0>();
+            l_address = C_CPPM_ERR;
+            fapi2::putScom(l_core_chplt, l_address, l_data64);
+
+            // Clearing Hcode Error Injection and other CSAR settings ...");
+            l_data64.flush<0>()
+                    .setBit<p9hcd::CPPM_CSAR_FIT_HCODE_ERROR_INJECT>()
+                    .setBit<p9hcd::CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK>()
+                    .setBit<p9hcd::CPPM_CSAR_PSTATE_HCODE_ERROR_INJECT>()
+                    .setBit<p9hcd::CPPM_CSAR_STOP_HCODE_ERROR_INJECT>();
+            // Note:  CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP is NOT
+            //        cleared as this is a persistent, characterization setting
+            l_address =  C_CPPM_CSAR_CLEAR;
+            fapi2::putScom(l_core_chplt, l_address, l_data64));
+
+            // Restore CORE PPM Error Mask
+            FAPI_ATTR_GET(fapi2::ATTR_CORE_PPM_ERRMASK, l_core_chplt, l_errMask));
+            l_data64.flush<0>().insertFromRight<0, 32>(l_errMask);
+            l_address = C_CPPM_ERRMSK;
+            fapi2::putScom(l_core_chplt, l_address, l_data64);
+        }
     }
-    else
-    {
-        fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
-    }
+
+fapi_try_exit:
+    return fapi2::current_err;
+}
+
+fapi2::ReturnCode p9_pm_occ_control
+(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+ const p9occ_ctrl::PPC_CONTROL i_ppc405_reset_ctrl = p9occ_ctrl::PPC405_START,
+ const p9occ_ctrl::PPC_BOOT_CONTROL i_ppc405_boot_ctrl = p9occ_ctrl::PPC405_BOOT_MEM,
+ const uint64_t i_ppc405_jump_to_main_instr)
+{
+    fapi2::buffer<uint64_t> l_data64;
+
+    // Set up Boot Vector Registers in SRAM
+    //    - set bv0-2 to all 0's (illegal instructions)
+    //    - set bv3 to proper branch instruction
+    fapi2::putScom(i_target, PU_SRAM_SRBV0_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_SRAM_SRBV1_SCOM, l_data64);
+    fapi2::putScom(i_target, PU_SRAM_SRBV2_SCOM, l_data64);
+    bootMemory(i_target, l_data64);
+    fapi2::putScom(i_target, PU_SRAM_SRBV3_SCOM, l_data64);
+
+    // Clear the halt bit
+    fapi2::putScom(i_target, PU_JTG_PIB_OJCFG_AND, ~BIT(JTG_PIB_OJCFG_DBG_HALT_BIT));
+    // Set the reset bit
+    fapi2::putScom(i_target, PU_OCB_PIB_OCR_OR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+    // Clear the reset bit
+    fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
+}
+
+///
+/// @brief Creates and loads the OCC memory boot launcher
+/// @param[in] i_target  Chip target
+/// @param[in] i_data64  32 bit instruction representing the branch
+///                    instruction to the SRAM boot loader
+/// @return FAPI2_RC_SUCCESS on success, else error
+///
+fapi2::ReturnCode bootMemory(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    fapi2::buffer<uint64_t>& i_data64)
+{
+    static const uint32_t SRAM_PROGRAM_SIZE = 2;  // in double words
+    uint64_t l_sram_program[SRAM_PROGRAM_SIZE];
+    fapi2::ReturnCode l_rc;
+    uint32_t l_ocb_length_act = 0;
+
+    // Setup use OCB channel 1 for placing instruction in SRAM
+    // Channel will be returned to Linear Stream, Circular upon exit
+    l_rc = p9_pm_ocb_indir_setup_linear(i_target,
+                  p9ocb::OCB_CHAN1,
+                  p9ocb::OCB_TYPE_LINSTR,
+                  OCC_SRAM_BOOT_ADDR);   // Bar
+    FAPI_TRY(l_rc);
+
+    // lis r1, 0x8000
+    l_sram_program[0] = ((uint64_t)ppc_lis(1, 0x8000) << 32);
+
+    // ori r1, r1, OCC_BOOT_OFFSET
+    l_sram_program[0] |= (ppc_ori(1, 1, OCC_BOOT_OFFSET));
+
+    // mtctr (mtspr r1, CTR )
+    l_sram_program[1] = ((uint64_t)ppc_mtspr(1, CTR) << 32);
+
+    // bctr
+    l_sram_program[1] |= ppc_bctr();
+
+    // Write to SRAM
+    l_rc = p9_pm_ocb_indir_access(i_target,
+                  p9ocb::OCB_CHAN1,
+                  p9ocb::OCB_PUT,
+                  SRAM_PROGRAM_SIZE,
+                  false,
+                  0,
+                  l_ocb_length_act,
+                  l_sram_program);
+
+    // b OCC_SRAM_BOOT_ADDR2
+    i_data64.insertFromRight<0, 32>(ppc_b(OCC_SRAM_BOOT_ADDR2));
+
+fapi_try_exit:
+    // Channel 1 returned to Linear Stream, Circular upon exit
+    l_rc = p9_pm_ocb_indir_setup_circular(i_target,
+                  p9ocb::OCB_CHAN1,
+                  p9ocb::OCB_TYPE_CIRC,
+                  0,   // Bar
+                  0,   // Length
+                  p9ocb::OCB_Q_OUFLOW_NULL,
+                  p9ocb::OCB_Q_ITPTYPE_NULL);
+}
+
+fapi2::ReturnCode p9_pm_ocb_indir_setup_circular(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9ocb::PM_OCB_CHAN_NUM i_ocb_chan,
+    const p9ocb::PM_OCB_CHAN_TYPE i_ocb_type,
+    const uint32_t i_ocb_bar,
+    const uint8_t i_ocb_q_len,
+    const p9ocb::PM_OCB_CHAN_OUFLOW i_ocb_flow,
+    const p9ocb::PM_OCB_ITPTYPE i_ocb_itp)
+{
+    return p9_pm_ocb_init(i_target,
+                  p9pm::PM_SETUP_ALL,
+                  i_ocb_chan,
+                  i_ocb_type,
+                  i_ocb_bar,
+                  i_ocb_q_len,
+                  i_ocb_flow,
+                  i_ocb_itp);
+    return l_rc;
 }
 
 template< fapi2::TargetType K >
@@ -2889,6 +3300,14 @@ fapi2::ReturnCode checkChiplet( CONST_FAPI2_PROC& i_procTgt, fapi2::TargetType  
     }
 }
 
+/**
+ * @brief   checks Memory buf configuration and updates config vector buffer.
+ * @param[in]   i_procTgt           fapi2 target for P9
+ * @param[in]   io_configVector     Unit Avaialability Vector
+ * @param[in]   i_oBusStartPos      start bit position for OBUS
+ * @param[in]   i_nvLinkPos         start bit position for NV Link
+ * @return      fapi2 return code
+ */
 fapi2::ReturnCode checkObusChipletHierarchy( CONST_FAPI2_PROC& i_procTgt,
         uint64_t& io_configVector, uint8_t i_oBusStartPos, uint8_t i_nvLinkPos )
 {
@@ -2941,27 +3360,31 @@ fapi2::ReturnCode checkObusChipletHierarchy( CONST_FAPI2_PROC& i_procTgt,
     }
 }
 
+enum {
+    INIT_CONFIG_VALUE       =       0x8000000C09800000ull,
+    QPMR_PROC_CONFIG_POS    =       0xBFC18,
+};
+
 /// @brief    builds a STOP image using a reference image as input.
 /// @param[in]   i_procTgt        fapi2 target for processor chip.
 /// @param[in]   i_pHomerImage    pointer to the beginning of the HOMER image buffer
 /// @return   fapi2 return code
-//
 fapi2::ReturnCode p9_check_proc_config ( CONST_FAPI2_PROC& i_procTgt, void* i_pHomerImage )
 {
     uint64_t l_configVectVal = INIT_CONFIG_VALUE;
     uint8_t* pHomer = (uint8_t*)i_pHomerImage + QPMR_HOMER_OFFSET + QPMR_PROC_CONFIG_POS;
     uint8_t l_chipName = 0;
 
-    checkChiplet< fapi2::TARGET_TYPE_MCS >( i_procTgt, fapi2::TARGET_TYPE_MCS, l_configVectVal, MCS_POS );
-    checkChiplet< fapi2::TARGET_TYPE_XBUS>( i_procTgt, fapi2::TARGET_TYPE_XBUS, l_configVectVal, XBUS_POS );
+    checkChiplet<fapi2::TARGET_TYPE_MCS >( i_procTgt, fapi2::TARGET_TYPE_MCS, l_configVectVal, MCS_POS );
+    checkChiplet<fapi2::TARGET_TYPE_XBUS>( i_procTgt, fapi2::TARGET_TYPE_XBUS, l_configVectVal, XBUS_POS );
     checkChiplet<fapi2::TARGET_TYPE_PHB>( i_procTgt, fapi2::TARGET_TYPE_PHB, l_configVectVal, PHB_POS );
     checkChiplet<fapi2::TARGET_TYPE_CAPP>( i_procTgt, fapi2::TARGET_TYPE_CAPP, l_configVectVal, CAPP_POS );
 
     FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_NAME, i_procTgt, l_chipName );
 
-    checkObusChipletHierarchy ( i_procTgt, l_configVectVal, OBUS_POS, NVLINK_POS );
+    checkObusChipletHierarchy(i_procTgt, l_configVectVal, OBUS_POS, NVLINK_POS);
 
     checkChiplet<fapi2::TARGET_TYPE_MCA>(i_procTgt, fapi2::TARGET_TYPE_MCA, l_configVectVal, MBA_POS);
-    *(uint64_t*)pHomer = htobe64( l_configVectVal );
+    *(uint64_t*)pHomer = htobe64(l_configVectVal);
 }
 ```
