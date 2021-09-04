@@ -38,10 +38,12 @@ Analisys assumptions:
 * Loading a payload (`TARGETING::is_no_load() == false`, `ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`)
 * `ATTR_PM_MALF_ALERT_ENABLE == ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE`.
 * `ATTR_PM_MALF_CYCLE == ENUM_ATTR_PM_MALF_CYCLE_INACTIVE`.
+* `INITSERVICE::spBaseServicesEnabled() == false` (from the log).
 * Homer address is never `NULL`.
 * Virtual addresses equal physical addresses.
 * Not in manufacturing mode or golden-side boot.
 * SMF is not enabled.
+* Have only one OCC.
 
 ***
 
@@ -78,6 +80,14 @@ Control flow of OCC start process:
             - uses OCB to write 128 bytes to SRAM
          3. Start OCC
       6. `putScom(PU_OCB_OCI_OCCFLG2_CLEAR, STOP_RECOVERY_TRIGGER_ENABLE)` (needed?)
+
+From https://raw.githubusercontent.com/open-power/docs/master/occ/OCC_OpenPwr_FW_Interfaces.pdf:
+
+    4  OCC Boot Process
+    After the OCC is loaded and taken out of reset it will default to “standby” state and wait for
+    configuration data from HTMGT and for HTMGT to send Set State command to Active.  There
+    is no thermal or power monitoring until the OCC is in active state.  When OCC is told to go
+    active it will populate OCC-OPAL shared memory interface with ‘valid’ and all Pstate data.
 
 ***
 
@@ -1375,7 +1385,7 @@ void* call_host_runtime_setup (void *io_pArgs)
         }
 #endif
 #ifdef CONFIG_HTMGT
-        HTMGT::processOccStartStatus(/*i_startCompleted=*/true, NULL);
+        HTMGT::processOccStartStatus(/*i_startCompleted=*/true);
 #else
 	HBPM::verifyOccChkptAll();
 #endif
@@ -1399,6 +1409,86 @@ void* call_host_runtime_setup (void *io_pArgs)
     {
         TCE::utilDisableTces();
     }
+}
+
+// Move the OCCs to active state or log unrecoverable error and
+// stay in safe mode
+void HTMGT::processOccStartStatus(const bool i_startCompleted = true)
+{
+	errlHndl_t l_err = nullptr;
+	bool skip_comm = true;
+
+	do
+	{
+#ifndef __HOSTBOOT_RUNTIME
+		// Calc memory throttles (once per IPL)
+		l_err = calcMemThrottles();
+		if( l_err )
+		{
+			break;
+		}
+#endif
+
+		// Make sure OCCs are ready for communication
+		l_err = OccManager::waitForOccCheckpoint();
+		if( l_err )
+		{
+			break;
+		}
+
+#ifdef __HOSTBOOT_RUNTIME
+		// TODO RTC 124738  Final solution TBD
+		//  Perhapse POLL scom 0x6a214 until bit 31 is set?
+		nanosleep(1,0);
+#endif
+
+		// Send poll to establish comm
+		TMGT_INF("Send initial poll to all OCCs to"
+			" establish comm");
+		l_err = OccManager::sendOccPoll();
+		if (l_err)
+		{
+			if (OccManager::occNeedsReset())
+			{
+				// No need to continue if reset is required
+				TMGT_ERR("processOccStartStatus(): "
+					"OCCs need to be reset");
+				break;
+			}
+			else
+			{
+				// Continue even if failed (will be retried)
+				ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+			}
+		}
+		skip_comm = false;
+
+		// Send ALL config data
+		sendOccConfigData();
+
+		// Set the User PCAP
+		l_err = sendOccUserPowerCap();
+		if (l_err)
+		{
+			break;
+		}
+
+		// Wait for all OCCs to go to the target state
+		l_err = waitForOccState();
+		if ( l_err )
+		{
+			break;
+		}
+
+		// Set active sensors for all OCCs,
+		// so BMC can start communication with OCCs
+		l_err = setOccActiveSensors(true);
+		if (l_err)
+		{
+			// Continue even if failed to update sensor
+			ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+		}
+	} while(0);
 }
 
 StopReturnCode_t p9_stop_save_scom( void* const   i_pImage,
@@ -2770,6 +2860,11 @@ void startPMComplex(Target* i_target)
     pm_init(l_fapiTarg, (void *)l_homerPhysAddr);
 }
 
+/** Offset from HOMER to OCC Image */
+#define HOMER_OFFSET_TO_OCC_IMG (0*KILOBYTE)
+/** Offset from HOMER to OCC Host Data Area */
+#define HOMER_OFFSET_TO_OCC_HOST_DATA (768*KILOBYTE)
+
 static void loadPMComplex(
     TARGETING::Target * i_target,
     uint64_t i_homerPhysAddr,
@@ -2783,6 +2878,41 @@ static void loadPMComplex(
     loadHostDataToHomer(i_target, l_occImgPaddr + HOMER_OFFSET_TO_OCC_HOST_DATA);
     loadHcode(i_target, (void *)i_homerPhysAddr, HBPM::PM_LOAD);
 }
+
+/**
+ * @brief Host config data consumed by OCC
+ */
+struct occHostConfigDataArea_t
+{
+    uint32_t version;
+
+    //For computation of timebase frequency
+    uint32_t nestFrequency;
+
+    // For determining the interrupt type to Host
+    //  0x00000000 = Use FSI2HOST Mailbox
+    //  0x00000001 = Use OCC interrupt line through PSIHB complex
+    uint32_t interruptType;
+
+    // For informing OCC if it is the FIR master:
+    //  0x00000000 = Default
+    //  0x00000001 = FIR Master
+    uint32_t firMaster;
+
+    // FIR collection configuration data needed by FIR Master
+    //  OCC in the event of a checkstop
+    uint8_t firdataConfig[3072];
+
+    // For informing OCC if SMF mode is enabled:
+    //  0x00000000 = Default (SMF disabled)
+    //  0x00000001 = SMF mode is enabled
+    uint32_t smfMode;
+};
+
+// the one from src/usr/isteps/pm/pm_common.H
+OccHostDataVersion = 0x00000090,
+
+USE_PSIHB_COMPLEX = 0x00000001,
 
 /**
  * @brief Sets up OCC Host data in Homer
@@ -2805,18 +2935,9 @@ void loadHostDataToHomer(TARGETING::Target* i_proc,
     l_config_data->version = OccHostDataVersion;
     l_config_data->nestFrequency = sysTarget->getAttr<ATTR_FREQ_PB_MHZ>();
 
-    // Figure out the interrupt type
-    if( INITSERVICE::spBaseServicesEnabled() )
-    {
-        l_config_data->interruptType = USE_FSI2HOST_MAILBOX;
-    }
-    else
-    {
-        l_config_data->interruptType = USE_PSIHB_COMPLEX;
-    }
-
-    l_config_data->firMaster = 0;
-    l_config_data->smfMode = SMF_MODE_DISABLED;
+    l_config_data->interruptType = USE_PSIHB_COMPLEX;
+    l_config_data->firMaster = false;
+    l_config_data->smfMode = false;
 }
 
 /**
@@ -2930,6 +3051,8 @@ errlHndl_t resetPMComplex(TARGETING::Target * i_target)
 #endif
 }
 
+uint64_t PHYSICAL_ADDR_MASK = 0x7FFFFFFFFFFFFFFF;
+
 /**
  * @brief Execute procedures and steps required to setup for loading
  *        the OCC image in a specified processor
@@ -3016,7 +3139,6 @@ fapi2::ReturnCode pm_init(
     void* i_pHomerImage)
 {
     fapi2::buffer<uint64_t> l_data64       = 0;
-    const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
 
     pm_corequad_init(i_target);
     p9_pm_ocb_init(
@@ -3367,6 +3489,27 @@ enum {
     QPMR_PROC_CONFIG_POS    =       0xBFC18,
 };
 
+/**
+ * @brief   bit position for various chiplets in config vector.
+ */
+enum {
+    MCS_POS             =   1,
+    MBA_POS             =   9,
+    MEM_BUF_POS         =   17,
+    XBUS_POS            =   25,
+    PHB_POS             =   30,
+    CAPP_POS            =   37,
+    OBUS_POS            =   41,
+    ABUS_POS            =   41,
+    NVLINK_POS          =   45,
+    OBUS_BRICK_0_POS    =   0,
+    OBUS_BRICK_1_POS    =   1,
+    OBUS_BRICK_2_POS    =   2,
+    OBUS_BRICK_9_POS    =   9,
+    OBUS_BRICK_10_POS   =   10,
+    OBUS_BRICK_11_POS   =   11,
+};
+
 /// @brief    builds a STOP image using a reference image as input.
 /// @param[in]   i_procTgt        fapi2 target for processor chip.
 /// @param[in]   i_pHomerImage    pointer to the beginning of the HOMER image buffer
@@ -3375,14 +3518,11 @@ fapi2::ReturnCode p9_check_proc_config ( CONST_FAPI2_PROC& i_procTgt, void* i_pH
 {
     uint64_t l_configVectVal = INIT_CONFIG_VALUE;
     uint8_t* pHomer = (uint8_t*)i_pHomerImage + QPMR_HOMER_OFFSET + QPMR_PROC_CONFIG_POS;
-    uint8_t l_chipName = 0;
 
     checkChiplet<fapi2::TARGET_TYPE_MCS >( i_procTgt, fapi2::TARGET_TYPE_MCS, l_configVectVal, MCS_POS );
     checkChiplet<fapi2::TARGET_TYPE_XBUS>( i_procTgt, fapi2::TARGET_TYPE_XBUS, l_configVectVal, XBUS_POS );
     checkChiplet<fapi2::TARGET_TYPE_PHB>( i_procTgt, fapi2::TARGET_TYPE_PHB, l_configVectVal, PHB_POS );
     checkChiplet<fapi2::TARGET_TYPE_CAPP>( i_procTgt, fapi2::TARGET_TYPE_CAPP, l_configVectVal, CAPP_POS );
-
-    FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_NAME, i_procTgt, l_chipName );
 
     checkObusChipletHierarchy(i_procTgt, l_configVectVal, OBUS_POS, NVLINK_POS);
 
