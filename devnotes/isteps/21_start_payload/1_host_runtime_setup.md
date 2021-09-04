@@ -53,6 +53,8 @@ Data (stored in HDAT):
 * NACA
 * SPIRA
 
+"PROC_DUMP"/"CPU CTRL" area might be needed by payload for something.
+
 ***
 
 Control flow of OCC start process:
@@ -74,7 +76,7 @@ Control flow of OCC start process:
          2. `bootMemory()`
             - composes boot code by calling `bootMemory()`
             - uses OCB to write 128 bytes to SRAM
-         3. Starts OCC
+         3. Start OCC
       6. `putScom(PU_OCB_OCI_OCCFLG2_CLEAR, STOP_RECOVERY_TRIGGER_ENABLE)` (needed?)
 
 ***
