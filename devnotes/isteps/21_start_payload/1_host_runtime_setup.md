@@ -28,9 +28,14 @@ Analisys assumptions:
 
 * `#define CONFIG_START_OCC_DURING_BOOT`
 * `#define __HOSTBOOT_MODULE`
+* `#define CONFIG_HTMGT`
 * `#undef CONFIG_IPLTIME_CHECKSTOP_ANALYSIS`
 * `#undef CONFIG_PNOR_TWO_SIDE_SUPPORT`
 * `#undef CONFIG_ENABLE_CHECKSTOP_ANALYSIS`
+* `#undef __HOSTBOOT_RUNTIME`
+* `#undef CONFIG_BMC_IPMI`
+* `#undef SIMICS_TESTING`
+* `#undef CONFIG_CONSOLE_OUTPUT_OCC_COMM`
 * Not in MPIPL mode (`ATTR_IS_MPIPL_HB == false`).
 * Simics is not running (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_NONE`).
 * Payload isn't PHYP (`ATTR_PAYLOAD_KIND != PAYLOAD_KIND_PHYP`).
@@ -39,11 +44,12 @@ Analisys assumptions:
 * `ATTR_PM_MALF_ALERT_ENABLE == ENUM_ATTR_PM_MALF_ALERT_ENABLE_FALSE`.
 * `ATTR_PM_MALF_CYCLE == ENUM_ATTR_PM_MALF_CYCLE_INACTIVE`.
 * `INITSERVICE::spBaseServicesEnabled() == false` (from the log).
+* `TCE::utilUseTcesForDmas() == false` because of `INITSERVICE::spBaseServicesEnabled() == false`.
 * Homer address is never `NULL`.
 * Virtual addresses equal physical addresses.
 * Not in manufacturing mode or golden-side boot.
 * SMF is not enabled.
-* Have only one OCC.
+* Have only one OCC and it's master, but not a FIR master.
 
 ***
 
@@ -59,7 +65,7 @@ Data (stored in HDAT):
 
 ***
 
-Control flow of OCC start process:
+Control flow of OCC start and initialization process:
 
 1. `loadAndStartPMAll(HBPM::PM_LOAD)`
    1. `loadPMComplex()` (for each processor get OCC ready for work)
@@ -80,6 +86,17 @@ Control flow of OCC start process:
             - uses OCB to write 128 bytes to SRAM
          3. Start OCC
       6. `putScom(PU_OCB_OCI_OCCFLG2_CLEAR, STOP_RECOVERY_TRIGGER_ENABLE)` (needed?)
+2. `processOccStartStatus(true)`
+   1. `calcMemThrottles()` (seems to compute data to be sent to OCC, e.g. power) (1 level)
+   2. `waitForOccCheckpoint()` (waits for all OCCs to finish their initialization)
+   3. `sendOccPoll()` (also called by several functions below)
+      1. `pollForErrors()` (checks whether OCCs are in error state) (2 levels)
+   4. `sendOccConfigData()` (collects and sends various of data to OCCs) (1 level)
+   5. `sendOccUserPowerCap()` (sets user power limit, 0 means "not set") (1 level)
+   6. `waitForOccState()` (wait for OCCs to become "Active-ready" and set "Active" state)
+   7. `setOccActiveSensors()` (signals to BMC that it can interract with OCC)
+
+Non-essential (as it appears) paths weren't followed too deeply.
 
 From https://raw.githubusercontent.com/open-power/docs/master/occ/OCC_OpenPwr_FW_Interfaces.pdf:
 
@@ -89,6 +106,8 @@ From https://raw.githubusercontent.com/open-power/docs/master/occ/OCC_OpenPwr_FW
     is no thermal or power monitoring until the OCC is in active state.  When OCC is told to go
     active it will populate OCC-OPAL shared memory interface with ‘valid’ and all Pstate data.
 
+On detecting errors in OCCs, Hostboot can reset them.
+
 ***
 
 ```cpp
@@ -96,22 +115,6 @@ errlHndl_t utilDisableTces(void)
 {
     return Singleton<UtilTceMgr>::instance().disableTces();
 };
-
-inline bool spBaseServicesEnabled()
-{
-    bool spBaseServicesEnabled = false;
-    TARGETING::Target * sys = NULL;
-    TARGETING::targetService().getTopLevelTarget( sys );
-    TARGETING::SpFunctions spfuncs;
-    if( sys &&
-        sys->tryGetAttr<TARGETING::ATTR_SP_FUNCTIONS>(spfuncs) &&
-        spfuncs.baseServices )
-    {
-        spBaseServicesEnabled = true;
-    }
-
-    return spBaseServicesEnabled;
-}
 
 /**
  * @brief Populate HB runtime data in mainstore
@@ -1229,18 +1232,6 @@ errlHndl_t utilClosePayloadTces(void)
     utilDeallocateTces(token);
 }
 
-bool utilUseTcesForDmas(void)
-{
-    if(INITSERVICE::spBaseServicesEnabled())
-    {
-        TARGETING::TargetService& tS = TARGETING::targetService();
-        TARGETING::Target* sys = nullptr;
-        (void) tS.getTopLevelTarget( sys );
-        return sys->getAttr<TARGETING::ATTR_USE_TCES_FOR_DMAS>();
-    }
-    return false;
-}
-
 errlHndl_t sendFreqAttrData()
 {
     tid_t l_progTid = 0;
@@ -1343,15 +1334,10 @@ void* call_host_runtime_setup (void *io_pArgs)
     sys->trySetAttr<ATTR_PM_RESET_FFDC_ENABLE> (0x01);
 
     sendFreqAttrData();
-    if (TCE::utilUseTcesForDmas())
-    {
-        TCE::utilClosePayloadTces();
-        closeNonMasterTces();
-    }
     RUNTIME::sendSBESystemConfig();
 
 #ifdef CONFIG_PLDM
-    if(INITSERVICE::spBaseServicesEnabled())
+    if(false)
     {
 #endif
         RUNTIME::verifyAndMovePayload();
@@ -1404,11 +1390,6 @@ void* call_host_runtime_setup (void *io_pArgs)
         capThreadArraySize);
     RUNTIME::writeActualCount(RUNTIME::MS_DUMP_RESULTS_TBL);
     RUNTIME::populate_hbRuntimeData();
-
-    if (TCE::utilUseTcesForDmas())
-    {
-        TCE::utilDisableTces();
-    }
 }
 
 // Move the OCCs to active state or log unrecoverable error and
@@ -1416,79 +1397,1192 @@ void* call_host_runtime_setup (void *io_pArgs)
 void HTMGT::processOccStartStatus(const bool i_startCompleted = true)
 {
 	errlHndl_t l_err = nullptr;
-	bool skip_comm = true;
 
+	// Calc memory throttles (once per IPL)
+	l_err = calcMemThrottles();
+	if (l_err) return;
+
+	// Make sure OCCs are ready for communication
+	l_err = OccManager::waitForOccCheckpoint();
+	if (l_err) return;
+
+	// Send initial poll to all OCCs to establish communication
+	l_err = OccManager::sendOccPoll();
+	if (l_err) return;
+
+	// Send ALL config data
+	sendOccConfigData();
+
+	// Set the User PCAP
+	l_err = sendOccUserPowerCap();
+	if (l_err) return;
+
+	// Wait for all OCCs to go to the target state
+	l_err = waitForOccState();
+	if (l_err) return;
+
+	// Set active sensors for all OCCs, so BMC can start communication with OCCs
+	l_err = setOccActiveSensors(true);
+	if (l_err) return;
+}
+
+/**
+ * Calculates the memory throttling numerator values for the OT,
+ * oversubscription, and redundant power cases.  The results are
+ * stored in attributes under the corresponding MBAs.
+ */
+errlHndl_t calcMemThrottles()
+{
+    Target* sys = NULL;
+
+    targetService().getTopLevelTarget(sys);
+    assert(sys != NULL);
+
+    uint8_t min_utilization =
+	sys->getAttr<ATTR_OPEN_POWER_MIN_MEM_UTILIZATION_THROTTLING>();
+    if (min_utilization == 0)
+    {
+	// Use SAFEMODE utilization
+	min_utilization = sys->getAttr
+	    <ATTR_MSS_MRW_SAFEMODE_MEM_THROTTLED_N_COMMANDS_PER_PORT>();
+	if (min_utilization == 0)
+	{
+	    // Use hardcoded utilization
+	    min_utilization = 10;
+	}
+    }
+    const uint8_t efficiency =
+	sys->getAttr<ATTR_OPEN_POWER_REGULATOR_EFFICIENCY_FACTOR>();
+
+    //Get all functional MCSs
+    TargetHandleList mcs_list;
+    getAllChiplets(mcs_list, TYPE_MCS, true);
+
+    // Create a FAPI Target list for HWP
+    std::vector < fapi2::Target< fapi2::TARGET_TYPE_MCS>> l_fapi_target_list;
+    for(const auto & mcs_target : mcs_list)
+    {
+	uint32_t mcs_huid = 0xFFFFFFFF;
+	uint8_t mcs_unit = 0xFF;
+	mcs_target->tryGetAttr<TARGETING::ATTR_HUID>(mcs_huid);
+	mcs_target->tryGetAttr<TARGETING::ATTR_CHIP_UNIT>(mcs_unit);
+
+	// Query the functional MCAs for this MCS
+	TARGETING::TargetHandleList mca_list;
+	getChildAffinityTargetsByState(mca_list, mcs_target, CLASS_UNIT,
+				       TYPE_MCA, UTIL_FILTER_FUNCTIONAL);
+	uint8_t occ_instance = 0xFF;
+	ConstTargetHandle_t proc_target = getParentChip(mcs_target);
+	assert(proc_target != nullptr);
+	occ_instance = proc_target->getAttr<TARGETING::ATTR_POSITION>();
+
+	// Convert to FAPI target and add to list
+	fapi2::Target<fapi2::TARGET_TYPE_MCS> l_fapiTarget(mcs_target);
+	l_fapi_target_list.push_back(l_fapiTarget);
+    }
+
+    errlHndl_t err = NULL;
+    do
+    {
+	//Calculate Throttle settings for Over Temperature
+	err = memPowerThrottleOT(l_fapi_target_list,
+				 min_utilization,
+				 efficiency);
+	if (NULL != err) break;
+
+	//Calculate Throttle settings for Nominal/Turbo
+	err = memPowerThrottleRedPower(l_fapi_target_list,
+				       min_utilization,
+				       efficiency);
+	if (NULL != err) break;
+
+	//Calculate Throttle settings for Power Capping
+	uint8_t pcap_min_utilization;
+	if (!sys->tryGetAttr<ATTR_OPEN_POWER_MIN_MEM_UTILIZATION_POWER_CAP>
+	    (pcap_min_utilization))
+	{
+	    pcap_min_utilization = 0;
+	}
+	err = memPowerThrottlePowercap(l_fapi_target_list,
+				       pcap_min_utilization,
+				       efficiency);
+
+    } while(0);
+
+    calculate_system_power();
+
+    if (err)
+    {
+	err->collectTrace(HTMGT_COMP_NAME);
+    }
+
+    return err;
+}
+
+OCC_RC_INIT_FAILURE             = 0xE5;
+OCC_RC_OCC_INIT_CHECKPOINT      = 0xE1;
+OCC_COMMAND_IN_PROGRESS         = 0xFF
+
+const uint32_t OCC_RSP_SRAM_ADDR   = 0xFFFBF000;
+
+const uint16_t OCC_COMM_INIT_COMPLETE = 0x0EFF;
+const uint16_t OCC_INIT_FAILURE = 0xE000;
+
+// The following header lengths include the 2 byte checksum
+const uint16_t OCC_CMD_HDR_LENGTH = 6;
+const uint16_t OCC_RSP_HDR_LENGTH = 7;
+
+// Wait for all OCCs to reach communications checkpoint
+void OccManager::waitForOccCheckpoint()
+{
+	// Wait up to 15 seconds for all OCCs to be ready (150 * 100ms = 15s)
+	const size_t NS_BETWEEN_READ = 100 * NS_PER_MSEC;
+	const size_t READ_RETRY_LIMIT = 150;
+
+	uint8_t retryCount = 0;
+
+	for( const auto & occ : iv_occArray )
+	{
+		bool occReady = false;
+
+		while (!occReady && retryCount++ < READ_RETRY_LIMIT)
+		{
+			nanosleep(0, NS_BETWEEN_READ);
+
+			TARGETING::ConstTargetHandle_t procTarget =
+				TARGETING::getParentChip(occ->getTarget());
+
+			// Read SRAM response buffer to check for OCC checkpoint
+			const uint16_t l_length = 8;  //Note: number of bytes
+			uint8_t l_sram_data[l_length] = { 0x0 };
+			errlHndl_t l_err = HBOCC::readSRAM(procTarget,
+						OCC_RSP_SRAM_ADDR,
+						(uint64_t*)(&(l_sram_data)),
+						l_length);
+			if (l_err != nullptr)
+			{
+				return nullptr;
+			}
+
+			// Pull status from response (byte 2)
+			uint8_t status = l_sram_data[2];
+
+			// Pull checkpoint from response (byte 6-7)
+			uint16_t checkpoint = l_sram_data[6]<<8 | l_sram_data[7];
+
+			if (OCC_RC_OCC_INIT_CHECKPOINT == status &&
+			    OCC_COMM_INIT_COMPLETE == checkpoint)
+				occReady = true;
+				break;
+			}
+			if (((checkpoint & OCC_INIT_FAILURE) == OCC_INIT_FAILURE) ||
+				status == OCC_RC_INIT_FAILURE)
+			{
+				occReady = false;
+				break;
+			}
+		}
+
+		if (!occReady)
+			die();
+	}
+}
+
+/**
+ * @brief Send a poll command to one or all OCCs
+ *
+ * @param[in]  i_flushAllErrors:
+ *                 If set to true, HTMGT will send poll cmds
+ *                 to each OCC that is selected as long as that OCC
+ *                 continues to report errors.  If false, only one
+ *                 poll will be send to each OCC.
+ * @param[in] i_occTarget: The Selected OCC or NULL for all OCCs
+ *
+ * @return NULL on success, else error handle
+ */
+void OccManager::sendOccPoll(const bool i_flushAllErrors = false,
+				   TARGETING::Target * i_occTarget = NULL,
+				   const bool onlyIfEstablished = false)
+{
+	errlHndl_t l_err = nullptr;
+
+	for( const auto & l_occ : iv_occArray )
+	{
+		errlHndl_t poll_err=l_occ->pollForErrors(/*i_flushAllErrors*/=false);
+		if (poll_err != nullptr)
+			die();
+	}
+
+	if (occNeedsReset())
+	{
+		TMGT_ERR("sendOccPoll(): OCCs need to be reset");
+	}
+}
+
+enum occCommandType
+{
+    OCC_CMD_POLL                    = 0x00,
+    OCC_CMD_CLEAR_ERROR_LOG         = 0x12,
+    OCC_CMD_SET_STATE               = 0x20,
+    OCC_CMD_SETUP_CFG_DATA          = 0x21,
+    OCC_CMD_SET_POWER_CAP           = 0x22,
+    OCC_CMD_RESET_PREP              = 0x25,
+    OCC_CMD_DEBUG_PASS_THROUGH      = 0x40,
+    OCC_CMD_AME_PASS_THROUGH        = 0x41,
+    OCC_CMD_GET_FIELD_DEBUG_DATA    = 0x42,
+    OCC_CMD_MFG_TEST                = 0x53,
+}
+
+/**
+ * @brief Poll for Errors
+ *
+ * @param[in]  i_flushAllErrors:
+ *      If set to true, HTMGT will send poll cmds
+ *      to the OCC as long as the OCC continues
+ *      to report errors.  If false, only one
+ *      poll will be sent.
+ *
+ * @return NULL on success, else error handle
+ */
+errlHndl_t Occ::pollForErrors(const bool i_flushAllErrors = false)
+{
+	errlHndl_t err = nullptr;
+	while (false)
+	{
+		// create 1 byte buffer for poll command data
+		const uint8_t l_cmdData[1] = { 0x20 /*version*/ };
+
+		OccCmd cmd(this,
+			   OCC_CMD_POLL,
+			   sizeof(l_cmdData),
+			   l_cmdData);
+
+		err = cmd.sendOccCmd();
+		if (err != nullptr)
+		{
+			break;
+		}
+
+		// Poll succeeded, check response
+		uint8_t * poll_rsp = nullptr;
+		uint32_t poll_rsp_size = cmd.getResponseData(poll_rsp);
+		if (poll_rsp_size >= OCC_POLL_DATA_MIN_SIZE)
+		{
+			pollRspHandler(poll_rsp, poll_rsp_size);
+		}
+		else
+		{
+			die();
+		}
+	}
+
+	return err;
+}
+
+struct occPollRspStruct_t
+{
+    uint8_t   status;
+    uint8_t   extStatus;
+    uint8_t   occsPresent;
+    uint8_t   requestedCfg;
+    uint8_t   state;
+    uint8_t   mode;
+    uint8_t   IPSStatus;
+    uint8_t   errorId;
+    uint32_t  errorAddress;
+    uint16_t  errorLength;
+    uint8_t   errorSource;
+    uint8_t   gpuCfg;
+    uint8_t   codeLevel[16];
+    uint8_t   sensor[6];
+    uint8_t   numBlocks;
+    uint8_t   version;
+    uint8_t   sensorData[4049];
+}  __attribute__((packed));
+
+// Handle OCC poll response
+void Occ::pollRspHandler(const uint8_t * i_pollResponse,
+			 const uint16_t i_pollResponseSize)
+{
+    static uint32_t L_elog_retry_count = 0;
+
+    const occPollRspStruct_t *pollRsp =
+	(occPollRspStruct_t *) i_pollResponse;
+    const occPollRspStruct_t *lastPollRsp =
+	(occPollRspStruct_t *) iv_lastPollResponse;
+
+    do
+    {
+	if (!iv_commEstablished)
+	{
+	    // 1st poll response, so comm has been established for this OCC
+	    iv_commEstablished = true;
+	}
+
+	// Check for Error Logs
+	if (pollRsp->errorId != 0)
+	{
+	    if ((pollRsp->errorId != lastPollRsp->errorId) ||
+		(pollRsp->errorSource != lastPollRsp->errorSource) ||
+		(L_elog_retry_count < 3))
+
+	    {
+		if ((pollRsp->errorId == lastPollRsp->errorId) &&
+		    (pollRsp->errorSource == lastPollRsp->errorSource))
+		{
+		    // Only retry same errorId a few times...
+		    L_elog_retry_count++;
+		}
+		else
+		{
+		    L_elog_retry_count = 0;
+		}
+
+		// Handle a new error log from the OCC
+		occProcessElog(pollRsp->errorId,
+			       pollRsp->errorAddress,
+			       pollRsp->errorLength,
+			       pollRsp->errorSource);
+		if (iv_needsReset)
+		{
+		    // Update state if changed...
+		    // (since dropping out of poll rsp handler)
+		    if (iv_state != pollRsp->state)
+		    {
+			iv_state = (occStateId)pollRsp->state;
+		    }
+		    break;
+		}
+	    }
+	}
+
+	if ((OCC_STATE_ACTIVE == pollRsp->state) ||
+	    (OCC_STATE_OBSERVATION == pollRsp->state) ||
+	    (OCC_STATE_CHARACTERIZATION == pollRsp->state))
+	{
+	    errlHndl_t l_err = nullptr;
+
+	    // Check role status
+	    if (((OCC_ROLE_SLAVE == iv_role) &&
+		 ((pollRsp->status & OCC_STATUS_MASTER) != 0)) ||
+		((OCC_ROLE_MASTER == iv_role) &&
+		 ((pollRsp->status & OCC_STATUS_MASTER) == 0)))
+	    {
+		iv_needsReset = true;
+		break;
+	    }
+
+	    if (pollRsp->occsPresent != iv_occsPresent)
+	    {
+		iv_needsReset = true;
+		if (iv_resetReason == OCC_RESET_REASON_NONE)
+		{
+		    iv_resetReason = OCC_RESET_REASON_ERROR;
+		}
+	    }
+	}
+
+	// Check for state change
+	if (iv_state != pollRsp->state)
+	{
+	    iv_state = (occStateId)pollRsp->state;
+	}
+
+	// Check GPU config
+	if (iv_gpuCfg != pollRsp->gpuCfg)
+	{
+	    iv_gpuCfg = pollRsp->gpuCfg;
+	}
+
+	// Copy rspData to lastPollResponse
+	memcpy(iv_lastPollResponse, pollRsp, OCC_POLL_DATA_MIN_SIZE);
+	iv_lastPollValid = true;
+    }
+    while(0);
+}
+
+const uint32_t OCC_MAX_DATA_LENGTH = 0x00001000;
+
+enum cfgTargets
+{
+    TARGET_ALL    = 0x00,
+    TARGET_MASTER = 0x01,
+};
+
+enum cfgSupStates
+{
+    CFGSTATE_ALL     = 0x00,
+    CFGSTATE_STANDBY = 0x01,
+    CFGSTATE_SBYOBS  = 0x02
+};
+
+const uint32_t TO_20SEC = 20;
+
+struct occCfgDataTable_t
+{
+    occCfgDataFormat    format;
+    cfgTargets          targets;
+    uint16_t            timeout; // in seconds
+    cfgSupStates        supportedStates;
+
+    bool operator==(const occCfgDataFormat& i_format) const
+    {
+	return (i_format == format);
+    }
+};
+
+const occCfgDataTable_t occCfgDataTable[] =
+{
+    { OCC_CFGDATA_SYS_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_APSS_CONFIG,    TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_OCC_ROLE,       TARGET_ALL,  TO_20SEC,CFGSTATE_STANDBY },
+    { OCC_CFGDATA_FREQ_POINT,     TARGET_MASTER,TO_20SEC, CFGSTATE_SBYOBS },
+    { OCC_CFGDATA_MEM_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_PCAP_CONFIG,    TARGET_MASTER, TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_MEM_THROTTLE,   TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_TCT_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    { OCC_CFGDATA_AVSBUS_CONFIG,  TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+    // GPU config packet MUST be sent after APSS config
+    { OCC_CFGDATA_GPU_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
+};
+const size_t OCC_CONFIG_TABLE_SIZE = sizeof(occCfgDataTable) / sizeof(occCfgDataTable_t);
+
+// Send config format data to all OCCs
+void sendOccConfigData(const occCfgDataFormat i_requestedFormat = OCC_CFGDATA_CLEAR_ALL)
+{
+    uint8_t cmdData[OCC_MAX_DATA_LENGTH] = {0};
+
+    const occCfgDataTable_t* start = &occCfgDataTable[0];
+    const occCfgDataTable_t* end = &occCfgDataTable[OCC_CONFIG_TABLE_SIZE];
+
+    // Loop through all functional OCCs
+    for (Occ * occ : OccManager::getOccArray())
+    {
+        const uint8_t occInstance = occ->getInstance();
+        const occRole role = occ->getRole();
+
+        // Loop through all config data types
+        for (const occCfgDataTable_t *itr = start; itr < end; ++itr)
+        {
+		const occCfgDataFormat format = itr->format;
+		bool sendData = true;
+
+		// Make sure format is supported by this OCC
+		if (TARGET_MASTER == itr->targets)
+		{
+			if (OCC_ROLE_MASTER != role)
+			{
+				sendData = false;
+			}
+		}
+
+		// Make sure data is supported in the current state
+		const occStateId state = occ->getState();
+		if (CFGSTATE_STANDBY == itr->supportedStates)
+		{
+			if (OCC_STATE_STANDBY != state)
+			{
+				sendData = false;
+			}
+		}
+		else if (CFGSTATE_SBYOBS == itr->supportedStates)
+		{
+			if ((OCC_STATE_STANDBY != state) &&
+			    (OCC_STATE_OBSERVATION != state))
+			{
+				sendData = false;
+			}
+		}
+
+		if (sendData)
+		{
+			uint64_t cmdDataLen = 0;
+			switch(format)
+			{
+				case OCC_CFGDATA_FREQ_POINT:
+					getFrequencyPointMessageData(cmdData,
+								     cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_OCC_ROLE:
+					getOCCRoleMessageData(OCC_ROLE_MASTER ==
+							      occ->getRole(),
+							      OCC_ROLE_FIR_MASTER ==
+							      occ->getRole(),
+							      cmdData, cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_APSS_CONFIG:
+					getApssMessageData(cmdData, cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_MEM_CONFIG:
+					getMemConfigMessageData(occ->getTarget(),
+								cmdData, cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_PCAP_CONFIG:
+					getPowerCapMessageData(cmdData, cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_SYS_CONFIG:
+					getSystemConfigMessageData(occ->getTarget(),
+								   cmdData, cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_MEM_THROTTLE:
+					if (!int_flags_set(FLAG_DISABLE_MEM_CONFIG))
+					{
+						getMemThrottleMessageData(occ->getTarget(),
+									  occInstance, cmdData, cmdDataLen);
+					}
+					break;
+
+				case OCC_CFGDATA_TCT_CONFIG:
+					getThermalControlMessageData(cmdData,
+								     cmdDataLen);
+					break;
+
+				case OCC_CFGDATA_AVSBUS_CONFIG:
+					getAVSBusConfigMessageData( occ->getTarget(),
+								    cmdData,
+								    cmdDataLen );
+					break;
+
+				case OCC_CFGDATA_GPU_CONFIG:
+					getGPUConfigMessageData(occ->getTarget(),
+								cmdData,
+								cmdDataLen);
+					break;
+			}
+
+			if (cmdDataLen > 0)
+			{
+				OccCmd cmd(occ, OCC_CMD_SETUP_CFG_DATA, cmdDataLen, cmdData);
+				errlHndl_t l_err = cmd.sendOccCmd();
+				if (l_err == nullptr && OCC_RC_SUCCESS != cmd.getRspStatus())
+				{
+					die();
+				}
+
+				// Send poll between config packets to flush errors
+				l_err = OccManager::sendOccPoll();
+				if (l_err)
+				{
+					ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+				}
+			}
+		} // if (sendData)
+
+		if (OccManager::occNeedsReset())
+		{
+			TMGT_ERR("sendOccConfigData(): OCCs need to be reset");
+		}
+        } // for each config format
+    } // for each OCC
+}
+
+//Sends the user selected power limit to the master OCC
+errlHndl_t sendOccUserPowerCap()
+{
+	Target* sys = NULL;
+	bool active = false;
+	uint16_t limit = 0;
+	uint16_t min = 0;
+	uint16_t max = 0;
+	targetService().getTopLevelTarget(sys);
+	assert(sys != NULL);
+
+	if (active)
+	{
+		//Make sure this value is between the min & max allowed
+		bool is_redundant;
+		min = sys->getAttr<ATTR_OPEN_POWER_MIN_POWER_CAP_WATTS>();
+		max = getMaxPowerCap(sys, is_redundant);
+		if ((limit != 0) && (limit < min))
+		{
+			limit = min;
+		}
+		else if (limit > max)
+		{
+			limit = max;
+		}
+		else if (limit == 0)
+		{
+			active = false;
+		}
+	}
+	else
+	{
+		// The OCC knows cap isn't active by getting a value of 0.
+		limit = 0;
+	}
+
+
+	Occ* occ = occMgr::instance().getMasterOcc();
+	if (occ)
+	{
+		uint8_t data[2];
+		data[0] = limit >> 8;
+		data[1] = limit & 0xFF;
+
+		OccCmd cmd(occ, OCC_CMD_SET_POWER_CAP, 2, data);
+
+		errlHndl_t err = cmd.sendOccCmd();
+		if (err)
+		{
+			return err;
+		}
+	}
+
+	return NULL;
+}
+
+// Wait for all OCCs to reach target state
+errlHndl_t waitForOccState()
+{
+    errlHndl_t l_err = NULL;
+
+    // Wait for all OCCs to be ready for active state
+    l_err = waitForOccReady();
+    if (NULL == l_err)
+    {
+        // Send Set State command to master OCC.
+        // The master will use the target state (default = ACTIVE)
+        l_err = OccManager::setOccState();
+    }
+
+    return l_err;
+}
+
+const uint8_t OCC_STATUS_ACTIVE_READY   = 0x01;
+const uint8_t OCC_STATUS_OBS_READY      = 0x02;
+
+enum occStateId
+{
+    OCC_STATE_NO_CHANGE                = 0x00,
+    OCC_STATE_STANDBY                  = 0x01,
+    OCC_STATE_OBSERVATION              = 0x02,
+    OCC_STATE_ACTIVE                   = 0x03,
+    OCC_STATE_SAFE                     = 0x04,
+    OCC_STATE_CHARACTERIZATION         = 0x05,
+    // the following states are internal to TMGT
+    OCC_STATE_RESET                    = 0x85,
+    OCC_STATE_IN_TRANSITION            = 0x87,
+    OCC_STATE_LOADING                  = 0x88,
+    OCC_STATE_UNKNOWN                  = 0x89,
+};
+
+// Wait for all OCCs to reach ready state
+errlHndl_t waitForOccReady()
+{
+    const uint8_t OCC_NONE = 0xFF;
+
+    uint8_t waitingForInstance = OCC_NONE;
+    const size_t MAX_POLL = 40;
+    const size_t MSEC_BETWEEN_POLLS = 250;
+    size_t numPolls = 0;
+    std::vector<Occ*> occList = OccManager::getOccArray();
+
+    // Determine which bit to check
+    uint8_t targetBit = OCC_STATUS_ACTIVE_READY;
+    // should evaluate to `false`, we're going to "Active" state
+    if (OCC_STATE_OBSERVATION == OccManager::getTargetState())
+    {
+	targetBit = OCC_STATUS_OBS_READY;
+    }
+
+    do
+    {
+	// Poll all OCCs
+	errlHndl_t l_err = OccManager::sendOccPoll();
+	++numPolls;
+	if (NULL != l_err)
+	{
+		return l_err;
+	}
+
+	// Check each OCC for ready state
+	waitingForInstance = OCC_NONE;
+	for (Occ * occ : occList)
+	{
+	    if (!occ->statusBitSet(targetBit))
+	    {
+		waitingForInstance = occ->getInstance();
+		break;
+	    }
+	}
+
+	if ((OCC_NONE != waitingForInstance) && (numPolls < MAX_POLL))
+	{
+	    // Still waiting for at least one OCC, delay and try again
+	    nanosleep(0,  NS_PER_MSEC * MSEC_BETWEEN_POLLS);
+	}
+    } while ((OCC_NONE != waitingForInstance) && (numPolls < MAX_POLL));
+
+    if (OCC_NONE != waitingForInstance)
+    {
+	die("waitForOccReady: OCC%d is not in ready state", waitingForInstance);
+    }
+
+    return l_err;
+}
+
+// Set the OCC state
+errlHndl_t OccManager::setOccState(const occStateId i_state = OCC_STATE_NO_CHANGE )
+{
+	errlHndl_t l_err = nullptr;
+
+	occStateId requestedState = i_state;
+	if (OCC_STATE_NO_CHANGE == i_state)
+	{
+		// If no state was requested use the target state, which is OCC_STATE_ACTIVE
+		// by default.
+		requestedState = OCC_STATE_ACTIVE;
+	}
+
+	l_err = _buildOccs(); // if not already built.
+
+	// Send poll cmd to confirm comm has been established.
+	// Flush old errors to ensure any new errors will be collected
+	l_err = sendOccPoll(true, nullptr);
+	if (l_err)
+	{
+		TMGT_ERR("setOccState: Poll OCCs failed.");
+		// Proceed with reset even if failed
+		ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+	}
+
+	const uint8_t occInstance = iv_occMaster->getInstance();
+	bool needsRetry = false;
 	do
 	{
-#ifndef __HOSTBOOT_RUNTIME
-		// Calc memory throttles (once per IPL)
-		l_err = calcMemThrottles();
-		if( l_err )
+		l_err = iv_occMaster->setState(requestedState);
+		if (nullptr == l_err)
 		{
-			break;
+			needsRetry = false;
 		}
-#endif
-
-		// Make sure OCCs are ready for communication
-		l_err = OccManager::waitForOccCheckpoint();
-		if( l_err )
+		else
 		{
-			break;
-		}
-
-#ifdef __HOSTBOOT_RUNTIME
-		// TODO RTC 124738  Final solution TBD
-		//  Perhapse POLL scom 0x6a214 until bit 31 is set?
-		nanosleep(1,0);
-#endif
-
-		// Send poll to establish comm
-		TMGT_INF("Send initial poll to all OCCs to"
-			" establish comm");
-		l_err = OccManager::sendOccPoll();
-		if (l_err)
-		{
-			if (OccManager::occNeedsReset())
+			if (false == needsRetry)
 			{
-				// No need to continue if reset is required
-				TMGT_ERR("processOccStartStatus(): "
-					"OCCs need to be reset");
-				break;
+				ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+				needsRetry = true;
 			}
 			else
 			{
-				// Continue even if failed (will be retried)
-				ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+				// Only one retry, return error handle
+				needsRetry = false;
 			}
 		}
-		skip_comm = false;
+	}
+	while (needsRetry);
 
-		// Send ALL config data
-		sendOccConfigData();
+	if (l_err)
+		return l_err;
 
-		// Set the User PCAP
-		l_err = sendOccUserPowerCap();
-		if (l_err)
+	// Send poll to query state of all OCCs
+	// and flush any errors reported by the OCCs
+	l_err = sendOccPoll(true);
+	if (l_err)
+	{
+		TMGT_ERR("setOccState: Poll all OCCs failed");
+		ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+	}
+
+	// Make sure all OCCs went to active state
+	for( const auto & occ : iv_occArray )
+	{
+		if (requestedState == occ->getState())
 		{
-			break;
+			// Update GPU present status
+			occ->updateGpuPresence();
 		}
-
-		// Wait for all OCCs to go to the target state
-		l_err = waitForOccState();
-		if ( l_err )
+		else
 		{
-			break;
+			die();
 		}
+	}
 
-		// Set active sensors for all OCCs,
-		// so BMC can start communication with OCCs
-		l_err = setOccActiveSensors(true);
-		if (l_err)
+	return l_err;
+}
+
+// Set state of the OCC
+errlHndl_t Occ::setState(const occStateId i_state)
+{
+	errlHndl_t l_err = nullptr;
+
+	const uint8_t l_cmdData[3] =
+	{
+		0x00, // version
+		i_state,
+		0x00 // reserved
+	};
+
+	OccCmd cmd(this, OCC_CMD_SET_STATE, sizeof(l_cmdData), l_cmdData);
+	l_err = cmd.sendOccCmd();
+	if (l_err != nullptr)
+	{
+		die();
+	}
+	else
+	{
+		if (OCC_RC_SUCCESS != cmd.getRspStatus())
 		{
-			// Continue even if failed to update sensor
-			ERRORLOG::errlCommit(l_err, HTMGT_COMP_ID);
+			die();
 		}
-	} while(0);
+	}
+
+	return l_err;
+
+} // end Occ::setState()
+
+// Send command to OCC
+errlHndl_t OccCmd::sendOccCmd()
+{
+	errlHndl_t l_errlHndl = NULL;
+	iv_OccRsp.returnStatus = OCC_COMMAND_IN_PROGRESS;
+
+	const occStateId l_occState = iv_Occ->iv_state;
+
+	// Only allow commands if comm has been established,
+	// or this is a poll command
+	const bool l_commEstablished = iv_Occ->iv_commEstablished;
+	if (l_commEstablished || OCC_CMD_POLL == iv_OccCmd.cmdType)
+	{
+		iv_RetryCmd = false;
+		do
+		{
+			// Send the command and receive the response
+			l_errlHndl = writeOccCmd();
+
+			// process response if OCC did not hit an exception
+			if (0 == iv_Occ->iv_exceptionLogged)
+			{
+				processOccResponse(l_errlHndl);
+			}
+			// skip retry if an exception was logged
+		} while (iv_RetryCmd && (0 == iv_Occ->iv_exceptionLogged));
+	}
+
+	return l_errlHndl;
+}
+
+// Build OCC command buffer in HOMER, notify OCC and wait for the response or timeout
+errlHndl_t OccCmd::writeOccCmd()
+{
+    errlHndl_t l_err = NULL;
+
+    // Write the command to HOMER
+    buildOccCmdBuffer();
+
+    // Notify OCC that command is available (via circular buffer)
+    const uint32_t l_bitsToSend = sizeof(occCircBufferCmd_t) * 8;
+
+    const occCircBufferCmd_t tmgtDataWriteAttention = {
+	0x10,   // sender: HTMGT
+	0x01,   // command: Command Write Attention
+	{0, 0, 0, 0, 0, 0} // reserved
+    };
+
+    fapi2::buffer<uint64_t> l_circ_buffer;
+    l_circ_buffer.insert((*(uint64_t*)&tmgtDataWriteAttention),0, l_bitsToSend);
+
+    l_err = HBOCC::writeCircularBuffer(iv_Occ->iv_target, l_circ_buffer.pointer());
+    if (NULL != l_err)
+    {
+	// Continue to try to read response buffer, in case an
+	// exception happened...
+    }
+
+    // Wait for response from the OCC
+    const uint8_t l_instance = iv_Occ->iv_instance;
+    const uint8_t l_index = getCmdIndex(iv_OccCmd.cmdType);
+    const uint16_t l_read_timeout = cv_occCommandTable[l_index].timeout;
+
+    // Wait for OCC to process command and send response
+    waitForOccRsp(l_read_timeout);
+
+    // Parse the OCC response (called even on timeout to collect
+    // rsp buffer)
+    l_err = parseOccResponse();
+
+    if (OCC_COMMAND_IN_PROGRESS != iv_OccRsp.returnStatus)
+    {
+	// Status of 0xE0-EF are reserved for OCC exceptions,
+	// must collect data for these
+	if (0xE0 == (iv_OccRsp.returnStatus & 0xF0))
+	{
+	    handleOccException();
+	    die();
+	}
+	else if (iv_OccRsp.sequenceNumber != iv_OccCmd.sequenceNumber)
+	{
+	    // Sequence number mismatch
+	    die();
+	}
+    }
+    else
+    {
+	// OCC must not have completed processing the command before
+	// timeout
+	die();
+    }
+
+    return l_err;
+}
+
+const uint32_t OCC_CMD_ADDR        = 0x000E0000;
+const uint32_t OCC_RSP_ADDR        = 0x000E1000;
+
+// Copy OCC command into command buffer in HOMER
+uint16_t OccCmd::buildOccCmdBuffer()
+{
+    uint8_t * const cmdBuffer = iv_Occ->iv_homer + OCC_CMD_ADDR;
+    uint16_t l_send_length = 0;
+
+    if (0 == ++iv_Occ->iv_seqNumber)
+    {
+	// Do not use 0 for sequence number
+	++iv_Occ->iv_seqNumber;
+    }
+    iv_OccCmd.sequenceNumber = iv_Occ->iv_seqNumber;
+    cmdBuffer[l_send_length++] = iv_OccCmd.sequenceNumber;
+    cmdBuffer[l_send_length++] = iv_OccCmd.cmdType;
+    cmdBuffer[l_send_length++] = (iv_OccCmd.dataLength >> 8) & 0xFF;
+    cmdBuffer[l_send_length++] = iv_OccCmd.dataLength & 0xFF;
+    memcpy(&cmdBuffer[l_send_length], iv_OccCmd.cmdData,
+	   iv_OccCmd.dataLength);
+    l_send_length += iv_OccCmd.dataLength;
+
+    // Calculate checksum
+    iv_OccCmd.checksum = 0;
+    for (uint16_t l_index = 0; l_index < l_send_length; l_index++)
+    {
+	iv_OccCmd.checksum += cmdBuffer[l_index];
+    }
+    cmdBuffer[l_send_length++] = (iv_OccCmd.checksum >> 8) & 0xFF;
+    cmdBuffer[l_send_length++] = iv_OccCmd.checksum & 0xFF;
+
+    // When the P8 processor writes to memory (such as the HOMER) there is
+    // no certainty that the writes happen in order or that they have
+    // actually completed by the time the instructions complete. 'sync'
+    // is a memory barrier to ensure the HOMER data has actually been made
+    // consistent with respect to memory, so that if the OCC were to read
+    // it they would see all of the data. Otherwise, there is potential
+    // for them to get stale or incomplete data.
+    sync();
+
+    return l_send_length;
+}
+
+// Write OCC Circular Buffer
+errlHndl_t writeCircularBuffer(const TARGETING::Target * i_pTarget,
+			       uint64_t * i_dataBuf)
+{
+    errlHndl_t l_errl = nullptr;
+    l_errl = accessOCBIndirectChannel(ACCESS_OCB_WRITE_CIRCULAR,
+					i_pTarget,
+					0,
+					i_dataBuf,
+					CIRCULAR_OCB_DATA_SIZE);
+    return l_errl;
+}
+
+// Returns true if timeout waiting for response
+bool OccCmd::waitForOccRsp(uint32_t i_timeout)
+{
+    const uint8_t * const rspBuffer = iv_Occ->iv_homer + OCC_RSP_ADDR;
+    uint16_t rspLength = 0;
+
+    bool l_time_expired = true;
+    const int64_t OCC_RSP_SAMPLE_TIME = 100; // in milliseconds
+    int64_t l_msec_remaining =
+	std::max(int64_t(i_timeout * 1000), OCC_RSP_SAMPLE_TIME);
+    while (l_msec_remaining >= 0)
+    {
+	// 1. When OCC receives the command, it will set the status to
+	//    COMMAND_IN_PROGRESS.
+	// 2. When the response is ready OCC will update the full
+	//    response buffer (except the status)
+	// 3. The status field is updated last to indicate response ready
+	//
+	// Note: Need to check the sequence number to be sure we are
+	//       processing the expected response
+	if ((OCC_COMMAND_IN_PROGRESS != rspBuffer[2]) &&
+	    (iv_Occ->iv_seqNumber == rspBuffer[0]))
+	{
+	    // Need an 'isync' here to ensure that previous instructions
+	    // have completed before the code continues on. This is a type
+	    // of read-barrier.  Without this the processor can do
+	    // speculative reads of the HOMER data and you can actually
+	    // get stale data as part of the instructions that happen
+	    // afterwards. Another 'weak consistency' issue.
+	    isync();
+
+	    // OCC must have processed the command
+	    const uint16_t rspDataLen = UINT16_GET(&rspBuffer[3]);
+	    rspLength = OCC_RSP_HDR_LENGTH + rspDataLen;
+	    l_time_expired = false;
+	    break;
+	}
+
+	if (l_msec_remaining > 0)
+	{
+	    // delay before next check
+	    const int64_t l_sleep_msec = std::min(l_msec_remaining,
+						  OCC_RSP_SAMPLE_TIME);
+	    nanosleep( 0, NS_PER_MSEC * l_sleep_msec );
+	    l_msec_remaining -= l_sleep_msec;
+	}
+	else
+	{
+	    // time expired
+	    l_msec_remaining = -1;
+
+	    // Read SRAM response buffer to check for exception
+	    // (On exception, data may not be copied to HOMER)
+	    handleOccException();
+	    die();
+	}
+    }
+
+    return l_time_expired;
+}
+
+// Copy response into object
+errlHndl_t OccCmd::parseOccResponse()
+{
+	errlHndl_t l_errlHndl = NULL;
+	uint16_t l_index = 0;
+	const uint8_t * const rspBuffer = iv_Occ->iv_homer + OCC_RSP_ADDR;
+
+	iv_OccRsp.sequenceNumber = rspBuffer[l_index++];
+	iv_OccRsp.cmdType = (enum occCommandType)rspBuffer[l_index++];
+	iv_OccRsp.returnStatus = (occReturnCodes)rspBuffer[l_index++];
+
+	iv_OccRsp.dataLength = UINT16_GET(&rspBuffer[l_index]);
+	l_index += 2;
+
+	if (iv_OccRsp.dataLength > 0)
+	{
+		if (iv_OccRsp.dataLength > OCC_MAX_DATA_LENGTH)
+		{
+			// truncating data
+			iv_OccRsp.dataLength = OCC_MAX_DATA_LENGTH;
+		}
+		memcpy(iv_OccRsp.rspData, &rspBuffer[l_index],
+			iv_OccRsp.dataLength);
+		l_index += iv_OccRsp.dataLength;
+	}
+
+	iv_OccRsp.checksum = UINT16_GET(&rspBuffer[l_index]);
+
+	return l_errlHndl;
+}
+
+// Check for an OCC exception in SRAM.  If found:
+// create/commit an error log with the OCC exception data
+void OccCmd::handleOccException(void);
+
+// Process the OCC response and determine if retry is required
+void OccCmd::processOccResponse(errlHndl_t & io_errlHndl)
+{
+	const uint8_t l_instance = iv_Occ->iv_instance;
+	const bool alreadyRetriedOnce = iv_RetryCmd;
+	iv_RetryCmd = false;
+
+	if (io_errlHndl != NULL)
+		die();
+
+	// A response was received
+	io_errlHndl = checkOccResponse();
+	if (io_errlHndl != NULL)
+	{
+		// Error checking on response failed...
+		if (!alreadyRetriedOnce &&
+		    OCC_RC_PRESENT_STATE_PROHIBITS != iv_OccRsp.returnStatus)
+		{
+			// A retry has not been sent yet, commit the error
+			// and retry.
+			iv_RetryCmd = true;
+			// Clear/init the response data structure
+			memset(&iv_OccRsp, 0x00, sizeof(occResponseStruct_t));
+			iv_OccRsp.returnStatus = OCC_COMMAND_IN_PROGRESS;
+		}
+		else
+		{
+			die();
+		}
+	}
+}
+
+// Verify status, checksum and length of OCC response
+errlHndl_t OccCmd::checkOccResponse()
+{
+	errlHndl_t l_errlHndl = NULL;
+	uint16_t l_calc_checksum = 0, l_index = 0;
+
+	// Calculate checksum on response
+	l_calc_checksum += iv_OccRsp.sequenceNumber;
+	l_calc_checksum += iv_OccRsp.cmdType;
+	l_calc_checksum += iv_OccRsp.returnStatus;
+	l_calc_checksum += (iv_OccRsp.dataLength >> 8) & 0xFF;
+	l_calc_checksum += iv_OccRsp.dataLength & 0xFF;
+	for (l_index = 0; l_index < iv_OccRsp.dataLength; l_index++)
+	{
+		l_calc_checksum += iv_OccRsp.rspData[l_index];
+	}
+
+	if (l_calc_checksum != iv_OccRsp.checksum)
+		die();
+
+	if (iv_OccRsp.returnStatus != OCC_RC_SUCCESS)
+		die();
+
+	occCheckRspLengthType l_check_rsp_length;
+	uint16_t l_rsp_length = 0;
+
+	// Verify response length and log errors if bad
+	l_index = getCmdIndex(iv_OccRsp.cmdType);
+	// l_index should be valid since validation was done
+	// in sendOccCmd()
+	l_check_rsp_length = cv_occCommandTable[l_index].checkRspLength;
+	l_rsp_length = cv_occCommandTable[l_index].rspLength;
+
+	if (OCC_CHECK_RSP_LENGTH_EQUALS == l_check_rsp_length)
+	{
+		if ( iv_OccRsp.dataLength != l_rsp_length )
+		{
+			die();
+		}
+	}
+	else if (OCC_CHECK_RSP_LENGTH_GREATER == l_check_rsp_length)
+	{
+		if ( iv_OccRsp.dataLength < l_rsp_length )
+		{
+			die();
+		}
+	}
+	else if (OCC_CHECK_RSP_LENGTH_NONE != l_check_rsp_length)
+	{
+			die();
+	}
+
+	return(l_errlHndl);
+}
+
+// Set active/inactive sensors for all OCCs so BMC can start communication
+errlHndl_t setOccActiveSensors(bool i_activate = true)
+{
+    errlHndl_t l_err = NULL;
+
+    for (Occ * occ : OccManager::getOccArray())
+    {
+	l_err = occ->ipmiSensor(i_activate);
+    }
+
+    return l_err;
 }
 
 StopReturnCode_t p9_stop_save_scom( void* const   i_pImage,
@@ -2608,25 +3702,6 @@ errlHndl_t p9_translation (TARGETING::Target * &i_target,
         l_chip_mode);
 
 
-#if __HOSTBOOT_RUNTIME
-    if(((i_type == TARGETING::TYPE_EQ) ||
-        (i_type == TARGETING::TYPE_EX) ||
-        (i_type == TARGETING::TYPE_CORE)) &&
-        (!g_wakeupInProgress) &&
-        !(i_opMode & fapi2::DO_NOT_DO_WAKEUP) )
-    {
-        o_needsWakeup = true;
-        for(uint16_t i = 0; i < l_scomPairings.size(); i++)
-        {
-            if( l_scomPairings[i].chipUnitType == PU_PERV_CHIPUNIT)
-            {
-                o_needsWakeup = false;
-                break;
-            }
-        }
-    }
-#endif
-
     for(uint32_t i = 0; i < l_scomPairings.size(); i++)
     {
         if( (l_scomPairings[i].chipUnitType == l_chipUnit) &&
@@ -3035,20 +4110,7 @@ errlHndl_t resetPMComplex(TARGETING::Target * i_target)
         return;
     }
 
-#if defined(__HOSTBOOT_RUNTIME) && defined(CONFIG_NVDIMM)
-    NVDIMM::notifyNvdimmProtectionChange(i_target, NVDIMM::OCC_INACTIVE);
-#endif
-
     p9_pm_reset(l_fapiTarg, (void*)l_homerPhysAddr);
-
-#ifdef __HOSTBOOT_RUNTIME
-    if(HB_INITIATED_PM_RESET_IN_PROGRESS != l_chipResetState)
-    {
-        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(HB_INITIATED_PM_RESET_IN_PROGRESS);
-        Singleton<ATTN::Service>::instance().handleAttentions(i_target);
-        i_target->setAttr<ATTR_HB_INITIATED_PM_RESET>(l_chipResetState);
-    }
-#endif
 }
 
 uint64_t PHYSICAL_ADDR_MASK = 0x7FFFFFFFFFFFFFFF;
