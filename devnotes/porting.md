@@ -275,6 +275,74 @@ ID=31      BOOTKERNFW 0x03e10000..0x03ff0000 (actual=0x001e0000) [---P------]
 ID=32     BACKUP_PART 0x03ff7000..0x03fff000 (actual=0x00000000) [----RB----]
 ```
 
+### Testing firmware images without flashing
+
+It is possible to test new firmware images without flashing the physical flash
+device. This makes testing and switching between two versions (e.g. Hostboot and
+coreboot) much faster and safer. There are two ways of doing so, one is
+described on [Raptor's wiki](https://wiki.raptorcs.com/wiki/Compiling_Firmware#Running_the_firmware_temporarily)
+and requires starting `mboxd` manually, the second one is described below.
+v2.00+ BMC firmware requirement still applies.
+
+First, read original flash. For earlier versions it is required to read from
+system that booted at least once, since some of the partitions are modified on
+the first boot.
+
+```shell
+root@talos:~# pflash -r /tmp/talos.pnor
+```
+
+> Keep in mind that tmpfs size is limited and exceeding that limit may result in
+> unresponsive BMC, which in most severe cases requires hard power cycle.
+
+Next step is "flashing" modified partition, which is similar to flashing real
+device with two changes: no need to erase the flash and target file must be
+specified. New command looks like this:
+
+```shell
+root@talos:~# pflash -P <partition> -p <partition>.bin -F /tmp/talos.pnor
+```
+
+> `pflash` can emulate `-e` option when "flashing" to file, but this is not
+> required. It only wastes time, as the emulated erase is even slower than the
+> real one.
+
+To mount the file as flash device one has to use (on powered down platform):
+
+```shell
+root@talos:~# mboxctl --backend file:/tmp/flash.pnor
+```
+
+> Partitions can be "flashed" while the file is mounted, as long as host
+> platform doesn't try to access it simultaneously.
+
+Optionally, success can be tested with:
+
+```shell
+root@talos:~# mboxctl --lpc-state
+LPC Bus Maps: BMC Memory
+```
+
+`BMC Memory` tells that emulated flash is used instead of real one. Host doesn't
+see any difference (except maybe different access times), it still reads and
+writes PNOR the same way as with physical device.
+
+To get back to real PNOR one has to use:
+
+```shell
+root@talos:~# mboxctl --backend vpnor
+Failed to post message: Connection timed out
+root@talos:~# mboxctl --lpc-state
+LPC Bus Maps: Flash Device
+```
+
+Even though that command reports failure, it maps LPC back to flash device. This
+can be tested with `mboxctl --lpc-state`.
+
+> There is `mboxctl --point-to-flash` command that is supposed to revert to the
+> original mapping, but it doesn't seem to work, neither does `--resume clean`
+> nor `--reset`.
+
 ## Building OpenPOWER firmware
 
 Sometimes it may be necessary to modify the core OpenPOWER firmware. The easiest
