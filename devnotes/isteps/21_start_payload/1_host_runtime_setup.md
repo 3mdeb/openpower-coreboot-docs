@@ -91,7 +91,7 @@ Control flow of OCC start and initialization process:
    2. `waitForOccCheckpoint()` (waits for all OCCs to finish their initialization)
    3. `sendOccPoll()` (also called by several functions below)
       1. `pollForErrors()` (checks whether OCCs are in error state) (2 levels)
-   4. `sendOccConfigData()` (collects and sends various of data to OCCs) (1 level)
+   4. `sendOccConfigData()` (collects and sends various data to OCCs) (1 level)
    5. `sendOccUserPowerCap()` (sets user power limit, 0 means "not set") (1 level)
    6. `waitForOccState()` (wait for OCCs to become "Active-ready" and set "Active" state)
    7. `setOccActiveSensors()` (signals to BMC that it can interract with OCC)
@@ -1370,11 +1370,7 @@ void* call_host_runtime_setup (void *io_pArgs)
             }
         }
 #endif
-#ifdef CONFIG_HTMGT
-        HTMGT::processOccStartStatus(/*i_startCompleted=*/true);
-#else
-	HBPM::verifyOccChkptAll();
-#endif
+    HTMGT::processOccStartStatus(/*i_startCompleted=*/true);
 
     uint32_t threadRegSize = sizeof(DUMP::hostArchRegDataHdr)
                            + 95 * sizeof(DUMP::hostArchRegDataEntry);
@@ -1608,7 +1604,7 @@ void OccManager::sendOccPoll(const bool i_flushAllErrors = false,
 
 	for( const auto & l_occ : iv_occArray )
 	{
-		errlHndl_t poll_err=l_occ->pollForErrors(/*i_flushAllErrors*/=false);
+		errlHndl_t poll_err = l_occ->pollForErrors(i_flushAllErrors);
 		if (poll_err != nullptr)
 			die();
 	}
@@ -1647,7 +1643,9 @@ enum occCommandType
 errlHndl_t Occ::pollForErrors(const bool i_flushAllErrors = false)
 {
 	errlHndl_t err = nullptr;
-	while (false)
+	bool continuePolling = false;
+	size_t elogCount = 10;
+	do
 	{
 		// create 1 byte buffer for poll command data
 		const uint8_t l_cmdData[1] = { 0x20 /*version*/ };
@@ -1668,13 +1666,42 @@ errlHndl_t Occ::pollForErrors(const bool i_flushAllErrors = false)
 		uint32_t poll_rsp_size = cmd.getResponseData(poll_rsp);
 		if (poll_rsp_size >= OCC_POLL_DATA_MIN_SIZE)
 		{
+			if (i_flushAllErrors)
+			{
+				const occPollRspStruct_t *currentPollRsp =
+					(occPollRspStruct_t *) poll_rsp;
+				if (currentPollRsp->errorId != 0)
+				{
+					if (--elogCount > 0)
+					{
+						// An error was returned, keep polling OCC
+						continuePolling = true;
+					}
+					else
+					{
+						// Limit number of elogs retrieved so
+						// we do not get stuck in loop
+						TMGT_INF("pollForErrors: OCC%d still has "
+							"more errors to report. "
+							"(ID 0x%02X)",
+							iv_instance,
+							currentPollRsp->errorId);
+						continuePolling = false;
+					}
+				}
+				else
+				{
+					continuePolling = false;
+				}
+			}
 			pollRspHandler(poll_rsp, poll_rsp_size);
 		}
 		else
 		{
-			die();
+			die("Invalid data length");
 		}
 	}
+	while (continuePolling);
 
 	return err;
 }
@@ -2243,8 +2270,6 @@ errlHndl_t OccCmd::sendOccCmd()
 	errlHndl_t l_errlHndl = NULL;
 	iv_OccRsp.returnStatus = OCC_COMMAND_IN_PROGRESS;
 
-	const occStateId l_occState = iv_Occ->iv_state;
-
 	// Only allow commands if comm has been established,
 	// or this is a poll command
 	const bool l_commEstablished = iv_Occ->iv_commEstablished;
@@ -2267,6 +2292,13 @@ errlHndl_t OccCmd::sendOccCmd()
 
 	return l_errlHndl;
 }
+
+struct occCircBufferCmd_t
+{
+    uint8_t senderId;
+    uint8_t commandType;
+    uint8_t reserved[6];
+}__attribute__((packed));
 
 // Build OCC command buffer in HOMER, notify OCC and wait for the response or timeout
 errlHndl_t OccCmd::writeOccCmd()
@@ -2296,7 +2328,6 @@ errlHndl_t OccCmd::writeOccCmd()
     }
 
     // Wait for response from the OCC
-    const uint8_t l_instance = iv_Occ->iv_instance;
     const uint8_t l_index = getCmdIndex(iv_OccCmd.cmdType);
     const uint16_t l_read_timeout = cv_occCommandTable[l_index].timeout;
 
@@ -2387,6 +2418,150 @@ errlHndl_t writeCircularBuffer(const TARGETING::Target * i_pTarget,
 					i_dataBuf,
 					CIRCULAR_OCB_DATA_SIZE);
     return l_errl;
+}
+
+/*
+ * @brief Interface for communicating with the OCC via OCB channels
+ *
+ * @param[in] i_cmd - OCB Command type
+ * @param[in] i_pTarget - The OCC Target
+ * @param[in] i_addr - The address to read from/write to
+ * @param[in/out] io_dataBuf - The input/output buffer
+ * @param[in] i_dataLen - The length of the buffer in bytes
+ *
+ * @return - nullptr on success, error log handle on failure
+ */
+errlHndl_t accessOCBIndirectChannel(accessOCBIndirectCmd i_cmd = ACCESS_OCB_WRITE_CIRCULAR,
+				    const TARGETING::Target * i_pTarget,
+				    const uint32_t i_addr = 0,
+				    uint64_t * io_dataBuf,
+				    size_t i_dataLen )
+{
+    errlHndl_t l_errl = nullptr;
+    uint32_t   l_len  = 0;
+    TARGETING::Target* l_pChipTarget = nullptr;
+
+    p9ocb::PM_OCB_CHAN_NUM   l_channel = p9ocb::OCB_CHAN1;  // OCB channel (0,1,2,3)
+    p9ocb::PM_OCB_ACCESS_OP   l_operation = p9ocb::OCB_PUT;  // Operation(Get, Put)
+    bool       l_ociAddrValid = false;  // use oci_address
+
+    do
+    {
+	l_errl = getChipTarget(i_pTarget,l_pChipTarget);
+	if (l_errl)
+	{
+	    break; //exit with error
+	}
+
+	fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapiTarget( l_pChipTarget );
+
+	// buffer must be multiple of 8 bytes
+	if( i_dataLen%8 != 0)
+	{
+	    break; // return with error
+	}
+
+	// perform operation
+	p9_pm_ocb_indir_access(l_fapiTarget,
+			 l_channel,
+			 l_operation,
+			 i_dataLen/8, // Number of 8-byte blocks
+			 l_ociAddrValid,
+			 i_addr,
+			 l_len,
+			 io_dataBuf);
+
+	if(l_errl)
+	{
+	    break; // return with error
+	}
+    }
+    while (0);
+
+    return l_errl;
+}
+
+fapi2::ReturnCode 9_pm_ocb_indir_access(
+    const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
+    const p9ocb::PM_OCB_CHAN_NUM  i_ocb_chan = p9ocb::OCB_CHAN1,
+    const p9ocb::PM_OCB_ACCESS_OP i_ocb_op,
+    const uint32_t                i_ocb_req_length,
+    const bool                    i_oci_address_valid = false,
+    const uint32_t                i_oci_address,
+    uint32_t&                     o_ocb_act_length,
+    uint64_t*                     io_ocb_buffer)
+{
+    uint64_t l_OCBAR_address   = PU_OCB_PIB_OCBAR1;
+    uint64_t l_OCBDR_address   = PU_OCB_PIB_OCBDR1;
+    uint64_t l_OCBCSR_address  = PU_OCB_PIB_OCBCSR1_RO;
+    uint64_t l_OCBSHCS_address = PU_OCB_OCI_OCBSHCS1_SCOM;
+    o_ocb_act_length = 0;
+
+    // PUT Operation: Write data to the SRAM in the given location
+    //                via the OCB channel
+    if ( i_ocb_op == p9ocb::OCB_PUT )
+    {
+	fapi2::buffer<uint64_t> l_data64;
+	fapi2::getScom(i_target, l_OCBCSR_address, l_data64);
+
+	// The following check for circular mode is an additional check
+	// performed to ensure a valid data access.
+	if (l_data64.getBit<4>() && l_data64.getBit<5>())
+	{
+	    FAPI_DBG("Circular mode detected.");
+	    // Check if push queue is enabled. If not, let the store occur
+	    // anyway to let the PIB error response return occur. (that is
+	    // what will happen if this checking code were not here)
+	    fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
+
+	    if (l_data64.getBit<31>())
+	    {
+		FAPI_DBG("Poll for a non-full condition to a push queue to "
+			 "avoid data corruption problem");
+		bool l_push_ok_flag = false;
+		uint8_t l_counter = 0;
+
+		do
+		{
+		    // If the OCB_OCI_OCBSHCS0_PUSH_FULL bit (bit 0) is clear,
+		    // proceed. Otherwise, poll
+		    if (!l_data64.getBit<0>())
+		    {
+			l_push_ok_flag = true;
+			FAPI_DBG("Push queue not full. Proceeding");
+			break;
+		    }
+
+		    // Delay, before next polling.
+		    fapi2::delay(OCB_FULL_POLL_DELAY_HDW, OCB_FULL_POLL_DELAY_SIM);
+
+		    fapi2::getScom(i_target, l_OCBSHCS_address, l_data64);
+		    l_counter++;
+		}
+		while (l_counter < OCB_FULL_POLL_MAX);
+
+		FAPI_ASSERT((true == l_push_ok_flag),
+			    fapi2::PM_OCB_PUT_DATA_POLL_NOT_FULL_ERROR().
+			    set_CHANNEL(i_ocb_chan).
+			    set_DATA_SIZE(i_ocb_req_length).
+			    set_TARGET(i_target),
+			    "Polling timeout waiting on push non-full");
+	    }
+	}
+
+	// Walk the input buffer (io_ocb_buffer) 8B (64bits) at a time to write
+	// the channel data register
+	for(uint32_t l_index = 0; l_index < i_ocb_req_length; l_index++)
+	{
+	    l_data64.insertFromRight(io_ocb_buffer[l_index], 0, 64);
+	    /* The data read is done via this getscom operation.
+	     * A data write failure will be logged off as a simple scom failure.
+	     * Need to find a way to distiniguish this error and collect
+	     * additional information incase of a failure.*/
+	    fapi2::putScom(i_target, l_OCBDR_address, l_data64);
+	    o_ocb_act_length++;
+	}
+    }
 }
 
 // Returns true if timeout waiting for response
@@ -2517,6 +2692,52 @@ void OccCmd::processOccResponse(errlHndl_t & io_errlHndl)
 	}
 }
 
+struct occCommandTable_t
+{
+    occCommandType    cmdType;
+    uint8_t            supported;
+    occCheckRspLengthType checkRspLength;
+    uint16_t           rspLength;
+    uint32_t           timeout;
+    uint16_t           maxBytesRead;
+    occCmdTraceEnum   traceCmd;
+
+    bool operator== (const occCommandType i_cmd)
+    {
+	return (cmdType == i_cmd);
+    }
+};
+
+const occCommandTable_t OccCmd::cv_occCommandTable[] =
+{
+    // Command                   Support  RspCheck
+    //   RspLen  Timeout  ReadMax  Tracing
+    {OCC_CMD_POLL,                 0xE0,  OCC_CHECK_RSP_LENGTH_GREATER,
+	0x0028, TO_20SEC,  0x0017, OCC_TRACE_EXTENDED},
+    {OCC_CMD_CLEAR_ERROR_LOG,      0xC0,  OCC_CHECK_RSP_LENGTH_EQUALS,
+	0x0000, TO_20SEC,  0x0008, OCC_TRACE_EXTENDED},
+    {OCC_CMD_SET_STATE,            0xE0,  OCC_CHECK_RSP_LENGTH_EQUALS,
+	0x0000, TO_20SEC,  0x0008, OCC_TRACE_ALWAYS},
+    {OCC_CMD_SETUP_CFG_DATA,       0x80,  OCC_CHECK_RSP_LENGTH_EQUALS,
+	0x0000, TO_20SEC,  0x0008, OCC_TRACE_CONDITIONAL},
+    {OCC_CMD_SET_POWER_CAP,        0x80,  OCC_CHECK_RSP_LENGTH_NONE,
+	0x0000, TO_20SEC,  0x0090, OCC_TRACE_EXTENDED},
+    {OCC_CMD_RESET_PREP,           0x80,  OCC_CHECK_RSP_LENGTH_GREATER,
+	0x0000, TO_20SEC,  0x0190, OCC_TRACE_ALWAYS},
+    {OCC_CMD_DEBUG_PASS_THROUGH,   0xF0,  OCC_CHECK_RSP_LENGTH_NONE,
+	0x0000, TO_20SEC,  RD_MAX, OCC_TRACE_EXTENDED},
+    {OCC_CMD_AME_PASS_THROUGH,     0xF0,  OCC_CHECK_RSP_LENGTH_NONE,
+	0x0000, TO_20SEC,  RD_MAX, OCC_TRACE_EXTENDED},
+    {OCC_CMD_GET_FIELD_DEBUG_DATA, 0x80,  OCC_CHECK_RSP_LENGTH_GREATER,
+	0x0001, TO_20SEC,  RD_MAX, OCC_TRACE_NEVER},
+    {OCC_CMD_MFG_TEST,             0xF0,  OCC_CHECK_RSP_LENGTH_NONE,
+	0x0001, TO_20SEC,  RD_MAX, OCC_TRACE_ALWAYS},
+
+    // If command not found, use this last entry
+    {OCC_CMD_END_OF_TABLE,         0xE0,  OCC_CHECK_RSP_LENGTH_NONE,
+	0x0000, TO_20SEC,  RD_MAX, OCC_TRACE_NEVER}
+};
+
 // Verify status, checksum and length of OCC response
 errlHndl_t OccCmd::checkOccResponse()
 {
@@ -2566,7 +2787,7 @@ errlHndl_t OccCmd::checkOccResponse()
 	}
 	else if (OCC_CHECK_RSP_LENGTH_NONE != l_check_rsp_length)
 	{
-			die();
+		die();
 	}
 
 	return(l_errlHndl);
@@ -4196,6 +4417,45 @@ errlHndl_t loadOCCImageToHomer(TARGETING::Target* i_target,
     memcpy(l_occVirt, l_pLidImage, l_lidImageSize);
 }
 
+/**
+ * @brief enumerates all platforms which request special wakeup.
+ */
+enum PROC_SPCWKUP_ENTITY
+{
+    OTR = 0,
+    FSP = 1,
+    OCC = 2,
+    HYP = 3,
+    HOST = HYP,
+    SPW_ALL
+};
+
+/**
+ * @brief enumerates types of special wakeup.
+ */
+enum PROC_SPCWKUP_TYPE
+{
+    SPW_CORE    = 0,
+    SPW_EQ      = 1,
+    SPW_EX      = 2
+};
+
+REG64( C_PPM_SPWKUP_OTR                                        , RULL(0x200F010A), SH_UNT_C        , SH_ACS_SCOM_RW   );
+REG64( EQ_PPM_SPWKUP_OTR                                       , RULL(0x100F010A), SH_UNT_EQ       , SH_ACS_SCOM_RW   );
+REG64( C_PPM_SPWKUP_FSP                                        , RULL(0x200F010B), SH_UNT_C        , SH_ACS_SCOM_RW   );
+REG64( EQ_PPM_SPWKUP_FSP                                       , RULL(0x100F010B), SH_UNT_EQ       , SH_ACS_SCOM_RW   );
+
+
+static const uint32_t NUM_ENTITIES = 4;
+static const uint32_t NUM_CHIPLET_TYPES = 2;
+static const uint64_t SPCWKUP_ADDR[NUM_ENTITIES][NUM_CHIPLET_TYPES] =
+{
+    {C_PPM_SPWKUP_OTR, EQ_PPM_SPWKUP_OTR},
+    {C_PPM_SPWKUP_FSP, EQ_PPM_SPWKUP_FSP},
+    {C_PPM_SPWKUP_OCC, EQ_PPM_SPWKUP_OCC},
+    {C_PPM_SPWKUP_HYP, EQ_PPM_SPWKUP_HYP}
+};
+
 fapi2::ReturnCode pm_init(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     void* i_pHomerImage)
@@ -4230,6 +4490,28 @@ fapi2::ReturnCode pm_init(
     l_data64.flush<0>().setBit<p9hcd::STOP_RECOVERY_TRIGGER_ENABLE>();
     fapi2::putScom(i_target, PU_OCB_OCI_OCCFLG2_CLEAR, l_data64);
 }
+
+EQ_QPPM_ERR = 0x100F0121
+EQ_QPPM_ERRMSK = 0x100F0122
+
+C_CPPM_CMEDB0_CLEAR = 0x200F0191
+C_CPPM_CMEDB1_CLEAR = 0x200F0195
+C_CPPM_CMEDB2_CLEAR = 0x200F0199
+C_CPPM_CMEDB3_CLEAR = 0x200F019D
+
+const uint64_t CME_DOORBELL_CLEAR[4] = {C_CPPM_CMEDB0_CLEAR,
+					C_CPPM_CMEDB1_CLEAR,
+					C_CPPM_CMEDB2_CLEAR,
+					C_CPPM_CMEDB3_CLEAR
+				       };
+
+const uint8_t DOORBELLS_COUNT = 4;
+
+CPPM_CSAR_FIT_HCODE_ERROR_INJECT                = 27,
+CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK  = 28,
+CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP   = 29,
+CPPM_CSAR_PSTATE_HCODE_ERROR_INJECT             = 30,
+CPPM_CSAR_STOP_HCODE_ERROR_INJECT               = 31
 
 fapi2::ReturnCode pm_corequad_init(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target)
@@ -4362,6 +4644,21 @@ fapi_try_exit:
     return fapi2::current_err;
 }
 
+PU_SRAM_SRBV0_SCOM = 0x0006A004
+PU_SRAM_SRBV1_SCOM = 0x0006A005
+PU_SRAM_SRBV2_SCOM = 0x0006A006
+PU_SRAM_SRBV3_SCOM = 0x0006A007
+
+PU_JTG_PIB_OJCFG_AND = 0x0006D005
+PU_OCB_PIB_OCR_CLEAR = 0x0006D001
+PU_OCB_PIB_OCR_OR    = 0x0006D002
+
+// OCR Register Bits
+static const uint32_t OCB_PIB_OCR_CORE_RESET_BIT = 0;
+
+// OCC JTAG Register Bits
+static const uint32_t JTG_PIB_OJCFG_DBG_HALT_BIT = 6;
+
 fapi2::ReturnCode p9_pm_occ_control
 (const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
  const p9occ_ctrl::PPC_CONTROL i_ppc405_reset_ctrl = p9occ_ctrl::PPC405_START,
@@ -4386,6 +4683,11 @@ fapi2::ReturnCode p9_pm_occ_control
     // Clear the reset bit
     fapi2::putScom(i_target, PU_OCB_PIB_OCR_CLEAR, BIT(OCB_PIB_OCR_CORE_RESET_BIT));
 }
+
+OCC_BOOT_OFFSET = 0x40
+CTR = 9
+OCC_SRAM_BOOT_ADDR = 0xFFF40000
+OCC_SRAM_BOOT_ADDR2 = 0xFFF40002
 
 ///
 /// @brief Creates and loads the OCC memory boot launcher
