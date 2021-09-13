@@ -84,7 +84,7 @@ uint8_t getMCPortNum(uint8_t i_portID)
 
 ### No information about changed SCOM addresses
 
-SCOM addresses has changed between DD1 and DD2 nit there is no information about
+SCOM addresses has changed between DD1 and DD2 but there is no information about
 it in the documentation, Raptor Wiki or IBM web page.\
 [p9_setup_bars.C#L939](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/nest/p9_setup_bars.C#L939)
 
