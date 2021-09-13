@@ -1,4 +1,4 @@
-# Introduction]
+# Introduction
 
 This document gathers informations about bugs found in Hostboot.
 
