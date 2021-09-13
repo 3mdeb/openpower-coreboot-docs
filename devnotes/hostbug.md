@@ -1,3 +1,7 @@
+# Introduction]
+
+This document gathers informations about bugs found in Hostboot.
+
 ### Rounding up not working
 
 [p9_pstate_parameter_block.C#L1803](https://github.com/open-power/hostboot/blob/4689d6d20fccc4587aea2cdfa843dc9881ff6482/src/import/chips/p9/procedures/hwp/pm/p9_pstate_parameter_block.C#L1803)
@@ -31,7 +35,7 @@ enum
 Comment describing what will be executed presents different operation than
 the actual code implements.
 
-[timing.H#L329](https://github.com/3mdeb/talos-hostboot/blob/a2ddbf3150e2c02ccc904b25d6650c9932a8a841/src/import/chips/p9/procedures/hwp/memory/lib/eff_config/timing.H#L329)
+[timing.H#L329](https://github.com/3mdeb/talos-hostboot/blob/a2ddbf3150e2c02ccc904b25d6650c9932a8a841/src/import/chips/p9/procedures/hwp/memory/lib/eff_config/timing.H#L329)\
 [timing.H#L344](https://github.com/3mdeb/talos-hostboot/blob/a2ddbf3150e2c02ccc904b25d6650c9932a8a841/src/import/chips/p9/procedures/hwp/memory/lib/eff_config/timing.H#L344)
 
 ```cpp
@@ -44,10 +48,13 @@ l_twlo_twloe = 12 + std::max( (l_twldqsen + tmod(i_target)), (l_wlo_ck + l_wloe_
 The same version of documentation, accessible on the IBM web page and
 Raptor Computing Systems Wiki has the same version, but different date
 of publication.
-[IBM version](https://ibm.ent.box.com/s/ddcdl3g0otdzyiajhkfe3jjh2oy5p3mt)
+
+[IBM version](https://ibm.ent.box.com/s/ddcdl3g0otdzyiajhkfe3jjh2oy5p3mt)\
 [Raptor version](https://wiki.raptorcs.com/w/images/0/04/POWER9_Registers_vol1_version1.1_pub.pdf)
 
 ### Overcomplicated modulo 2 calculation
+
+In C++ this could be done using simple modulo operation.
 
 [p9_mss_setup_bars.C#L269](https://github.com/open-power/hostboot/blob/4689d6d20fccc4587aea2cdfa843dc9881ff6482/src/import/chips/p9/procedures/hwp/nest/p9_mss_setup_bars.C#L269)
 
@@ -78,7 +85,7 @@ uint8_t getMCPortNum(uint8_t i_portID)
 ### No information about changed SCOM addresses
 
 SCOM addresses has changed between DD1 and DD2 nit there is no information about
-it in the documentation, Raptor Wiki or IBM web page.
+it in the documentation, Raptor Wiki or IBM web page.\
 [p9_setup_bars.C#L939](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/nest/p9_setup_bars.C#L939)
 
 ### isPstateModeEnabled returns false for Enabled
@@ -94,36 +101,32 @@ bool PlatPmPPB::isPstateModeEnabled()
 
 ### Different names for the same attribute
 
-Są jakby aliasy pod innymi nazwami i z innym sposobem dostępu do nich. Na przykładzie https://git.raptorcs.com/git/talos-hostboot/tree/src/usr/targeting/common/xmltohb/attribute_types.xml#n3583 mamy MIN_FREQ_MHZ, które jest nazwą hostbootowego atrybutu, i ATTR_FREQ_CORE_FLOOR_MHZ, które jest tym samym w FAPI/HWPF. Pierwszy z nich jest używany chyba wszędzie poza src/import/*, drugi tylko tam i w kodzie powstającym z src/usr/targeting, który mapuje między jednymi a drugimi (w obj/genfiles dużo plików się pojawia po kompilacji).
-
-Dostęp do tego pierwszego typu jest przez TARGETING::Target * sys->{g,s}etAttr<TARGETING::ATTR_MIN_FREQ_MHZ>(), a do drugiego przez FAPI_ATTR_GET(fapi2::ATTR_FREQ_CORE_FLOOR_MHZ, target, var).
-
 Hostboot attributes often have an alias that is used in `FAPI`/`HWPF`.
 For example Hostboot attribute `MIN_FREQ_MHZ` is also named `ATTR_FREQ_CORE_FLOOR_MHZ`.
 The first name is used everywhere except `src/import/*`, the second one
 in the `src/import/*` and code created from `src/usr/targeting` that
-maps the names between each other.
+maps the names between each other.\
 [attribute_types.xml#n3583](https://git.raptorcs.com/git/talos-hostboot/tree/src/usr/targeting/common/xmltohb/attribute_types.xml#n3583)
 
 ### Istep order different than in the documentation
 
 Istep 15.1 is swapped with 15.2 and 15.3 is swapped with 15.4.
 The execution order of these isteps is different in the code
-and in the documentation.
-[istep15list.H#L111](https://github.com/open-power/hostboot/blob/4689d6d20fccc4587aea2cdfa843dc9881ff6482/src/include/usr/isteps/istep15list.H#L111)
-[https://wiki.raptorcs.com/w/images/b/bd/IPL-Flow-POWER9.pdf](P9 IPL Flow)
+and in the documentation.\
+[istep15list.H#L111](https://github.com/open-power/hostboot/blob/4689d6d20fccc4587aea2cdfa843dc9881ff6482/src/include/usr/isteps/istep15list.H#L111)\
+[P9 IPL Flow](https://wiki.raptorcs.com/w/images/b/bd/IPL-Flow-POWER9.pdf)
 
 ### Istep missing in documentation
 
-[https://wiki.raptorcs.com/w/images/b/bd/IPL-Flow-POWER9.pdf](P9 IPL Flow)
-has no information about istep 8.12
+[P9 IPL Flow](https://wiki.raptorcs.com/w/images/b/bd/IPL-Flow-POWER9.pdf)\
+has no information about istep 8.12.\
 [istep08list.H#L257](https://github.com/open-power/hostboot/blob/4689d6d20fccc4587aea2cdfa843dc9881ff6482/src/include/usr/isteps/istep08list.H#L257)
 
 ### Pstates inconsistencies and VpdOperatingPoint units
 
 [readme.txt](https://github.com/3mdeb/coreboot/blob/09bc0efd57f59dea97790dedf0ae224ab661fad6/src/soc/ibm/power9/pstates_include/readme.txt)
 
-The comment in the code mentions units of 500mA.
+The comment in the code mentions units of 500mA.\
 [p9_pstates_occ.h#L164](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/lib/p9_pstates_occ.h#L164)
 
 ```cpp
@@ -134,7 +137,7 @@ The comment in the code mentions units of 500mA.
 /// in units of 500mA.
 VpdOperatingPoint operating_points[NUM_OP_POINTS];
 ```
-[p9_pstates_common.h#L173](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/lib/p9_pstates_common.h#L173)
+[p9_pstates_common.h#L173](https://github.com/open-power/hostboot/blob/master/src/import/chips/p9/procedures/hwp/lib/p9_pstates_common.h#L173)\
 In the included file, units of 100mA are mentioned.
 ```cpp
 /// A VPD operating point
