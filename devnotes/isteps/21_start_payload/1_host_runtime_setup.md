@@ -91,7 +91,7 @@ Control flow of OCC start and initialization process:
    2. `waitForOccCheckpoint()` (waits for all OCCs to finish their initialization)
    3. `sendOccPoll()` (also called by several functions below)
       1. `pollForErrors()` (checks whether OCCs are in error state) (2 levels)
-   4. `sendOccConfigData()` (collects and sends various data to OCCs) (1 level)
+   4. `sendOccConfigData()` (collects and sends various data to OCCs) (1 level and some more)
    5. `sendOccUserPowerCap()` (sets user power limit, 0 means "not set") (1 level)
    6. `waitForOccState()` (wait for OCCs to become "Active-ready" and set "Active" state)
    7. `setOccActiveSensors()` (signals to BMC that it can interract with OCC)
@@ -1862,8 +1862,8 @@ const occCfgDataTable_t occCfgDataTable[] =
 {
     { OCC_CFGDATA_SYS_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
     { OCC_CFGDATA_APSS_CONFIG,    TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
-    { OCC_CFGDATA_OCC_ROLE,       TARGET_ALL,  TO_20SEC,CFGSTATE_STANDBY },
-    { OCC_CFGDATA_FREQ_POINT,     TARGET_MASTER,TO_20SEC, CFGSTATE_SBYOBS },
+    { OCC_CFGDATA_OCC_ROLE,       TARGET_ALL,    TO_20SEC, CFGSTATE_STANDBY },
+    { OCC_CFGDATA_FREQ_POINT,     TARGET_MASTER, TO_20SEC, CFGSTATE_SBYOBS },
     { OCC_CFGDATA_MEM_CONFIG,     TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
     { OCC_CFGDATA_PCAP_CONFIG,    TARGET_MASTER, TO_20SEC, CFGSTATE_ALL },
     { OCC_CFGDATA_MEM_THROTTLE,   TARGET_ALL,    TO_20SEC, CFGSTATE_ALL },
@@ -1905,6 +1905,7 @@ void sendOccConfigData(const occCfgDataFormat i_requestedFormat = OCC_CFGDATA_CL
 
 		// Make sure data is supported in the current state
 		const occStateId state = occ->getState();
+		// `state ` should be OCC_STATE_STANDBY here.
 		if (CFGSTATE_STANDBY == itr->supportedStates)
 		{
 			if (OCC_STATE_STANDBY != state)
@@ -2008,6 +2009,218 @@ void sendOccConfigData(const occCfgDataFormat i_requestedFormat = OCC_CFGDATA_CL
         } // for each config format
     } // for each OCC
 }
+
+void getFrequencyPointMessageData(uint8_t* o_data,
+				  uint64_t & o_size)
+{
+    uint64_t index   = 0;
+    uint16_t min     = 0;
+    uint16_t turbo   = 0;
+    uint16_t ultra   = 0;
+    uint16_t nominal = 0;
+    Target* sys = nullptr;
+
+    targetService().getTopLevelTarget(sys);
+    assert(sys != nullptr);
+    assert(o_data != nullptr);
+
+
+    o_data[index++] = OCC_CFGDATA_FREQ_POINT;
+    o_data[index++] = OCC_CFGDATA_FREQ_POINT_VERSION;
+
+    check_wof_support(nominal, turbo, ultra);
+    if (turbo == 0)
+    {
+
+	// If turbo not supported, send nominal for turbo
+	// and reason code for ultra-turbo (no WOF support)
+	turbo = nominal;
+	ultra = WOF_UNSUPPORTED_FREQ;
+    }
+
+    //Nominal Frequency in MHz
+    memcpy(&o_data[index], &nominal, 2);
+    index += 2;
+
+    //Turbo Frequency in MHz
+    memcpy(&o_data[index], &turbo, 2);
+    index += 2;
+
+    //Minimum Frequency in MHz
+    min = sys->getAttr<ATTR_MIN_FREQ_MHZ>();
+    Target* proc = nullptr;
+    targetService().masterProcChipTargetHandle(proc);
+    if (proc != nullptr)
+    {
+	// Check if min frequency needs to be biased
+	int8_t bias = proc->getAttr<ATTR_FREQ_BIAS_POWERSAVE>();
+	if (bias != 0)
+	{
+	    // Calculate biased Minimum frequency
+	    // (bias values are signed integers in units of 0.5 percent steps)
+	    min *= 1 + (bias/200.0);
+	}
+    }
+    memcpy(&o_data[index], &min, 2);
+    index += 2;
+
+    //Ultra Turbo Frequency in MHz
+    memcpy(&o_data[index], &ultra, 2);
+    index += 2;
+
+    // Reserved (Static Power Save in PowerVM)
+    memset(&o_data[index], 0, 2);
+    index += 2;
+
+    // Reserved (FFO in PowerVM)
+    memset(&o_data[index], 0, 2);
+    index += 2;
+
+    o_size = index;
+}
+
+void getOCCRoleMessageData(bool i_master, bool i_firMaster,
+			   uint8_t* o_data, uint64_t & o_size)
+{
+    assert(o_data != nullptr);
+
+    o_data[0] = OCC_CFGDATA_OCC_ROLE;
+
+    o_data[1] = OCC_ROLE_SLAVE;
+
+    if (i_master)
+    {
+	o_data[1] = OCC_ROLE_MASTER;
+    }
+
+    if (i_firMaster)
+    {
+	o_data[1] |= OCC_ROLE_FIR_MASTER;
+    }
+
+    o_size = 2;
+}
+
+void getPowerCapMessageData(uint8_t* o_data, uint64_t & o_size)
+{
+    uint64_t index = 0;
+
+    Target* sys = nullptr;
+    targetService().getTopLevelTarget(sys);
+
+    o_data[index++] = OCC_CFGDATA_PCAP_CONFIG;
+    o_data[index++] = OCC_CFGDATA_PCAP_CONFIG_VERSION;
+
+    // Minimum HARD Power Cap
+    ATTR_OPEN_POWER_MIN_POWER_CAP_WATTS_type min_pcap =
+	sys->getAttr<ATTR_OPEN_POWER_MIN_POWER_CAP_WATTS>();
+
+    // Minimum SOFT Power Cap
+    ATTR_OPEN_POWER_SOFT_MIN_PCAP_WATTS_type soft_pcap;
+    if ( ! sys->tryGetAttr
+	    <ATTR_OPEN_POWER_SOFT_MIN_PCAP_WATTS>(soft_pcap))
+    {
+	// attr does not exist (use min)
+	soft_pcap = min_pcap;
+    }
+    UINT16_PUT(&o_data[index], soft_pcap);
+    index += 2;
+
+    // Minimum Hard Power Cap
+    UINT16_PUT(&o_data[index], min_pcap);
+    index += 2;
+
+    // System Maximum Power Cap
+    bool is_redundant;
+    const uint16_t max_pcap = getMaxPowerCap(sys, is_redundant);
+    UINT16_PUT(&o_data[index], max_pcap);
+    index += 2;
+
+    // Quick Power Drop Power Cap
+    ATTR_OPEN_POWER_N_BULK_POWER_LIMIT_WATTS_type qpd_pcap;
+    if ( ! sys->tryGetAttr
+	 <ATTR_OPEN_POWER_N_BULK_POWER_LIMIT_WATTS>(qpd_pcap))
+    {
+	// attr does not exist, so disable by sending 0
+	qpd_pcap = 0;
+    }
+    UINT16_PUT(&o_data[index], qpd_pcap);
+    index += 2;
+
+    o_size = index;
+}
+
+/**
+ * Return the maximum power cap for the system.
+ *
+ * Value is read from the MRW based on the Current Power Supply
+ * Redundancy Policy sensor in the BMC
+ *
+ * @param[in]  i_sys - pointer to system target
+ * @param[out] o_is_redundant - true if power supplies should be redundant
+ * @returns  maximum power cap in watts
+ */
+uint16_t getMaxPowerCap(Target *i_sys, bool & o_is_redundant)
+{
+    uint16_t o_maxPcap = 0;
+    o_is_redundant = true;
+
+#ifdef CONFIG_BMC_IPMI
+    // Check if HPC limit was found
+    ATTR_OPEN_POWER_N_PLUS_ONE_HPC_BULK_POWER_LIMIT_WATTS_type hpc_pcap;
+    if (i_sys->tryGetAttr
+	<ATTR_OPEN_POWER_N_PLUS_ONE_HPC_BULK_POWER_LIMIT_WATTS>(hpc_pcap))
+    {
+	if (0 != hpc_pcap)
+	{
+	    // Check if redundant power supply policy is enabled (on BMC)
+	    SENSOR::getSensorReadingData redPolicyData;
+	    SENSOR::SensorBase
+		redPolicySensor(TARGETING::SENSOR_NAME_REDUNDANT_PS_POLICY,
+				i_sys);
+	    errlHndl_t err = redPolicySensor.readSensorData(redPolicyData);
+	    if (nullptr == err)
+	    {
+		// 0x02 == Asserted bit (redundant policy is enabled)
+		if ((redPolicyData.event_status & 0x02) == 0x00)
+		{
+		    // non-redundant policy allows higher bulk power limit
+		    // with the potential impact of OCC not being able to
+		    // lower power fast enough
+		    o_is_redundant = false;
+		    TMGT_INF("getMaxPowerCap: maximum power cap = %dW"
+			     " (HPC/non-redundant PS bulk power limit)",
+			     hpc_pcap);
+		    o_maxPcap = hpc_pcap;
+		}
+		// else redundant policy enabled, use default
+	    }
+	    else
+	    {
+		// error reading policy, commit and use default
+		TMGT_ERR("getMaxPowerCap: unable to read power supply"
+			 " redundancy policy sensor, rc=0x%04X",
+			 err->reasonCode());
+		ERRORLOG::errlCommit(err, HTMGT_COMP_ID);
+	    }
+	}
+	// else no valid HPC limit, use default
+    }
+    // else HPC limit not found, use default
+#endif
+
+    if (o_is_redundant)
+    {
+	// Read the default N+1 bulk power limit (redundant PS policy)
+	o_maxPcap = i_sys->
+	    getAttr<ATTR_OPEN_POWER_N_PLUS_ONE_BULK_POWER_LIMIT_WATTS>();
+	TMGT_INF("getMaxPowerCap: maximum power cap = %dW "
+		 "(redundant PS bulk power limit)", o_maxPcap);
+    }
+
+    return o_maxPcap;
+
+} // end getMaxPowerCap()
 
 //Sends the user selected power limit to the master OCC
 errlHndl_t sendOccUserPowerCap()
