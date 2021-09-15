@@ -1,4 +1,4 @@
-{
+!/^$/ {
 	c = "grep " substr($0,28,4) " trexhex";
 	c | getline x;
 	close(c);
