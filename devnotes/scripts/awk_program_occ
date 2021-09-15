@@ -1,0 +1,34 @@
+{
+	# Timestamp
+	tb = int("0x" substr($0,28,16));
+
+	# Assume there are no logs at tb = 0, treat it as mark for end of entries
+	if (tb == 0) exit;
+
+	# u32 TID, u16 len, u16 tag
+	# Len is size in bytes of args only, including implicit entry size "arg"
+	getline;
+	len = int("0x" substr($0,36,4));
+
+	# u32 hash, u32 line number
+	getline;
+	c = "grep \"^" substr($0,28,8) "\" trexhex";
+	c | getline x;
+	close(c);
+
+	# Even with 0 params there is at least entry size
+	getline parm_01
+
+	if (len >= 8) {
+		getline parm_23
+	}
+	if (len >= 16) {
+		getline parm_45
+	}
+	# 5 parameters + entry size max
+
+	line = "[%8.8x] " substr(x,12) "\n";
+	printf (line, tb, "0x" substr(parm_01,28,8), "0x" substr(parm_01,36,8),
+	                  "0x" substr(parm_23,28,8), "0x" substr(parm_23,36,8),
+	                  "0x" substr(parm_45,28,8), "0x" substr(parm_45,36,8));
+}

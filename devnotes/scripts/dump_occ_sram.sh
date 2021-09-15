@@ -1,14 +1,26 @@
 #!/bin/bash
 
-# How to use this script to extract strings from PkTraceBuffer:
+# Dump and parse SGPE/CME logs:
 # - one time preparation (use appropriate file from hcode/output/obj/*/):
-#	awk -F'\\|\\|' '{printf("%x   %s\n", $1, $2)}' trexStringFile > trexhex
+#	awk -F'\\|\\|' '{printf("%8.8x   %s\n", $1, $2)}' trexStringFile > trexhex
 #
-# Dump and parse:
-# ./dump_occ_sram.sh <g_pk_trace_buf+0x38> | tac | awk -f awk_program -n | tac
+# - dumping
+#	./dump_occ_sram.sh <g_pk_trace_buf+0x38> | tac | awk -f awk_program -n | tac
 #
 # ...except BMC's busybox doesn't have 'tac' and doesn't support 'awk -n', so
 # you have to run dump_occ_sram.sh on BMC and the rest on PC.
+#
+#
+# Dump and parse OCC logs:
+# - one time preparation:
+#	awk -F'\\|\\|' '{printf("%8.8x   %s\n", $1, $2)}' occ/obj/occStringFile > trexhex
+#
+# - dumping
+#	./dump_occ_sram.sh <g_trac_{err,inf,imp}_buffer+0x28> 0x2000 | awk -f awk_program_occ -n
+#
+# No need for 'tac', OCC's format can be parsed in chronological order. It
+# prints timestamps before lines so you can 'cat' all 3 logs together before
+# passing it to 'awk' and 'sort' the output.
 
 if [ $# -lt 1 -o $(($1)) -eq 0 ]; then
 	echo "Usage: $0 OCB_address [size]"
