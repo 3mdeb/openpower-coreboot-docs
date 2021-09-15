@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# WARNING: SCOM addresses are hardcoded for CME0 of first quad, change if needed
+
 if [ $# -lt 1 -o $(($1)) -eq 0 ]; then
 	echo "Usage: $0 OCB_address [size]"
 	exit

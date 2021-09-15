@@ -192,7 +192,7 @@ file have the following format:
 ```
 
 Hashes are written as decimal numbers, for easier handling convert them to
-hexadecimal with `awk -F'|' -vOFS='|' '{printf("%x", $1); $1 = ""; print $0}' trexStringFile`:
+hexadecimal with `awk -F'|' -vOFS='|' '{printf("%8.8x", $1); $1 = ""; print $0}' trexStringFile`:
 
 ```
 ...
@@ -248,6 +248,8 @@ p0: 0x000000000006d015 = 0xbafa000014e03675 (/kernelfsi@0/pib@1000)
 
 Reading from `0x6D010` will return address of *next* 8 bytes to read.
 
+[Script automatizing reading from OCC SRAM](./scripts/dump_occ_sram.sh)
+
 ### CME log
 
 CME uses the same format as SGPE. Of course, different `trexStringFile` and
@@ -272,3 +274,76 @@ root@talos:~# pdbg -P pib putscom 0x1q012m0D 0x000066d800000000
 After that read from `0x1q012m0E` and parse as previously. Contrary to accessing
 from OCC SRAM, `0x1q012m0D` doesn't change its value - it holds the original
 address.
+
+[Script automatizing reading from CME SRAM](./scripts/dump_cme_sram.sh). Note
+that it is hardcoded for CME0 of first quad.
+
+### OCC log
+
+OCC log has different format than the previous two - at least it can be parsed
+from start to end, because arguments are saved after the header.
+
+#### Log format
+
+OCC logs are split into 3 parts: `g_trac_err_buffer`, `g_trac_inf_buffer` and
+`g_trac_imp_buffer`. This makes dumping all entries harder, but it helps with
+preserving important entries while informative ones can cause their buffers to
+wrap. Each of those buffers has the size of 0x2000 bytes. They can be read in
+the same way as described in [Reading OCC SRAM](#reading-occ-sram) section.
+
+```
+/*
+ * Structure is put at beginning of all trace buffers
+ */
+typedef struct trace_buf_head {
+    UCHAR ver;         /* version of this struct (1)                      */
+    UCHAR hdr_len;     /* size of this struct in bytes                    */
+    UCHAR time_flg;    /* meaning of timestamp entry field                */
+    UCHAR endian_flg;  /* flag for big ('B') or little ('L') endian       */
+    CHAR comp[16];     /* the buffer name as specified in init call       */
+    UINT32 size;       /* size of buffer, including this struct           */
+    UINT32 times_wrap; /* how often the buffer wrapped                    */
+    UINT32 next_free;  /* offset of the byte behind the latest entry      */
+    UINT32 te_count;   /* Updated each time a trace is done               */
+    UINT32 extracted;  /* Not currently used                              */
+}trace_buf_head_t;
+
+/*
+ * Timestamp and thread id for each trace entry.
+ */
+typedef struct trace_entry_stamp {
+    UINT32 tbh;        /* timestamp upper part                            */
+    UINT32 tbl;        /* timestamp lower part                            */
+    UINT32 tid;        /* process/thread id                               */
+}trace_entry_stamp_t;
+
+/*
+ * Structure is used by adal app. layer to fill in trace info.
+ */
+typedef struct trace_entry_head {
+    UINT16 length;     /* size of trace entry                             */
+    UINT16 tag;        /* type of entry: xTRACE xDUMP, (un)packed         */
+    UINT32 hash;       /* a value for the (format) string                 */
+    UINT32 line;       /* source file line number of trace call           */
+}trace_entry_head_t;
+
+/*
+ * Parameter traces can be all contained in one write.
+ */
+typedef struct trace_entire_entry {
+    trace_entry_stamp_t stamp;
+    trace_entry_head_t head;
+    UINT32 args[TRACE_MAX_ARGS + 1];
+} trace_entire_entry_t;
+```
+
+`TRACE_MAX_ARGS` equals 5, `+ 1` is used for saving size of whole entry as the
+last parameter. If there are less parameters, the entry takes appropriately less
+space, but it is always a multiply of 8B. `head.length` is total size in bytes
+of parameters, including implicit entry size "parameter".
+
+#### OCC string hashes
+
+Those are located in `occ-<revision>/obj/occStringFile` after building. They
+have exactly the same format as previous components, except whole 32 bits are
+used for hash - there is no constant prefix.
