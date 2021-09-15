@@ -1,4 +1,4 @@
-{
+!/^$/ {
 	# Timestamp
 	tb = int("0x" substr($0,28,16));
 
