@@ -2101,6 +2101,145 @@ void getOCCRoleMessageData(bool i_master, bool i_firMaster,
     o_size = 2;
 }
 
+void getApssMessageData(uint8_t* o_data, uint64_t & o_size)
+{
+    Target* sys = nullptr;
+    targetService().getTopLevelTarget(sys);
+
+    ATTR_ADC_CHANNEL_FUNC_IDS_type function;
+    sys->tryGetAttr<ATTR_ADC_CHANNEL_FUNC_IDS>(function);
+
+    ATTR_ADC_CHANNEL_GNDS_type ground;
+    sys->tryGetAttr<ATTR_ADC_CHANNEL_GNDS>(ground);
+
+    ATTR_ADC_CHANNEL_GAINS_type gain;
+    sys->tryGetAttr<ATTR_ADC_CHANNEL_GAINS>(gain);
+
+    ATTR_ADC_CHANNEL_OFFSETS_type offset;
+    sys->tryGetAttr<ATTR_ADC_CHANNEL_OFFSETS>(offset);
+
+    CPPASSERT(sizeof(function) == sizeof(ground));
+    CPPASSERT(sizeof(function) == sizeof(gain));
+    CPPASSERT(sizeof(function) == sizeof(offset));
+
+    //The APSS function below hardcodes 16 channels,
+    //so everything better agree.
+    CPPASSERT(sizeof(function) == 16);
+
+    o_data[0] = OCC_CFGDATA_APSS_CONFIG;
+    o_data[1] = OCC_CFGDATA_APSS_VERSION;
+    o_data[2] = 0;
+    o_data[3] = 0;
+    uint64_t idx = 4;
+
+    for(uint64_t channel = 0; channel < sizeof(function); ++channel)
+    {
+	o_data[idx] = function[channel]; // ADC Channel assignement
+	idx += sizeof(uint8_t);
+
+	uint32_t sensorId = 0;
+	memcpy(o_data+idx,&sensorId,sizeof(uint32_t)); // Sensor ID
+	idx += sizeof(uint32_t);
+
+	o_data[idx] = ground[channel];   // Ground Select
+	idx += sizeof(uint8_t);
+
+	INT32_PUT(o_data+idx, gain[channel]);
+	idx += sizeof(int32_t);
+
+	INT32_PUT(o_data+idx, offset[channel]);
+	idx += sizeof(int32_t);
+    }
+
+    ATTR_APSS_GPIO_PORT_MODES_type gpioMode;
+    sys->tryGetAttr<ATTR_APSS_GPIO_PORT_MODES>(gpioMode);
+
+    ATTR_APSS_GPIO_PORT_PINS_type gpioPin;
+    sys->tryGetAttr<ATTR_APSS_GPIO_PORT_PINS>(gpioPin);
+
+    uint64_t pinsPerPort = sizeof(ATTR_APSS_GPIO_PORT_PINS_type) /
+	sizeof(ATTR_APSS_GPIO_PORT_MODES_type);
+    uint64_t pinIdx = 0;
+
+    for(uint64_t port = 0; port < sizeof(gpioMode); ++port)
+    {
+	o_data[idx] = gpioMode[port];
+	idx += sizeof(uint8_t);
+	o_data[idx] = 0;
+	idx += sizeof(uint8_t);
+	memcpy(o_data + idx, gpioPin+pinIdx, pinsPerPort);
+	idx += pinsPerPort;
+	pinIdx += pinsPerPort;
+    }
+
+    o_size = idx;
+}
+
+OCC_CFGDATA_MEM_CONFIG     = 0x05,  // Memory Configuration
+
+void getMemConfigMessageData(const TargetHandle_t i_occ,
+			     uint8_t* o_data, uint64_t & o_size)
+{
+    uint64_t index = 0;
+
+    o_data[index++] = OCC_CFGDATA_MEM_CONFIG;
+    o_data[index++] = 0x21; // version
+
+    // if OPAL then no "Power Control Default" support.
+    //Byte 3:   Memory Power Control Default.
+    o_data[index++] = 0xFF;
+    //Byte 4:   Idle Power Memory Power Control.
+    o_data[index++] = 0xFF;
+
+    //Byte 5:   Number of data sets.
+    size_t numSetsOffset = index++; //Will fill in numSets at the end
+
+    if (!int_flags_set(FLAG_DISABLE_MEM_CONFIG))
+    {
+	TargetHandleList dimms;
+	uint8_t numSets = 0;
+
+	ConstTargetHandle_t proc = getParentChip(i_occ);
+	assert(proc != nullptr);
+
+	// DIMMs are wired directly to the proc in Nimbus
+	dimms.clear();
+	getChildAffinityTargets( dimms,
+				 proc,
+				 CLASS_LOGICAL_CARD,
+				 TYPE_DIMM );
+
+	for( const auto & dimm : dimms )
+	{
+	    numSets++;
+
+	    // Get PIB I2C Master engine for this dimm
+	    ATTR_TEMP_SENSOR_I2C_CONFIG_type tempI2cCfgData =
+	        dimm->getAttr<ATTR_TEMP_SENSOR_I2C_CONFIG>();
+
+	    // Fill in the DIMM entry
+	    writeMemConfigData( o_data,
+	    		dimm,
+	    		SENSOR_NAME_DIMM_STATE,//Bytes 0-3:HW sensor ID
+	    		SENSOR_NAME_DIMM_TEMP, //Bytes 4-7:TMP sensor ID
+	    		0xFF,                  //Bytes 8:MEM Nimbus,
+	    		tempI2cCfgData.engine, //Byte 9: DIMM Info byte1
+	    		tempI2cCfgData.port,   //Byte 10:DIMM Info byte2
+	    		tempI2cCfgData.devAddr,//Byte 11:DIMM Info byte3
+	    		index );
+	}
+
+	o_data[numSetsOffset] = numSets;
+    }
+    else
+    {
+	//A zero in byte 5 (numSets) means monitoring is disabled
+	o_data[numSetsOffset] = 0;
+    }
+
+    o_size = index;
+}
+
 void getPowerCapMessageData(uint8_t* o_data, uint64_t & o_size)
 {
     uint64_t index = 0;
@@ -2165,50 +2304,6 @@ uint16_t getMaxPowerCap(Target *i_sys, bool & o_is_redundant)
     uint16_t o_maxPcap = 0;
     o_is_redundant = true;
 
-#ifdef CONFIG_BMC_IPMI
-    // Check if HPC limit was found
-    ATTR_OPEN_POWER_N_PLUS_ONE_HPC_BULK_POWER_LIMIT_WATTS_type hpc_pcap;
-    if (i_sys->tryGetAttr
-	<ATTR_OPEN_POWER_N_PLUS_ONE_HPC_BULK_POWER_LIMIT_WATTS>(hpc_pcap))
-    {
-	if (0 != hpc_pcap)
-	{
-	    // Check if redundant power supply policy is enabled (on BMC)
-	    SENSOR::getSensorReadingData redPolicyData;
-	    SENSOR::SensorBase
-		redPolicySensor(TARGETING::SENSOR_NAME_REDUNDANT_PS_POLICY,
-				i_sys);
-	    errlHndl_t err = redPolicySensor.readSensorData(redPolicyData);
-	    if (nullptr == err)
-	    {
-		// 0x02 == Asserted bit (redundant policy is enabled)
-		if ((redPolicyData.event_status & 0x02) == 0x00)
-		{
-		    // non-redundant policy allows higher bulk power limit
-		    // with the potential impact of OCC not being able to
-		    // lower power fast enough
-		    o_is_redundant = false;
-		    TMGT_INF("getMaxPowerCap: maximum power cap = %dW"
-			     " (HPC/non-redundant PS bulk power limit)",
-			     hpc_pcap);
-		    o_maxPcap = hpc_pcap;
-		}
-		// else redundant policy enabled, use default
-	    }
-	    else
-	    {
-		// error reading policy, commit and use default
-		TMGT_ERR("getMaxPowerCap: unable to read power supply"
-			 " redundancy policy sensor, rc=0x%04X",
-			 err->reasonCode());
-		ERRORLOG::errlCommit(err, HTMGT_COMP_ID);
-	    }
-	}
-	// else no valid HPC limit, use default
-    }
-    // else HPC limit not found, use default
-#endif
-
     if (o_is_redundant)
     {
 	// Read the default N+1 bulk power limit (redundant PS policy)
@@ -2221,6 +2316,635 @@ uint16_t getMaxPowerCap(Target *i_sys, bool & o_is_redundant)
     return o_maxPcap;
 
 } // end getMaxPowerCap()
+
+OCC_CFGDATA_SYS_CONFIG     = 0x0F,  // System Configuration
+OCC_CFGDATA_SYS_CONFIG_VERSION    = 0x21,
+
+OCC_CFGDATA_OPENPOWER_OPALVM  = 0x81,
+uint8_t G_system_type = OCC_CFGDATA_OPENPOWER_OPALVM;
+
+void getSystemConfigMessageData(const TargetHandle_t i_occ, uint8_t* o_data,
+				uint64_t & o_size)
+{
+    uint64_t index = 0;
+    uint32_t SensorID1 = 0;
+    uint32_t SensorID2 = 0;
+
+    TargetHandle_t sys = nullptr;
+    TargetHandleList nodes;
+    targetService().getTopLevelTarget(sys);
+    assert(sys != nullptr);
+    getChildAffinityTargets(nodes, sys, CLASS_ENC, TYPE_NODE);
+    assert(!nodes.empty());
+    TargetHandle_t node = nodes[0];
+
+    o_data[index++] = OCC_CFGDATA_SYS_CONFIG;
+    o_data[index++] = OCC_CFGDATA_SYS_CONFIG_VERSION;
+
+    //System Type
+    uint8_t l_throttle_below_nominal = 0;
+    //0=OCC report throttling when max frequency lowered below turbo
+    G_system_type &= ~OCC_REPORT_THROTTLE_BELOW_NOMINAL;
+    // Power supply policy is redundant
+    G_system_type &= ~OCC_CFGDATA_NON_REDUNDANT_PS;
+    o_data[index++] = G_system_type;
+
+    //processor Callout Sensor ID
+    ConstTargetHandle_t proc = getParentChip(i_occ);
+    SensorID1 = UTIL::getSensorNumber(proc, SENSOR_NAME_PROC_STATE);
+    memcpy(&o_data[index], &SensorID1, 4);
+    index += 4;
+
+    //Next 12*4 bytes are for core sensors.
+    //If a new processor with more cores comes along,
+    //this command will have to change.
+    TargetHandleList cores;
+    getChildChiplets(cores, proc, TYPE_CORE, false);
+
+    for (uint64_t core=0; core<CFGDATA_CORES; core++)
+    {
+	SensorID1 = 0;
+	SensorID2 = 0;
+
+	if ( core < cores.size() )
+	{
+	    SensorID1 = UTIL::getSensorNumber(cores[core],     //Temp Sensor
+					       SENSOR_NAME_CORE_TEMP);
+
+	    SensorID2 = UTIL::getSensorNumber(cores[core],     //Freq Sensor
+					       SENSOR_NAME_CORE_FREQ);
+	}
+
+	//Core Temp Sensor ID
+	memcpy(&o_data[index], &SensorID1, 4);
+	index += 4;
+
+	//Core Frequency Sensor ID
+	memcpy(&o_data[index], &SensorID2, 4);
+	index += 4;
+    }
+
+    //Backplane Callout Sensor ID
+    SensorID1 = UTIL::getSensorNumber(node, SENSOR_NAME_BACKPLANE_FAULT);
+    memcpy(&o_data[index], &SensorID1, 4);
+    index += 4;
+
+    //APSS Callout Sensor ID
+    SensorID1 = UTIL::getSensorNumber(node, SENSOR_NAME_APSS_FAULT);
+    memcpy(&o_data[index], &SensorID1, 4);
+    index += 4;
+
+    //Format 21 - VRM VDD Callout Sensor ID
+    SensorID1 = UTIL::getSensorNumber(node, SENSOR_NAME_VRM_VDD_FAULT);
+    memcpy(&o_data[index], &SensorID1, 4);
+    index += 4;
+
+    //Format 21 - VRM VDD Temperature Sensor ID
+    SensorID1 = UTIL::getSensorNumber(node, SENSOR_NAME_VRM_VDD_TEMP);
+    memcpy(&o_data[index], &SensorID1, 4);
+    index += 4;
+
+    o_size = index;
+}
+
+void getMemThrottleMessageData(const TargetHandle_t i_occ,
+			       const uint8_t i_occ_instance,
+			       uint8_t* o_data, uint64_t & o_size)
+{
+    uint8_t numSets = 0;
+    uint64_t index = 0;
+
+    ConstTargetHandle_t proc = getParentChip(i_occ);
+    assert(proc != nullptr);
+    assert(o_data != nullptr);
+
+    //Get all functional MCSs
+    TargetHandleList mcs_list;
+    getAllChiplets(mcs_list, TYPE_MCS, true);
+
+    o_data[index++] = OCC_CFGDATA_MEM_THROTTLE;
+    o_data[index++] = 0x20; // version;
+
+    //Byte 3:   Number of memory throttling data sets.
+    size_t numSetsOffset = index++; //Will fill in numSets at the end
+
+    //Next, the following format repeats per set/MBA:
+    //Byte 0:       Cumulus: Centaur position 0-7
+    //              Nimbus : Memory Controller
+    //Byte 1:       Cumulus: MBA Position 0-1
+    //              Nimbus : Memory Controller's physical Port # 0-3
+    //Bytes 2-3:    min N_PER_MBA
+    //Bytes 4-5:    Max mem power with throttle @Min
+    //Bytes 6-7:    Turbo N_PER_MBA
+    //Bytes 8-9:    Turbo N_PER_CHIP
+    //Bytes 10-11:  Max mem power with throttle @Turbo
+    //Bytes 12-13:  Power Capping N_PER_MBA
+    //Bytes 14-15:  Power Capping N_PER_CHIP
+    //Bytes 16-17:  Max mem power with throttle @PowerCapping
+    //Bytes 18-19:  Nominal Power N_PER_MBA
+    //Bytes 20-21:  Nominal Power N_PER_CHIP
+    //Bytes 22-23:  Max mem power with throttle @Nominal
+    //Bytes 24-29:  Reserved
+
+    for(const auto & mcs_target : mcs_list)
+    {
+	uint8_t mcs_unit = 0xFF;
+	if (!mcs_target->tryGetAttr<TARGETING::ATTR_CHIP_UNIT>(mcs_unit))
+	{
+	    continue;
+	}
+	ConstTargetHandle_t proc_target = getParentChip(mcs_target);
+	assert(proc_target != nullptr);
+
+	// Make sure this MCS is for the current OCC/Proc
+	if (i_occ_instance == proc_target->getAttr<TARGETING::ATTR_POSITION>())
+	{
+	    // Read the throttle and power values for this MCS
+	    ATTR_OT_MIN_N_PER_MBA_type npm_min;
+	    ATTR_OT_MEM_POWER_type power_min;
+	    mcs_target->tryGetAttr<ATTR_OT_MIN_N_PER_MBA>(npm_min);
+	    mcs_target->tryGetAttr<ATTR_OT_MEM_POWER>(power_min);
+	    ATTR_N_PLUS_ONE_N_PER_MBA_type npm_redun;
+	    ATTR_N_PLUS_ONE_N_PER_CHIP_type npc_redun;
+	    ATTR_N_PLUS_ONE_MEM_POWER_type power_redun;
+	    mcs_target->tryGetAttr<ATTR_N_PLUS_ONE_N_PER_MBA>(npm_redun);
+	    mcs_target->tryGetAttr<ATTR_N_PLUS_ONE_N_PER_CHIP>(npc_redun);
+	    mcs_target->tryGetAttr<ATTR_N_PLUS_ONE_MEM_POWER>(power_redun);
+	    ATTR_POWERCAP_N_PER_MBA_type npm_pcap;
+	    ATTR_POWERCAP_N_PER_CHIP_type npc_pcap;
+	    ATTR_POWERCAP_MEM_POWER_type power_pcap;
+	    mcs_target->tryGetAttr<ATTR_POWERCAP_N_PER_MBA>(npm_pcap);
+	    mcs_target->tryGetAttr<ATTR_POWERCAP_N_PER_CHIP>(npc_pcap);
+	    mcs_target->tryGetAttr<ATTR_POWERCAP_MEM_POWER>(power_pcap);
+
+	    // Query the functional MCAs for this MCS
+	    TARGETING::TargetHandleList mca_list;
+	    getChildAffinityTargetsByState(mca_list, mcs_target, CLASS_UNIT,
+					   TYPE_MCA, UTIL_FILTER_FUNCTIONAL);
+	    for(const auto & mca_target : mca_list)
+	    {
+		// unit identifies unique MCA under a processor
+		uint8_t mca_unit = 0xFF;
+		mca_target->tryGetAttr<TARGETING::ATTR_CHIP_UNIT>(mca_unit);
+		const uint8_t mca_rel_pos = mca_unit % 2;
+		if ((npm_min[mca_rel_pos] == 0) ||
+		    (npm_redun[mca_rel_pos] == 0) ||
+		    (npm_pcap[mca_rel_pos] == 0))
+		{
+		    continue;
+		}
+		if (mca_rel_pos >= TMGT_MAX_MCA_PER_MCS)
+		{
+		    continue;
+		}
+		// OCC expects phyMC=0 for (MCS0-1) and 1 for (MCS2-3)
+		//  MCS   MCA  MCA    OCC   OCC
+		// unit  unit relPos phyMC phyPort
+		//   0     0    0      0     0
+		//   0     1    1      0     1
+		//   1     2    0      0     2
+		//   1     3    1      0     3
+		//   2     4    0      1     0
+		//   2     5    1      1     1
+		//   3     6    0      1     2
+		//   3     7    1      1     3
+		o_data[index] = mcs_unit >> 1; // MC (0-1)
+		o_data[index+1] = mca_unit % 4; // Phy Port (0-3)
+		// Minimum
+		UINT16_PUT(&o_data[index+ 2], npm_min[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+ 4], power_min[mca_rel_pos]);
+		// Turbo
+		UINT16_PUT(&o_data[index+ 6], npm_redun[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+ 8], npc_redun[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+10], power_redun[mca_rel_pos]);
+		// Power Capping
+		UINT16_PUT(&o_data[index+12], npm_pcap[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+14], npc_pcap[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+16], power_pcap[mca_rel_pos]);
+		// Nominal (same as Turbo)
+		UINT16_PUT(&o_data[index+18], npm_redun[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+20], npc_redun[mca_rel_pos]);
+		UINT16_PUT(&o_data[index+22], power_redun[mca_rel_pos]);
+		index += 30;
+		++numSets ;
+	    }
+	}
+    }
+
+    o_data[numSetsOffset] = numSets;
+
+    o_size = index;
+}
+
+OCC_CFGDATA_TCT_CONFIG     = 0x13,  // Thermal Control Treshold
+
+CFGDATA_FRU_TYPE_PROC       = 0x00,
+CFGDATA_FRU_TYPE_MEMBUF     = 0x01,
+CFGDATA_FRU_TYPE_DIMM       = 0x02,
+CFGDATA_FRU_TYPE_VRM        = 0x03,
+CFGDATA_FRU_TYPE_GPU_CORE   = 0x04,
+CFGDATA_FRU_TYPE_GPU_MEMORY = 0x05,
+CFGDATA_FRU_TYPE_VRM_VDD    = 0x06,
+
+OCC_NOT_DEFINED = 0xFF,
+
+void getThermalControlMessageData(uint8_t* o_data, uint64_t & o_size)
+{
+    uint64_t index = 0;
+    uint8_t l_numSets = 0;
+    Target* l_sys = nullptr;
+    targetService().getTopLevelTarget(l_sys);
+
+    assert(l_sys != nullptr);
+
+    o_data[index++] = OCC_CFGDATA_TCT_CONFIG;
+    o_data[index++] = OCC_CFGDATA_TCT_CONFIG_VERSION;
+
+    // Processor Core Weight
+    ATTR_OPEN_POWER_PROC_WEIGHT_type l_proc_weight;
+    if ( ! l_sys->tryGetAttr          //if attr does not exists.
+	   <ATTR_OPEN_POWER_PROC_WEIGHT>(l_proc_weight))
+    {
+	l_proc_weight = OCC_PROC_QUAD_DEFAULT_WEIGHT;
+    }
+    if(l_proc_weight == 0x0)
+    {
+	l_proc_weight = OCC_PROC_QUAD_DEFAULT_WEIGHT;
+    }
+    o_data[index++] = l_proc_weight;
+
+    // Processor Quad Weight
+    ATTR_OPEN_POWER_QUAD_WEIGHT_type l_quad_weight;
+    if ( ! l_sys->tryGetAttr          //if attr does not exists.
+	   <ATTR_OPEN_POWER_QUAD_WEIGHT>(l_quad_weight))
+    {
+	l_quad_weight = OCC_PROC_QUAD_DEFAULT_WEIGHT;
+    }
+    if(l_quad_weight == 0x0)
+    {
+	l_quad_weight = OCC_PROC_QUAD_DEFAULT_WEIGHT;
+    }
+    o_data[index++] = l_quad_weight;
+
+
+    // data sets following (proc, Centaur(Cumulus only), DIMM), and
+    // each will get a FRU type, DVS temp, error temp,
+    // and max read timeout
+    size_t l_numSetsOffset = index++;
+
+    // Note: Bytes 4 and 5 of each data set represent the PowerVM DVFS and ERROR
+    // Resending the regular DVFS and ERROR for now
+
+    // Processor
+    o_data[index++] = CFGDATA_FRU_TYPE_PROC;
+    uint8_t l_DVFS_temp =l_sys->getAttr<ATTR_OPEN_POWER_PROC_DVFS_TEMP_DEG_C>();
+    uint8_t l_ERR_temp =l_sys->getAttr<ATTR_OPEN_POWER_PROC_ERROR_TEMP_DEG_C>();
+    uint8_t l_timeout = l_sys->getAttr<ATTR_OPEN_POWER_PROC_READ_TIMEOUT_SEC>();
+    if(l_DVFS_temp == 0x0)
+    {
+	l_DVFS_temp = OCC_PROC_DEFAULT_DVFS_TEMP;
+	l_ERR_temp  = OCC_PROC_DEFAULT_ERR_TEMP;
+	l_timeout   = OCC_PROC_DEFAULT_TIMEOUT;
+    }
+    o_data[index++] = l_DVFS_temp;
+    o_data[index++] = l_ERR_temp;
+    o_data[index++] = OCC_NOT_DEFINED;     //PM_DVFS
+    o_data[index++] = OCC_NOT_DEFINED;     //PM_ERROR
+    o_data[index++] = l_timeout;
+    l_numSets++;
+
+    // DIMM
+    o_data[index++] = CFGDATA_FRU_TYPE_DIMM;
+    l_DVFS_temp =l_sys->getAttr<ATTR_OPEN_POWER_DIMM_THROTTLE_TEMP_DEG_C>();
+    l_ERR_temp =l_sys->getAttr<ATTR_OPEN_POWER_DIMM_ERROR_TEMP_DEG_C>();
+    l_timeout = l_sys->getAttr<ATTR_OPEN_POWER_DIMM_READ_TIMEOUT_SEC>();
+    if(l_DVFS_temp == 0x0)
+    {
+	l_DVFS_temp = OCC_DIMM_DEFAULT_DVFS_TEMP;
+	l_ERR_temp  = OCC_DIMM_DEFAULT_ERR_TEMP;
+	l_timeout   = OCC_DIMM_DEFAULT_TIMEOUT;
+    }
+    o_data[index++] = l_DVFS_temp;
+    o_data[index++] = l_ERR_temp;
+    o_data[index++] = OCC_NOT_DEFINED;     //PM_DVFS
+    o_data[index++] = OCC_NOT_DEFINED;     //PM_ERROR
+    o_data[index++] = l_timeout;
+    l_numSets++;
+
+    // VRM
+    if (!l_sys->tryGetAttr<ATTR_OPEN_POWER_VRM_READ_TIMEOUT_SEC>(l_timeout))
+	l_timeout = 0;
+    if (l_timeout != 0)
+    {
+	o_data[index++] = CFGDATA_FRU_TYPE_VRM;
+	o_data[index++] = 0xFF;
+	o_data[index++] = 0xFF;
+	o_data[index++] = 0xFF;
+	o_data[index++] = 0xFF;
+	o_data[index++] = l_timeout;
+	l_numSets++;
+    }
+
+    // GPU Cores
+    if (!l_sys->tryGetAttr<ATTR_OPEN_POWER_GPU_READ_TIMEOUT_SEC>(l_timeout))
+	l_timeout = 0xFF;
+    if (l_timeout == 0)
+    {
+	l_timeout = 0xFF;
+    }
+    if (!l_sys->
+	tryGetAttr<ATTR_OPEN_POWER_GPU_ERROR_TEMP_DEG_C>(l_ERR_temp))
+	l_ERR_temp = OCC_NOT_DEFINED;
+    if (l_ERR_temp == 0)
+    {
+	l_ERR_temp = OCC_NOT_DEFINED;
+    }
+    o_data[index++] = CFGDATA_FRU_TYPE_GPU_CORE;
+    o_data[index++] = OCC_NOT_DEFINED;      //DVFS
+    o_data[index++] = l_ERR_temp;           //ERROR
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_DVFS
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_ERROR
+    o_data[index++] = l_timeout;
+    l_numSets++;
+
+    // GPU Memory
+    if (!l_sys->
+	tryGetAttr<ATTR_OPEN_POWER_GPU_MEM_READ_TIMEOUT_SEC>(l_timeout))
+	l_timeout = 0xFF;
+    if (l_timeout == 0)
+    {
+	l_timeout = 0xFF;
+    }
+    if (!l_sys->
+	tryGetAttr<ATTR_OPEN_POWER_GPU_MEM_ERROR_TEMP_DEG_C>(l_ERR_temp))
+	l_ERR_temp = OCC_NOT_DEFINED;
+    if (l_ERR_temp == 0)
+    {
+	l_ERR_temp = OCC_NOT_DEFINED;
+    }
+    o_data[index++] = CFGDATA_FRU_TYPE_GPU_MEMORY;
+    o_data[index++] = OCC_NOT_DEFINED;      //DVFS
+    o_data[index++] = l_ERR_temp;           //ERROR
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_DVFS
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_ERROR
+    o_data[index++] = l_timeout;
+    l_numSets++;
+
+    // VRM Vdd
+    if(!l_sys->tryGetAttr<ATTR_OPEN_POWER_VRM_VDD_DVFS_TEMP_DEG_C>(l_DVFS_temp))
+	l_DVFS_temp = OCC_NOT_DEFINED;
+    if (l_DVFS_temp == 0)
+    {
+	l_DVFS_temp = OCC_NOT_DEFINED;
+    }
+    if(!l_sys->tryGetAttr<ATTR_OPEN_POWER_VRM_VDD_ERROR_TEMP_DEG_C>(l_ERR_temp))
+	l_ERR_temp = OCC_NOT_DEFINED;
+    if (l_ERR_temp == 0)
+    {
+	l_ERR_temp = OCC_NOT_DEFINED;
+    }
+    if(!l_sys->tryGetAttr<ATTR_OPEN_POWER_VRM_VDD_READ_TIMEOUT_SEC>(l_timeout))
+	l_timeout = OCC_NOT_DEFINED;
+    if(l_timeout == 0)
+    {
+	l_timeout = OCC_NOT_DEFINED;
+    }
+    o_data[index++] = CFGDATA_FRU_TYPE_VRM_VDD;
+    o_data[index++] = l_DVFS_temp;          //DVFS
+    o_data[index++] = l_ERR_temp;           //ERROR
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_DVFS
+    o_data[index++] = OCC_NOT_DEFINED;      //PM_ERROR
+    o_data[index++] = l_timeout;
+    l_numSets++;
+
+    o_data[l_numSetsOffset] = l_numSets;
+    o_size = index;
+}
+
+void getAVSBusConfigMessageData( const TargetHandle_t i_occ,
+				 uint8_t * o_data,
+				 uint64_t & o_size )
+{
+    uint64_t index      = 0;
+    uint8_t version = 0x01;
+    o_size = 0;
+
+    Target* l_sys = nullptr;
+    targetService().getTopLevelTarget(l_sys);
+    assert(l_sys != nullptr);
+
+    // Get the parent processor
+    ConstTargetHandle_t l_proc = getParentChip( i_occ );
+    assert( l_proc != nullptr );
+
+    // Populate the data
+    o_data[index++] = OCC_CFGDATA_AVSBUS_CONFIG;
+    const uint64_t version_index = index++; // version updated later
+    o_data[index++] = l_proc->getAttr<ATTR_VDD_AVSBUS_BUSNUM>();//Vdd Bus
+    o_data[index++] = l_proc->getAttr<ATTR_VDD_AVSBUS_RAIL>();  //Vdd Rail Sel
+    o_data[index++] = 0xFF;                                     //reserved
+    o_data[index++] = 0xFF;                                     //reserved
+    o_data[index++] = l_proc->getAttr<ATTR_VDN_AVSBUS_BUSNUM>();//Vdn Bus
+    o_data[index++] = l_proc->getAttr<ATTR_VDN_AVSBUS_RAIL>();  //Vdn Rail sel
+
+    ATTR_NO_APSS_PROC_POWER_VCS_VIO_WATTS_type PowerAdder = 0;
+    if (l_proc->tryGetAttr          //if attr exists populate Proc Power Adder.
+	<ATTR_NO_APSS_PROC_POWER_VCS_VIO_WATTS>(PowerAdder))
+    {
+	o_data[index++] = ((PowerAdder>>8)&0xFF);
+	o_data[index++] = ((PowerAdder)&0xFF);
+    }
+    else                            //else attr not def. set to 0x0000.
+    {
+	o_data[index++] = 0x00;
+	o_data[index++] = 0x00;
+    }
+
+    ATTR_VDD_CURRENT_OVERFLOW_WORKAROUND_ENABLE_type overflow_enable = 0;
+    ATTR_MAX_VDD_CURRENT_READING_type max_vdd_current = 0;
+    if ((l_sys->tryGetAttr          //if attr exists populate overflow_enable
+	 <ATTR_VDD_CURRENT_OVERFLOW_WORKAROUND_ENABLE>(overflow_enable)) &&
+	(l_sys->tryGetAttr          //if attr exists populate max_vdd_current
+	 <ATTR_MAX_VDD_CURRENT_READING>(max_vdd_current)))
+    {
+	if (overflow_enable == 1)
+	{
+	    // Additional config info for Vdd Current overflow workaround
+	    version = 0x02;
+	    o_data[index++] = 0x7F; // Hardcode Vdd Current Rollover Point
+	    o_data[index++] = 0xFF;
+	    o_data[index++] = (max_vdd_current>>8) & 0xFF;
+	    o_data[index++] = max_vdd_current & 0xFF;
+	}
+    }
+
+    o_data[version_index] = version; // Version
+    o_size = index;
+}
+
+void calculate_system_power()
+{
+    Target* sys = NULL;
+    targetService().getTopLevelTarget(sys);
+    assert(sys != NULL);
+
+    TARGETING::TargetHandleList proc_list;
+    // Get all processor chips (do not have to be functional)
+    getAllChips(proc_list, TARGETING::TYPE_PROC, false);
+    const uint8_t num_procs = proc_list.size();
+
+    const uint16_t proc_socket_power =
+	sys->getAttr<ATTR_PROC_SOCKET_POWER_WATTS>();
+    TMGT_INF("calculate_system_power: proc socket power: %5dW (%d procs)",
+	     proc_socket_power, num_procs);
+    const uint16_t misc_power =
+	sys->getAttr<ATTR_MISC_SYSTEM_COMPONENTS_MAX_POWER_WATTS>();
+    TMGT_INF("calculate_system_power: misc power: %5dW", misc_power);
+
+    // Calculate Total non-GPU maximum power (Watts):
+    //   Maximum system power excluding GPUs when CPUs are at maximum frequency
+    //   (ultra turbo) and memory at maximum power (least throttled) plus
+    //   everything else (fans...) excluding GPUs.
+    uint32_t power_max = proc_socket_power * num_procs;
+    TMGT_INF("calculate_system_power: power(max)  proc: %5dW, mem: %5dW",
+		 power_max, G_mem_power_min_throttles);
+    power_max += G_mem_power_min_throttles + misc_power;
+    TMGT_INF("calculate_system_power: max proc/mem/misc power (no GPUs): %5dW",
+	     power_max);
+    sys->setAttr<ATTR_CALCULATED_MAX_SYS_POWER_EXCLUDING_GPUS>(power_max);
+
+    // Calculate Total Processor/Memory Power Drop (Watts):
+    //   The max non-GPU power can be reduced (with proc/mem)
+    //   calculates this as the CPU power at minimum frequency plus memory at
+    //   minimum power (most throttled)
+    const uint16_t freq_min = sys->getAttr<ATTR_MIN_FREQ_MHZ>();
+    // Minimum Frequency biasing (ATTR_FREQ_BIAS_POWERSAVE) will be ignored here
+    uint16_t freq_nominal, freq_turbo, freq_ultra;
+    check_wof_support(freq_nominal, freq_turbo, freq_ultra);
+    if (freq_turbo == 0)
+    {
+	freq_turbo = sys->getAttr<ATTR_FREQ_CORE_MAX>();
+	// Turbo Frequency biasing (ATTR_FREQ_BIAS_TURBO) will be ignored here
+	if (freq_turbo == 0)
+	{
+	    // If no turbo point, then use nominal...
+	    TMGT_ERR("calculate_system_power: No turbo frequency to calculate "
+		     "power drop.  Using nominal");
+	    freq_turbo = freq_nominal;
+	}
+    }
+    const uint16_t mhz_per_watt = sys->getAttr<ATTR_PROC_MHZ_PER_WATT>();
+    // Drop always calculated from Turbo to Min (not ultra)
+    uint32_t proc_drop = ((freq_turbo - freq_min) / mhz_per_watt);
+    TMGT_INF("calculate_system_power: Processor Power Drop: %dMHz (%dMHz/W) "
+	     "-> %dW/proc",
+	     freq_turbo - freq_min, mhz_per_watt, proc_drop);
+    proc_drop *= num_procs;
+    const uint32_t memory_drop =
+	G_mem_power_min_throttles - G_mem_power_max_throttles;
+    TMGT_INF("calculate_system_power: Memory Power Drop: %d - %d = %dW",
+	     G_mem_power_min_throttles, G_mem_power_max_throttles,
+	     G_mem_power_min_throttles - G_mem_power_max_throttles);
+    const uint32_t power_drop = proc_drop + memory_drop;
+    TMGT_INF("calculate_system_power: Proc/Mem Power Drop: %d + %d = %dW",
+	     proc_drop, memory_drop, power_drop);
+    sys->setAttr<ATTR_CALCULATED_PROC_MEMORY_POWER_DROP>(power_drop);
+
+} // end calculate_system_power()
+
+// Send config data required by OCC for GPU handling.
+// The OCC will determine which GPUs are present from the APSS GPIOs.
+void getGPUConfigMessageData(const TargetHandle_t i_occ,
+			     uint8_t * o_data,
+			     uint64_t & o_size)
+{
+    unsigned int index = 0;
+
+    // Get system and proc target
+    Target* sys = nullptr;
+    targetService().getTopLevelTarget(sys);
+    assert(sys != nullptr);
+    ConstTargetHandle_t proc = getParentChip(i_occ);
+    assert(proc != nullptr);
+
+    // Populate the data
+    o_data[index++] = OCC_CFGDATA_GPU_CONFIG;
+    o_data[index++] = 0x01;             // GPU Config Version
+
+    uint16_t power = 0;
+    power = sys->getAttr<ATTR_CALCULATED_MAX_SYS_POWER_EXCLUDING_GPUS>();
+    UINT16_PUT(&o_data[index], power);   // Total non-GPU max power (W)
+    index += 2;
+
+    power = sys->getAttr<ATTR_CALCULATED_PROC_MEMORY_POWER_DROP>();
+    UINT16_PUT(&o_data[index], power);   // Total proc/mem power drop (W)
+    index += 2;
+    o_data[index++] = 0;                // reserved
+    o_data[index++] = 0;
+
+    uint32_t gpu_func_sensors[MAX_GPUS] = {0};
+    uint32_t gpu_temp_sensors[MAX_GPUS] = {0};
+    uint32_t gpu_memtemp_sensors[MAX_GPUS] = {0};
+    // Read GPU sensor numbers
+    uint8_t num_sensors = 0;
+    errlHndl_t err = nullptr;
+    err = SENSOR::getGpuSensors(const_cast<TARGETING::TargetHandle_t>(proc),
+				HWAS::GPU_FUNC_SENSOR,
+				num_sensors, gpu_func_sensors);
+    if (err)
+    {
+	memset(gpu_func_sensors, 0, sizeof(gpu_func_sensors));
+    }
+    err = SENSOR::getGpuSensors(const_cast<TARGETING::TargetHandle_t>(proc),
+				HWAS::GPU_TEMPERATURE_SENSOR,
+				num_sensors, gpu_temp_sensors);
+    if (err)
+    {
+	memset(gpu_temp_sensors, 0, sizeof(gpu_temp_sensors));
+    }
+    err = SENSOR::getGpuSensors(const_cast<TARGETING::TargetHandle_t>(proc),
+				HWAS::GPU_MEMORY_TEMP_SENSOR,
+				num_sensors, gpu_memtemp_sensors);
+    if (err)
+    {
+	memset(gpu_memtemp_sensors, 0, sizeof(gpu_memtemp_sensors));
+    }
+    for (unsigned int index = 0; index < MAX_GPUS; ++index)
+    {
+	if (gpu_func_sensors[index] == TARGETING::UTIL::INVALID_IPMI_SENSOR)
+	    gpu_func_sensors[index] = 0;
+	if (gpu_temp_sensors[index] == TARGETING::UTIL::INVALID_IPMI_SENSOR)
+	    gpu_temp_sensors[index] = 0;
+	if (gpu_memtemp_sensors[index] == TARGETING::UTIL::INVALID_IPMI_SENSOR)
+	    gpu_memtemp_sensors[index] = 0;
+    }
+
+    // GPU0
+    UINT32_PUT(&o_data[index], gpu_temp_sensors[0]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_memtemp_sensors[0]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_func_sensors[0]);
+    index += 4;
+
+    // GPU1
+    UINT32_PUT(&o_data[index], gpu_temp_sensors[1]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_memtemp_sensors[1]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_func_sensors[1]);
+    index += 4;
+
+    // GPU2
+    UINT32_PUT(&o_data[index], gpu_temp_sensors[2]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_memtemp_sensors[2]);
+    index += 4;
+    UINT32_PUT(&o_data[index], gpu_func_sensors[2]);
+    index += 4;
+
+    o_size = index;
+}
 
 //Sends the user selected power limit to the master OCC
 errlHndl_t sendOccUserPowerCap()
