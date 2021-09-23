@@ -4,7 +4,8 @@
 
     `HDAT` or `Hostboot DATa` is the name used by `Hostboot`.
 
-    Source code mentiones
+    Specification is mentioned by the source code,
+    but accordign to the current knowledge it is not public.
     > "6.1.1 System Parameters" of the Hypervisor Interface Data
     > Specifications document (aka the "HDAT spec)
 
@@ -29,8 +30,8 @@
     __section(".spirah.data") struct spirah spirah = {
     ```
 
-Hostboot uses this name sometimes to reference the HDAT
-> * @brief  Write actual architected register detail to HDAT/SPIRAH
+    Hostboot uses this name sometimes to reference the HDAT
+    > * @brief  Write actual architected register detail to HDAT/SPIRAH
 
 
 ## Dump from memory
