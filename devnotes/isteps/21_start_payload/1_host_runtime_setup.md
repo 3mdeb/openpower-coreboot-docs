@@ -110,6 +110,45 @@ On detecting errors in OCCs, Hostboot can reset them.
 
 ***
 
+Part of initialization looks like this:
+
+OCC:
+```c
+call pstate_start IPC of PGPE
+```
+
+PGPE:
+```c
+Constructs list of cores during its boot from CCSR and opit4pr (CME registration
+messages).
+
+actuate_pstates thread:
+    set PGPE_ACTIVE in G_OCB_OCCS2
+
+p9_pgpe_process_start_stop() (IPC handler for pstate_start):
+    p9_pgpe_pstate_start():
+	send Doorbell0 to CMEs
+	...
+	set PGPE_PSTATE_PROTOCOL_ACTIVE in G_OCB_OCCS2
+```
+
+SGPE:
+```c
+main():
+    p9_sgpe_stop_init():
+	if PGPE_ACTIVE and PGPE_PSTATE_PROTOCOL_ACTIVE are set in G_OCB_OCCS2:
+	    set ENABLE_PSTATE_REGISTRATION_INTERLOCK in CPPM_CSAR
+```
+
+CME:
+```c
+main():
+    if ENABLE_PSTATE_REGISTRATION_INTERLOCK is set in CPPM_CSAR:
+	enable processing of Doorbell0
+```
+
+***
+
 ```cpp
 errlHndl_t utilDisableTces(void)
 {
