@@ -95,6 +95,40 @@ The contents of HOMER are customized, based on the reference image found in
 HCODE PNOR partition. That partition is a nested XIP Image which structure is
 defined in `import/chips/p9/xip/p9_xip_image.h`.
 
+## OCC
+
+Structurally OCC also includes SGPE (GPE3) and PGPE (GPE2), although its
+firmware (in OCC partition) includes code only for GPE0 and GPE1 with the rest
+being provided by HCODE partition.
+
+OCC and all GPEs have access to the same SRAM, part of which is used to
+implement IPC via shared memory.  Other communication mechanisms include at
+least doorbells, interrupts and SCOM (both data and OCB channels).
+
+Parts of the complex operate independently in several threads and monitor each
+other, so that if one component halts for whatever reason others can disable
+themselves automatically.
+
+Initialization of OCC is quite complicated due to interactions with PGPE, SGPE
+and CMEs. Success of the initialization depends on all of its dependencies
+working in sync, that is all of them need to be started in close succession one
+after another or initialization will fail. If any of the components were
+initialized earlier, they must be reset before proceeding.
+
+Approximate startup procedure:
+* Prepare code image for OCC
+* Start SGPE
+* Start PGPE
+* Prepare bootcode for OCC in its SRAM
+* Reset OCC to start its execution, it will enter Standby state
+* Provide OCC configuration data (order in which data is sent is important!)
+* Move OCC into Active state (mind that internally OCC goes first to Observation
+  and then to Active)
+
+See also:
+* [Official OCC overview](https://github.com/open-power/docs/blob/master/occ/OCC_overview.md)
+* [OCC Firmware Interface Specification for POWER9](https://raw.githubusercontent.com/open-power/docs/master/occ/OCC_P9_FW_Interfaces.pdf)
+
 ## Debugging
 
 Debugging by verbose prints performed by coeboot is mostly useless when it comes
@@ -250,6 +284,11 @@ Reading from `0x6D010` will return address of *next* 8 bytes to read.
 
 [Script automatizing reading from OCC SRAM](./scripts/dump_occ_sram.sh)
 
+### PGPE log
+
+Format matches that of SGPE with the size of 0x400 bytes.  Location and string
+hashes are different obviously.
+
 ### CME log
 
 CME uses the same format as SGPE. Of course, different `trexStringFile` and
@@ -347,3 +386,10 @@ of parameters, including implicit entry size "parameter".
 Those are located in `occ-<revision>/obj/occStringFile` after building. They
 have exactly the same format as previous components, except whole 32 bits are
 used for hash - there is no constant prefix.
+
+#### OCC errors
+
+As part of an error log, pointer to which is included in poll response, OCC can
+provide FFDC (helpful on panics because it includes address from which it was
+called), full or partial logs of PGPE and all three logs of OCC. Size of error
+buffers is fixed and the logs can be truncated.
