@@ -17,7 +17,7 @@ and size and then dump it from memory using `pdbg` while `skiboot` is halted.
 ### Patching skiboot
 
 Find `skiboot` sources in your locally built [talos-op-build](https://scm.raptorcs.com/scm/git/talos-op-build).
-It lies in `utput/build/skiboot-*/`.  Apply the following patch to the sources:
+It lies in `output/build/skiboot-*/`.  Apply the following patch to the sources:
 
 ```diff
  core/init.c | 7 +++++++
