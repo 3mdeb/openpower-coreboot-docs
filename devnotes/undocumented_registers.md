@@ -212,6 +212,73 @@ You can find more information [upper](#hole_description).
 | 18-24     | SYNC_REPLAY_COUNT |                        |             |
 | 25-27     | SYNC_RESERVED     |                        |             |
 
+**PU_PBAMODE_SCOM 00068000**
+
+NOTE: some bits which aren't set by coreboot are missing from the table
+
+| Bit range | Name              | Value assigned in code | Description |
+| --------- | ----------------- | ---------------------- | ----------- |
+| 8         | en_marker_ack     |                        |             |
+| 10        | en_second_wrbuf   |                        |             |
+| 16-17     | pba_region        |                        |             |
+| 18-20     | oci_marker_space  |                        |             |
+| 21-22     | bcde_ocitrans     |                        |             |
+| 23-24     | bcue_ocitrans     |                        |             |
+| 27        | en_slv_fairness   |                        |             |
+
+**PU_PBASLVCTL0_SCOM 00068004**
+
+NOTE: some bits which aren't set by coreboot are missing from the table
+
+| Bit range | Name              | Value assigned in code | Description |
+| --------- | ----------------- | ---------------------- | ----------- |
+| 0         | enable            |                        |             |
+| 1-3       | mid_match_value   |                        |             |
+| 5-7       | mid_care_mask     |                        |             |
+| 8-10      | write_ttype       |                        |             |
+| 15        | read_ttype        |                        |             |
+| 16-17     | read_prefetch_ctl |                        |             |
+| 19        | buf_alloc_w       |                        |             |
+| 20        | buf_alloc_a       |                        |             |
+| 21        | buf_alloc_b       |                        |             |
+| 22        | buf_alloc_c       |                        |             |
+| 25-27     | wr_gather_timeout |                        |             |
+
+**PU_PBASLVCTL1_SCOM 0x00068005**
+
+NOTE: some bits which aren't set by coreboot are missing from the table
+
+| Bit range | Name              | Value assigned in code | Description |
+| --------- | ----------------- | ---------------------- | ----------- |
+| 0         | enable            |                        |             |
+| 1-3       | mid_match_value   |                        |             |
+| 5-7       | mid_care_mask     |                        |             |
+| 8-10      | write_ttype       |                        |             |
+| 15        | read_ttype        |                        |             |
+| 16-17     | read_prefetch_ctl |                        |             |
+| 19        | buf_alloc_w       |                        |             |
+| 20        | buf_alloc_a       |                        |             |
+| 21        | buf_alloc_b       |                        |             |
+| 22        | buf_alloc_c       |                        |             |
+| 25-27     | wr_gather_timeout |                        |             |
+
+**PU_PBASLVCTL2_SCOM 0x00068006**
+
+NOTE: some bits which aren't set by coreboot are missing from the table
+
+| Bit range | Name              | Value assigned in code | Description |
+| --------- | ----------------- | ---------------------- | ----------- |
+| 0         | enable            |                        |             |
+| 1-3       | mid_match_value   |                        |             |
+| 5-7       | mid_care_mask     |                        |             |
+| 8-10      | write_ttype       |                        |             |
+| 15        | read_ttype        |                        |             |
+| 16-17     | read_prefetch_ctl |                        |             |
+| 19        | buf_alloc_w       |                        |             |
+| 20        | buf_alloc_a       |                        |             |
+| 21        | buf_alloc_b       |                        |             |
+| 22        | buf_alloc_c       |                        |             |
+| 25-27     | wr_gather_timeout |                        |             |
 
 **XBUS_RX0_RXPACKS3_SLICE4_RX_DATA_DAC_SPARE_MODE_PL 8000000006010C3F** \
 **XBUS_RX0_RXPACKS3_SLICE5_RX_DATA_DAC_SPARE_MODE_PL 8000000106010C3F** \
