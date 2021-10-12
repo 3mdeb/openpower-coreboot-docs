@@ -67,11 +67,11 @@ To build the `hdata_to_dt`, execute following command in the root
 of the Skiboot repository.
 
 ```
-make check
+make hdata/test/hdata_to_dt
 ```
 
-This command should execute `Skiboot` tests and create `hdata_to_dt` binary.
-Binary will be located in the `hdata/test/hdata_to_dt` file.
+This command should create `hdata_to_dt` binary which will be located in the
+`hdata/test/hdata_to_dt` file.
 
 ### Using the tool
 
