@@ -1,34 +1,65 @@
+# Split with 'sed "s/.\{27\}\(.\{8\}\)\(.\{8\}\).*/\1\n\2/"'
+# Manual moving may be required around the wrap-around or when size is not
+# multiply of 8B.
+
 !/^$/ {
-	# Timestamp
-	tb = int("0x" substr($0,28,16));
+	# Timestamp high
+	tb = int("0x" $0 "00000000");
+
+	# Timestamp low
+	getline;
+	tb += int("0x" $0);
 
 	# Assume there are no logs at tb = 0, treat it as mark for end of entries
 	if (tb == 0) exit;
 
-	# u32 TID, u16 len, u16 tag
-	# Len is size in bytes of args only, including implicit entry size "arg"
+	# u32 TID
 	getline;
-	len = int("0x" substr($0,36,4));
 
-	# u32 hash, u32 line number
+	# u16 len, u16 tag
+	# Len is size in bytes of args and line number, including implicit entry size "arg"
 	getline;
-	c = "grep \"^" substr($0,28,8) "\" trexhex";
+	len = int("0x" substr($0,0,4));
+
+	# u32 hash
+	getline;
+	c = "grep \"^" $0 "\" trexhex";
 	c | getline x;
 	close(c);
 
-	# Even with 0 params there is at least entry size
-	getline parm_01
+	# u32 line number
+	getline;
+	line_num = int("0x" $0);
 
+	# Even with 0 params there is at least entry size
+	getline parm_0
+
+	if (len >= 4) {
+		getline parm_1
+	}
 	if (len >= 8) {
-		getline parm_23
+		getline parm_2
+	}
+	if (len >= 12) {
+		getline parm_3
 	}
 	if (len >= 16) {
-		getline parm_45
+		getline parm_4
 	}
-	# 5 parameters + entry size max
+	if (len >= 20) {
+		getline parm_5
+	}
+	if (len >= 24) {
+		getline parm_6
+	}
+	if (len >= 28) {
+		getline parm_7
+	}
+	# 5 parameters + one for entry size + two "just in case"
 
-	line = "[%8.8x] " substr(x,12) "\n";
-	printf (line, tb, "0x" substr(parm_01,28,8), "0x" substr(parm_01,36,8),
-	                  "0x" substr(parm_23,28,8), "0x" substr(parm_23,36,8),
-	                  "0x" substr(parm_45,28,8), "0x" substr(parm_45,36,8));
+	fmt = "[%16.16x] " substr(x,12) "\n";
+	printf (fmt, tb, line_num, "0x" parm_0, "0x" parm_1,
+	                           "0x" parm_2, "0x" parm_3,
+	                           "0x" parm_4, "0x" parm_5,
+	                           "0x" parm_6, "0x" parm_7);
 }
