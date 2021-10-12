@@ -32,3 +32,21 @@ Talos II properly booted, however no TPM module was detected by Heads.
 $ dmesg | grep -i tpm
 [    4.552516] ima: No TPM chip found, activating TPM-bypass!
 ```
+
+## Supported TPM connections
+
+TPM connection is hardware-supperted via LPC and I2C interface.
+[Source](https://wiki.raptorcs.com/wiki/User:HLandau/Block_Diagram_Discussion#Minor_CPU_Interfaces)
+
+* CPU0 LPC [to FlexVer] to BMC, LPC TPM
+
+    ```
+    The LPC interface of CPU0 is connected to the BMC. The BMC serves the PNOR flash chip connected to it to CPU0, and CPU0 loads boot firmware from it. A TPM connector is also provided on the board which exposes this bus, and allows a standard TPM to be attached to it.
+
+    A FlexVer module, if fitted, can intermediate this bus and proxy all communications between the CPU and other devices on the LPC bus. This switching is done automatically via analogue components on the mainboard when a FlexVer device is connected.
+    ```
+* BMC I2C TO I2C TPM
+    ```
+    Runs to the TPM connector. Allows connection of a TPM via I2C instead of LPC. In this case, the connection is via the BMC.
+    ```
+
