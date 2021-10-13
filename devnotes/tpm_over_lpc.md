@@ -33,6 +33,14 @@ $ dmesg | grep -i tpm
 [    4.552516] ima: No TPM chip found, activating TPM-bypass!
 ```
 
+### START nibble
+
+The LPC TPM uses the same cycles as I/O cycles which we implement e.g. for
+serial port. The only difference is the START nibble. There may exist a register
+thast allows to alter a START nibble that is sent on each LPC cycle.
+
+> TODO: Check if this type of register exists.
+
 ## Supported TPM connections
 
 TPM connection is hardware-supperted via LPC and I2C interface.
@@ -49,4 +57,3 @@ TPM connection is hardware-supperted via LPC and I2C interface.
     ```
     Runs to the TPM connector. Allows connection of a TPM via I2C instead of LPC. In this case, the connection is via the BMC.
     ```
-
