@@ -38,7 +38,8 @@ programming guides:
 - [POWER9 Registers vol3](https://ibm.ent.box.com/s/flt3hs6eiwd9glq3yzzff0flnup2j7p0)
 - [POWER ISA v3.0B](https://ibm.ent.box.com/s/1hzcwkwf8rbju5h9iyf44wm94amnlcrv)
 - [POWER9 processor errata](https://ibm.ent.box.com/s/0ixfserqjzjmt3q6vabotz9arxzs59md)
-- [POWER9 IPL flow](https://wiki.raptorcs.com/w/images/b/bd/IPL-Flow-POWER9.pdf)
+- [Power9 PCIe Controller](https://ibm.box.com/s/07dfe69jbaavct70a642f0bhrqhlhgze)
+- [PHB4 Specification (PCIe related)](https://ibm.ent.box.com/s/jftnfhceul07qjh9jtn91xwjmclabc71)
 
 Other useful information extracted form documents aboive may be found in
 [ppc.md](devnotes/ppc.md).
