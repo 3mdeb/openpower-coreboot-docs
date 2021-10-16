@@ -1,3 +1,9 @@
+## Specifications
+
+[POWER9 PCIe Controller (Functional Specification)](https://wiki.raptorcs.com/w/images/a/a5/POWER9_PCIe_controller_v11_27JUL2018_pub.pdf)
+
+[Power Systems Host Bridge 4 (PHB4) Specification](https://wiki.raptorcs.com/w/images/a/ad/P9_PHB_version1.0_27July2018_pub.pdf)
+
 ## Terms
 
 PEC - PCI Express Controller (probably)
