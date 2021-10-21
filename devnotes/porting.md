@@ -316,7 +316,8 @@ root@talos:~# mboxctl --backend file:/tmp/flash.pnor
 > Partitions can be "flashed" while the file is mounted, as long as host
 > platform doesn't try to access it simultaneously.
 
-Optionally, success can be tested with:
+Sometimes this command fails with timeout, in that case repeat it until it
+succeeds. Optionally, success can be tested with:
 
 ```shell
 root@talos:~# mboxctl --lpc-state
