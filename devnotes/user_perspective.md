@@ -37,9 +37,9 @@ make it longer, but not as long as the first boot.
 -
     reboots: 0
 -
-    boot time to skiboot: 10s
+    boot time to skiboot: 24s
 -
-    Tested revision: `a6a261b8cedfb8a476d3ec5c5ac095e6d373cb18`
+    Tested revision: `ce64c091228ed8878263263fd7fe700e64557148`
 -
     Repository: [https://github.com/3mdeb/coreboot](https://github.com/3mdeb/coreboot)
 
@@ -48,7 +48,7 @@ make it longer, but not as long as the first boot.
 > This and the fact, coreboot doesn't initialize everything yet,
 > may affect the boot time in the future.
 
-[![asciicast](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW.svg)](https://asciinema.org/a/L1HquySbGrlEPgqNYfFKUPDiW)
+[![asciicast](https://asciinema.org/a/lqMvLFEPfjR14Eqq8Z5Wwlm77.svg)](https://asciinema.org/a/lqMvLFEPfjR14Eqq8Z5Wwlm77)
 
 ## Boot video recording vs the real situation
 
