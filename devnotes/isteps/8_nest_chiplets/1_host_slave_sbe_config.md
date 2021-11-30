@@ -1,14 +1,39 @@
 # 8.1 host_slave_sbe_config
 
+Requires:
+    * CFAM/FSI to configure remote SBE (register access)
+
 ### src/usr/isteps/istep08/call_host_slave_sbe_config.C
 
 ```python
 for l_cpu_target in l_cpuTargetList:
-    setChipletGardsOnProc(l_cpu_target)
+    setChipletGardsOnProc(l_cpu_target) # described below
     if l_cpu_target is not l_pMasterProcTarget:
-        p9_setup_sbe_config(l_cpu_target) # described bellow
-        updateSbeBootSeeprom(l_cpu_target) # described bellow
+        p9_setup_sbe_config(l_cpu_target) # described below
+        updateSbeBootSeeprom(l_cpu_target) # described below
 
+```
+
+### src/usr/hwas/common/hwas.C
+
+```python
+# Algorithm to set up the EQ_GARD and EC_GARD attributes on the proc
+def setChipletGardsOnProc(i_procTarget):
+    l_eqGard = 0xFF # uint8
+    l_ecGard = 0xFFFFFFFF # uint32
+
+    for l_targ in i_target_chip.getChildren:
+        if !l_targ.isFunctional():
+            continue
+
+        l_chipUnit = l_targ.ATTR_CHIP_UNIT
+        if l_targ.TARGETING::ATTR_TYPE == TARGETING::TYPE_EQ:
+            l_eqGard &= ~(0x80 >> l_chipUnit)
+        elif l_targ.TARGETING::ATTR_TYPE == TARGETING::TYPE_EC:
+            l_ecGard &= ~(0x80000000 >> l_chipUnit)
+
+    i_procTarget.ATTR_EQ_GARD = l_eqGard
+    i_procTarget.ATTR_EC_GARD = l_ecGard
 ```
 
 ### src/import/chips/p9/procedures/hwp/perv/p9_setup_sbe_config.C
@@ -18,7 +43,8 @@ registers used in this file are described best here `src/include/usr/initservice
 ```python
 # SCRATCH_REGISTER_X is TP.TPVSB.FSI.W.FSI_MAILBOX.FSXCOMP.FSXLOG.SCRATCH_REGISTER_X
 def p9_setup_sbe_config(i_target):
-    # Registers are accessed by SCOM or FSI depending on whether the code is being executed by the MASTER_CHIP
+    # Registers are accessed by SCOM or CFAM/FSI depending on whether the target is
+    # the MASTER_CHIP: master accessed via SCOM and others via CFAM/FSI
     temp32_REGISTER_8 = SCRATCH_REGISTER_8 >> 32
 ############################### REGISTER_1 ####################################
    # temp32_REGISTER_1 = SCRATCH_REGISTER_1[63-32]
@@ -40,8 +66,7 @@ def p9_setup_sbe_config(i_target):
         | ((fapi2::i_target_chip.ATTR_EC_GARD & 0xffffffULL) << (sizeof(temp32_REGISTER_1) * 8 - 8 - 24))
 
     #SCRATCH_REGISTER_1[63-32] = temp32_REGISTER_1
-    SCRATCH_REGISTER_1 = (SCRATCH_REGISTER_1 & ~(0xffffffffULL << 32)) |
-        (temp32_REGISTER_1 << 32)
+    SCRATCH_REGISTER_1 = (SCRATCH_REGISTER_1 & 0xffffffffU) | (temp32_REGISTER_1 << 32)
     # SCRATCH_REGISTER_8.setBit<0>()
     # temp32_REGISTER_8[31] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1))
@@ -115,8 +140,7 @@ def p9_setup_sbe_config(i_target):
         | ((fapi2::i_target_chip.ATTR_OB3_PLL_BUCKET & 0x3ULL) << (sizeof(temp32_REGISTER_2) * 8 - 30 - 2))
 
     # SCRATCH_REGISTER_2[63-32] = temp32_REGISTER_2
-    SCRATCH_REGISTER_2 = (SCRATCH_REGISTER_2 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_2 << 32)
+    SCRATCH_REGISTER_2 = (SCRATCH_REGISTER_2 & 0xffffffffU) | (temp32_REGISTER_2 << 32)
 
     # SCRATCH_REGISTER_8.setBit<1>()
     # temp32_REGISTER_8[30] = 1
@@ -132,15 +156,14 @@ def p9_setup_sbe_config(i_target):
     #     (fapi2::FAPI_SYSTEM.ATTR_RISK_LEVEL)
 
     # temp32_REGISTER_3[31-0] = fapi2::FAPI_SYSTEM.ATTR_BOOT_FLAGS[31-0]
-    temp32_REGISTER_3 = (temp32_REGISTER_3 & ~(0xffffffffULL))
+    temp32_REGISTER_3 = (temp32_REGISTER_3 & ~0xffffffffULL)
         | (fapi2::FAPI_SYSTEM.ATTR_BOOT_FLAGS & 0xffffffffULL)
     # temp32_REGISTER_3[3-0] = fapi2::FAPI_SYSTEM.ATTR_RISK_LEVEL[3-0]
     temp32_REGISTER_3 = (temp32_REGISTER_3 & ~0xfULL)
         | (fapi2::FAPI_SYSTEM.ATTR_RISK_LEVEL & 0xfULL)
 
     #SCRATCH_REGISTER_3[63-32] = temp32_REGISTER_3
-    SCRATCH_REGISTER_3 = (SCRATCH_REGISTER_3 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_3 << 32)
+    SCRATCH_REGISTER_3 = (SCRATCH_REGISTER_3 & 0xffffffffU) | (temp32_REGISTER_3 << 32)
     # SCRATCH_REGISTER_8.setBit<2>()
     # temp32_REGISTER_8[29] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1 - 2))
@@ -194,8 +217,7 @@ def p9_setup_sbe_config(i_target):
         | (fapi2::i_target_chip.ATTR_OBUS_RATIO_VALUE & 0x1) << (sizeof(temp32_REGISTER_4) * 8 - 1 - 21)
 
     #SCRATCH_REGISTER_4[63-32] = temp32_REGISTER_4
-    SCRATCH_REGISTER_4 = (SCRATCH_REGISTER_4 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_4 << 32)
+    SCRATCH_REGISTER_4 = (SCRATCH_REGISTER_4 & 0xffffffffU) | (temp32_REGISTER_4 << 32)
     # SCRATCH_REGISTER_8.setBit<3>()
     # temp32_REGISTER_8[28] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1 - 3))
@@ -264,7 +286,6 @@ def p9_setup_sbe_config(i_target):
         temp32_REGISTER_5 &= ~(1ULL << (sizeof(temp32_REGISTER_5) * 8 - 1 - 5))
 
     # PLL mux attributes
-    #!!!! I'm not sure if SOURCE_STARTBIT is counted from right or left. I assumed right, same as TARGET_STARTBIT. !!!!
     # SCRATCH_REGISTER_5.insert<TARGET_STARTBIT = 12, LENGTH = 20, SOURCE_STARTBIT = 0>
     #     (fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX)
     # temp32_REGISTER_5[19-0] = fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX[19-0]
@@ -273,8 +294,7 @@ def p9_setup_sbe_config(i_target):
         << (sizeof(temp32_REGISTER_5) * 8 - 12 - 20))
 
     #SCRATCH_REGISTER_5[63-32] = temp32_REGISTER_5
-    SCRATCH_REGISTER_5 = (SCRATCH_REGISTER_5 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_5 << 32)
+    SCRATCH_REGISTER_5 = (SCRATCH_REGISTER_5 & 0xffffffffU) | (temp32_REGISTER_5 << 32)
     # SCRATCH_REGISTER_8.setBit<4>()
     # temp32_REGISTER_8[27] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1 - 4))
@@ -352,14 +372,12 @@ def p9_setup_sbe_config(i_target):
 
 
     #SCRATCH_REGISTER_6[63-32] = temp32_REGISTER_6
-    SCRATCH_REGISTER_6 = (SCRATCH_REGISTER_6 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_6 << 32)
+    SCRATCH_REGISTER_6 = (SCRATCH_REGISTER_6 & 0xffffffffU) | (temp32_REGISTER_6 << 32)
     # SCRATCH_REGISTER_8.setBit<5>()
     # temp32_REGISTER_8[26] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1 - 5))
     #SCRATCH_REGISTER_8[63-32] = temp32_REGISTER_8
-    SCRATCH_REGISTER_8 = (SCRATCH_REGISTER_8 & ~(0xffffffffULL << 32))
-        | (temp32_REGISTER_8 << 32)
+    SCRATCH_REGISTER_8 = (SCRATCH_REGISTER_8 & 0xffffffffU) | (temp32_REGISTER_8 << 32)
 
 #### PERV_CBS_CS_ is TP.TPVSB.FSI.W.FSI_MAILBOX.FSXCOMP.FSXLOG.CBS_CS
     # SECURITY_MODE attribute
@@ -398,4 +416,21 @@ def updateSbeBootSeeprom(i_target):
     else:
         l_targetReg |= l_sbeBootSelectMask
     i_target.SB_CS = l_targetReg
+```
+
+### getSbeBootSeeprom() from src/usr/sbe/sbe_update.C
+
+```cpp
+// Used to read SBE Boot Side from processor
+// (PERV_SB_CS_SCOM 0x00050008 or PERV_SB_CS_FSI 0x2808)
+const uint64_t SBE_BOOT_SELECT_MASK = 0x0000400000000000;
+```
+
+```python
+def getSbeBootSeeprom(i_target):
+    PERV_SB_CS_SCOM = 0x00050008
+    if getScom(PERV_SB_CS_SCOM) & SBE_BOOT_SELECT_MASK:
+        return 1
+    else:
+        return 0
 ```
