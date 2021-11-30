@@ -1,5 +1,9 @@
 # 8.4 proc_check_slave_sbe_seeprom_complete: Check Slave SBE Complete
 
+Requires:
+    * SBE FIFO implementation
+    * CFAM/FSI (for SBE FIFO)
+
 ### src/usr/isteps/istep08/call_proc_check_slave_sbe_seeprom_complete.C
 
 ```python
@@ -19,7 +23,9 @@ for l_cpu_target in l_cpuTargetList:
         l_SBEobj.setInitialPowerOn(True)
         l_SBEobj.main_sbe_handler(l_cpu_target)
 
-# probably just error checking below
+        ## mostly status checking and error handling below (like restarting SBE
+        ## after a failed boot or figuring out what went wrong during
+        ## initialization)
 
         # We will judge whether or not the SBE had a successful
         # boot or not depending on if it made it to runtime or not
@@ -27,11 +33,15 @@ for l_cpu_target in l_cpuTargetList:
             # Set attribute indicating that SBE is started
             l_cpu_target.setAttr<ATTR_SBE_IS_STARTED>(1)
             # Make the FIFO call to get and apply the SBE Capabilities
-             SBEIO::getFifoSbeCapabilities(l_cpu_target)
+            # The function queries version information from SBE and stores it in
+            # target's attributes, look closer at it if any of these are needed:
+            #  - ATTR_SBE_VERSION_INFO
+            #  - ATTR_SBE_COMMIT_ID
+            #  - ATTR_SBE_RELEASE_TAG
+            SBEIO::getFifoSbeCapabilities(l_cpu_target)
             # Switch to using SBE SCOM
             ScomSwitches l_switches =
                 l_cpu_target.getAttr<ATTR_SCOM_SWITCHES>()
-            ScomSwitches l_switches_before = l_switches
             # Turn on SBE SCOM and turn off FSI SCOM.
             l_switches.useFsiScom = 0
             l_switches.useSbeScom = 1
@@ -45,43 +55,29 @@ for l_cpu_target in l_cpuTargetList:
     for l_cpu_target in l_cpuTargetList:
         const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_fapi2ProcTarget(
                 const_cast<TARGETING::Target*> (l_cpu_target))
-        # variable_buffer of size 112 is originally used, but I think it needs to be 192 bytes long
-        uint_192t l_fuseString
-        p9_getecid(l_fapi2ProcTarget, l_fuseString) # described bellow
+        # Hostboot has an output variable of 112 bits here which is just ignored
+        p9_getecid(l_fapi2ProcTarget) # described below
 ```
 
 ```python
-def p9_getecid(i_target_chip, o_fuseString):
+def p9_getecid(i_target_chip):
     uint64_t attr_data[2]
 
-    # buffer is 192 bits long!
-    # variable_buffer of size 192 is originally used
-    uint_192t l_fuseString
     temp64_ECID_PART0 = PU_OTPROM0_ECID_PART0_REGISTER
     temp64_ECID_PART1 = PU_OTPROM0_ECID_PART1_REGISTER
     temp64_ECID_PART2 = PU_OTPROM0_ECID_PART2_REGISTER
-    temp64_ECID_PART0.reverse() # function originally used to reverse bits is pasted bellow
+    temp64_ECID_PART0.reverse() # function originally used to reverse bits is pasted below
     temp64_ECID_PART1.reverse()
     temp64_ECID_PART2.reverse()
+
     attr_data[0] = temp64_ECID_PART0()
     attr_data[1] = temp64_ECID_PART1()
-# src/import/hwpf/fapi2/include/variable_buffer.H:883 -> variable_buffer.H:86
-    # l_fuseString.insert(temp64_ECID_PART0(), 0, 64)
-    # l_fuseString.insert(temp64_ECID_PART1(), 64, 64)
-    # l_fuseString.insert(temp64_ECID_PART2(), 128, 64)
-    l_fuseString &= 0xFFFFFFFFFFFFFFFF  << 0
-    l_fuseString |= temp64_ECID_PART0() << 0
-    l_fuseString &= 0xFFFFFFFFFFFFFFFF  << 64
-    l_fuseString |= temp64_ECID_PART1() << 64
-    l_fuseString &= 0xFFFFFFFFFFFFFFFF  << 128
-    l_fuseString |= temp64_ECID_PART2() << 128
-    # probably nothing ever happens with o_fuseString
-    o_fuseString = l_fuseString
     #push fuse string into attribute
     FAPI_ATTR_SET(fapi2::ATTR_ECID, i_target_chip, attr_data)
+
     # Set some attributes memory can used to make work-around decisions.
-    setup_memory_work_around_attributes(i_target_chip, temp64_ECID_PART2)
-    setup_pcie_work_around_attributes(i_target_chip, temp64_ECID_PART2)
+    setup_memory_work_around_attributes(i_target_chip, temp64_ECID_PART2) # no-op for DD2
+    setup_pcie_work_around_attributes(i_target_chip, temp64_ECID_PART2)   # no-op for DD2
 ```
 
 ```python
