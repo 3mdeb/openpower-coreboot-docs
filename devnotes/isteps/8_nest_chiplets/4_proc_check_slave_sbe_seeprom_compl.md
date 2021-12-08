@@ -1,8 +1,8 @@
 # 8.4 proc_check_slave_sbe_seeprom_complete: Check Slave SBE Complete
 
 Requires:
-    * SBE FIFO implementation
     * CFAM/FSI (for SBE FIFO)
+    * SBE FIFO implementation (not on happy path)
 
 Analysis assumptions:
     * `#define __HOSTBOOT_MODULE`
@@ -106,6 +106,60 @@ This unit checks status of SBE, reports whether it managed to boot successfully
 and handles its failures.
 
 ```cpp
+/// @brief A structure (bitfield) representing the SBE messaging register
+typedef union sbeMsgReg
+{
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t sbeBooted : 1; ///< SBE control loop initialized
+        uint32_t asyncFFDC : 1; // < async ffdc present on sbe
+        uint32_t reserved1 : 2; ///< Reserved
+        uint32_t prevState : 4; ///< Previous SBE state
+        uint32_t currState : 4; ///< Current SBE state
+        uint32_t majorStep : 8; ///< Last major istep executed by the SBE
+        uint32_t minorStep : 6; ///< Last minor istep executed by the SBE
+        uint32_t reserved2 : 6; ///< Reserved
+#else
+        uint32_t reserved2 : 6; ///< Reserved
+        uint32_t minorStep : 6; ///< Last minor istep executed by the SBE
+        uint32_t majorStep : 8; ///< Last major istep executed by the SBE
+        uint32_t currState : 4; ///< Current SBE state
+        uint32_t prevState : 4; ///< Previous SBE state
+        uint32_t reserved1 : 2; ///< Reserved
+        uint32_t asyncFFDC : 1; // < async ffdc present on sbe
+        uint32_t sbeBooted : 1; ///< SBE control loop initialized
+#endif
+    };
+    uint32_t reg; ///< The complete SBE messaging register as a uint32
+} sbeMsgReg_t;
+
+/**
+ * @brief Enumeration of SBE states
+*/
+typedef enum sbeState
+{
+    SBE_STATE_UNKNOWN = 0x0, // Unkown, initial state
+    SBE_STATE_IPLING  = 0x1, // IPL'ing - autonomous mode (transient)
+    SBE_STATE_ISTEP   = 0x2, // ISTEP - Running IPL by steps (transient)
+    SBE_STATE_MPIPL   = 0x3, // MPIPL
+    SBE_STATE_RUNTIME = 0x4, // SBE Runtime
+    SBE_STATE_DMT     = 0x5, // Dead Man Timer State (transient)
+    SBE_STATE_DUMP    = 0x6, // Dumping
+    SBE_STATE_FAILURE = 0x7, // Internal SBE failure
+    SBE_STATE_QUIESCE = 0x8, // Final state - needs SBE reset to get out
+
+    // Max States, Always keep it at the last of the enum and sequential
+    SBE_MAX_STATE     = 0x9,
+    // Don't count this in the state, just to intialize the state variables
+    SBE_INVALID_STATE = 0xF,
+} sbeState_t;
+
+/*
+ * @brief The current sbe register
+ */
+sbeMsgReg_t iv_sbeRegister;
+
 SbeRetryHandler::SbeRetryHandler(SBE_MODE_OF_OPERATION i_sbeMode) : SbeRetryHandler(i_sbeMode, 0)
 {
 }
@@ -436,8 +490,8 @@ bool SbeRetryHandler::sbe_run_extract_msg_reg(TARGETING::Target * i_target)
     return l_statusReadSuccess;
 }
 
-constexpr uint64_t SBE_RETRY_TIMEOUT_HW_SEC     = 60;  // 60 seconds
-constexpr uint32_t SBE_RETRY_NUM_LOOPS          = 60;
+constexpr uint64_t SBE_RETRY_TIMEOUT_HW_SEC = 60;  // 60 seconds
+constexpr uint32_t SBE_RETRY_NUM_LOOPS      = 60;
 
 errlHndl_t SbeRetryHandler::sbe_poll_status_reg(TARGETING::Target * i_target)
 {

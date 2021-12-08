@@ -288,7 +288,7 @@ def p9_setup_sbe_config(i_target):
     # PLL mux attributes
     # SCRATCH_REGISTER_5.insert<TARGET_STARTBIT = 12, LENGTH = 20, SOURCE_STARTBIT = 0>
     #     (fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX)
-    # temp32_REGISTER_5[19-0] = fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX[19-0]
+    # temp32_REGISTER_5[19-0] = fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX[31-12]
     temp32_REGISTER_5 = (temp32_REGISTER_5 & ~(0xfffffULL << (sizeof(temp32_REGISTER_5) * 8 - 12 - 20))) # shift value zeros out, but I leave it as a example
         | (((fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX >> sizeof(fapi2::i_target_chip.ATTR_CLOCK_PLL_MUX) * 8 - 20) & 0xfffffULL)
         << (sizeof(temp32_REGISTER_5) * 8 - 12 - 20))
@@ -304,13 +304,13 @@ def p9_setup_sbe_config(i_target):
 
     # attribute for Hostboot slave bit
     if fapi2::i_target_chip.ATTR_PROC_SBE_MASTER_CHIP:
-        # SCRATCH_REGISTER_6.setBit<24>()
-        # temp32_REGISTER_6[7] = 1
-        temp32_REGISTER_6 |= (1ULL << (sizeof(temp32_REGISTER_6) * 8 - 1 - 24))
-    else:
         # SCRATCH_REGISTER_6.clearBit<24>()
         # temp32_REGISTER_6[7] = 0
         temp32_REGISTER_6 &= ~(1ULL << (sizeof(temp32_REGISTER_6) * 8 - 1 - 24))
+    else:
+        # SCRATCH_REGISTER_6.setBit<24>()
+        # temp32_REGISTER_6[7] = 1
+        temp32_REGISTER_6 |= (1ULL << (sizeof(temp32_REGISTER_6) * 8 - 1 - 24))
     # SMF_CONFIG
     if fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>().ATTR_SMF_CONFIG
         == fapi2::ENUM_ATTR_SMF_CONFIG_ENABLED:
@@ -360,7 +360,7 @@ def p9_setup_sbe_config(i_target):
         | ((fapi2::i_target_chip.ATTR_PROC_EFF_FABRIC_CHIP_ID & 0x7ULL) << (sizeof(temp32_REGISTER_6) * 8 - 20 - 3))
 
     # SCRATCH_REGISTER_6.setBit<0>()
-    # temp32_REGISTER_6[31] = 0
+    # temp32_REGISTER_6[31] = 1
     temp32_REGISTER_6 |= (1ULL << (sizeof(temp32_REGISTER_6) * 8 - 1 - 0))
 
     #ATTR_PROC_MEM_TO_USE
@@ -376,6 +376,7 @@ def p9_setup_sbe_config(i_target):
     # SCRATCH_REGISTER_8.setBit<5>()
     # temp32_REGISTER_8[26] = 1
     temp32_REGISTER_8 |= (1ULL << (sizeof(temp32_REGISTER_8) * 8 - 1 - 5))
+
     #SCRATCH_REGISTER_8[63-32] = temp32_REGISTER_8
     SCRATCH_REGISTER_8 = (SCRATCH_REGISTER_8 & 0xffffffffU) | (temp32_REGISTER_8 << 32)
 
@@ -390,7 +391,7 @@ def p9_setup_sbe_config(i_target):
     temp8_ATTR_SECURITY_MODE = fapi2::FAPI_SYSTEM.ATTR_SECURITY_MODE
     temp64_PERV_CBS_CS = fapi2::i_target_chip.PERV_CBS_CS
     # if temp8_ATTR_SECURITY_MODE[0] == 0
-    if temp8_ATTR_SECURITY_MODE & (1ULL << (sizeof(temp8_ATTR_SECURITY_MODE) * 8 - 1 - 7):
+    if not (temp8_ATTR_SECURITY_MODE & (1ULL << (sizeof(temp8_ATTR_SECURITY_MODE) * 8 - 1 - 7)):
         #SMD=0 indicate chip is in secure mode
         # if temp64_PERV_CBS_CS[58] == 0
         if temp64_PERV_CBS_CS & (1ULL << (sizeof(temp64_PERV_CBS_CS_SCOM) * 8 - 1 - 5):

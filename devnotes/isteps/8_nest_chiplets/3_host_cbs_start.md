@@ -59,6 +59,7 @@ def p9_start_cbs(i_target_chip, i_sbe_start):
     # i_target_chip.PERV_CBS_ENVSTAT.getBit<2>()
     #l_read_vdn_pgood_status = i_target_chip.PERV_CBS_ENVSTAT[29]
     l_read_vdn_pgood_status = (i_target_chip.PERV_CBS_ENVSTAT & (1<<29)) == (1<<29)
+    assert(l_read_vdn_pgood_status)
 
     temp32_PERV_CBS_CS = i_target_chip.PERV_CBS_CS
     # temp32_PERV_CBS_CS.clearBit<0>()
@@ -99,4 +100,5 @@ def p9_start_cbs(i_target_chip, i_sbe_start):
 
     #l_fsi2pib_status = i_target_chip.PERV_FSI2PIB_STATUS[15]
     l_fsi2pib_status = (i_target_chip.PERV_FSI2PIB_STATUS & (1 << 15)) == (1 << 15)
+    assert(l_fsi2pib_status);
 ```
