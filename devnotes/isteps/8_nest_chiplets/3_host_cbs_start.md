@@ -16,14 +16,14 @@ for l_cpu_target in l_cpuTargetList:
         p9_start_cbs(l_cpu_target, True) ## described below
 ```
 
-### /home/emdeb/repos/talos-hostboot/src/usr/sbeio/sbe_scomAccess.C
+### src/usr/sbeio/sbe_scomAccess.C
 
 ```python
 def sendFifoReset(i_target)
     SbeFifo::performFifoReset(i_target) ## described below
 ```
 
-### /home/emdeb/repos/talos-hostboot/src/usr/sbeio/sbe_fifodd.C
+### src/usr/sbeio/sbe_fifodd.C
 
 ```python
 def performFifoReset(i_target)

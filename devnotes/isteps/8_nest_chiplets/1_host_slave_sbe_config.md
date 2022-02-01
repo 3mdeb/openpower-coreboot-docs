@@ -43,8 +43,8 @@ registers used in this file are described best here `src/include/usr/initservice
 ```python
 # SCRATCH_REGISTER_X is TP.TPVSB.FSI.W.FSI_MAILBOX.FSXCOMP.FSXLOG.SCRATCH_REGISTER_X
 def p9_setup_sbe_config(i_target):
-    # Registers are accessed by SCOM or CFAM/FSI depending on whether the target is
-    # the MASTER_CHIP: master accessed via SCOM and others via CFAM/FSI
+    # Registers are accessed by XSCOM or CFAM/FSI depending on whether the target is
+    # the MASTER_CHIP: master is accessed via XSCOM and others via CFAM/FSI
     temp32_REGISTER_8 = SCRATCH_REGISTER_8 >> 32
 ############################### REGISTER_1 ####################################
    # temp32_REGISTER_1 = SCRATCH_REGISTER_1[63-32]
