@@ -89,7 +89,8 @@ Linux driver for ST is ~300 lines.
 
 Drivers like these are copied between projects and adapted, sometimes one device
 driver is derived from the other explicitly.  This likely means that it won't be
-a major task to make a missing driver.
+a major task to make a missing driver for chips whose documentation is
+available and is clear enough.
 
 Implementations seem to be centered around transfer functions, which implement
 send and receive operations on registers.

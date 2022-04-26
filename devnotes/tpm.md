@@ -25,9 +25,9 @@ header in the first place...).
 | In stock        | Hardly (-1)  | -        | Yes (+1)   | Yes (+1)   | Hardly (-1)   | -             | -        |
 | Design HW       | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Partial (-.5) | Partial (-.5) | No (+1)  |
 | Manufacture HW  | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Yes (-1)      | Yes (-1)      | No (+1)  |
-| Needs OS driver | No (+1)      | Yes (-1) | No (+1)    | No (+1)    | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
+| Needs OS driver | No (+1)      | Yes (-1) | Yes (-1)   | No (+1)    | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
 | Fully open      | No (-1)      | Yes (+1) | No (-1)    | No (-1)    | Yes (+1)      | Yes (+1)      | Yes (+1) |
-| Score           | +2 / -2      | +1       | 0          | 0          | +0.5 / -1.5   | -0.5          | +3       |
+| Score           | +2 / -2      | +1       | -2         | 0          | +0.5 / -1.5   | -0.5          | +3       |
 
 ### Score counting
 
@@ -92,6 +92,7 @@ As secure as BMC is.
 
 * **Risks**
   * BMC might not have been designed to fulfill security requirements.
+  * Still won't address LPC cycles issue?
 
 * **Implementation effort**
   * Implement fTPM in BMC.
@@ -103,13 +104,17 @@ As secure as BMC is.
     performance for MVPD).
 
 ******
-### FPGA translator (LPC TPM cycle - LPC TPM cycle)
+### IO LPC translator (IO TPM cycle - LPC TPM cycle)
 
-New piece of hardware that addresses LPC cycles issues.
+New piece of hardware with FPGA that addresses LPC cycles issues.
+
+Although might not actually need FPGA:
+
+    LAD[0]' = LAD[0] + ~LFRAME#
+    LAD[2]' = LAD[2] + ~LFRAME#
 
 * **Pros**
   * Conventional TPM modules.
-  * No need for a new driver.
 
 * **Cons**
   * Need to design and manufacture this hardware.
@@ -124,7 +129,10 @@ New piece of hardware that addresses LPC cycles issues.
 ******
 ### FPGA translator (SPI - LPC TPM cycle)
 
-New piece of hardware that addresses LPC cycles issues.
+New piece of hardware that addresses LPC cycles issues by creating an SPI - LPC
+bridge, where LPC side is connected to the board and SPI TPM module is used.
+
+What exactly does cycle translation?
 
 * **Pros**
   * Conventional TPM modules.
@@ -163,7 +171,7 @@ Find an existing open hardware TPM and possibly extend it for I2C interface.
 ### TPM on [LibreBMC][LibreBMC-site]
 
 Embed TPM into an alternative BMC hardware that's still in development?
-The BMC itself is implemented as a custom extension card defined by DS-CMS?
+The BMC itself is implemented as a custom extension card defined by [DC-SCM]?
 
 * **Pros**
   * Open hardware.
@@ -172,7 +180,8 @@ The BMC itself is implemented as a custom extension card defined by DS-CMS?
   * Project is in an early phase of development.
 
 * **Risks**
-  * Current design does not have TPM connector.
+  * Current design does not have TPM connector (because it's builtin?).
+  * Not possible without redesign Talos board?
 
 * **Implementation effort**
 
@@ -203,11 +212,13 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
     Hostboot does, so we might be able to remove unused parts of sources.
   * Looks like `sbe_seeprom_DD2` is compressed from 86 to 65 KiB, but compressed
     `sbe_seeprom_AXONE` is 150 KiB.
-  * There are 96 KiB of RAM and 256 KiB of SEEPROM.
+  * There are 96 KiB of RAM and 256 KiB of SEEPROM (227 KiB effectively due to
+    ECC).
   * Stripped uncompressed x86-64 `libtpm.a` from [MS][fTPM] compiled with
     `-Os -g0` gives 257 KiB as a sum of text and data columns printed by `size`.
     There might be a chance it will fit when compressed.  It's a bit larger for
     x86.
+  * But there is also TPM NV memory that needs to be stored somewhere...
 
 ## See also
 
@@ -218,10 +229,11 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [LibreBMC-site]: https://openpower.foundation/groups/librebmc/
 [SBE-site]: https://wiki.raptorcs.com/wiki/Self-Boot_Engine
 [lpnTPM]: https://lpntpm.lpnplant.io/
+[DC-SCM]: https://www.opencompute.org/documents/ocp-dc-scm-spec-rev-1-0-pdf
 
 [I2C]: #i2c-tpm-module
 [On BMC]: #software-tpm-on-bmc
-[FPGA LPC]: #fpga-translator-lpc-tpm-cycle---lpc-tpm-cycle
+[IO LPC]: #io-lpc-translator-io-tpm-cycle---lpc-tpm-cycle
 [FPGA SPI]: #fpga-translator-spi---lpc-tpm-cycle
 [On MCU]: #open-tpm-on-mcu-eg-lpntpm
 [LibreBMC]: #tpm-on-librebmc
