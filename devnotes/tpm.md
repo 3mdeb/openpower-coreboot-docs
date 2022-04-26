@@ -17,16 +17,38 @@ header in the first place...).
 
 ## Quick overview
 
-| Aspect\Approach | [I2C]   |[On BMC]|[FPGA LPC]|[FPGA SPI]|[On MCU] |[LibreBMC]| [SBE] |
-| --------------- | -----   | ------ | -------- | -------- | ------  | -------- | ----- |
-| Interface       | I2C     | -      | LPC      | SPI      | I2C     | ?        | -     |
-| Placement       | Board   | BMC    | Board    | Board    | USB?    | BMC      | CPU   |
-| In stock        | Hardly  | -      | Yes      | Yes      | Hardly  | -        | -     |
-| Software only   | No      | Yes    | No       | No       | No      | No       | Yes   |
-| Design HW       | Maybe   | No     | Yes      | Yes      | Partial | Partial  | No    |
-| Manufacture HW  | Maybe   | No     | Yes      | Yes      | Yes     | Yes      | No    |
-| Lacks OS driver | Maybe   | Yes    | No       | No       | Maybe   | No?      | Maybe |
-| Openness        | Partial | Full   | Partial  | Partial  | Full    | Full     | Full  |
+| Aspect\Approach | [I2C]        | [On BMC] | [FPGA LPC] | [FPGA SPI] | [On MCU]      | [LibreBMC]    | [SBE]    |
+| --------------- | -----        | -------- | ---------- | ---------- | --------      | ----------    | -----    |
+| Interface       | I2C          | -        | LPC        | SPI        | I2C           | ?             | -        |
+| Placement       | Board        | BMC      | Board      | Board      | USB?          | BMC           | CPU      |
+| HW protected    | Yes (+1)     | No (-1)  | Yes (+1)   | Yes (+1)   | Yes (+1)      | Yes (+1)      | Yes (+1) |
+| In stock        | Hardly (-1)  | -        | Yes (+1)   | Yes (+1)   | Hardly (-1)   | -             | -        |
+| Design HW       | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Partial (-.5) | Partial (-.5) | No (+1)  |
+| Manufacture HW  | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Yes (-1)      | Yes (-1)      | No (+1)  |
+| Needs OS driver | No (+1)      | Yes (-1) | No (+1)    | No (+1)    | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
+| Fully open      | No (-1)      | Yes (+1) | No (-1)    | No (-1)    | Yes (+1)      | Yes (+1)      | Yes (+1) |
+| Score           | +2 / -2      | +1       | 0          | 0          | +0.5 / -1.5   | -0.5          | +3       |
+
+### Score counting
+
+Some rows in the table are informational and no score is assigned to them, the
+rest get points according to the following set of rules:
+
+ * if aspect isn't applicable, then 0
+ * if aspect is satisfied, then +1 or +0.5 if partially true
+ * if aspect is lacking, then -1 or -0.5 if partially true
+ * if aspects is marked as inverted, negate the value
+
+| Aspect          | Scored   | Description                                              |
+| ------          | ------   | -----------                                              |
+| Interface       | No       | Interface of the chip: I2C, LPC, SPI                     |
+| Placement       | No       | Where TPM functionality is located physically            |
+| HW protected    | Yes      | Protection against tampering is by design                |
+| In stock        | Yes      | If modules compatible with the approach are easy to find |
+| Design HW       | Inverted | Designing hardware is necessary                          |
+| Manufacture HW  | Inverted | Producing hardware is necessary                          |
+| Needs OS driver | Inverted | Producing OS driver is necessary                         |
+| Fully open      | Yes      | Whether involved hardware and software are fully open    |
 
 ## Approaches
 
@@ -53,6 +75,7 @@ Atmel (AT97SC3205T).
 
 * **Other notes**
   * ST33 has Linux driver for TPM 2.0
+  * Bought modules won't have OSS firmware.
 
 ******
 ### Software TPM on BMC
