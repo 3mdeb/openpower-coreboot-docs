@@ -1,33 +1,48 @@
+# TPM for IBM POWER9 - feasibility study
+
 This document is an attempt to gather information about the issues faced with
 TPMs on POWER9 and what are the potential solutions to them.
 
+Mind that thanks to POWER9 being more secure than any x86 by design, it is more
+important to have TPM support than to have a particularly secure or feature-full
+one.  See [platform comparison] for more details.
+
 ## Some definitions
 
+* TPM - Trusted Platform Module
+* dTPM - Discreet TPM module (a dedicated pluggable hardware module)
 * fTPM - Firmware-based TPM implementation
+* LPC - Low Pin Count (hardware interface)
+* I2C - Inter-Integrated Circuit (hardware interface)
+* SBE - Self-Boot Engine (part of POWER9 CPU and/or its firmware)
+* MCU - MicroController Unit (like a board connected via USB)
+* FPGA - Field-Programmable Gate Array (programmable integrated circuit)
+* BMC - Baseboard Management Controller ("service processor")
 
 ## Problems
 
-### POWER9 cannot generate LPC TPM cycles
+### Talos II cannot generate LPC TPM cycles
 
 This is a hardware limitation and cannot be worked around in firmware.
 
-The consequence is that regular LPC TPM cannot be used on POWER9 by directly
+The consequence is that regular LPC TPM cannot be used on Talos II by directly
 connecting it to the TPM LPC header (one might wonder why have the LPC TPM
 header in the first place...).
 
 ## Quick overview
 
-| Aspect\Approach | [I2C]        | [On BMC] | [FPGA LPC] | [FPGA SPI] | [On MCU]      | [LibreBMC]    | [SBE]    |
-| --------------- | -----        | -------- | ---------- | ---------- | --------      | ----------    | -----    |
+| Aspect\Approach | [I2C]        | [On BMC] | [IO LPC]   | [FPGA SPI] | [On MCU]      | [LibreBMC]    | [SBE]    |
+| --------------- | -----        | -------- | --------   | ---------- | --------      | ----------    | -----    |
 | Interface       | I2C          | -        | LPC        | SPI        | I2C           | ?             | -        |
-| Placement       | Board        | BMC      | Board      | Board      | USB?          | BMC           | CPU      |
-| HW protected    | Yes (+1)     | No (-1)  | Yes (+1)   | Yes (+1)   | Yes (+1)      | Yes (+1)      | Yes (+1) |
+| TPM kind        | dTPM         | fTPM     | dTPM       | dTPM       | dTPM          | ?             | -        |
+| Placement       | MCU          | BMC      | MCU        | MCU        | MCU           | BMC           | CPU      |
+| Fully open      | No           | Yes      | No         | No         | Yes           | Yes           | Yes      |
+| HW protected    | Yes          | No       | Yes        | Yes        | Yes           | Yes           | Yes      |
 | In stock        | Hardly (-1)  | -        | Yes (+1)   | Yes (+1)   | Hardly (-1)   | -             | -        |
 | Design HW       | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Partial (-.5) | Partial (-.5) | No (+1)  |
 | Manufacture HW  | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Yes (-1)      | Yes (-1)      | No (+1)  |
 | Needs OS driver | No (+1)      | Yes (-1) | Yes (-1)   | No (+1)    | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
-| Fully open      | No (-1)      | Yes (+1) | No (-1)    | No (-1)    | Yes (+1)      | Yes (+1)      | Yes (+1) |
-| Score           | +2 / -2      | +1       | -2         | 0          | +0.5 / -1.5   | -0.5          | +3       |
+| Score           | +2 / -2      | +1       | -2         | 0          | -1.5 / -3.5   | -2.5          | +1       |
 
 ### Score counting
 
@@ -41,14 +56,15 @@ rest get points according to the following set of rules:
 
 | Aspect          | Scored   | Description                                              |
 | ------          | ------   | -----------                                              |
-| Interface       | No       | Interface of the chip: I2C, LPC, SPI                     |
+| TPM kind        | No       | Whether it's fTPM or dTPM                                |
+| Interface       | No       | Board interface used to connect TPM: I2C, LPC, SPI       |
 | Placement       | No       | Where TPM functionality is located physically            |
-| HW protected    | Yes      | Protection against tampering is by design                |
+| Fully open      | No       | Whether involved hardware and software are fully open    |
+| HW protected    | No       | Protection against tampering is by design                |
 | In stock        | Yes      | If modules compatible with the approach are easy to find |
 | Design HW       | Inverted | Designing hardware is necessary                          |
 | Manufacture HW  | Inverted | Producing hardware is necessary                          |
 | Needs OS driver | Inverted | Producing OS driver is necessary                         |
-| Fully open      | Yes      | Whether involved hardware and software are fully open    |
 
 ## Approaches
 
@@ -151,7 +167,8 @@ What exactly does cycle translation?
 ******
 ### Open TPM on MCU (e.g. [lpnTPM])
 
-Find an existing open hardware TPM and possibly extend it for I2C interface.
+Find an existing open hardware TPM project based on an MCU and possibly extend
+it for I2C interface.
 
 * **Pros**
   * Open hardware.
@@ -160,7 +177,7 @@ Find an existing open hardware TPM and possibly extend it for I2C interface.
   * Need to implement and manufacture TPM module.
 
 * **Risks**
-  * I2C is not in the scope as of now.
+  * I2C is not in the scope of [lpnTPM] as of now.
 
 * **Implementation effort**
   * Slightly easier than the fTPM on BMC - but not much.
@@ -230,6 +247,7 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [SBE-site]: https://wiki.raptorcs.com/wiki/Self-Boot_Engine
 [lpnTPM]: https://lpntpm.lpnplant.io/
 [DC-SCM]: https://www.opencompute.org/documents/ocp-dc-scm-spec-rev-1-0-pdf
+[platform comparison]: https://wiki.raptorcs.com/wiki/Platform_Comparison
 
 [I2C]: #i2c-tpm-module
 [On BMC]: #software-tpm-on-bmc
