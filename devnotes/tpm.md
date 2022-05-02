@@ -31,18 +31,17 @@ header in the first place...).
 
 ## Quick overview
 
-| Aspect\Approach | [I2C]        | [On BMC] | [IO LPC]   | [FPGA SPI] | [On MCU]      | [LibreBMC]    | [SBE]    |
-| --------------- | -----        | -------- | --------   | ---------- | --------      | ----------    | -----    |
-| Interface       | I2C          | -        | LPC        | SPI        | I2C           | ?             | -        |
-| TPM kind        | dTPM         | fTPM     | dTPM       | dTPM       | dTPM          | ?             | -        |
-| Placement       | MCU          | BMC      | MCU        | MCU        | MCU           | BMC           | CPU      |
-| Fully open      | No           | Yes      | No         | No         | Yes           | Yes           | Yes      |
-| HW protected    | Yes          | No       | Yes        | Yes        | Yes           | Yes           | Yes      |
-| In stock        | Hardly (-1)  | -        | Yes (+1)   | Yes (+1)   | Hardly (-1)   | -             | -        |
-| Design HW       | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Partial (-.5) | Partial (-.5) | No (+1)  |
-| Manufacture HW  | Maybe (+/-1) | No (+1)  | Yes (-1)   | Yes (-1)   | Yes (-1)      | Yes (-1)      | No (+1)  |
-| Needs OS driver | No (+1)      | Yes (-1) | Yes (-1)   | No (+1)    | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
-| Score           | +2 / -2      | +1       | -2         | 0          | -1.5 / -3.5   | -2.5          | +1       |
+| Aspect\Approach | [Direct I2C] | [BMC fTPM] | [LPC adapter] | [SPI adapter] | [MCU dTPM]    | [LibreBMC]    | [SBE]    |
+| --------------- | ------------ | ---------- | ------------- | ------------- | ----------    | ----------    | -----    |
+| [TPM kind]      | dTPM         | fTPM       | dTPM          | dTPM          | dTPM          | dTPM          | fTPM     |
+| Placement       | MCU          | BMC        | MCU           | MCU           | MCU           | BMC           | CPU      |
+| Fully open      | No           | Yes        | No            | No            | Yes           | Yes           | Yes      |
+| HW protected    | Yes          | No         | Yes           | Yes           | Yes           | Yes           | Yes      |
+| In stock        | Hardly (-1)  | -          | Yes (+1)      | Yes (+1)      | Hardly (-1)   | -             | -        |
+| Design HW       | Maybe (+/-1) | No (+1)    | Yes (-1)      | Yes (-1)      | Partial (-.5) | Partial (-.5) | No (+1)  |
+| Manufacture HW  | Maybe (+/-1) | No (+1)    | Yes (-1)      | Yes (-1)      | Yes (-1)      | Yes (-1)      | No (+1)  |
+| Needs OS driver | No (+1)      | Yes (-1)   | Yes (-1)      | No (+1)       | Maybe (+/-1)  | Yes (-1)      | Yes (-1) |
+| Score           | +2 / -2      | +1         | -2            | 0             | -1.5 / -3.5   | -2.5          | +1       |
 
 ### Score counting
 
@@ -57,7 +56,6 @@ rest get points according to the following set of rules:
 | Aspect          | Scored   | Description                                              |
 | ------          | ------   | -----------                                              |
 | TPM kind        | No       | Whether it's fTPM or dTPM                                |
-| Interface       | No       | Board interface used to connect TPM: I2C, LPC, SPI       |
 | Placement       | No       | Where TPM functionality is located physically            |
 | Fully open      | No       | Whether involved hardware and software are fully open    |
 | HW protected    | No       | Protection against tampering is by design                |
@@ -248,11 +246,12 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [lpnTPM]: https://lpntpm.lpnplant.io/
 [DC-SCM]: https://www.opencompute.org/documents/ocp-dc-scm-spec-rev-1-0-pdf
 [platform comparison]: https://wiki.raptorcs.com/wiki/Platform_Comparison
+[TPM kind]: https://blog.3mdeb.com/2021/2021-10-08-ftpm-vs-dtpm/
 
-[I2C]: #i2c-tpm-module
-[On BMC]: #software-tpm-on-bmc
-[IO LPC]: #io-lpc-translator-io-tpm-cycle---lpc-tpm-cycle
-[FPGA SPI]: #fpga-translator-spi---lpc-tpm-cycle
-[On MCU]: #open-tpm-on-mcu-eg-lpntpm
+[Direct I2C]: #i2c-tpm-module
+[BMC fTPM]: #software-tpm-on-bmc
+[LPC adapter]: #io-lpc-translator-io-tpm-cycle---lpc-tpm-cycle
+[SPI adapter]: #fpga-translator-spi---lpc-tpm-cycle
+[MCU dTPM]: #open-tpm-on-mcu-eg-lpntpm
 [LibreBMC]: #tpm-on-librebmc
-[SBE]: #ftpm-in-sbe-
+[SBE]: #ftpm-in-sbe
