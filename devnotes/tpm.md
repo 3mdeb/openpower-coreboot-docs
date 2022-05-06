@@ -23,11 +23,31 @@ one.  See [platform comparison] for more details.
 
 ### Talos II cannot generate LPC TPM cycles
 
-This is a hardware limitation and cannot be worked around in firmware.
+A short overview of relationships between LPC and TPM on LPC can be found in
+this [TPM publication]:
 
-The consequence is that regular LPC TPM cannot be used on Talos II by directly
-connecting it to the TPM LPC header (one might wonder why have the LPC TPM
-header in the first place...).
+    The format of these TPM cycles is virtually identical to I/O LPC cycles
+    discussed earlier. The only visible difference between TPM and I/O cycles
+    is the value sent during the START phase of LPC transactions. Existing I/O
+    cycles are “target” cycles in LPC bus terminology and use 0x0 as their
+    4-bit START value. The new TPM cycles use the previously reserved value 0x5
+    as the start value.
+
+To repeat: TPM cycles are implemented as I/O LPC cycles but use a different
+START nibble (`5` instead of `0`).  The value of `5` is reserved in
+[LPC specification] and is claimed by [TPM specification] \(Table 43). The same
+TPM specification mentions in an informative comment that:
+
+    For system Software, the TPM has a 64-bit address of 0x0000_0000_FED4_xxxx.
+    On LPC, the chipset passes the least significant 16 bits to the TPM.
+
+Which allows generation of LPC cycles with arbitrary START nibble.
+
+The problem is that LPC accesses on Talos II don't have this property and fix
+START nibble at `0`, thus precluding a direct LPC TPM connection. See [lpcdd.C]
+in Hostboot, LPC cycles are abstracted away via more high-level memory-mapped
+I/O, where clients don't write START field themselves and have no control over
+its value.
 
 ## Quick overview
 
@@ -95,6 +115,8 @@ Atmel (AT97SC3205T).
 ### Software TPM on BMC
 
 TPM functionality exposed to the POWER9 CPU via LPC gadget device from BMC.
+That is OpenBMC is extended to provide fTPM though LPC bus, but do this with
+START field equal to `0`.
 As secure as BMC is.
 
 * **Pros**
@@ -111,7 +133,9 @@ As secure as BMC is.
 * **Implementation effort**
   * Implement fTPM in BMC.
   * LPC gadget BMC -> POWER.
-  * No existing driver. Maybe need to hack up existing LPC driver.
+  * No existing driver.
+    Maybe need to hack up existing LPC driver to change the way LPC is accessed
+    and translate START value.
 
 * **Other notes**
   * We could go full RO with coreboot if desired (by sacrificing some
@@ -145,8 +169,6 @@ Although might not actually need FPGA:
 
 New piece of hardware that addresses LPC cycles issues by creating an SPI - LPC
 bridge, where LPC side is connected to the board and SPI TPM module is used.
-
-What exactly does cycle translation?
 
 * **Pros**
   * Conventional TPM modules.
@@ -247,6 +269,10 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [DC-SCM]: https://www.opencompute.org/documents/ocp-dc-scm-spec-rev-1-0-pdf
 [platform comparison]: https://wiki.raptorcs.com/wiki/Platform_Comparison
 [TPM kind]: https://blog.3mdeb.com/2021/2021-10-08-ftpm-vs-dtpm/
+[LPC specification]: https://www.intel.com/content/dam/www/program/design/us/en/documents/low-pin-count-interface-specification.pdf
+[TPM specification]: https://trustedcomputinggroup.org/wp-content/uploads/PC-Client-Specific-Platform-TPM-Profile-for-TPM-2p0-v1p05p_r14_pub.pdf
+[TPM publication]: https://www.sciencedirect.com/science/article/pii/S0898122112004634
+[lpcdd.C]: https://github.com/open-power/hostboot/blob/master/src/usr/lpc/lpcdd.C
 
 [Direct I2C]: #i2c-tpm-module
 [BMC fTPM]: #software-tpm-on-bmc
