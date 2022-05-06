@@ -207,18 +207,25 @@ it for I2C interface.
 ******
 ### TPM on [LibreBMC][LibreBMC-site]
 
-Embed TPM into an alternative BMC hardware that's still in development?
-The BMC itself is implemented as a custom extension card defined by [DC-SCM]?
+Embed TPM into an alternative BMC hardware that's still in development.
+The BMC itself is implemented as a custom extension card defined by [DC-SCM]
+which needs a compatible motherboard.
+
+Overall this doesn't look feasible. [Kestrel] on the other hand can be used
+with Talos II as is, but also lacks TPM and ASpeed BMC needs to be disabled
+after power on so it doesn't interfere. There might also be compatibility issues
+with coreboot port and this project is too in development. Still looks more
+realistic than LibreBMC.
 
 * **Pros**
   * Open hardware.
 
 * **Cons**
   * Project is in an early phase of development.
+  * Can't be used with already existing boards.
 
 * **Risks**
   * Current design does not have TPM connector (because it's builtin?).
-  * Not possible without redesign Talos board?
 
 * **Implementation effort**
 
@@ -273,6 +280,7 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [TPM specification]: https://trustedcomputinggroup.org/wp-content/uploads/PC-Client-Specific-Platform-TPM-Profile-for-TPM-2p0-v1p05p_r14_pub.pdf
 [TPM publication]: https://www.sciencedirect.com/science/article/pii/S0898122112004634
 [lpcdd.C]: https://github.com/open-power/hostboot/blob/master/src/usr/lpc/lpcdd.C
+[Kestrel]: https://gitlab.raptorengineering.com/kestrel-collaboration
 
 [Direct I2C]: #i2c-tpm-module
 [BMC fTPM]: #software-tpm-on-bmc
