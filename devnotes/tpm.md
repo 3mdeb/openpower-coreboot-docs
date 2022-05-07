@@ -47,7 +47,10 @@ The problem is that LPC accesses on Talos II don't have this property and fix
 START nibble at `0`, thus precluding a direct LPC TPM connection. See [lpcdd.C]
 in Hostboot, LPC cycles are abstracted away via more high-level memory-mapped
 I/O, where clients don't write START field themselves and have no control over
-its value.
+its value. Hostboot hard-codes base addresses for different kinds of
+interactions (see examples in [lpc.c], [lpc_const.H] and [sbeConsole.H]), which
+demonstrates lack of any pattern in a way that they are assigned, lack of a way
+to customize START field and absence of an address space dedicated to TPM.
 
 ## Quick overview
 
@@ -280,6 +283,9 @@ Implement TPM on a chip that's used primarily for booting POWER9 processor.
 [TPM specification]: https://trustedcomputinggroup.org/wp-content/uploads/PC-Client-Specific-Platform-TPM-Profile-for-TPM-2p0-v1p05p_r14_pub.pdf
 [TPM publication]: https://www.sciencedirect.com/science/article/pii/S0898122112004634
 [lpcdd.C]: https://github.com/open-power/hostboot/blob/master/src/usr/lpc/lpcdd.C
+[lpc.c]: https://github.com/open-power/skiboot/blob/master/hw/lpc.c#L160
+[lpc_const.H]: https://github.com/open-power/hostboot/blob/master/src/include/usr/lpc/lpc_const.H#L38
+[sbeConsole.H]: https://github.com/open-power/sbe/blob/master/src/sbefw/core/sbeConsole.H#L93
 [Kestrel]: https://gitlab.raptorengineering.com/kestrel-collaboration
 
 [Direct I2C]: #i2c-tpm-module
