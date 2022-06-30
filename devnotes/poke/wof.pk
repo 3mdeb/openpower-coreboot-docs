@@ -1,0 +1,123 @@
+/*
+ * GNU Poke pickle for WOFDATA section of PNOR.
+ *
+ * Example usage:
+ *
+ *   $ poke
+ *   (poke) .file WOF.noecc
+ *   (poke) .load wof.pk
+ *   (poke) var wof = WOF @ 0x1000#B
+ *   (poke) wof.find_match(4, b.sort_power_turbo, b.turbo.freq)
+ *
+ *   // v is #V bucket from MVPD
+ */
+
+set_endian(ENDIAN_BIG);
+
+var MAX_QUADS_PER_CHIP = 6;
+var SYSTEM_VFRT_SIZE = 128#B;
+
+/* Data is provided in 1/24ths granularity with adjustments for integer representation  */
+var VFRT_VRATIO_SIZE = 24;
+/* 5 steps down from 100% is Fratio_step sizes */
+var VFRT_FRATIO_SIZE = 5;
+
+/* Header of data within a WOF table */
+type VfrtHdr = struct {
+	uint16 magic_number = 0x5654H; // "VT"
+	uint16 reserved;
+	// bits 4-7 are type: 0 -- "System", 1 -- "Homer"
+	// bits 0-3 are version: 1 -- 12 row(voltage) X 11 column(freq)
+	//                       2 -- 24 row(Voltage) X 5 column (Freq)
+	uint8 type_version;
+	uint8 res_vdnId;	// Vdn assumptions
+	uint8 vddId_QAId;	// Vdd assumptions
+	uint8 rsvd_QAId;	// bits 0-2: Quad Active assumptions
+};
+
+type VfrtEntry = struct {
+    VfrtHdr hdr;
+    uint8[VFRT_FRATIO_SIZE * VFRT_VRATIO_SIZE] freq;
+
+    byte[alignto(OFFSET, SYSTEM_VFRT_SIZE)] padding;
+};
+
+type WOFTableHdr = struct {
+    uint32 magic_number : magic_number == 0x57465448;	// "WFTH"
+
+    uint16 reserved;
+    uint8 mode;		// version 1 = 0; version 2 = 1 or 2; WOF_MODE_*
+    uint8 version : version == 1;
+
+    uint16 vfrt_block_size;
+    uint16 vfrt_block_header_size;
+    uint16 vfrt_data_size;
+    uint8 quads_active_size;
+    uint8 core_count;
+    uint16 vdn_start;	// CeffVdn value represented by index 0 (in 0.01%)
+    uint16 vdn_step;	// CeffVdn step value for each CeffVdn index (in 0.01%)
+    uint16 vdn_size;	// Number of CeffVdn indexes
+    uint16 vdd_start;	// CeffVdd value represented by index 0 (in 0.01%)
+    uint16 vdd_step;	// CeffVdd step value for each CeffVdd index (in 0.01%)
+    uint16 vdd_size;	// Number of CeffVdd indexes
+    uint16 vratio_start;	// Vratio value represented by index 0 (in 0.01%)
+    uint16 vratio_step;	// Vratio step value for each CeffVdd index (in 0.01%)
+    uint16 vratio_size;	// Number of Vratio indexes
+    uint16 fratio_start;	// Fratio value represented by index 0 (in 0.01%)
+    uint16 fratio_step;	// Fratio step value for each CeffVdd index (in 0.01%)
+    uint16 fratio_size;	// Number of Fratio indexes
+
+    uint16[8] vdn_percent;	// Currently unused
+
+    uint16 socket_power_w;
+    uint16 nest_frequency_mhz;
+    uint16 sort_power_freq_mhz;	// Either the Nominal or Turbo #V frequency
+    uint16 rdp_capacity;		// Regulator Design Point Capacity (in Amps)
+
+    char[8] wof_table_source_tag;
+    char[16] package_name;
+};
+
+type WOFTable = struct {
+    WOFTableHdr hdr;
+    VfrtEntry[hdr.vdn_size * hdr.vdd_size * MAX_QUADS_PER_CHIP] entries @ 128#B;
+};
+
+type WOFEntry = struct {
+    uint32 offset;	// BE offset to section from image start
+    uint32 size;	// BE size of the section
+};
+
+type WOF = struct {
+    uint32 magic_number : magic_number == 0x57544948; // "WTIH";
+    uint8  version : version == 1;
+    uint8  entry_count;	// Number of entries in section table
+    uint32 offset;	// BE offset to section table from image start
+    WOFEntry[entry_count] entries @ offset#B;
+
+    method get_table = (int idx) WOFTable : {
+        var addr = entries'offset - offset#B + entries[idx].offset#B;
+        return WOFTable @ addr;
+    }
+
+    method find_match = (uint8 core_count, uint16 socket_power_w, uint16 sort_power_freq_mhz) WOFTable : {
+        for (var i = 0; i < entries'length; ++i) {
+            var t = get_table(i);
+
+            printf("WOF Table #%u8d\n", i);
+            printf("  core_count = %u8d\n", t.hdr.core_count);
+            printf("  socket_power_w = %u16d\n", t.hdr.socket_power_w);
+            printf("  sort_power_freq_mhz = %u16d\n", t.hdr.sort_power_freq_mhz);
+
+            if (t.hdr.core_count != core_count)
+                continue;
+            if (t.hdr.socket_power_w != socket_power_w)
+                continue;
+            if (t.hdr.sort_power_freq_mhz != sort_power_freq_mhz)
+                continue;
+            return t;
+        }
+
+        raise Exception { code = 255, msg = "No suitable WOF table was found!" };
+    }
+};

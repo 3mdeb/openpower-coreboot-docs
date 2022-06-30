@@ -1,0 +1,147 @@
+/*
+ * GNU Poke pickle for MVPD and V# keywords.
+ *
+ * Example usage:
+ *
+ *   $ poke MVPD.noecc
+ *   (poke) .load mvpd.pk
+ *   (poke) var v = (Mvpd @ 0#B).get_record("LRP0").get_keyword("#V").as_voltage
+ *   (poke) v.buckets[0].sort_power_turbo
+ *   (poke) var b = (Mvpd @ 0#B).get_vbucket
+ */
+
+set_endian(ENDIAN_BIG);
+
+var MAX_QUADS = 6;
+var VOLTAGE_BUCKET_COUNT = 6;
+
+type VoltageData = struct {
+    uint16 freq;        // MHz
+    uint16 vdd_voltage;
+    uint16 idd_current;
+    uint16 vcs_voltage;
+    uint16 ics_current;
+};
+
+/* Single bucket within #V keyword of version 3 */
+type VoltageBucketv3 = struct {
+    uint8 id;
+
+    VoltageData nominal;
+    VoltageData powersave;
+    VoltageData turbo;
+    VoltageData ultra_turbo;
+    VoltageData powerbus;
+
+    uint16 sort_power_normal;
+    uint16 sort_power_turbo;
+
+    uint8[6] reserved;
+};
+
+type VoltageKwd = struct {
+    uint8 version : version == 3;
+    uint8[3] pnp;
+    VoltageBucketv3[VOLTAGE_BUCKET_COUNT] buckets;
+};
+
+type VpdKeyword = struct {
+    char[2] name;
+
+    uint8 size8 if name[0] != '#';
+    uint16 size16 if name[0] == '#';
+    var size = name[0] == '#' ? size16 : size8 as uint16;
+
+    byte[size] data;
+
+    method get_name = string : {
+        return catos(name);
+    }
+    method get_size = uint16 : {
+        return size;
+    }
+    method as_voltage = VoltageKwd : {
+        return VoltageKwd @ data'offset;
+    }
+};
+
+type MvpdRecord = struct {
+    uint16 size;
+    VpdKeyword[] keywords;
+
+    method get_keyword = (string name) VpdKeyword : {
+        for (k in keywords)
+            if (k.get_name == name)
+                return k;
+
+        raise E_inval;
+    }
+};
+
+type MvpdTocEntry = struct {
+    char[4] name;         // Name without trailing NUL byte
+    little uint16 offset; // Offset from the beginning of partition in LE
+    uint8[2] reserved;    // Unused
+
+    method get_name = string : {
+        return catos(name);
+    }
+
+    method get_record = MvpdRecord : {
+        return MvpdRecord @ offset#B;
+    }
+};
+
+type Mvpd = struct {
+    MvpdTocEntry[32] toc;
+
+    method get_record = (string name) MvpdRecord : {
+        for (e in toc) {
+            if (e.get_name == name)
+                return e.get_record;
+        }
+
+        raise E_inval;
+    }
+
+    method get_vbucket = VoltageBucketv3 : {
+        // Handling only the simplest cases here.
+
+        var v = get_record("LRP0").get_keyword("#V").as_voltage;
+        for (var i = 1; i < MAX_QUADS; ++i) {
+            var lrp = catos([ 'L', 'R', 'P', ('0' + i) as char ]);
+            var vv = get_record(lrp).get_keyword("#V").as_voltage;
+            if (vv != v) {
+                raise Exception {
+                    code = 255,
+                    msg = "#Vs aren't equal!"
+                };
+            }
+        }
+
+        var valid = 0;
+        var bucket = v.buckets[0];
+        for (var i = 0; i < VOLTAGE_BUCKET_COUNT; ++i) {
+            if (v.buckets[i].nominal.freq != 0) {
+                bucket = v.buckets[i];
+                ++valid;
+            }
+        }
+
+        if (valid == 0) {
+            raise Exception {
+                code = 255,
+                msg = "No bucket is valid!"
+            };
+        }
+
+        if (valid > 1) {
+            raise Exception {
+                code = 255,
+                msg = "More than one bucket is valid!"
+            };
+        }
+
+        return bucket;
+    }
+};
