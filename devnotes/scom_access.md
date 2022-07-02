@@ -168,3 +168,121 @@ Call chain to register XSCOM procedure:
 <- [macro DEVICE_REGISTER_ROUTE](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/devicefw/driverif.H#L432)<br/>
 <- [DEVICE_REGISTER_ROUTE()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L69)<br/>
 <- [called on xscomPerformOp()](https://github.com/open-power/hostboot/blob/a4af0cc2d6432eff344e28335560dd72409b4d50/src/usr/xscom/xscom.C#L665)
+
+## Indirect form 1
+
+Analysis assumptions:
+* `#undef __HOSTBOOT_RUNTIME`
+* secure boot checks aren't interesting
+
+```cpp
+// src/usr/scom/scom.C
+errlHndl_t checkIndirectAndDoScom(DeviceFW::OperationType i_opType,
+                                  TARGETING::Target* i_target,
+                                  void* io_buffer,
+                                  size_t& io_buflen,
+                                  int64_t i_accessType,
+                                  uint64_t i_addr)
+{
+    bool l_runIndirectLogic = (i_addr & 0x8000000000000000);
+    if (!l_runIndirectLogic) {
+        return doScomOp(i_opType,
+                        i_target,
+                        io_buffer,
+                        io_buflen,
+                        i_accessType,
+                        i_addr);
+    }
+
+    //----------------------------------------------
+    //---  Below here is the indirect scom logic ---
+
+    // Bits 0:3 of the address hold the indirect and form bits
+    // We shift out 60 bits to read the form bit here
+    uint8_t form = (i_addr >> 60) & 1;
+
+    // If the form is 0, we are using the "old" indirect scom method
+    if (form == 0) {
+        return doForm0IndirectScom(i_opType,
+                                   i_target,
+                                   io_buffer,
+                                   io_buflen,
+                                   i_accessType,
+                                   i_addr);
+        if (l_err) break;
+
+    // If form is equal to 1, we are using new FBC method
+    } else {
+        return doForm1IndirectScom(i_opType,
+                                   i_target,
+                                   io_buffer,
+                                   io_buflen,
+                                   i_accessType,
+                                   i_addr);
+    }
+}
+
+errlHndl_t doScomOp(DeviceFW::OperationType i_opType,
+                    TARGETING::Target* i_target,
+                    void* io_buffer,
+                    size_t& io_buflen,
+                    int64_t i_accessType,
+                    uint64_t i_addr);
+
+errlHndl_t doForm0IndirectScom(DeviceFW::OperationType i_opType,
+                               TARGETING::Target* i_target,
+                               void* io_buffer,
+                               size_t& io_buflen,
+                               int64_t i_accessType,
+                               uint64_t i_addr);
+
+/*
+ * data |= (addr(20:31) << 20);
+ * addr = addr(32:63);
+ */
+errlHndl_t doForm1IndirectScom(DeviceFW::OperationType i_opType,
+                               TARGETING::Target* i_target,
+                               void* io_buffer,
+                               size_t& io_buflen,
+                               int64_t i_accessType,
+                               uint64_t i_addr)
+{
+    uint64_t l_io_buffer = 0;
+    uint64_t temp_scomAddr = 0;
+    uint64_t l_data_from_addr = 0;
+
+    memcpy(&l_io_buffer, io_buffer, 8);
+    memcpy(&temp_scomAddr, &i_addr, 8);
+
+    if (i_opType == DeviceFW::READ)
+        die("Indirect Scom Form 1 does not support read op");
+
+    // We want to make sure the user inputted data bits 0:11 are zero
+    // so we can push addr(20:31) in it.
+    if ((l_io_buffer & 0xFFF0000000000000) != 0)
+        die("Data(0:11) is not zero: data out of range!");
+
+    // Set up Address reg
+    // cmdreg = addr(32:63)
+    temp_scomAddr = i_addr & 0x00000000FFFFFFFF;
+
+    // Set up data regs
+    // data(0:11) = addr(20:31)
+    l_data_from_addr = i_addr & 0x00000FFF00000000;
+    // Do some bit shifting so things line up nicely
+    l_data_from_addr <<= 20;
+
+    // data(12:63) = data(12:63)
+    // Set Data reg
+    l_io_buffer |= l_data_from_addr;
+
+    // Now perform the op requested using the
+    // local io_buffer with the indirect addr imbedded.
+    return doScomOp(i_opType,
+                    i_target,
+                    &l_io_buffer,
+                    io_buflen,
+                    i_accessType,
+                    temp_scomAddr);
+}
+```
