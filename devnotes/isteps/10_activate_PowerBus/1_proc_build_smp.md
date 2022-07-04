@@ -605,7 +605,7 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 {
     /// l_chip_id == 0x05 (Nimbus) ///
     /// l_TGT1_ATTR_PROC_EPS_TABLE_TYPE == fapi2::ENUM_ATTR_PROC_EPS_TABLE_TYPE_EPS_TYPE_LE ///
-    /// l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG == 1 ///
+    /// l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG <= 1 ///
     /// l_TGT1_ATTR_PROC_FABRIC_SMP_OPTICS_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_SMP_OPTICS_MODE_OPTICS_IS_X_BUS ///
     /// l_TGT1_ATTR_PROC_FABRIC_ASYNC_SAFE_MODE == ENUM_ATTR_PROC_FABRIC_ASYNC_SAFE_MODE_PERFORMANCE_MODE ///
     /// l_TGT0_ATTR_CHIP_EC_FEATURE_HW409019 == 1 ///
@@ -613,6 +613,10 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
     fapi2::ATTR_FREQ_PB_MHZ_Type l_TGT1_ATTR_FREQ_PB_MHZ;
     FAPI_ATTR_GET(fapi2::ATTR_FREQ_PB_MHZ, TGT1, l_TGT1_ATTR_FREQ_PB_MHZ);
+
+    fapi2::ATTR_PROC_FABRIC_X_LINKS_CNFG_Type l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG;
+    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_X_LINKS_CNFG, TGT0, l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG));
+    uint64_t l_def_NUM_X_LINKS_CFG = l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG;
 
     /// Frequency of XBus, 2000 MHz for Nimbus DD2 ///
     uint32_t l_TGT1_ATTR_FREQ_X_MHZ = 2000;
@@ -643,7 +647,12 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     {
         l_scom_buffer.flush<0> ();
         l_scom_buffer.insert<53, 1, 63, uint64_t>(0);
-        l_scom_buffer.insert<54, 5, 59, uint64_t>(0x08);
+
+        if (l_def_NUM_X_LINKS_CFG == 0)
+            l_scom_buffer.insert<54, 5, 59, uint64_t>(0x06);
+        else if (l_def_NUM_X_LINKS_CFG == 1)
+            l_scom_buffer.insert<54, 5, 59, uint64_t>(0x08);
+
         l_scom_buffer.insert<59, 5, 59, uint64_t>(0x03);
         fapi2::putScom(TGT0, 0x90000cb205012011ull, l_scom_buffer);
     }
@@ -682,7 +691,12 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         l_scom_buffer.insert<51, 5, 59, uint64_t>(0x10);
         l_scom_buffer.insert<56, 2, 62, uint64_t>(0);
         l_scom_buffer.insert<58, 2, 62, uint64_t>(2);
-        l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+
+        if (l_def_NUM_X_LINKS_CFG == 1)
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+        else
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0x8);
+
         fapi2::putScom(TGT0, 0x90000cdb05011c11ull, l_scom_buffer);
     }
     {
@@ -725,7 +739,12 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         l_scom_buffer.insert<51, 3, 61, uint64_t>(0);
         l_scom_buffer.insert<54, 3, 61, uint64_t>(0);
         l_scom_buffer.insert<57, 3, 61, uint64_t>(1);
-        l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+
+        if (l_def_NUM_X_LINKS_CFG == 1)
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+        else
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0x8);
+
         fapi2::putScom(TGT0, 0x90000daa05011c11ull, l_scom_buffer);
     }
     {
@@ -745,7 +764,12 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         l_scom_buffer.insert<57, 1, 63, uint64_t>(1);
         l_scom_buffer.insert<58, 1, 63, uint64_t>(0);
         l_scom_buffer.insert<59, 1, 63, uint64_t>(0);
-        l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+
+        if (l_def_NUM_X_LINKS_CFG == 1)
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+        else
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0x8);
+
         fapi2::putScom(TGT0, 0x90000dcc05011c11ull, l_scom_buffer);
     }
     {
@@ -975,6 +999,10 @@ fapi2::ReturnCode p9_fbc_cd_hp1_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
 fapi2::ReturnCode p9_fbc_cd_hp2_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& TGT0,
                                      const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>& TGT1)
 {
+    fapi2::ATTR_PROC_FABRIC_X_LINKS_CNFG_Type l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG;
+    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_X_LINKS_CNFG, TGT0, l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG));
+    uint64_t l_def_NUM_X_LINKS_CFG = l_TGT0_ATTR_PROC_FABRIC_X_LINKS_CNFG;
+
     fapi2::buffer<uint64_t> l_scom_buffer;
     {
         l_scom_buffer.flush<0> ();
@@ -986,7 +1014,11 @@ fapi2::ReturnCode p9_fbc_cd_hp2_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC
         l_scom_buffer.insert<51, 3, 61, uint64_t>(0);
         l_scom_buffer.insert<54, 3, 61, uint64_t>(0);
         l_scom_buffer.insert<57, 3, 61, uint64_t>(1);
-        l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+
+        if (l_def_NUM_X_LINKS_CFG == 1)
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0xF);
+        else
+            l_scom_buffer.insert<60, 4, 60, uint64_t>(0x8);
 
         fapi2::putScom(TGT0, 0x90000daa05011c11ull, l_scom_buffer);
     }
@@ -1124,6 +1156,7 @@ fapi2::ReturnCode p9_fbc_ab_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
     /// l_TGT0_ATTR_PROC_FABRIC_X_AGGREGATE == ENUM_ATTR_PROC_FABRIC_X_AGGREGATE_OFF ///
     /// l_TGT1_ATTR_PROC_FABRIC_X_BUS_WIDTH == fapi2::ENUM_ATTR_PROC_FABRIC_X_BUS_WIDTH_4_BYTE ///
     /// l_TGT1_ATTR_PROC_FABRIC_CAPI_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_CAPI_MODE_OFF ///
+    /// Assumption: it's OK to not update ABus configuration since we don't have it ///
 
     fapi2::ATTR_PROC_FABRIC_GROUP_MASTER_CHIP_Type l_TGT0_ATTR_PROC_FABRIC_GROUP_MASTER_CHIP;
     if (l_TGT0_ATTR_PROC_FABRIC_SYSTEM_MASTER_CHIP)
@@ -1139,7 +1172,7 @@ fapi2::ReturnCode p9_fbc_ab_hp_scom(const fapi2::Target<fapi2::TARGET_TYPE_PROC_
                   l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_CNFG);
 
     uint8_t l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_ID;
-    if (l_TGT0_ATTR_PROC_FABRIC_SYSTEM_MASTER_CHIP) 
+    if (l_TGT0_ATTR_PROC_FABRIC_SYSTEM_MASTER_CHIP)
         l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_ID = 1;
     else
         l_TGT0_ATTR_PROC_FABRIC_X_ATTACHED_CHIP_ID = 0;
