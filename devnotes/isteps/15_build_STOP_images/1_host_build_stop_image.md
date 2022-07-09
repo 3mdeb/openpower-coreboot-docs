@@ -414,7 +414,9 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 
 					chk_valid_poundv():
 						- check that none of the fields from MVPD is 0
+						  - if !iv_wof_enabled skip the check for UltraTurbo
 						- check that all fields are >= the same fields for lower performance Pstate
+						  - if !iv_wof_enabled skip the check for UltraTurbo
 						- note: Pstates in MVPD aren't sorted
 						- PowerBus is excluded from tests (not a core Pstate)
 
@@ -507,8 +509,9 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 					// For now, implement if needed
 					die()
 
-				// Validate the WOF content is non-zero - assuming WOF is enabled
-				- Log if any of the ivdd_tdp_{a,d}c_current_10ma is zero and set iv_wof_enabled = false
+				// Validate the WOF content is non-zero
+				- if iv_wof_enabled:
+				  - Log if any of the ivdd_tdp_{a,d}c_current_10ma is zero and set iv_wof_enabled = false
 
 				// Assuming VDM is enabled (return otherwise)
 				// VDM_ENABLE is OFF in talos.xml, yet code after this point still executes. Why?
@@ -541,10 +544,10 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 				- print info about recovered error
 				- return from vpd_init() with success
 
-			// Read #IQ data
+			// Read #IQ data (Hostboot skips calling this function if iv_wof_enabled is false)
 			get_mvpd_iddq():
 				- read from (MVPD_RECORD_CRP0, MVPD_KEYWORD_IQ) to iv_iddqt
-				- log warning and return with succes if any of the following is 0:
+				- log warning, set iv_wof_enabled to false and return with succes if any of the following is 0:
 				  - iddq_version
 				  - good_quads_per_sort
 				  - good_normal_cores_per_sort
@@ -863,6 +866,8 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			  - frequency (nominal, as read from #V)
 			  - if version >= WOF_TABLE_VERSION_POWERMODE (2):
 			    - mode matches current mode (WOF_MODE_NOMINAL = 1) or wildcard (WOF_MODE_UNKNOWN = 0)
+			- if no match was found, need to disable WOF in OPPB later:
+			  - iv_wof_enabled = false
 			- structures used:
 			  - wofImageHeader_t from plat_wof_access.C
 			    - check magic and version
@@ -895,7 +900,7 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			// LHS is l_occppb, it eventually will be homer->ppmr.occ_parm_block
 			magic = OCC_PARMSBLOCK_MAGIC		// 0x4f43435050423030, "OCCPPB00"
 
-			wof.wof_enabled = 1		// Assuming wof_init() succeeded
+			wof.wof_enabled = iv_wof_enabled
 
 			vdd_sysparm = {ATTR_PROC_R_LOADLINE_VDD_UOHM, ATTR_PROC_R_DISTLOSS_VDD_UOHM, ATTR_PROC_VRM_VOFFSET_VDD_UV} = {254, 0, 0}
 			vcs_sysparm = {ATTR_PROC_R_LOADLINE_VCS_UOHM, ATTR_PROC_R_DISTLOSS_VCS_UOHM, ATTR_PROC_VRM_VOFFSET_VCS_UV} = {0, 64, 0}
@@ -922,17 +927,18 @@ buildParameterBlock(homer, proc, ppmrHdr = homer.ppmr.header, imgType, buf1, buf
 			// Iddq Table
 			iddq = iv_iddqt				// from get_mvpd_iddq()
 
-			wof.tdp_rdp_factor = ATTR_TDP_RDP_CURRENT_FACTOR		// 0 from talos.xml
-			nest_leakage_percent = ATTR_NEST_LEAKAGE_PERCENT		// 60 (0x3C) from hb_temp_defaults.xml
+			if iv_wof_enabled:
+				wof.tdp_rdp_factor = ATTR_TDP_RDP_CURRENT_FACTOR		// 0 from talos.xml
+				nest_leakage_percent = ATTR_NEST_LEAKAGE_PERCENT		// 60 (0x3C) from hb_temp_defaults.xml
 
-			lac_tdp_vdd_turbo_10ma =
-			         iv_poundW_data.poundw[TURBO].ivdd_tdp_ac_current_10ma
-			lac_tdp_vdd_nominal_10ma =
-			         iv_poundW_data.poundw[NOMINAL].ivdd_tdp_ac_current_10ma
+				lac_tdp_vdd_turbo_10ma =
+				         iv_poundW_data.poundw[TURBO].ivdd_tdp_ac_current_10ma
+				lac_tdp_vdd_nominal_10ma =
+				         iv_poundW_data.poundw[NOMINAL].ivdd_tdp_ac_current_10ma
 
-			// As the Vdn dimension is not supported in the WOF tables,
-			// hardcoding this value to the OCC as non-zero to keep it happy.
-			ceff_tdp_vdn = 1;
+				// As the Vdn dimension is not supported in the WOF tables,
+				// hardcoding this value to the OCC as non-zero to keep it happy.
+				ceff_tdp_vdn = 1;
 
 			//Update nest frequency in OPPB
 			nest_frequency_mhz = ATTR_FREQ_PB_MHZ				// 1866 from talos.xml
