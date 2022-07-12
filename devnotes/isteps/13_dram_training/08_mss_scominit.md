@@ -297,15 +297,17 @@ for each functional MCBIST:
               ATTR_MSS_MRW_POWER_CONTROL_REQUESTED == PD_AND_STR_OFF:       0     // default
             [2-11]  MBASTR0Q_CFG_ENTER_STR_TIME =                           1023
         set_nm_support()
+          // see p9_mss_eff_config_thermal() at the end of this file
           MC01.PORT1.SRQ.MBA_FARB3Q =       // 0x7010956
-            [0-14]  MBA_FARB3Q_CFG_NM_N_PER_SLOT = ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT[mss::index(MCA)]
-            [15-30] MBA_FARB3Q_CFG_NM_N_PER_PORT = ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_PORT[mss::index(MCA)]
+            [0-14]  MBA_FARB3Q_CFG_NM_N_PER_SLOT = ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT[mss::index(MCA)]  // default 0x80
+            [15-30] MBA_FARB3Q_CFG_NM_N_PER_PORT = ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_PORT[mss::index(MCA)]  // default 0x80
             [31-44] MBA_FARB3Q_CFG_NM_M =          ATTR_MSS_MRW_MEM_M_DRAM_CLOCKS     // default 0x200
             [45-47] MBA_FARB3Q_CFG_NM_RAS_WEIGHT = 0
             [48-50] MBA_FARB3Q_CFG_NM_CAS_WEIGHT = 1
             // Set to disable permanently due to hardware design bug (HW403028) that won't be changed
             [53]    MBA_FARB3Q_CFG_NM_CHANGE_AFTER_SYNC = 0
         set_safemode_throttles(MCA)
+          // see p9_mss_eff_config_thermal() at the end of this file
           MC01.PORT1.SRQ.MBA_FARB4Q =       // 0x7010957
             [27-41] MBA_FARB4Q_EMERGENCY_N = ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_PORT[mss::index(MCA)]  // BUG? var name says per_slot...
             [42-55] MBA_FARB4Q_EMERGENCY_M = ATTR_MSS_MRW_MEM_M_DRAM_CLOCKS
@@ -1057,4 +1059,340 @@ a)    IOM0.DDRPHY_ADR_BIT_ENABLE_P0_ADR3 =        // 0x80004c000701103f
       MC01.PORT0.SRQ.MBACALFIRQ =         // 0x07010900         // maybe use SCOM1 (AND) 0x07010901
           [4]   MBACALFIRQ_RCD_PARITY_ERROR = 0
           [8]   MBACALFIRQ_DDR_MBA_EVENT_N =  0
+```
+
+### p9_mss_eff_config_thermal
+
+```
+// Assumptions:
+// - input values are valid (e.g. non-zero, proper ratios etc)
+// - each MCS has its own VDDR rail (true for Talos)
+// - no DDIMM (differential DIMM, for OMI)
+
+FAPI_INF("Start effective config thermal");
+fapi2::ReturnCode l_rc;
+
+// Machine Readable Workbook Power Curve Slope for DIMM Used to get the VDDR and
+// VDDR+VPP power curve for each DIMM Decoded and used to set
+// ATTR_MSS_TOTAL_PWR_INTERCEPT
+// Key Value pair KEY (0-19): In order
+// DIMM_SIZE = bits 0-3,
+// DIMM_GEN = 4-5,
+// DIMM_TYPE = 6-7,
+// DIMM_WIDTH = 8-10,
+// DIMM_DENSITY = 11-13,
+// DIMM_STACK_TYPE = 14-15,
+// DRAM_MFGID = 16-18,
+// DIMMS_PER_PORT = 19-20,
+// Bits 21-32: Not used
+// VALUE (bits 32-63) in cW:
+// VMEM power curve = 32-47
+// VMEM+VPP power curve = 48-63
+std::vector< uint64_t > l_slope =
+{
+    // everything is: any gen, any type, any width, any density, any stack type, any mfgID
+    0x1FFFE00001BA01DD,     // 8GB, 1 DIMM per port         : VDDR = 0x1ba, total = 0x1dd
+    0x1FFFE800018901A8,     // 8GB, 2 DIMMs per port
+    0x2FFFE0000215022F,     // 16GB, 1 DIMM per port
+    0x2FFFE80001D901F1,     // 16GB, 2 DIMMs per port
+    0x3FFFE00001E001FB,     // 32GB, 1 DIMM per port
+    0x3FFFE80001AB01C2,     // 32GB, 2 DIMMs per port
+    0x4FFFE000023F0266,     // 64GB, 1 DIMM per port
+    0x4FFFE80001FF0222,     // 64GB, 2 DIMMs per port
+    0x5FFFE0000269028B,     // 128GB, 1 DIMM per port
+    0x5FFFE80002240242,     // 128GB, 2 DIMMs per port
+    0xFFFFF8000303032D,     // any size, any DIMMs per port
+    0x00, ... // until the end, total of 100 uint64_t's
+}
+
+// Machine Readable Workbook Power Curve Intercept for DIMM - see above
+std::vector< uint64_t > l_intercept =
+{
+    // everything is: any gen, any type, any width, any density, any stack type, any mfgID
+    0x1FFFE000010B0115,     // 8GB, 1 DIMM per port         : VDDR = 0x10b, total = 0x115
+    0x1FFFE800010B0115,     // 8GB, 2 DIMM per port
+    0x2FFFE000015D0163,     // 16GB, 1 DIMM per port
+    0x2FFFE800015D0163,     // 16GB, 2 DIMM per port
+    0x3FFFE0000197019D,     // 32GB, 1 DIMM per port
+    0x3FFFE8000197019D,     // 32GB, 2 DIMM per port
+    0x4FFFE00001CA01D2,     // 64GB, 1 DIMM per port
+    0x4FFFE80001CA01D2,     // 64GB, 2 DIMM per port
+    0x5FFFE0000248026A,     // 128GB, 1 DIMM per port
+    0x5FFFE8000248026A,     // 128GB, 2 DIMM per port
+    0xFFFFF80002DA0305,     // any size, any DIMMs per port
+    0x00, ... // until the end, total of 100 uint64_t's
+}
+
+// Machine Readable Workbook Thermal Memory Power Limit
+// KEY - see above
+// VALUE (bits 32-63) in cW:
+// VMEM+VPP thermal power limit per DIMM = 32-63
+std::vector< uint64_t > l_thermal_power_limit =
+{
+    0xFFFFF80000000708,     // everything
+    0x00, ... // until the end, total of 10 uint64_t's
+}
+
+uint16_t l_vddr_slope     [mss::PORTS_PER_MCS][mss::MAX_DIMM_PER_PORT] = {};
+uint16_t l_vddr_int       [mss::PORTS_PER_MCS][mss::MAX_DIMM_PER_PORT] = {};
+uint16_t l_total_slope    [mss::PORTS_PER_MCS][mss::MAX_DIMM_PER_PORT] = {};
+uint16_t l_total_int      [mss::PORTS_PER_MCS][mss::MAX_DIMM_PER_PORT] = {};
+uint32_t l_thermal_power  [mss::PORTS_PER_MCS][mss::MAX_DIMM_PER_PORT] = {};
+
+
+mss::power_thermal::set_runtime_m_and_watt_limit():
+    // ATTRs in this function are actually arrays of repeated values
+    ATTR_MSS_RUNTIME_MEM_M_DRAM_CLOCKS = 0x200; // MSS_MRW_MEM_M_DRAM_CLOCKS, from talos.xml
+    l_vmem_power_limit_dimm = 1200;     // MRW_VMEM_REGULATOR_MEMORY_POWER_LIMIT_PER_DIMM_DDR4, talos.xml
+    l_max_dimms = 8;                    // MSS_MRW_MAX_NUMBER_DIMMS_POSSIBLE_PER_VMEM_REGULATOR, talos.xml
+    l_count_dimms_vec = number of DIMMs under VDDR rail (i.e. under MCS)
+
+    // Now calculate the watt target
+    // Calculate max power available / number of dimms configured on the VDDR rail
+    ATTR_MSS_MEM_WATT_TARGET = (l_vmem_power_limit_dimm * l_max_dimms) / l_count_dimms_vec;
+    // ATTR_MSS_MEM_WATT_TARGET = 9600 / l_count_dimms_vec;
+
+// Restore runtime_throttles from safemode setting
+// Decode and set power curve attributes at the same time
+for (const auto& l_mcs : i_targets )
+{
+    //Not doing any work if there are no dimms installed
+    if (mss::count_dimm(l_mcs) == 0)
+    {
+        FAPI_INF("Skipping eff_config thermal because no dimms %s", mss::c_str(l_mcs));
+        continue;
+    }
+
+    // For each DIMM, extract (VDDR and total) slope, intercept and thermal power
+    // from appropriate objects of l_slope, l_intercept and l_thermal_power_limit
+    mss::power_thermal::get_power_attrs(l_mcs,
+                                        l_slope,
+                                        l_intercept,
+                                        l_thermal_power_limit,
+                                        l_vddr_slope,
+                                        l_vddr_int,
+                                        l_total_slope,
+                                        l_total_int,
+                                        l_thermal_power));
+
+    // Sets throttles to max_databus_util value
+    mss::power_thermal::restore_runtime_throttles(l_mcs):
+        // Equation:  N = (DRAM data bus utilization * M) / (4 * 10000)
+        // N = (MSS_MRW_MAX_DRAM_DATABUS_UTIL * MSS_MRW_MEM_M_DRAM_CLOCKS) /
+        //     (4 * 10000)
+        // N = (0x2710 * 0x200) / 40000 = (10000 * 512) / 40000 = 128 = 0x80
+        ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_PORT = 0x80;
+        ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT = 0x80;
+
+    // Set the power attribute (TOTAL_PWR) to just VDDR for the POWER bulk_pwr_throttles,
+    // restore to vddr+vpp later for OCC
+    ATTR_MSS_TOTAL_PWR_SLOPE = l_vddr_slope;
+    ATTR_MSS_TOTAL_PWR_INTERCEPT = l_vddr_int;
+    ATTR_MSS_DIMM_THERMAL_LIMIT = l_thermal_power;
+}
+
+// Get the thermal limits, done per DIMM and set to worst case for the slot and port throttles
+// Bulk_pwr sets the general, all purpose ATTR_MSS_MEM_THROTTLED_N_COMMANDS_PER_SLOT, _PER_PORT, and MAXPOWER ATTRs
+p9_mss_bulk_pwr_throttles(i_targets, mss::throttle_type::POWER):
+    for ( const auto& l_mcs : i_targets)
+        {
+            if (mss::count_dimm (l_mcs) == 0)
+            {
+                continue;
+            }
+
+            uint16_t l_slot [mss::PORTS_PER_MCS] = {};
+            uint16_t l_port [mss::PORTS_PER_MCS] = {};
+            uint32_t l_power [mss::PORTS_PER_MCS] = {};
+
+            for (const auto& l_mca : mss::find_targets<TARGET_TYPE_MCA>(l_mcs))
+            {
+                fapi2::ReturnCode l_rc = fapi2::FAPI2_RC_SUCCESS;
+
+                //Don't run if there are no dimms on the port
+                if (mss::count_dimm(l_mca) == 0)
+                {
+                    continue;
+                }
+
+                const uint8_t l_pos = mss::index(l_mca);
+
+                mss::power_thermal::throttle<> l_pwr_struct(l_mca, l_rc):
+                    iv_databus_port_max = 0x2710;   // MSS_MRW_MAX_DRAM_DATABUS_UTIL, talos.xml
+                    iv_power_uplift = 0;            // MSS_MRW_DIMM_POWER_CURVE_PERCENT_UPLIFT, talos.xml
+                    iv_power_uplift_idle = 0;       // MSS_MRW_DIMM_POWER_CURVE_PERCENT_UPLIFT_IDLE, talos.xml
+                    iv_dimm_thermal_limit = 0;      // ATTR_MSS_DIMM_THERMAL_LIMIT, get_power_attrs()
+                    iv_pwr_int = xxx;               // ATTR_MSS_TOTAL_PWR_SLOPE, get_power_attrs()
+                    iv_pwr_slope = xxx;             // ATTR_MSS_TOTAL_PWR_INTERCEPT, get_power_attrs()
+                    iv_runtime_n_slot = 0x80;       // ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_SLOT, restore_runtime_throttles()
+                    iv_runtime_n_port = 0x80;       // ATTR_MSS_RUNTIME_MEM_THROTTLED_N_COMMANDS_PER_PORT, restore_runtime_throttles()
+                    iv_m_clocks = 0x200;            // MSS_MRW_MEM_M_DRAM_CLOCKS, talos.xml
+
+                    // Port power limit = sum of dimm power limits
+                    // NOTE: this is different for thermal
+                    for ( const auto& l_dimm : mss::find_targets<fapi2::TARGET_TYPE_DIMM>(iv_target) )
+                    {
+                        iv_port_power_limit += ATTR_MSS_MEM_WATT_TARGET(dimm);  // set_runtime_m_and_watt_limit(), 9600/dimms_per_mcs
+                    }
+
+                // Let's do the actual work now
+                // NOTE: this is different for thermal
+                l_pwr_struct.power_regulator_throttles():
+                    // Decide utilization for each dimm based off of dimm count and power slopes
+                    // NOTE: sum is 100% in both cases
+                    if (iv_pwr_slope[DIMM0] == iv_pwr_slope[DIMM1]):
+                        l_databus_dimm_max = iv_databus_port_max / 2
+                    else:
+                        l_databus_dimm_max[DIMM with bigger iv_pwr_slope] = iv_databus_port_max
+                        l_databus_dimm_max[DIMM with smaller iv_pwr_slope] = 0
+
+                    // Use the dimm utilizations and dimm power slopes to calculate port min and max power
+                    calc_port_power(l_calc_databus_port_idle = 0,
+                                    l_databus_dimm_max,
+                                    l_port_power_calc_idle,
+                                    l_port_power_calc_max):
+                        // Calculate the port power curve info by summing the dimms on the port
+                        // NOTE: idle utilizations are 0, max are defined for DIMM with bigger pwr_slope,
+                        //       and there are no cases where pwr_slope is the same but pwr_int differs,
+                        //       so it should be possible to use just 'else' path from previous NOTE and
+                        //       calculate below values just for bigger (in terms of power) DIMM
+                        for ( const auto& l_dimm : mss::find_targets<fapi2::TARGET_TYPE_DIMM>(iv_target) )
+                        {
+                            // Sum up the dimm's power to calculate the port power curve
+                            l_port_power_calc_idle += (0 / 10000) * iv_pwr_slope + iv_pwr_int;                          // 0 + 267 (0x10b) for single 8GB DIMM
+                            l_port_power_calc_max  += (l_databus_dimm_max[l_dimm] / 10000) * iv_pwr_slope + iv_pwr_int; // 442 + 267 (0x1ba + 0x10b) for single 8GB DIMM
+                        }
+
+                        // Raise the powers by the uplift percent
+                        // NOTE: uplifts are 0, so this is no-op
+                        calc_power_uplift(iv_power_uplift_idle, l_port_power_calc_idle);
+                        calc_power_uplift(iv_power_uplift, l_port_power_calc_max);
+
+                    // Calculate the power curve slope and intercept using the port's min and max power values
+                    calc_power_curve(l_port_power_calc_idle,
+                                     l_port_power_calc_max,
+                                     l_port_power_slope,
+                                     l_port_power_int):
+                        // Assumption: max = 100%, idle = 0%
+                        l_port_power_slope = l_port_power_calc_max - l_port_power_calc_idle
+                        l_port_power_int = l_port_power_calc_idle
+
+                    // Calculate the port's utilization to get under watt target using the port's calculated slopes
+                    calc_util_usage(l_port_power_slope,
+                                    l_port_power_int,
+                                    iv_port_power_limit,
+                                    l_calc_util_port):
+                        // Assumption: max = 100%, idle = 0%
+                        l_calc_util_port = 100%
+
+                    // Calculate the new slot values and the max power value for the port
+                    calc_slots_and_power(l_calc_util_port):
+                        // Calculate the Port N throttles
+                        // NOTE: same equation and inputs as restore_runtime_throttles()
+                        iv_n_port = 0x80;
+
+                        // Set iv_n_slot to the lower value between the slot runtime and iv_n_port
+                        iv_n_slot = (iv_runtime_n_slot != 0) ? std::min (iv_n_port, iv_runtime_n_slot) : iv_n_port;
+                        // iv_n_slot = 0x80
+                        // Choose the lowest value of the runtime and the calculated
+                        iv_n_port = (iv_runtime_n_port != 0) ? std::min (iv_n_port, iv_runtime_n_port) : iv_n_port;
+                        // iv_n_port = 0x80
+
+                        //Use the throttle value to calculate the power that gets to exactly that value
+                        calc_power_from_n(iv_n_slot, iv_n_port, iv_calc_port_maxpower):
+                            calc_util_from_throttles(i_n_slot, iv_m_clocks, l_calc_util_slot):
+                                // Check for overflow, clamp to min if lower, no-op if values are sane
+                            calc_util_from_throttles(i_n_port, iv_m_clocks, l_calc_util_port):
+                                // Check for overflow, clamp to min if lower, no-op if values are sane
+
+                            // Determine the utilization for each DIMM that will maximize the port power
+                            calc_split_util(l_calc_util_slot, l_calc_util_port, l_calc_databus_port_max):
+                                // Assumption: no DDIMM
+                                // Due to split across DIMMs (50:50 if they are identical or 100:0 if not)
+                                // l_calc_databus_port_max will always be 100% of bigger (w.r.t. power) DIMM
+
+                            calc_port_power(l_calc_databus_port_idle,
+                                            l_calc_databus_port_max,
+                                            l_port_power_idle,
+                                            l_port_power_max):
+                                // As above, split simplifies calculations
+
+                            iv_calc_port_maxpower = mss::round_up (l_port_power_max);
+
+                l_slot[l_mca] = l_pwr_struct.iv_n_slot;                 // 0x80 always
+                l_port[l_mca] = l_pwr_struct.iv_n_port;                 // 0x80 always
+                l_power[l_mca] = l_pwr_struct.iv_calc_port_maxpower;    // 442 + 267 (0x1ba + 0x10b) for single 8GB DIMM 
+            }
+
+            ATTR_MSS_PORT_MAXPOWER[l_mca] = l_power;
+            ATTR_MSS_MEM_THROTTLED_N_COMMANDS_PER_SLOT[l_mca] = l_slot;
+            ATTR_MSS_MEM_THROTTLED_N_COMMANDS_PER_PORT[l_mca] = l_port;
+        }
+
+        // Set all of the throttles to the lowest value per port for performance reasons
+        mss::power_thermal::equalize_throttles(i_targets, i_throttle_type /*= mss::throttle_type::POWER*/, l_exceeded_power):
+            // With 100% max utilization we get 0x80 everywhere, so skip equalization.
+            //
+            // This function also checks if total power is no bigger than limit
+            // (depending on i_throttle_type, limit is per DIMM or per port), but
+            // this is almost always true for all MSS_MRW_PWR_INTERCEPT and MSS_MRW_PWR_SLOPE.
+            // It is barely outside of defined value for single 128GB DIMM per port: max value
+            // calculated from those values is 1201 per DIMM, while max defined in talos.xml
+            // says that maximum allowed value is 1200. On the other hand, this value is
+            // defined for up to 8 DIMMs per VDDR rail, while there are only 4 slots available,
+            // which gives more than twice as much power as is required (because 1 DIMM per
+            // port means not each slot is occupied).
+            //
+            // For all these reasons, treat this function as no-op.
+
+// Set runtime throttles to worst case between ATTR_MSS_MEM_THROTTLED_N_COMMANDS_PER_SLOT
+// and ATTR_MSS_MEM_RUNTIME_THROTTLED_N_COMMANDS_PER_SLOT and the _PORT equivalents also
+mss::power_thermal::update_runtime_throttles(i_targets):
+    // Everything is 0x80, no-op
+
+// Set VDDR+VPP power curve values
+// NOTE: no idea why this wasn't parsed at the same time as VDDR values
+for ( const auto& l_mcs : i_targets )
+{
+    if (mss::count_dimm(l_mcs) == 0)
+    {
+        continue;
+    }
+
+    // Zero out the arrays
+    memset(l_vddr_slope, 0, sizeof(l_vddr_slope));
+    memset(l_vddr_int, 0, sizeof(l_vddr_int));
+    memset(l_total_slope, 0, sizeof(l_total_slope));
+    memset(l_total_int, 0, sizeof(l_total_int));
+    memset(l_thermal_power, 0, sizeof(l_thermal_power));
+
+    mss::power_thermal::get_power_attrs(l_mcs,
+                                        l_slope,
+                                        l_intercept,
+                                        l_thermal_power_limit,
+                                        l_vddr_slope,
+                                        l_vddr_int,
+                                        l_total_slope,
+                                        l_total_int,
+                                        l_thermal_power));
+
+    FAPI_INF( "VDDR+VPP power curve slope is %d, int is %d, thermal_power is %d", l_total_slope[0][0], l_total_int[0][0],
+              l_thermal_power[0][0]);
+
+    // Set the power curve attributes (TOTAL_PWR) to vpp+vdd power slope and intercept
+    ATTR_MSS_TOTAL_PWR_SLOPE = l_total_slope;
+    ATTR_MSS_TOTAL_PWR_INTERCEPT = l_total_int;
+}
+
+// Run thermal throttles with the VDDR+VPP power curves
+p9_mss_bulk_pwr_throttles(i_targets, mss::throttle_type::THERMAL):
+    // TBD if needed.
+    // Main differences against mss::throttle_type::POWER:
+    // - total slopes are used, not only VDDR (other rails also generate heat)
+    // - power limit is calculated per DIMM instead of port and VDDR domain
+    // - ATTR_MSS_DIMM_THERMAL_LIMIT is used as a target value instead of
+    //   ATTR_MSS_MEM_WATT_TARGET
+
+// Update everything to worst case
+mss::power_thermal::update_runtime_throttles(i_targets);
 ```
